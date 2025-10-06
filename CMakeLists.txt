@@ -11,15 +11,21 @@ find_package(Qt5 COMPONENTS
         Core
         Gui
         Widgets
+        Charts
         REQUIRED)
 
 add_executable(ip9_task_scheduling src/main.cpp
-        include/Timeline.h
+        include/TimelineView.h
         include/Task.h
-        include/MainView.h)
+        include/MapView.h
+        include/Event.h
+        include/Robot.h
+        src/distibutions.cpp
+        include/Dist.h)
 target_link_libraries(ip9_task_scheduling
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
+        Qt5::Charts
 )
 
