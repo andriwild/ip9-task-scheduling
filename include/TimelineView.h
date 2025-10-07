@@ -44,7 +44,7 @@ public:
 
     void wheelEvent(QWheelEvent *event) override {
         if (event->modifiers() & Qt::ControlModifier) {
-            const double factor = (event->angleDelta().y() > 0) ? 1.15 : 1.0 / 1.15;
+            const double factor = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
             scale(factor, factor);
         } else {
             QGraphicsView::wheelEvent(event);
@@ -58,9 +58,9 @@ public:
         // there is no easy way to get all enum values -> duplicated code
         std::array<std::pair<QColor, std::string>, 3> allTaskTypes = {
             {
-                {taskColor(TaskType::ESCORT), "Escort"},
-                {taskColor(TaskType::DRIVE), "Drive"},
-                {taskColor(TaskType::CHARGE), "Charge"},
+                {Qt::darkGreen, "Escort"},
+                {Qt::gray, "Drive"},
+                {{255, 165, 0}, "Charge"},
             }
         };
         int rectPos = 10;
@@ -92,30 +92,37 @@ public:
         drawTicks();
     }
 
-    void drawEvent(const Event &event, const QColor &color = Qt::red) const {
-        const int start = X_LINE_POS + event.time;
+    void drawEvent(
+        const int time,
+        const std::string &label,
+        const QColor &color = Qt::red,
+        const bool includeLabel = false
+    ) const {
+        const int start = X_LINE_POS + time;
         constexpr int markerHeight = 30;
+        const int yMarkerPos = m_yLinePos - TASK_HEIGHT;
         QVector<QPoint> const points = {
-            { start, m_yLinePos },
-            { start + 10, m_yLinePos - 30 },
-            { start - 10, m_yLinePos - 30 }
+            { start, yMarkerPos },
+            { start + 10, yMarkerPos - 30 },
+            { start - 10, yMarkerPos - 30 }
         };
         QPolygon const poly = points;
-        const auto elem = m_scene->addPolygon(
-            poly,
-            { color },
-            { color, Qt::SolidPattern }
-            );
+        const auto elem = m_scene->addPolygon(poly, { color }, { color, Qt::SolidPattern });
         elem->setZValue(Z_EVENT);
 
-        QGraphicsSimpleTextItem* const eventLabel = m_scene->addSimpleText(QString::number(event.eventId));
+        QGraphicsSimpleTextItem* const eventLabel = m_scene->addSimpleText(QString::fromStdString(label));
         const double w = eventLabel->boundingRect().width();
-        QFont font = eventLabel->font();
-        font.setBold(true);
-        font.setPointSize(8);
-        eventLabel->setFont(font);
-        eventLabel->setBrush(Qt::white);
-        eventLabel->setPos(start - w / 2.0, m_yLinePos - markerHeight);
+        const double h = eventLabel->boundingRect().height();
+        if (includeLabel) {
+            QFont font = eventLabel->font();
+            font.setBold(true);
+            font.setPointSize(8);
+            eventLabel->setFont(font);
+            eventLabel->setBrush(Qt::white);
+            eventLabel->setPos(start - w / 2.0, yMarkerPos - markerHeight);
+        } else {
+            eventLabel->setPos(start - w / 2.0, yMarkerPos - markerHeight - h);
+        }
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
@@ -140,9 +147,8 @@ public:
     }
 
 
-    void drawDrive(const int startTime, const int endTime) const {
+    void drawDrive(const int startTime, const int duration, const QColor &color = Qt::gray) const {
         const int start = X_LINE_POS + startTime;
-        const auto color = taskColor(TaskType::DRIVE);
 
         QLinearGradient gradient(0, 0, 1 , 0);
         gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
@@ -152,9 +158,9 @@ public:
         QGraphicsRectItem* const rect = m_scene->addRect(
             start,
             m_yLinePos,
-            endTime-startTime,
+            duration,
             -TASK_HEIGHT,
-            QPen(Qt::NoPen),
+            QPen(Qt::black),
             QBrush(gradient)
             );
         rect->setZValue(Z_TASKS);

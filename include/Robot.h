@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Dist.h"
 #include "Event.h"
 
 class Robot {
@@ -36,7 +37,7 @@ public:
         return m_isDriving;
     }
 
-    void setDriving(const int time) {
+    void startDriving(const int time) {
         m_isDriving = true;
         m_startDrivingTime = time;
     }
@@ -49,8 +50,29 @@ public:
         return m_startDrivingTime;
     }
 
+    int calcDriveTime(const Point &target) const {
+        const auto dist = calculateDistance(m_location, target);
+        return dist / m_speed;
+    }
+
+    double calcPathThroughPoints(const std::vector<Point> &points) const {
+       double t = 0;
+        Point currentPos = m_location;
+        for (Point p: points) {
+            t += calculateDistance(currentPos, p);
+            currentPos = p;
+        }
+        return t;
+    }
+
     friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {
         out << "Robot (" << robot.m_location.x << ", " << robot.m_location.y << std::endl;
         return out;
+    }
+
+    static double calculateDistance(const Point& p1, const Point& p2) {
+        const double dx = p2.x - p1.x;
+        const double dy = p2.y - p1.y;
+        return std::sqrt(dx * dx + dy * dy);
     }
 };

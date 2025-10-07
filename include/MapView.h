@@ -5,11 +5,12 @@
 #include <iostream>
 #include <QGraphicsLineItem>
 #include <qt5/QtWidgets/QGraphicsView>
+#include <cmath>
 
 #include "Event.h"
 
-constexpr int MAP_HEIGHT = 400;
-constexpr int MAP_WIDTH = 400;
+constexpr int MAP_HEIGHT = 1000;
+constexpr int MAP_WIDTH = 1000;
 constexpr int MAP_SCENE_MARGIN = 50;
 
 constexpr int Z_DRIVE = 1;
@@ -23,11 +24,11 @@ class MapView final : public QGraphicsView {
 public:
     explicit MapView() {
         m_scene = new QGraphicsScene(this);
-        m_scene->setSceneRect(-MAP_SCENE_MARGIN, -MAP_SCENE_MARGIN, MAP_WIDTH, MAP_HEIGHT);
+        m_scene->setSceneRect(-MAP_WIDTH / 2, -MAP_HEIGHT / 2, MAP_WIDTH, MAP_HEIGHT);
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
-        centerOn(0,0);
         setScene(m_scene);
+        centerOn(0,0);
     }
 
     void wheelEvent(QWheelEvent *event) override {
@@ -40,6 +41,32 @@ public:
     }
 
     void drawForeground(QPainter *painter, const QRectF &rect) override { }
+
+    void drawBackground(QPainter *painter, const QRectF &rect) override {
+        QGraphicsView::drawBackground(painter, rect);
+
+        const double gridStep = 100.0;
+
+        painter->fillRect(rect, Qt::white);
+
+        QPen gridPen(QColor(200, 200, 200), 0.5);
+        painter->setPen(gridPen);
+
+        double startX = std::floor(rect.left() / gridStep) * gridStep;
+        for (double x = startX; x <= rect.right(); x += gridStep) {
+            painter->drawLine(QPointF(x, rect.top()), QPointF(x, rect.bottom()));
+        }
+
+        double startY = std::floor(rect.top() / gridStep) * gridStep;
+        for (double y = startY; y <= rect.bottom(); y += gridStep) {
+            painter->drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y));
+        }
+
+        QPen axisPen(QColor(150, 150, 150), 1.0);
+        painter->setPen(axisPen);
+        painter->drawLine(QPointF(rect.left(), 0), QPointF(rect.right(), 0));
+        painter->drawLine(QPointF(0, rect.top()), QPointF(0, rect.bottom()));
+    }
 
     void drawLocation(const Point &p, const std::string &label, const QColor& color = Qt::red, double radius = 10) const {
         const auto point = m_scene->addEllipse(
@@ -55,7 +82,7 @@ public:
         eventLabel->setZValue(Z_LOCATION + 1);
     }
 
-    void driveFromTo(const Point &from, const Point &to, QColor color = Qt::black) const {
+    void drawPath(const Point &from, const Point &to, const QColor& color = Qt::black) const {
         const auto line = m_scene->addLine({ from.x, from.y, to.x, to.y }, { color });
         line->setZValue(Z_DRIVE);
     }

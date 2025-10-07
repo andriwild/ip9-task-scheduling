@@ -8,9 +8,14 @@
 #include "../include/Robot.h"
 #include "../include/Dist.h"
 
-
 int eventId = 1;
+int personId = 1;
+
 constexpr Point therapyLocation = {123,321};
+
+constexpr int maxSimTime = 3600;
+constexpr Point dock {0,0};
+Robot robot(dock, 100.0);
 
 struct CompareEventTime {
     bool operator()(const std::unique_ptr<Event> &a, const std::unique_ptr<Event> &b) const {
@@ -29,144 +34,143 @@ Point generatePoint() {
     return Point{values[0], values[1]};
 }
 
-double calculateDistance(const Point& p1, const Point& p2) {
-    const double dx = p2.x - p1.x;
-    const double dy = p2.y - p1.y;
-    return std::sqrt(dx * dx + dy * dy);
+Point generatePointAround(const Point center, const double radius) {
+    const auto offsets = dist::dist(std::normal_distribution<>(0, radius), 2);
+    return Point{center.x + offsets[0], center.y + offsets[1]};
 }
 
-std::vector<std::unique_ptr<Event>> generateEscortEvents(const int startTime, const int endTime, const int mean) {
-    int currentTime = startTime;
+std::vector<Point> searchForPerson(const int pId, const Point escortLocation, const double radius = 100) {
+    std::vector<Point> points(3);
+    std::ranges::generate(
+        points,
+        [escortLocation, radius] {
+            return generatePointAround(escortLocation, radius);
+        });
+    return points;
+}
+
+template<typename Generator>
+std::vector<std::unique_ptr<Event>> generateEscortEvents(const int startTime, const int endTime, Generator rndGen) {
     std::vector<std::unique_ptr<Event>> events = {};
-    do {
-        const double randomTimeDelta = dist::expRand(mean);
-        currentTime = currentTime + static_cast<int>(randomTimeDelta);
-        if (currentTime < endTime) {
-            EscortEvent escortEvent (eventId++, currentTime, generatePoint(), 0);
-            events.push_back(std::make_unique<EscortEvent>(escortEvent));
-        }
-    } while (currentTime < endTime);
+    int currentTime = startTime + rndGen();
+    while (currentTime < endTime){
+        auto escortEvent = std::make_unique<Event>(eventId++, currentTime, generatePointAround(dock, 200.0), personId++);
+        events.push_back(std::move(escortEvent));
+        currentTime = currentTime + static_cast<int>(rndGen());
+    }
     return events;
 }
 
-std::vector<std::unique_ptr<Event>> generateSearchEvents(
-    const std::vector<std::unique_ptr<Event>> &escortEvents,
-    const double speed) {
-    std::vector<std::unique_ptr<Event>> driveEvents = {};
-
-    for(const auto &ev: escortEvents) {
-        const Point searchPoint = generatePoint();
-        const double distanceToTherapy = calculateDistance(searchPoint, ev->location);
-        const int driveTimeToTherapy = static_cast<int>(distanceToTherapy / speed);
-
-        SearchEvent se(eventId++,  ev->time - driveTimeToTherapy, searchPoint, 0);
-        driveEvents.push_back(std::make_unique<SearchEvent>(se));
-    }
-    return driveEvents;
-}
-
-std::vector<std::unique_ptr<Event>> generateDriveEvents(
-    const std::vector<std::unique_ptr<Event>> &escortEvents,
-    const Point &initialPosition,
-    const double speed,
-    const Point dock) {
-    Point lastPosition = initialPosition;
-    std::vector<std::unique_ptr<Event>> driveEvents = {};
-
+void planSearchPersonEvents(const std::vector<std::unique_ptr<Event>> &escortEvents, const double searchRadius) {
     for(const auto &escortEvent: escortEvents) {
-
-        const Point searchPoint = generatePoint();
-        const double distanceToTherapy = calculateDistance(searchPoint, escortEvent->location);
-        const int driveTimeToTherapy = static_cast<int>(distanceToTherapy / speed);
-        SearchEvent se(eventId++,  escortEvent->time - driveTimeToTherapy, searchPoint, 0);
-        driveEvents.push_back(std::make_unique<SearchEvent>(se));
-
-        // drive to search point
-        const double distanceToSearchPoint = calculateDistance(lastPosition, searchPoint);
-        const int driveTimeToSearchPoint = static_cast<int>(distanceToSearchPoint / speed);
-        DriveStart ds { eventId++, escortEvent->time - (driveTimeToSearchPoint + driveTimeToTherapy), lastPosition };
-        driveEvents.push_back(std::make_unique<DriveStart>(ds));
-        DriveEnd de { eventId++, escortEvent->time - driveTimeToTherapy-1, searchPoint};
-        driveEvents.push_back(std::make_unique<DriveEnd>(de));
-        lastPosition = searchPoint;
-
-        // bring person to therapy location
-        DriveStart ds2 { eventId++, escortEvent->time - driveTimeToTherapy, lastPosition };
-        driveEvents.push_back(std::make_unique<DriveStart>(ds2));
-        DriveEnd de2 { eventId++, escortEvent->time -1, escortEvent->location};
-        driveEvents.push_back(std::make_unique<DriveEnd>(de2));
-
-        lastPosition = escortEvent->location;
-
-        // go back to dock
-        const double distanceToDock= calculateDistance(lastPosition, dock);
-        const int driveTimeToDock= static_cast<int>(distanceToDock / speed);
-        DriveStart ds3 { eventId++, escortEvent->time, lastPosition };
-        driveEvents.push_back(std::make_unique<DriveStart>(ds3));
-        DriveEnd de3 { eventId++, escortEvent->time + driveTimeToDock, dock};
-        driveEvents.push_back(std::make_unique<DriveEnd>(de3));
-
-        lastPosition = dock;
+        auto searchLocations = searchForPerson(escortEvent->personId, escortEvent->location, searchRadius);
+        for (Point sl: searchLocations) {
+            auto event = std::make_unique<SearchEvent>(eventId++, sl);
+            escortEvent->children.push_back(std::move(event));
+        }
     }
-    return driveEvents;
 }
 
-void sim() {
-    constexpr int simTime = 3600;
-    constexpr Point dock {0,0};
-    Robot robot(dock);
-    robot.setSpeed(3.0);
-
-    auto escortEvents = generateEscortEvents(0, simTime, 2000);
-    std::cout << escortEvents.size() << " EscortEvents created" << std::endl;
-
-    auto driveEvents = generateDriveEvents(escortEvents, robot.getPosition(), robot.getSpeed(), dock);
-    std::cout << driveEvents.size() << " DriveEvents created" << std::endl;
-
-    for (auto &ev: escortEvents) {
-        eventQueue.push(std::move(ev));
+int calcMaxTourTime(
+    const Point &robotPos,
+    const std::queue<std::shared_ptr<SearchEvent>> &path,
+    const Point& finalDestination,
+    const double speed
+    ) {
+    if (path.empty()) {
+        return 0;
     }
+    double totalDistance = 0;
+    auto pathCopy = path;
+    Point currentPos = robotPos;
 
-    for (auto &ev: driveEvents) {
-        eventQueue.push(std::move(ev));
+    while (!pathCopy.empty()) {
+        Point nextPos = pathCopy.front()->location;
+        totalDistance += Robot::calculateDistance(currentPos, nextPos);
+        currentPos = nextPos;
+        pathCopy.pop();
     }
+    totalDistance += Robot::calculateDistance(currentPos, finalDestination);
+    return static_cast<int>(totalDistance / speed);
+}
 
-    Timeline timeline{simTime};
+std::queue<std::shared_ptr<SearchEvent>> shortestPath(
+    const Point &start,
+    const std::vector<std::shared_ptr<SearchEvent>> & points
+    ) {
+    std::queue<std::shared_ptr<SearchEvent>> events = {};
+    for (auto p: points) {
+        events.push(p);
+    }
+    return events;
+}
+
+void sim(const double searchLocationRadius, const double lambda) {
+    Timeline timeline{maxSimTime};
     timeline.draw();
 
     MapView mapView {};
     mapView.drawLocation(robot.getPosition(), "Init", Qt::blue);
 
-    while(!eventQueue.empty()) {
-        const auto &ev = eventQueue.top();
 
-        if (dynamic_cast<DriveStart*>(ev.get())) {
-            if (!robot.isDriving()) {
-                robot.setDriving(ev->time);
-            } else {
-                std::cout << ev->eventId << " Robot already driving" << std::endl;
-            }
-        }
-        else if (dynamic_cast<DriveEnd*>(ev.get())) {
-            if (robot.isDriving()) {
-                robot.stopDriving();
-                mapView.driveFromTo(robot.getPosition(), ev->location);
-                std::cout << robot.getPosition().x << ","<< robot.getPosition().y  << " - " << ev->location.x << "," << ev->location.y << std::endl;
-                timeline.drawDrive(robot.getStartDrivingTime(), ev->time);
-                robot.setPosition(ev->location);
-            } else {
-                std::cout << ev->eventId << " Robot is not driving - can't stop!"  << std::endl;
-            }
-        }
-        else if (const auto escortEvent = dynamic_cast<EscortEvent*>(ev.get())) {
-            timeline.drawEvent(*escortEvent);
-            mapView.drawLocation(ev->location, std::to_string(ev->eventId));
-        }
-        else if (const auto searchEvent = dynamic_cast<SearchEvent*>(ev.get())) {
-            timeline.drawEvent(*searchEvent, Qt::blue);
-            mapView.drawLocation(ev->location, std::to_string(ev->eventId), Qt::blue);
-        }
+    auto genRnd = [lambda] { return dist::rnd(std::poisson_distribution<>(lambda)); };
+    auto escortEvents = generateEscortEvents(0, maxSimTime, genRnd);
+    planSearchPersonEvents(escortEvents, searchLocationRadius);
 
+    // draw events
+    for (auto &e: escortEvents) {
+        std::string label = std::to_string(e->eventId);
+        timeline.drawEvent(e->time, label, Qt::red, true);
+        mapView.drawLocation(e->location, label);
+        int searchPointId = 1;
+
+        for (const auto &se: e->children) {
+            std::string searchLabel = label + "." + std::to_string(searchPointId++);
+            mapView.drawLocation(se->location, searchLabel);
+        }
+        eventQueue.push(std::move(e));
+    }
+
+    // robot simulation
+    int simTime = 0;
+    while (!eventQueue.empty()) {
+        const auto &event = eventQueue.top();
+        auto path = shortestPath(robot.getPosition(), event->children);
+        const int tourTime = calcMaxTourTime(robot.getPosition(), path, event->location, robot.getSpeed());
+        int startDriveTime = event->time - tourTime;
+
+        if (startDriveTime > simTime) {
+            // search for person
+            bool personFound = false;
+            int searchPointCounter = 1;
+            while (!personFound && !path.empty()) {
+                const auto se = path.front();
+                const int driveTime = robot.calcDriveTime(se->location);
+                mapView.drawPath(robot.getPosition(), se->location);
+                std::string label = std::to_string(event->eventId) + "." + std::to_string(searchPointCounter++);
+                timeline.drawEvent(startDriveTime + driveTime, label, Qt::darkRed, false);
+                timeline.drawDrive(startDriveTime, driveTime);
+                robot.setPosition(se->location);
+                startDriveTime += driveTime;
+                path.pop();
+
+                // found person?
+                if (dist::uniRand() > 0.8) {
+                    personFound = true;
+                }
+            }
+            // escort person to therapy
+            const int driveTime = robot.calcDriveTime(event->location);
+            startDriveTime = event->time - driveTime;
+            mapView.drawPath(robot.getPosition(), event->location, Qt::darkGreen);
+            timeline.drawDrive(startDriveTime, driveTime, Qt::darkGreen);
+            robot.setPosition(event->location);
+
+            simTime = event->time;
+        } else {
+
+            std::cout << "Can't reach goal!" << std::endl;
+        }
         eventQueue.pop();
     }
 
@@ -178,7 +182,7 @@ void sim() {
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    sim();
+    sim(500, 200);
     //dist::show();
     return 0;
 }

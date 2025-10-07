@@ -46,6 +46,11 @@ namespace dist {
         return values;
     }
 
+    template<typename Distribution>
+    double rnd(Distribution d) {
+        return d(gen);
+    }
+
 
     inline int show() {
         QGraphicsView view{};
@@ -54,7 +59,7 @@ namespace dist {
 
         //std::vector<double> data = dist(std::exponential_distribution<>(), n);
         //std::vector<double> data = dist(std::normal_distribution<>(10, 4), n);
-        std::vector<double> data = dist( std::poisson_distribution<>(20), n);
+        std::vector<double> data = dist(std::poisson_distribution<>(20), n);
 
 
         constexpr int numBins = 50;
