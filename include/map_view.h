@@ -7,7 +7,7 @@
 #include <qt5/QtWidgets/QGraphicsView>
 #include <cmath>
 
-#include "Event.h"
+#include "event.h"
 
 constexpr int MAP_HEIGHT = 1000;
 constexpr int MAP_WIDTH = 1000;
@@ -17,12 +17,12 @@ constexpr int Z_DRIVE = 1;
 constexpr int Z_LOCATION = 100;
 
 
-class MapView final : public QGraphicsView {
+class map_view final : public QGraphicsView {
     Q_OBJECT
     QGraphicsScene* m_scene;
 
 public:
-    explicit MapView() {
+    explicit map_view() {
         m_scene = new QGraphicsScene(this);
         m_scene->setSceneRect(-MAP_WIDTH / 2, -MAP_HEIGHT / 2, MAP_WIDTH, MAP_HEIGHT);
         setDragMode(ScrollHandDrag);

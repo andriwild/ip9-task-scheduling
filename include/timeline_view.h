@@ -4,7 +4,7 @@
 #include <QGraphicsView>
 
 #include "event.h"
-#include "Task.h"
+#include "task.h"
 
 constexpr int TIMELINE_HEIGHT = 500;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
@@ -126,7 +126,7 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawTask(const Task &task) const {
+    void drawTask(const task &task) const {
         const int start = X_LINE_POS + task.startTime;
         const auto color = taskColor(task.type);
 
@@ -166,7 +166,7 @@ public:
         rect->setZValue(Z_TASKS);
     }
 
-    void drawTasks(const std::vector<Task> &tasks) const {
+    void drawTasks(const std::vector<task> &tasks) const {
         for (auto const task : tasks) {
             drawTask(task);
         }

@@ -10,7 +10,7 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 
-#include "Event.h"
+#include "event.h"
 
 namespace rnd {
     static std::random_device rd{};
@@ -53,12 +53,10 @@ namespace rnd {
         return d(gen);
     }
 
-
     inline Point generatePointAround(const Point center, const double radius) {
         const auto offsets = rnd::dist(std::normal_distribution<>(0, radius), 2);
         return Point{center.x + offsets[0], center.y + offsets[1]};
     }
-
 
     inline int show() {
         QGraphicsView view{};

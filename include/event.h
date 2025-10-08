@@ -10,7 +10,7 @@ struct SearchEvent {
     Point location;
 };
 
-struct Event {
+struct event {
     int eventId;
     int time;
     Point location;

@@ -14,7 +14,7 @@ inline QColor taskColor(const TaskType type) {
    Q_UNREACHABLE();
 }
 
-struct Task {
+struct task {
    int startTime;
    int duration;
    TaskType type;

@@ -9,14 +9,14 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 
-#include "../include/Dist.h"
+#include "../include/rnd.h"
 
 int distTest(int argc, char *argv[]) {
     QGraphicsView view{};
     QGraphicsScene scene{};
 
     //std::vector<double> data = normalDist(10, 5, 1000);
-    std::vector<double> data = dist::dist(std::exponential_distribution<>(), 1000);
+    std::vector<double> data = rnd::dist(std::exponential_distribution<>(), 1000);
 
     const int numBins = 20;
     std::map<int, int> histogram;

@@ -15,13 +15,14 @@ find_package(Qt5 COMPONENTS
         REQUIRED)
 
 add_executable(ip9_task_scheduling src/main.cpp
-        include/TimelineView.h
-        include/Task.h
-        include/MapView.h
-        include/Event.h
-        include/Robot.h
+        include/timeline_view.h
+        include/task.h
+        include/map_view.h
+        include/event.h
+        include/robot.h
         src/distibutions.cpp
-        include/Dist.h)
+        include/rnd.h
+        include/util.h)
 target_link_libraries(ip9_task_scheduling
         Qt5::Core
         Qt5::Gui

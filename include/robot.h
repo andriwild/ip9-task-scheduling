@@ -6,7 +6,7 @@
 constexpr double energyUsageStandby = 0.2;
 constexpr double energyUsageDrive = 0.4;
 
-class Robot {
+class robot {
     Point m_location;
     double m_speed;
     bool m_isDriving;
@@ -14,7 +14,7 @@ class Robot {
     double m_energy;
 
 public:
-    explicit Robot(const Point p, double speed = 3.0, double energy = 100.0) :
+    explicit robot(const Point p, double speed = 3.0, double energy = 100.0) :
     m_location(p),
     m_speed(speed),
     m_isDriving(false),
@@ -67,7 +67,7 @@ public:
         return m_energy;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {
+    friend std::ostream& operator<<(std::ostream& out, const robot& robot) {
         out << "Robot (" << robot.m_location.x << ", " << robot.m_location.y << std::endl;
         return out;
     }
