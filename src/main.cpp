@@ -12,25 +12,24 @@
 int eventId = 1;
 int personId = 1;
 
-constexpr Point therapyLocation = {50,50};
-
+constexpr Point dock = {0, 0};
+constexpr Point therapyLocation = { 50,50 };
 constexpr int maxSimTime = 3600;
 
 struct CompareEventTime {
-    bool operator()(const std::unique_ptr<event> &a, const std::unique_ptr<event> &b) const {
+    bool operator()(const std::unique_ptr<EscortEvent> &a, const std::unique_ptr<EscortEvent> &b) const {
         return a->time > b->time;
     }
 };
 
 std::priority_queue<
-    std::unique_ptr<event>,
-    std::vector<std::unique_ptr<event>>,
+    std::unique_ptr<EscortEvent>,
+    std::vector<std::unique_ptr<EscortEvent>>,
     CompareEventTime
 > eventQueue {};
 
-
-
 std::vector<Point> searchForPerson(const int pId, const Point escortLocation, const double radius = 100) {
+    std::cout << "[searchForPerson] generate search points for person " << pId << std::endl;
     std::vector<Point> points(3);
     std::ranges::generate(
         points,
@@ -41,25 +40,26 @@ std::vector<Point> searchForPerson(const int pId, const Point escortLocation, co
 }
 
 template<typename Generator>
-std::vector<std::unique_ptr<event>> generateEscortEvents(
+std::vector<std::unique_ptr<EscortEvent>> generateEscortEvents(
     const int startTime,
     const int endTime,
     const Point &center,
-    Generator rndGen)
-{
-    std::vector<std::unique_ptr<event>> events = {};
+    Generator rndGen
+    ) {
+    std::cout << "[generateEscortEvents] generate escort locations" << std::endl;
+    std::vector<std::unique_ptr<EscortEvent>> events = {};
     int currentTime = startTime + rndGen();
     while (currentTime < endTime){
-        auto escortEvent = std::make_unique<event>(
-            eventId++, currentTime, rnd::generatePointAround(center, 200.0), personId++
-            );
+        EscortEvent event(eventId++, currentTime, rnd::generatePointAround(center, 200.0), personId++);
+        auto escortEvent = std::make_unique<EscortEvent>(event);
         events.push_back(std::move(escortEvent));
         currentTime = currentTime + static_cast<int>(rndGen());
     }
     return events;
 }
 
-void planSearchPersonEvents(const std::vector<std::unique_ptr<event>> &escortEvents, const double searchRadius) {
+void planSearchPersonEvents(const std::vector<std::unique_ptr<EscortEvent>> &escortEvents, const double searchRadius) {
+    std::cout << "[planSearchPersonEvents] add search locations to escort event " << std::endl;
     for(const auto &escortEvent: escortEvents) {
         auto searchLocations = searchForPerson(escortEvent->personId, escortEvent->location, searchRadius);
         for (Point sl: searchLocations) {
@@ -75,9 +75,8 @@ int calcMaxTourTime(
     const Point& finalDestination,
     const double speed
     ) {
-    if (path.empty()) {
-        return 0;
-    }
+    assert(!path.empty());
+
     double totalDistance = 0;
     auto pathCopy = path;
     Point currentPos = robotPos;
@@ -98,15 +97,20 @@ std::queue<std::shared_ptr<SearchEvent>> shortestPath(
     ) {
     // TODO: implement shortest path
     std::queue<std::shared_ptr<SearchEvent>> events = {};
-    for (auto p: points) {
+    for (auto const& p: points) {
         events.push(p);
     }
     return events;
 }
 
-void runSimulation(const Timeline &timeline, const map_view &mapView, robot &robot) {
+void runSimulation(
+    const Timeline &timeline,
+    const map_view &mapView,
+    robot &robot,
+    const bool useDock,
+    const double personFoundProbability
+    ) {
     // robot simulation
-    constexpr double personFoundProbability = 0.8;
     int simTime = 0;
     while (!eventQueue.empty()) {
         const auto &event = eventQueue.top();
@@ -130,7 +134,7 @@ void runSimulation(const Timeline &timeline, const map_view &mapView, robot &rob
                 path.pop();
 
                 // found person?
-                if (rnd::uniRand() > personFoundProbability) {
+                if (rnd::uniRand() < personFoundProbability) {
                     personFound = true;
                 }
             }
@@ -141,15 +145,25 @@ void runSimulation(const Timeline &timeline, const map_view &mapView, robot &rob
             timeline.drawDrive(startDriveTime, driveTime, Qt::darkGreen);
             robot.setPosition(event->location);
 
-            simTime = event->time;
+            if (useDock) {
+                const int driveToDockTime = util::calcDriveTime(robot.getPosition(), dock, robot.getSpeed());
+                mapView.drawPath(robot.getPosition(), dock, Qt::blue);
+                timeline.drawDrive(event->time, driveToDockTime, Qt::blue);
+                timeline.drawEvent(event->time + driveToDockTime, "dock", Qt::blue);
+                robot.setPosition(dock);
+                simTime = event->time + driveToDockTime;
+            } else {
+                simTime = event->time;
+            }
+
         } else {
-            std::cout << "Can't reach goal!" << std::endl;
+            std::cout << "[runSimulation] Skip event "<< event->eventId << std::endl;
         }
         eventQueue.pop();
     }
 }
 
-void drawEvents(const Timeline &timeline, const map_view &mapView, std::vector<std::unique_ptr<event>> &escortEvents) {
+void drawEvents(const Timeline &timeline, const map_view &mapView, std::vector<std::unique_ptr<EscortEvent>> &escortEvents) {
     for (auto &e: escortEvents) {
         std::string label = std::to_string(e->eventId);
         timeline.drawEvent(e->time, label, Qt::red, true);
@@ -164,8 +178,7 @@ void drawEvents(const Timeline &timeline, const map_view &mapView, std::vector<s
     }
 }
 
-void sim(const double searchLocationRadius, const double lambda) {
-    constexpr Point dock { 0,0 };
+void sim(const double searchLocationRadius, const double lambda, bool useDock = false, const double personFindProb = 0.8) {
     constexpr double speed = 3.0;
     robot robot(dock, speed);
 
@@ -180,7 +193,7 @@ void sim(const double searchLocationRadius, const double lambda) {
     planSearchPersonEvents(escortEvents, searchLocationRadius);
 
     drawEvents(timeline, mapView, escortEvents);
-    runSimulation(timeline, mapView, robot);
+    runSimulation(timeline, mapView, robot, useDock, personFindProb);
 
     timeline.show();
     mapView.show();
@@ -189,7 +202,7 @@ void sim(const double searchLocationRadius, const double lambda) {
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    sim(100, 200);
+    sim(100, 100, true, 0.8);
     //dist::show();
     return 0;
 }

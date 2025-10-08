@@ -60,7 +60,8 @@ public:
             {
                 {Qt::darkGreen, "Escort"},
                 {Qt::gray, "Drive"},
-                {{255, 165, 0}, "Charge"},
+                {Qt::blue, "Dock"},
+                //{{255, 165, 0}, "Charge"},
             }
         };
         int rectPos = 10;

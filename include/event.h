@@ -4,13 +4,12 @@ struct Point {
     double x, y;
 };
 
-
 struct SearchEvent {
     int eventId;
     Point location;
 };
 
-struct event {
+struct EscortEvent {
     int eventId;
     int time;
     Point location;
