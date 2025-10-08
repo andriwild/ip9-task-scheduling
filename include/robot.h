@@ -1,20 +1,25 @@
 #pragma once
 
-#include "Dist.h"
-#include "Event.h"
+#include "rnd.h"
+#include "event.h"
+
+constexpr double energyUsageStandby = 0.2;
+constexpr double energyUsageDrive = 0.4;
 
 class Robot {
     Point m_location;
     double m_speed;
     bool m_isDriving;
     int m_startDrivingTime;
+    double m_energy;
 
 public:
-    explicit Robot(const Point p, double speed = 3.0) :
+    explicit Robot(const Point p, double speed = 3.0, double energy = 100.0) :
     m_location(p),
     m_speed(speed),
     m_isDriving(false),
-    m_startDrivingTime(0)
+    m_startDrivingTime(0),
+    m_energy(energy)
     {}
 
     void setPosition(const Point p) {
@@ -50,29 +55,20 @@ public:
         return m_startDrivingTime;
     }
 
-    int calcDriveTime(const Point &target) const {
-        const auto dist = calculateDistance(m_location, target);
-        return dist / m_speed;
+    void energyConsumption(int time, bool drive) {
+        double usage = energyUsageStandby;
+        if (drive) {
+            usage = energyUsageDrive;
+        }
+        m_energy -= time * usage;
     }
 
-    double calcPathThroughPoints(const std::vector<Point> &points) const {
-       double t = 0;
-        Point currentPos = m_location;
-        for (Point p: points) {
-            t += calculateDistance(currentPos, p);
-            currentPos = p;
-        }
-        return t;
+    double getEnergy() const {
+        return m_energy;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {
         out << "Robot (" << robot.m_location.x << ", " << robot.m_location.y << std::endl;
         return out;
-    }
-
-    static double calculateDistance(const Point& p1, const Point& p2) {
-        const double dx = p2.x - p1.x;
-        const double dy = p2.y - p1.y;
-        return std::sqrt(dx * dx + dy * dy);
     }
 };

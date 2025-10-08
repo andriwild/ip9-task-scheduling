@@ -10,7 +10,9 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 
-namespace dist {
+#include "Event.h"
+
+namespace rnd {
     static std::random_device rd{};
     static std::mt19937 gen{rd()};
 
@@ -52,6 +54,12 @@ namespace dist {
     }
 
 
+    inline Point generatePointAround(const Point center, const double radius) {
+        const auto offsets = rnd::dist(std::normal_distribution<>(0, radius), 2);
+        return Point{center.x + offsets[0], center.y + offsets[1]};
+    }
+
+
     inline int show() {
         QGraphicsView view{};
         QGraphicsScene scene{};
@@ -59,7 +67,7 @@ namespace dist {
 
         //std::vector<double> data = dist(std::exponential_distribution<>(), n);
         //std::vector<double> data = dist(std::normal_distribution<>(10, 4), n);
-        std::vector<double> data = dist(std::poisson_distribution<>(20), n);
+        std::vector<double> data = dist(std::poisson_distribution<>(200), n);
 
 
         constexpr int numBins = 50;

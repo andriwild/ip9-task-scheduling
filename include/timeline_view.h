@@ -3,7 +3,7 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
-#include "Event.h"
+#include "event.h"
 #include "Task.h"
 
 constexpr int TIMELINE_HEIGHT = 500;
