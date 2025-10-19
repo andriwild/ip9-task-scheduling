@@ -3,8 +3,7 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
-#include "event.h"
-#include "task.h"
+#include "../model/event.h"
 
 constexpr int TIMELINE_HEIGHT = 500;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
@@ -127,27 +126,6 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawTask(const task &task) const {
-        const int start = X_LINE_POS + task.startTime;
-        const auto color = taskColor(task.type);
-
-        QLinearGradient gradient(0, 0, 1 , 0);
-        gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
-        gradient.setColorAt(0.0, color);
-        gradient.setColorAt(1.0, Qt::white);
-
-        QGraphicsRectItem* const rect = m_scene->addRect(
-            start,
-            m_yLinePos,
-            task.duration,
-            -TASK_HEIGHT,
-            QPen(Qt::NoPen),
-            QBrush(gradient)
-            );
-        rect->setZValue(Z_TASKS);
-    }
-
-
     void drawDrive(const int startTime, const int duration, const QColor &color = Qt::gray) const {
         const int start = X_LINE_POS + startTime;
 
@@ -167,11 +145,6 @@ public:
         rect->setZValue(Z_TASKS);
     }
 
-    void drawTasks(const std::vector<task> &tasks) const {
-        for (auto const task : tasks) {
-            drawTask(task);
-        }
-    }
 
 private:
     void drawTicks() const {
