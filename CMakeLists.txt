@@ -44,6 +44,7 @@ add_executable(ip9_task_scheduling
         view/robot_item.h
         model/planner.h
         view/helper.h
+        datastructure/tree.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES
@@ -63,6 +64,7 @@ target_link_libraries(ip9_task_scheduling
 
 add_executable(tests
         tests/test_graph.cpp
+        tests/test_tree.cpp
 )
 
 target_link_libraries(tests

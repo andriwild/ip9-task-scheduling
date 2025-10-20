@@ -4,10 +4,12 @@
 #include "../datastructure/event_queue.h"
 #include "../util/util.h"
 
+class RobotDriveStartEvent;
 
 class RobotDriveEndEvent final : public SimulationEvent {
     Robot *m_robot;
     int m_destinationId;
+
 
 public:
     RobotDriveEndEvent(Robot *robot, const int time, const int destinationId):
@@ -22,6 +24,7 @@ public:
         m_robot->setPosition(m_destinationId);
     }
 };
+
 
 class RobotDriveStartEvent final : public SimulationEvent {
     Robot *m_robot;
@@ -49,7 +52,7 @@ public:
         m_robot->startDriving(time);
         m_robot->setTarget(m_targetId);
         m_robot->setTask(m_task);
-        //eventQueue.addEvent<RobotDriveEndEvent>(m_robot, time + m_expectedArrival, m_targetId);
+        eventQueue.addEvent<RobotDriveEndEvent>(m_robot, m_expectedArrival, m_targetId);
         Log::d("Robot starts driving");
     }
 };
@@ -57,6 +60,7 @@ public:
 class MeetingEvent final : public SimulationEvent {
     int m_destinationId;
     int m_personId;
+    std::vector<RobotDriveStartEvent*> children;
 
 public:
     MeetingEvent(const int time, const int destinationId, const int personId):
@@ -71,6 +75,10 @@ public:
 
     int getDestination() const {
         return m_destinationId;
+    }
+
+    void addDriveEvent(RobotDriveStartEvent *ev) {
+        children.push_back(ev);
     }
 
     void execute(EventQueue &eventQueue, bool randomness = true) override {

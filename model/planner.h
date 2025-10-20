@@ -27,11 +27,11 @@ public:
             m_events.addEvent<RobotDriveStartEvent>(
                 &robot,
                 currentTime,
-                currentTime + driveTime,
+                currentTime + driveTime-1,
                 path[nodeId],
                 task
             );
-            m_events.addEvent<RobotDriveEndEvent>(&robot, currentTime + driveTime - 1, path[nodeId]);
+            //m_events.addEvent<RobotDriveEndEvent>(&robot, currentTime + driveTime - 1, path[nodeId]);
             currentTime += driveTime;
         }
         return currentTime;
@@ -45,12 +45,12 @@ public:
         for (int nodeId = path.size() -1; nodeId > 0; nodeId--) {
             m_events.addEvent<RobotDriveStartEvent>(
                 &robot,
-                goalArrivalTime - driveTimes[nodeId -1],
+                goalArrivalTime - driveTimes[nodeId -1] +1,
                 goalArrivalTime,
                 path[nodeId],
                 task
             );
-            m_events.addEvent<RobotDriveEndEvent>(&robot, goalArrivalTime-1, path[nodeId]);
+            //m_events.addEvent<RobotDriveEndEvent>(&robot, goalArrivalTime-1, path[nodeId]);
             goalArrivalTime -= driveTimes[nodeId - 1];
         }
         return goalArrivalTime;
