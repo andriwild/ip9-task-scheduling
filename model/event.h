@@ -10,13 +10,13 @@ class RobotDriveEndEvent final : public SimulationEvent {
     int m_destinationId;
 
 public:
-    RobotDriveEndEvent(Robot *robot, const int t, const int destinationId):
-    SimulationEvent(t),
+    RobotDriveEndEvent(Robot *robot, const int time, const int destinationId):
+    SimulationEvent(time),
     m_robot(robot),
     m_destinationId(destinationId)
     {}
 
-    void execute(EventQueue &eventQueue) override {
+    void execute(EventQueue &eventQueue, bool randomness = true) override {
         Log::d("Robot ends driving");
         m_robot->stopDriving();
         m_robot->setPosition(m_destinationId);
@@ -25,31 +25,42 @@ public:
 
 class RobotDriveStartEvent final : public SimulationEvent {
     Robot *m_robot;
-    int m_targetId;
 
 public:
-    RobotDriveStartEvent(Robot *robot, const int t, const int targetId):
-    SimulationEvent(t),
+    const int m_targetId;
+    const ROBOT_TASK m_task;
+    const int m_expectedArrival;
+
+    RobotDriveStartEvent(
+        Robot *robot,
+        const int time,
+        const int expectedArrival,
+        const int targetId,
+        const ROBOT_TASK task = DRIVE
+        ):
+    SimulationEvent(time),
     m_robot(robot),
-    m_targetId(targetId)
+    m_targetId(targetId),
+    m_task(task),
+    m_expectedArrival(expectedArrival)
     {}
 
-    void execute(EventQueue &eventQueue) override {
+    void execute(EventQueue &eventQueue, bool randomness = true) override {
         m_robot->startDriving(time);
         m_robot->setTarget(m_targetId);
-        // int driveTime = util::calcDriveTime(m_robot->getPosition(), destination, m_robot->getSpeed());
-        // eventQueue.addEvent<RobotDriveEndEvent>(driveTime, m_robot, destination);
+        m_robot->setTask(m_task);
+        //eventQueue.addEvent<RobotDriveEndEvent>(m_robot, time + m_expectedArrival, m_targetId);
         Log::d("Robot starts driving");
     }
 };
 
-class PersonEscortEvent final : public SimulationEvent {
+class MeetingEvent final : public SimulationEvent {
     int m_destinationId;
     int m_personId;
 
 public:
-    PersonEscortEvent(const int t, const int destinationId, const int personId):
-    SimulationEvent(t),
+    MeetingEvent(const int time, const int destinationId, const int personId):
+    SimulationEvent(time),
     m_destinationId(destinationId),
     m_personId(personId)
     {}
@@ -62,7 +73,7 @@ public:
         return m_destinationId;
     }
 
-    void execute(EventQueue &eventQueue) override {
+    void execute(EventQueue &eventQueue, bool randomness = true) override {
         Log::d("PersonEscortEvent");
     }
 };

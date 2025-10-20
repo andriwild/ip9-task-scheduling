@@ -300,13 +300,12 @@ int main(int argc, char *argv[]) {
     graph.addEdge(19, 2);
     graph.addEdge(19, 0);
 
-
-
+    // TODO: expectation that fist search location has biggest change to find the person
     util::PersonData personData;
-    personData[0].push_back(graph.getNode(13));
-    personData[0].push_back(graph.getNode(12));
-    personData[0].push_back(graph.getNode(14));
-    personData[1].push_back(graph.getNode(10));
+    personData[0].push_back(4);
+    personData[0].push_back(10);
+    personData[0].push_back(12);
+    // personData[0].push_back(14);
 
     const int robotPosition = 0;
     const int dock = 11;
@@ -316,9 +315,24 @@ int main(int argc, char *argv[]) {
 
     EventQueue events;
     //events.addEvent<PersonEscortEvent>(100, coffeMachineId, 0);
-    events.addEvent<PersonEscortEvent>(500, coffeMachineId, 1);
+    events.addEvent<MeetingEvent>(1000, coffeMachineId, 0);
 
-    planner::addSearchEvents(graph, robot, events, personData);
+    Planner planner(graph, events);
+    planner.escort(robot, personData[0]);
+
+    for (auto ev: events.getAllEvents()) {
+            if (auto* event = dynamic_cast<MeetingEvent*>(ev)) {
+                std::cout << event->getTime() << " MeetingEvent with Person: " << event->getPersonId() << std::endl;
+
+            } else if (auto* startEvent = dynamic_cast<RobotDriveStartEvent*>(ev)) {
+                std::cout << startEvent->getTime() << " RobotDriveStartEvent  to " << startEvent->m_targetId << " arrivalTime: "<< startEvent->m_expectedArrival <<" [" << startEvent->m_task << "]" << std::endl;
+
+            } else if (auto* endEvent = dynamic_cast<RobotDriveEndEvent*>(ev)) {
+                std::cout << endEvent->getTime() << " RobotDriveEndEvent" << std::endl;
+
+            }
+    }
+
 
 
     Simulation model(graph, robot, events, personData);

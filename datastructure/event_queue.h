@@ -10,7 +10,7 @@ protected:
 public:
     explicit SimulationEvent(const int t): time(t){}
     virtual ~SimulationEvent() = default;
-    virtual void execute(EventQueue &eventQueue) = 0;
+    virtual void execute(EventQueue &eventQueue, bool randomness = true) = 0;
     int getTime() const { return time; };
 };
 
@@ -29,7 +29,7 @@ public:
         sortEvents();
     }
 
-    [[nodiscard]] bool hasEvents() const {
+    bool hasEvents() const {
         return !m_events.empty();
     }
 
@@ -40,15 +40,15 @@ public:
         return event;
     }
 
-    [[nodiscard]] int getNextEventTime() const {
+    int getNextEventTime() const {
         return m_events.empty() ? -1 : m_events.front()->getTime();
     }
 
-    [[nodiscard]] const std::vector<std::unique_ptr<SimulationEvent>>& getEvents() const {
+    const std::vector<std::unique_ptr<SimulationEvent>>& getEvents() const {
         return m_events;
     }
 
-    [[nodiscard]] std::vector<SimulationEvent*> getAllEvents() const {
+    std::vector<SimulationEvent*> getAllEvents() const {
         std::vector<SimulationEvent*> result;
         result.reserve(m_events.size());
         for (const auto& event : m_events) {

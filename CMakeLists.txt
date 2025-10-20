@@ -43,6 +43,7 @@ add_executable(ip9_task_scheduling
         datastructure/event_queue.h
         view/robot_item.h
         model/planner.h
+        view/helper.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

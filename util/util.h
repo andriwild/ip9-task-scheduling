@@ -1,8 +1,12 @@
 #pragma once
+
 #include <cmath>
+#include <vector>
+#include <unordered_map>
+#include "../datastructure/graph.h"
 
 namespace util {
-    using PersonData = std::unordered_map<int, std::vector<Node>>;
+    using PersonData = std::unordered_map<int, std::vector<int>>;
 
     inline double calculateDistance(const Node& p1, const Node& p2) {
         const double dx = p2.x - p1.x;

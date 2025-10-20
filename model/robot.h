@@ -2,6 +2,8 @@
 
 #include "../algo/rnd.h"
 
+enum ROBOT_TASK { IDLE, DRIVE, ESCORT, SEARCH };
+
 constexpr double energyUsageStandby = 0.2;
 constexpr double energyUsageDrive = 0.4;
 
@@ -13,6 +15,7 @@ class Robot {
     bool m_isDriving;
     int m_startDrivingTime;
     double m_energy;
+    ROBOT_TASK m_task = IDLE;
 
 public:
     explicit Robot(const int position, const int dock, double speed = 3.0, double energy = 100.0):
@@ -80,6 +83,14 @@ public:
 
     void setTarget(const int target) {
         this->m_target = target;
+    }
+
+    void setTask(ROBOT_TASK task) {
+        m_task = task;
+    }
+
+    ROBOT_TASK getTask() const {
+        return m_task;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {

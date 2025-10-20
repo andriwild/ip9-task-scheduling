@@ -176,7 +176,7 @@ public:
 
     void drawEvents(EventQueue &events) {
         for (auto ev: events.getAllEvents()) {
-            if (auto* escortEvent = dynamic_cast<PersonEscortEvent*>(ev)) {
+            if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev)) {
                Node node =  m_model.getGraph().getNode(escortEvent->getDestination());
                 drawLocation(node, std::to_string(escortEvent->getPersonId()), Qt::red, S);
             }
@@ -198,11 +198,12 @@ public:
     }
 
     void drawPersons(util::PersonData personData) {
+        Graph graph = m_model.getGraph();
         for (auto p: personData) {
             int personId = p.first;
             auto searchLocation = p.second;
             for (auto sl: searchLocation) {
-                drawLocation(sl, std::to_string(personId), Qt::magenta, O);
+                drawLocation(graph.getNode(sl), std::to_string(personId), Qt::magenta, O);
             }
         }
 

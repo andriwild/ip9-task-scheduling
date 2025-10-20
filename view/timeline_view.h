@@ -3,6 +3,7 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
+#include "helper.h"
 #include "../model/event.h"
 
 constexpr int TIMELINE_HEIGHT = 500;
@@ -52,6 +53,7 @@ public:
 
         connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
         connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);
+
         drawPointer(0);
         drawBaseline();
         drawEvents(m_model.getEvents());
@@ -154,20 +156,23 @@ public:
 
     void drawEvents(const EventQueue &events) const {
         auto allEvents = events.getAllEvents();
-        int startDriveTime = -1;
 
         for (auto ev: allEvents) {
-            if (auto* escortEvent = dynamic_cast<PersonEscortEvent*>(ev)) {
-                drawEvent(escortEvent->getTime(), "Escort");
+            if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev)) {
+                drawEvent(escortEvent->getTime(), "Meeting");
             } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev)) {
-               startDriveTime = startDrive->getTime();
+                drawDrive(
+                    startDrive->getTime(),
+                    startDrive->m_expectedArrival,
+                    Helper::taskColor(startDrive->m_task)
+                    );
             } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev)) {
-                drawDrive(startDriveTime, endDrive->getTime() - startDriveTime);
             }
         }
     }
 
-    void drawDrive(const int startTime, const int duration, const QColor &color = Qt::gray) const {
+    void drawDrive(const int startTime, const int endTime, const QColor &color = Qt::gray) const {
+        const int duration = endTime - startTime;
         const int start = X_LINE_POS + startTime;
 
         QLinearGradient gradient(0, 0, 1 , 0);
