@@ -66,11 +66,12 @@ public:
         return m_adjList;
     }
 
-    std::optional<Node> getNode(const int id) const {
+    Node getNode(const int id) const {
         if (m_nodes.contains(id)) {
            return m_nodes.at(id);
         }
-        return std::nullopt;
+        std::cout << "searched for id: " << id << std::endl;
+        std::__throw_range_error("node not found");
     }
 
     struct DijkstraResult {
@@ -132,9 +133,6 @@ public:
 
         //result.print();
         while (!pq.empty()) {
-            //std::cout << "begin iteraition " << pq.size() << std::endl;
-            //result.print();
-
             auto [currentDistance, id] = pq.top();
             pq.pop();
 
@@ -158,8 +156,6 @@ public:
                 }
             }
         }
-
-        result.print();
         return result;
     }
 

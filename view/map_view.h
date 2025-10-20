@@ -4,13 +4,13 @@
 #include <QWheelEvent>
 #include <iostream>
 #include <QGraphicsLineItem>
-#include <qt5/QtWidgets/QGraphicsView>
 #include <cmath>
 
 #include "robot_item.h"
-#include "../model/event.h"
 #include "../datastructure/graph.h"
-#include "../model/simulation_model.h"
+#include "../model/simulation.h"
+
+enum DIRECTION {N, O, S, W};
 
 constexpr int Z_DRIVE = 1;
 constexpr int Z_LOCATION = 100;
@@ -24,11 +24,11 @@ class MapView final : public QGraphicsView {
 
     QGraphicsScene *m_scene;
     bool m_userZoomed = false;
-    SimulationModel& m_model;
+    Simulation& m_model;
     RobotItem *m_robotItem = new RobotItem();
 
 public:
-    explicit MapView(SimulationModel& model) :
+    explicit MapView(Simulation& model) :
     m_model(model) {
         m_scene = new QGraphicsScene(this);
         setDragMode(ScrollHandDrag);
@@ -39,10 +39,16 @@ public:
         m_scene->addPixmap(map);
         m_scene->addItem(m_robotItem);
         m_robotItem->setZValue(Z_ROBOT);
-        connect(&m_model, &SimulationModel::graphChanged, this, &MapView::drawGraph);
-        connect(&m_model, &SimulationModel::robotChanged, this, &MapView::drawRobot);
+
+        connect(&m_model, &Simulation::graphChanged, this, &MapView::drawGraph);
+        connect(&m_model, &Simulation::robotChanged, this, &MapView::drawRobot);
+        connect(&m_model, &Simulation::eventsChanged, this, &MapView::drawEvents);
+        connect(&m_model, &Simulation::personChanged, this, &MapView::drawPersons);
+
         drawGraph(m_model.getGraph());
         drawRobot(m_model.getRobot());
+        drawEvents(m_model.getEvents());
+        drawPersons(m_model.getPersonData());
     }
 
     void showEvent(QShowEvent *event) override {
@@ -79,7 +85,7 @@ public:
 
     void keyPressEvent(QKeyEvent *event) override {
         if (event->key() == Qt::Key_Space) {
-            m_model.step();
+            m_model.simStep();
         } else {
             QGraphicsView::keyPressEvent(event);
         }
@@ -122,8 +128,13 @@ public:
     //     painter->drawLine(QNodeF(0, rect.top()), QNodeF(0, rect.bottom()));
     // }
 
-    void drawLocation(const Node &n, const std::string &label, const QColor &color = Qt::red,
-                      double radius = 10) const {
+    void drawLocation(
+        const Node &n,
+        const std::string &label,
+        const QColor &color = Qt::red,
+        const DIRECTION labelPos = N,
+        double radius = 10
+        ) const {
         const auto point = m_scene->addEllipse(
             {n.x - radius / 2, n.y - radius / 2, radius, radius},
             {color},
@@ -133,7 +144,16 @@ public:
 
         QGraphicsSimpleTextItem *const eventLabel = m_scene->addSimpleText(QString::fromStdString(label));
         const double w = eventLabel->boundingRect().width();
-        eventLabel->setPos(n.x - w, n.y - 2 * radius);
+        switch (labelPos) {
+            case N:  eventLabel->setPos(n.x - w, n.y - 2 * radius);
+                break;
+            case S: eventLabel->setPos(n.x - w, n.y + 1 * radius);
+                break;
+            case W: eventLabel->setPos(n.x - w  - 2 * radius, n.y);
+                break;
+            case O: eventLabel->setPos(n.x - w  + 2 * radius, n.y);
+                break;
+        }
         eventLabel->setZValue(Z_LOCATION + 1);
     }
 
@@ -145,9 +165,8 @@ public:
     void drawGraph(Graph &graph) {
         auto nodes = graph.allNodes();
         for (auto [id, node]: graph.allNodes()) {
-            drawLocation(node, std::to_string(id));
+            drawLocation(node, std::to_string(id), Qt::darkGray);
         }
-        std::cout << graph << std::endl;
         for (auto [id, neighbours]: graph.allEdges()) {
             for (auto n: neighbours) {
                 drawPath(nodes.at(id), nodes.at(n), Qt::lightGray);
@@ -155,14 +174,37 @@ public:
         }
     }
 
+    void drawEvents(EventQueue &events) {
+        for (auto ev: events.getAllEvents()) {
+            if (auto* escortEvent = dynamic_cast<PersonEscortEvent*>(ev)) {
+               Node node =  m_model.getGraph().getNode(escortEvent->getDestination());
+                drawLocation(node, std::to_string(escortEvent->getPersonId()), Qt::red, S);
+            }
+        }
+    }
+
     void drawRobot(Robot& robot) {
-        auto pos = robot.getPosition();
+        Graph graph = m_model.getGraph();
+        int posId = robot.getPosition();
+        Node pos = graph.getNode(posId);
         if (robot.isDriving()) {
-            auto target = robot.getTarget().value();
+            int targetId = robot.getTarget();
+            Node target = graph.getNode(targetId);
             m_robotItem->setDirection(target.x, target.y);
         } else {
             m_robotItem->clearDirection();
         }
         m_robotItem->setPos(pos.x - (15.0 / 2), pos.y - (15.0 / 2));
+    }
+
+    void drawPersons(util::PersonData personData) {
+        for (auto p: personData) {
+            int personId = p.first;
+            auto searchLocation = p.second;
+            for (auto sl: searchLocation) {
+                drawLocation(sl, std::to_string(personId), Qt::magenta, O);
+            }
+        }
+
     }
 };

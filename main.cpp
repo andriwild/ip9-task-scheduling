@@ -3,7 +3,9 @@
 #include "view/map_view.h"
 #include "model/robot.h"
 #include "algo/rnd.h"
-#include "model/simulation_model.h"
+#include "model/planner.h"
+#include "model/simulation.h"
+#include "view/timeline_view.h"
 
 //#include "behaviortree_cpp/bt_factory.h"
 
@@ -235,6 +237,7 @@ constexpr int maxSimTime = 3600;
 // }
 
 int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
     // DBClient db {"",""};
     //
     // if (argc == 3) {
@@ -248,25 +251,6 @@ int main(int argc, char *argv[]) {
     // }
     // BT::BehaviorTreeFactory factory;
     Graph graph;
-
-    // factory.registerSimpleAction("SayHello", [](BT::TreeNode&) {
-    //     std::cout << "Hallo Welt!" << std::endl;
-    //     return BT::NodeStatus::SUCCESS;
-    // });
-    //
-    // const char* xml_text = R"(
-    //     <root BTCPP_format="4">
-    //         <BehaviorTree>
-    //             <Sequence>
-    //                 <SayHello/>
-    //             </Sequence>
-    //         </BehaviorTree>
-    //     </root>
-    // )";
-    //
-    // auto tree = factory.createTreeFromText(xml_text);
-    // tree.tickWhileRunning();
-
     std::vector nodes = {
         Node(359.183, 202.229),
         Node(311.896, 227.382),
@@ -316,21 +300,32 @@ int main(int argc, char *argv[]) {
     graph.addEdge(19, 2);
     graph.addEdge(19, 0);
 
-    QApplication app(argc, argv);
 
-     Node robotPosition = graph.getNode(0).value();
-     Node dock = graph.getNode(11).value();
-     Robot robot(robotPosition, dock);
+
+    util::PersonData personData;
+    personData[0].push_back(graph.getNode(13));
+    personData[0].push_back(graph.getNode(12));
+    personData[0].push_back(graph.getNode(14));
+    personData[1].push_back(graph.getNode(10));
+
+    const int robotPosition = 0;
+    const int dock = 11;
+    const int coffeMachineId = 16;
+
+    Robot robot(robotPosition, dock);
 
     EventQueue events;
-     events.addEvent<PersonEscortEvent>(100, dock , 1);
-     events.addEvent<PersonEscortEvent>(500, graph.getNode(5).value(), 2);
+    //events.addEvent<PersonEscortEvent>(100, coffeMachineId, 0);
+    events.addEvent<PersonEscortEvent>(500, coffeMachineId, 1);
 
-    SimulationModel model(graph, robot, events);
+    planner::addSearchEvents(graph, robot, events, personData);
+
+
+    Simulation model(graph, robot, events, personData);
     MapView mapView(model);
+    Timeline timelineView(model, maxSimTime);
 
-    //sim(graph, 100, 800, true, 0.8);
-    //rnd::show();
+    timelineView.show();
     mapView.show();
     QApplication::exec();
     return 0;

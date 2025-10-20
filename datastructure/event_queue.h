@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <queue>
 
 class EventQueue;
 
@@ -15,42 +14,55 @@ public:
     int getTime() const { return time; };
 };
 
-struct EventComparator {
-    bool operator()(const std::unique_ptr<SimulationEvent>& a,
-                    const std::unique_ptr<SimulationEvent>& b) const {
-        return a->getTime()> b->getTime();
-    }
-};
-
 class EventQueue {
 public:
+    EventQueue() = default;
+
+    void addEvent(std::unique_ptr<SimulationEvent> event) {
+        m_events.push_back(std::move(event));
+        sortEvents();
+    }
 
     template<typename EventType, typename... Args>
     void addEvent(Args&&... args) {
-        m_queue.push(std::make_unique<EventType>(std::forward<Args>(args)...));
+        m_events.push_back(std::make_unique<EventType>(std::forward<Args>(args)...));
+        sortEvents();
     }
 
-    void addEvent(std::unique_ptr<SimulationEvent> event) {
-        m_queue.push(std::move(event));
-    }
-
-    bool hasEvents() const {
-        return !m_queue.empty();
+    [[nodiscard]] bool hasEvents() const {
+        return !m_events.empty();
     }
 
     std::unique_ptr<SimulationEvent> getNextEvent() {
-        auto event = std::move(const_cast<std::unique_ptr<SimulationEvent> &>(m_queue.top()));
-        m_queue.pop();
+        if (m_events.empty()) return nullptr;
+        auto event = std::move(m_events.front());
+        m_events.erase(m_events.begin());
         return event;
     }
 
-    int getNextEventTime() const {
-        return m_queue.top()->getTime();
+    [[nodiscard]] int getNextEventTime() const {
+        return m_events.empty() ? -1 : m_events.front()->getTime();
+    }
+
+    [[nodiscard]] const std::vector<std::unique_ptr<SimulationEvent>>& getEvents() const {
+        return m_events;
+    }
+
+    [[nodiscard]] std::vector<SimulationEvent*> getAllEvents() const {
+        std::vector<SimulationEvent*> result;
+        result.reserve(m_events.size());
+        for (const auto& event : m_events) {
+            result.push_back(event.get());
+        }
+        return result;
     }
 
 private:
-    std::priority_queue<
-        std::unique_ptr<SimulationEvent>,
-        std::vector<std::unique_ptr<SimulationEvent>>,
-        EventComparator> m_queue;
+    void sortEvents() {
+        std::ranges::sort(
+            m_events,
+            [](const auto& a, const auto& b) { return a->getTime() < b->getTime();}
+            );
+    }
+    std::vector<std::unique_ptr<SimulationEvent>> m_events;
 };

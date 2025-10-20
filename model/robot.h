@@ -1,23 +1,21 @@
 #pragma once
 
 #include "../algo/rnd.h"
-#include "../datastructure/graph.h"
-
 
 constexpr double energyUsageStandby = 0.2;
 constexpr double energyUsageDrive = 0.4;
 
 class Robot {
-    Node m_dock;
-    Node m_position;
-    std::optional<Node> m_target = std::nullopt;
+    int m_dock;
+    int m_position;
+    int  m_target = -1;
     double m_speed;
     bool m_isDriving;
     int m_startDrivingTime;
     double m_energy;
 
 public:
-    explicit Robot(const Node position, const Node dock, double speed = 3.0, double energy = 100.0):
+    explicit Robot(const int position, const int dock, double speed = 3.0, double energy = 100.0):
     m_position(position),
     m_speed(speed),
     m_isDriving(false),
@@ -26,11 +24,11 @@ public:
     m_dock(dock)
     {}
 
-    void setPosition(const Node p) {
+    void setPosition(const int p) {
        m_position = p;
     }
 
-    Node getPosition() const {
+    int getPosition() const {
         return m_position;
     }
 
@@ -53,6 +51,7 @@ public:
 
     void stopDriving() {
         m_isDriving = false;
+        m_target = -1;
     }
 
     int getStartDrivingTime() const {
@@ -71,20 +70,20 @@ public:
         return m_energy;
     }
 
-    Node getDock() {
+    int getDock() {
         return m_dock;
     }
 
-    std::optional<Node> getTarget() const {
+    int getTarget() const {
         return m_target;
     }
 
-    void setTarget(const std::optional<Node> &target) {
+    void setTarget(const int target) {
         this->m_target = target;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {
-        out << "Robot (" << robot.m_position.x << ", " << robot.m_position.y << std::endl;
+        out << "Robot at node id: " << robot.m_position  << std::endl;
         return out;
     }
 };

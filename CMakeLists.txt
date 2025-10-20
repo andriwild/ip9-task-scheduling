@@ -39,9 +39,10 @@ add_executable(ip9_task_scheduling
         util/db.h
         algo/algo.h
         datastructure/graph.h
-        model/simulation_model.h
+        model/simulation.h
         datastructure/event_queue.h
         view/robot_item.h
+        model/planner.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

@@ -18,18 +18,22 @@ constexpr int LABEL_OFFSET = 20;
 constexpr int X_LINE_POS = TIMELINE_SCENE_MARGIN;
 constexpr int Y_LINE_POS = 250;
 constexpr int TASK_HEIGHT = 30;
+constexpr double TIME_POINTER_HEIGHT = 200.0;
 
 
 class Timeline final : public QGraphicsView {
     Q_OBJECT
     QGraphicsScene* m_scene;
+    Simulation& m_model;
     const int m_yLinePos = 250;
     const int m_tickStep = 10;
     const int m_endLinePos;
+    QGraphicsLineItem* m_timePointer;
 
 public:
-    explicit Timeline(const int simTime, const int tickStep = 10, QWidget *parent=nullptr):
+    explicit Timeline(Simulation& model, const int simTime, const int tickStep = 10, QWidget *parent=nullptr):
     QGraphicsView(parent),
+    m_model(model),
     m_tickStep(tickStep),
     m_endLinePos(simTime)
     {
@@ -39,6 +43,28 @@ public:
         setRenderHint(QPainter::Antialiasing);
         setScene(m_scene);
         centerOn(0,0);
+        m_timePointer = m_scene->addLine(
+            X_LINE_POS,
+            m_yLinePos - TIME_POINTER_HEIGHT / 2,
+            X_LINE_POS,
+            m_yLinePos + TIME_POINTER_HEIGHT / 2
+            , {Qt::red});
+
+        connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
+        connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);
+        drawPointer(0);
+        drawBaseline();
+        drawEvents(m_model.getEvents());
+    }
+
+    void drawPointer(const int time) {
+        m_timePointer->setLine(
+        X_LINE_POS + time,
+        m_yLinePos-100,
+        X_LINE_POS + time,
+        m_yLinePos+100
+        );
+        update();
     }
 
     void wheelEvent(QWheelEvent *event) override {
@@ -78,7 +104,7 @@ public:
         painter->restore();
     }
 
-    void draw() const {
+    void drawBaseline() const {
         // baseline of timeline (x-axis)
         QGraphicsLineItem* const line  = m_scene->addLine(
             X_LINE_POS,
@@ -124,6 +150,21 @@ public:
             eventLabel->setPos(start - w / 2.0, yMarkerPos - markerHeight - h);
         }
         eventLabel->setZValue(Z_EVENT + 1);
+    }
+
+    void drawEvents(const EventQueue &events) const {
+        auto allEvents = events.getAllEvents();
+        int startDriveTime = -1;
+
+        for (auto ev: allEvents) {
+            if (auto* escortEvent = dynamic_cast<PersonEscortEvent*>(ev)) {
+                drawEvent(escortEvent->getTime(), "Escort");
+            } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev)) {
+               startDriveTime = startDrive->getTime();
+            } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev)) {
+                drawDrive(startDriveTime, endDrive->getTime() - startDriveTime);
+            }
+        }
     }
 
     void drawDrive(const int startTime, const int duration, const QColor &color = Qt::gray) const {
