@@ -10,10 +10,11 @@
 #include "../datastructure/graph.h"
 #include "../model/simulation.h"
 
-enum DIRECTION {N, O, S, W};
+enum DIRECTION { N, O, S, W };
 
 constexpr int Z_DRIVE = 1;
 constexpr int Z_LOCATION = 100;
+constexpr int Z_DOCK = Z_LOCATION - 1;
 constexpr int Z_ROBOT= 200;
 
 const std::string FILEPATH = "/home/andri/repos/ip9-task-scheduling/resources/";
@@ -21,7 +22,6 @@ const std::string FILENAME = "imvs2.pgm";
 
 class MapView final : public QGraphicsView {
     Q_OBJECT
-
     QGraphicsScene *m_scene;
     bool m_userZoomed = false;
     Simulation& m_model;
@@ -133,14 +133,15 @@ public:
         const std::string &label,
         const QColor &color = Qt::red,
         const DIRECTION labelPos = N,
-        double radius = 10
-        ) const {
+        double radius = 10,
+        int zValue = Z_LOCATION
+    ) const {
         const auto point = m_scene->addEllipse(
             {n.x - radius / 2, n.y - radius / 2, radius, radius},
             {color},
             {color, Qt::SolidPattern}
         );
-        point->setZValue(Z_LOCATION);
+        point->setZValue(zValue);
 
         QGraphicsSimpleTextItem *const eventLabel = m_scene->addSimpleText(QString::fromStdString(label));
         const double w = eventLabel->boundingRect().width();
@@ -185,6 +186,9 @@ public:
 
     void drawRobot(Robot& robot) {
         Graph graph = m_model.getGraph();
+        Node dock = graph.getNode(robot.getDock());
+        drawLocation(dock, "Dock", Qt::yellow, O, 15, Z_DOCK);
+
         int posId = robot.getPosition();
         Node pos = graph.getNode(posId);
         if (robot.isDriving()) {

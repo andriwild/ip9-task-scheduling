@@ -305,7 +305,8 @@ int main(int argc, char *argv[]) {
     personData[0].push_back(4);
     personData[0].push_back(10);
     personData[0].push_back(12);
-    // personData[0].push_back(14);
+    personData[1].push_back(14);
+    personData[1].push_back(13);
 
     const int robotPosition = 0;
     const int dock = 11;
@@ -316,9 +317,10 @@ int main(int argc, char *argv[]) {
     EventQueue events;
     //events.addEvent<PersonEscortEvent>(100, coffeMachineId, 0);
     events.addEvent<MeetingEvent>(1000, coffeMachineId, 0);
+    events.addEvent<MeetingEvent>(2000, 7, 1);
 
     Planner planner(graph, events);
-    planner.escort(robot, personData[0]);
+    planner.process(robot, personData);
 
     for (auto ev: events.getAllEvents()) {
             if (auto* event = dynamic_cast<MeetingEvent*>(ev)) {

@@ -156,7 +156,6 @@ public:
 
     void drawEvents(const EventQueue &events) const {
         auto allEvents = events.getAllEvents();
-
         for (auto ev: allEvents) {
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev)) {
                 drawEvent(escortEvent->getTime(), "Meeting");
@@ -196,7 +195,7 @@ private:
     void drawTicks() const {
         int time = 0;
         for (int xPosition = X_LINE_POS; xPosition < m_endLinePos; xPosition += m_tickStep) {
-            if (time % 60 == 0) {
+            if (time % 100 == 0) {
                 constexpr int tickHeight = 5;
                 QGraphicsLineItem* const line = m_scene->addLine(
                     xPosition,
@@ -206,7 +205,7 @@ private:
                     {Qt::black, 2}
                     );
                 line->setZValue(Z_TIMELINE);
-                QGraphicsSimpleTextItem* const tickLabel = m_scene->addSimpleText(QString::number(time / 60));
+                QGraphicsSimpleTextItem* const tickLabel = m_scene->addSimpleText(QString::number(time));
                 const double w = tickLabel->boundingRect().width();
                 tickLabel->setPos(xPosition - w / 2.0, m_yLinePos + LABEL_OFFSET);
             } else {
