@@ -7,7 +7,9 @@ protected:
 
     void SetUp() override {
         auto* root = tree.createRoot(0);
-        TreeNode<int> node(1, root);
+        TreeNode node(1, root);
+        root->addChild(1);
+        tree.getAllNodes();
     }
 
     void TearDown() override {
