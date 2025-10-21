@@ -22,6 +22,8 @@ constexpr int TASK_HEIGHT = 30;
 constexpr double TIME_POINTER_HEIGHT = 200.0;
 
 
+using EventTree = std::vector<TreeNode<SimulationEvent>*>;
+
 class Timeline final : public QGraphicsView {
     Q_OBJECT
     QGraphicsScene* m_scene;
@@ -154,18 +156,18 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawEvents(const EventQueue &events) const {
-        auto allEvents = events.getAllEvents();
-        for (auto ev: allEvents) {
-            if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev)) {
+    void drawEvents(const EventTree &events) const {
+        for (auto ev: events) {
+            SimulationEvent* currentEvent = ev->getValue();
+            if (auto* escortEvent = dynamic_cast<MeetingEvent*>(currentEvent)) {
                 drawEvent(escortEvent->getTime(), "Meeting");
-            } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev)) {
+            } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev->getValue())) {
                 drawDrive(
                     startDrive->getTime(),
                     startDrive->m_expectedArrival,
                     Helper::taskColor(startDrive->m_task)
                     );
-            } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev)) {
+            } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev->getValue())) {
             }
         }
     }

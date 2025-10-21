@@ -4,55 +4,73 @@
 #include "../datastructure/event_queue.h"
 #include "../util/util.h"
 
+
+
 class RobotDriveStartEvent;
 
-class RobotDriveEndEvent final : public SimulationEvent {
-    Robot *m_robot;
-    int m_destinationId;
 
+class Tour final : public SimulationEvent {
 
 public:
-    RobotDriveEndEvent(Robot *robot, const int time, const int destinationId):
+    Tour(): SimulationEvent(0) {}
+
+    std::string getName() const override {
+        return "Tour";
+    }
+
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+        Log::d("Start Tour");
+    }
+};
+
+class RobotDriveEndEvent final : public SimulationEvent {
+    int m_destinationId;
+
+public:
+    RobotDriveEndEvent(const int time, const int destinationId):
     SimulationEvent(time),
-    m_robot(robot),
     m_destinationId(destinationId)
     {}
 
-    void execute(EventQueue &eventQueue, bool randomness = true) override {
+    std::string getName() const override {
+        return "Drive End Event";
+    }
+
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Robot ends driving");
-        m_robot->stopDriving();
-        m_robot->setPosition(m_destinationId);
+        robot.stopDriving();
+        robot.setPosition(m_destinationId);
     }
 };
 
 
 class RobotDriveStartEvent final : public SimulationEvent {
-    Robot *m_robot;
-
 public:
     const int m_targetId;
     const ROBOT_TASK m_task;
     const int m_expectedArrival;
 
     RobotDriveStartEvent(
-        Robot *robot,
         const int time,
         const int expectedArrival,
         const int targetId,
         const ROBOT_TASK task = DRIVE
         ):
     SimulationEvent(time),
-    m_robot(robot),
     m_targetId(targetId),
     m_task(task),
     m_expectedArrival(expectedArrival)
     {}
 
-    void execute(EventQueue &eventQueue, bool randomness = true) override {
-        m_robot->startDriving(time);
-        m_robot->setTarget(m_targetId);
-        m_robot->setTask(m_task);
-        eventQueue.addEvent<RobotDriveEndEvent>(m_robot, m_expectedArrival, m_targetId);
+    std::string getName() const override {
+        return "Drive Start Event";
+    }
+
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+        robot.startDriving(m_time);
+        robot.setTarget(m_targetId);
+        robot.setTask(m_task);
+        //eventQueue.addEvent<RobotDriveEndEvent>(m_robot, m_expectedArrival, m_targetId);
         Log::d("Robot starts driving");
     }
 };
@@ -69,6 +87,10 @@ public:
     m_personId(personId)
     {}
 
+    std::string getName() const override {
+        return "Meeting Event [" + std::to_string(m_id) + "]";
+    }
+
     int getPersonId() const {
         return m_personId;
     }
@@ -81,7 +103,7 @@ public:
         children.push_back(ev);
     }
 
-    void execute(EventQueue &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("PersonEscortEvent");
     }
 };

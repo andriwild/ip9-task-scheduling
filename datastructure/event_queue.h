@@ -2,17 +2,35 @@
 
 #include <memory>
 
+#include "tree.h"
+
 class EventQueue;
 
+
+inline static int nextId;
 class SimulationEvent {
 protected:
-    int time;
+    int m_id;
+    int m_time;
 public:
-    explicit SimulationEvent(const int t): time(t){}
+    explicit SimulationEvent(const int t):
+    m_id(nextId++),
+    m_time(t)
+    {}
     virtual ~SimulationEvent() = default;
-    virtual void execute(EventQueue &eventQueue, bool randomness = true) = 0;
-    int getTime() const { return time; };
+    virtual void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) = 0;
+    int getTime() const { return m_time; };
+    virtual std::string getName() const  = 0;
+    int getId() const {
+        return m_id;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const SimulationEvent& event) {
+        os << "[" << event.getId() << "] " << event.getName() << " (t=" << event.m_time << ")";
+        return os;
+    }
 };
+
 
 class EventQueue {
 public:

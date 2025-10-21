@@ -2,24 +2,32 @@
 #include <memory>
 #include <vector>
 
+
 template<typename T>
 class TreeNode {
-    const T data;
-    std::vector<std::unique_ptr<TreeNode<T>>> children;
+    const std::unique_ptr<T> data;
+    std::vector<std::unique_ptr<TreeNode>> children;
 
 public:
     TreeNode *parent;
 
-    TreeNode(T data, TreeNode *parent):
+    explicit TreeNode(std::unique_ptr<T> data, TreeNode *parent = nullptr):
     data(std::move(data)),
     parent(parent)
     {}
 
-    TreeNode* addChild(T t) {
-        auto p = std::make_unique<TreeNode<T>>(std::move(t), this);
+    TreeNode* addChild(std::unique_ptr<T> t) {
+        auto p = std::make_unique<TreeNode>(std::move(t), this);
         auto* child = p.get();
         children.emplace_back(std::move(p));
         return child;
+    }
+
+    TreeNode* addSubtree(std::unique_ptr<TreeNode> subtreeRoot) {
+        subtreeRoot->parent = this;
+        auto oldRoot = subtreeRoot.get();
+        children.emplace_back(std::move(subtreeRoot));
+        return oldRoot;
     }
 
     std::vector<TreeNode*> getAllDescendants() const {
@@ -32,8 +40,8 @@ public:
         return result;
     }
 
-    const T& getValue() const {
-        return data;
+    T* getValue() const {
+        return data.get();
     }
 
     const std::vector<std::unique_ptr<TreeNode>>& getChildren() const {
@@ -57,6 +65,28 @@ public:
     bool isLeaf() const {
         return children.empty();
     }
+
+    TreeNode *getLeaf(const bool left) {
+        if (isLeaf()) {
+            return this;
+        }
+        if (!children.empty()) {
+            if (left) {
+                return children.front()->getLeaf(left);
+            } else {
+                return children.back()->getLeaf(left);
+            }
+        }
+        return nullptr;
+    }
+
+    TreeNode *getLeftMostLeaf() {
+        return getLeaf(true);
+    }
+
+    TreeNode *getRightMostLeaf() {
+        return getLeaf(false);
+    }
 };
 
 
@@ -66,9 +96,8 @@ class Tree {
 public:
     Tree()  = default;
 
-    TreeNode<T>* createRoot(T t) {
-        TreeNode<T> node(t, nullptr);
-        m_root = std::make_unique<TreeNode<T>>(std::move(node));
+    TreeNode<T>* createRoot(std::unique_ptr<T> t) {
+        m_root = std::make_unique<TreeNode<T>>(std::move(t));
         return m_root.get();
     }
 
@@ -95,6 +124,10 @@ public:
         }
     }
 
+    std::unique_ptr<TreeNode<T>> getRoot() {
+        return std::move(m_root);
+    }
+
     void clear() {
         m_root.reset();
     }
@@ -103,23 +136,38 @@ public:
         return m_root == nullptr;
     }
 
+    TreeNode<T>* getLeftMostLeaf() const {
+        assert(m_root);
+        return m_root->getLeaf(true);
+    }
+
+    TreeNode<T>* getRightMostLeaf() const {
+        assert(m_root);
+        return m_root->getLeaf(false);
+    }
+
+
+    std::vector<TreeNode<T>*> traversalPreOrder() {
+        std::vector<TreeNode<T>*> result;
+        traversalPreOrderRec(m_root.get(), result);
+        return result;
+    }
+
     void printNode(std::ostream& os, const TreeNode<T>* node,
                    const std::string& prefix, bool isLast) const {
         if (!node) return;
 
         os << prefix;
         os << (isLast ? "└── " : "├── ");
-        os << node->getValue() << "\n";
+        os << *node->getValue() << "\n";
 
-        std::string childPrefix = prefix + (isLast ? "    " : "│   ");
+        const std::string childPrefix = prefix + (isLast ? "    " : "│   ");
 
         for (size_t i = 0; i < node->childCount(); ++i) {
-            bool isLastChild = (i == node->childCount() - 1);
+            bool isLastChild = i == node->childCount() - 1;
             printNode(os, node->getChildren()[i].get(), childPrefix, isLastChild);
         }
     }
-
-
 
     friend std::ostream& operator<<(std::ostream& os, const Tree<T>& tree) {
         if (tree.isEmpty()) {
@@ -131,6 +179,13 @@ public:
     }
 
 private:
+
+    void traversalPreOrderRec(TreeNode<T>* node, std::vector<TreeNode<T>*> &result) {
+        result.emplace_back(node);
+        for (const auto& n: node->getChildren()) {
+            traversalPreOrderRec(n.get(), result);
+        }
+    }
 
     std::unique_ptr<TreeNode<T>> m_root;
 };

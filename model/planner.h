@@ -16,16 +16,15 @@ public:
     m_events(events)
     {}
 
-    int driveSequence(Robot &robot, int startTime, const int from, const int to, ROBOT_TASK task) {
+    int driveSequence(int startTime, const int from, const int to, double speed, ROBOT_TASK task) {
         std::vector<int> path = m_graph.dijkstra(from).shortestPath(to);
-        std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, robot.getSpeed());
+        std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, speed);
 
         // from goal to start
         int currentTime = startTime;
         for (int nodeId = 1; nodeId < path.size(); nodeId++) {
             int driveTime = driveTimes[nodeId-1];
             m_events.addEvent<RobotDriveStartEvent>(
-                &robot,
                 currentTime,
                 currentTime + driveTime-1,
                 path[nodeId],
@@ -37,14 +36,13 @@ public:
         return currentTime;
     }
 
-    int driveSequenceReverse(Robot &robot, int goalArrivalTime, const int from, const int to, ROBOT_TASK task) {
+    int driveSequenceReverse(int goalArrivalTime, const int from, const int to, double speed, ROBOT_TASK task) {
         std::vector<int> path = m_graph.dijkstra(from).shortestPath(to);
-        std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, robot.getSpeed());
+        std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, speed);
 
         // from goal to start
         for (int nodeId = path.size() -1; nodeId > 0; nodeId--) {
             m_events.addEvent<RobotDriveStartEvent>(
-                &robot,
                 goalArrivalTime - driveTimes[nodeId -1] +1,
                 goalArrivalTime,
                 path[nodeId],
@@ -56,34 +54,57 @@ public:
         return goalArrivalTime;
     }
 
-    void addEscortEvents(Robot &robot, MeetingEvent &ev, std::vector<int> searchLocations) {
+    void addEscortEvents(MeetingEvent &ev, std::vector<int> searchLocations, int startNode, double speed) {
         // from goal back to start
         int dest = ev.getDestination();
 
         int timeOffset = ev.getTime();
         int lastSearchLocation = searchLocations.back();
         int firstSearchLocation = searchLocations.front();
-        timeOffset = driveSequenceReverse(robot, timeOffset, lastSearchLocation, dest, ESCORT);
+        timeOffset = driveSequenceReverse(timeOffset, lastSearchLocation, dest, speed, ESCORT);
 
         searchLocations.pop_back();
         std::ranges::reverse(searchLocations);
         int to = lastSearchLocation;
         for (auto searchLocation: searchLocations) {
             const int from = searchLocation;
-            timeOffset = driveSequenceReverse(robot, timeOffset, from, to, SEARCH);
+            timeOffset = driveSequenceReverse(timeOffset, from, to, speed, SEARCH);
             to = from;
         }
-        driveSequenceReverse(robot, timeOffset, robot.getPosition(), firstSearchLocation, DRIVE);
+        driveSequenceReverse(timeOffset, startNode, firstSearchLocation, speed, DRIVE);
     }
 
 
-    void process(Robot &robot, util::PersonData personData) {
+    void process(int startNodeId, util::PersonData personData, double speed) {
         for(auto ev: m_events.getAllEvents()) {
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev)) {
                 auto searchLocations = personData.at(escortEvent->getPersonId());
-                addEscortEvents(robot, *escortEvent, searchLocations);
-                driveSequence(robot, escortEvent->getTime() ,escortEvent->getDestination(), robot.getDock(), DRIVE);
+                addEscortEvents(*escortEvent, searchLocations, startNodeId, speed);
             }
         }
+    }
+
+    Tree<SimulationEvent> tour(int timeOffset, int from, int to, double speed) {
+        std::vector<int> path = m_graph.dijkstra(from).shortestPath(to);
+        std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, speed);
+
+        Tree<SimulationEvent> eventTree;
+        auto root = eventTree.createRoot(std::make_unique<Tour>());
+
+        // from goal to start
+        int currentTime = timeOffset;
+        for (int nodeId = 1; nodeId < path.size(); nodeId++) {
+            int driveTime = driveTimes[nodeId-1];
+            root->addChild(
+                std::make_unique<RobotDriveStartEvent>(
+                currentTime,
+                currentTime + driveTime-1,
+                path[nodeId],
+                DRIVE)
+                );
+            root->addChild(std::make_unique<RobotDriveEndEvent>(currentTime + driveTime - 1, path[nodeId]));
+            currentTime += driveTime;
+        }
+        return eventTree;
     }
 };
