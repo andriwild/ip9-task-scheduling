@@ -175,8 +175,9 @@ public:
         }
     }
 
-    void drawEvents(EventTree events) {
-        for (auto ev: events) {
+    void drawEvents(Tree<SimulationEvent> &events) {
+        auto evs = events.traversalPreOrder();
+        for (auto ev: evs) {
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev->getValue())) {
                Node node =  m_model.getGraph().getNode(escortEvent->getDestination());
                 drawLocation(node, std::to_string(escortEvent->getPersonId()), Qt::red, S);

@@ -3,11 +3,9 @@
 
 #include "event.h"
 #include "robot.h"
-#include "../datastructure/event_queue.h"
 #include "../datastructure/graph.h"
 #include "../datastructure/tree.h"
 
-using EventTree = std::vector<TreeNode<SimulationEvent>*>;
 class  Simulation final : public QObject {
     Q_OBJECT
     Graph &m_graph;
@@ -39,13 +37,13 @@ public:
 
     Graph& getGraph() const { return m_graph; };
     Robot& getRobot() const { return m_robot; }
-    std::vector<TreeNode<SimulationEvent> *> getEvents() const { return m_events.traversalPreOrder(); };
+    Tree<SimulationEvent>& getEvents() const { return m_events; };
     util::PersonData& getPersonData() const { return m_personData; };
 
 signals:
     void graphChanged(Graph& graph);
     void robotChanged(Robot &robot);
     void timeChanged(int time);
-    void eventsChanged(EventTree &events);
+    void eventsChanged(Tree<SimulationEvent> &events);
     void personChanged(util::PersonData &peronData);
 };

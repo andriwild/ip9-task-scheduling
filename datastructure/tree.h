@@ -5,8 +5,27 @@
 
 template<typename T>
 class TreeNode {
+private:
     const std::unique_ptr<T> data;
     std::vector<std::unique_ptr<TreeNode>> children;
+
+    void sortRec() {
+        auto comparator = [](const auto& a, const auto&b) {
+            return *a->getValue() < *b->getValue();
+        };
+        std::sort(children.begin(), children.end(), comparator);
+        for (const auto& child: children) {
+            child->sortRec();
+        }
+    }
+
+    void forEach(std::function<void(T&, int)> fn,int time) {
+        fn(*this->getValue(), time);
+
+        for (const auto& child: children) {
+            child->forEach(fn, time);
+        }
+    }
 
 public:
     TreeNode *parent;
@@ -20,6 +39,7 @@ public:
         auto p = std::make_unique<TreeNode>(std::move(t), this);
         auto* child = p.get();
         children.emplace_back(std::move(p));
+        sort();
         return child;
     }
 
@@ -27,6 +47,7 @@ public:
         subtreeRoot->parent = this;
         auto oldRoot = subtreeRoot.get();
         children.emplace_back(std::move(subtreeRoot));
+        sort();
         return oldRoot;
     }
 
@@ -40,21 +61,11 @@ public:
         return result;
     }
 
-    T* getValue() const {
-        return data.get();
-    }
-
-    const std::vector<std::unique_ptr<TreeNode>>& getChildren() const {
-        return children;
-    }
-
-    int childCount() const {
-        return children.size();
-    }
-
     void removeChild(TreeNode* childToRemove) {
         children.erase(
-            std::remove_if(children.begin(), children.end(),
+            std::remove_if(
+                children.begin(),
+                children.end(),
                 [childToRemove](const auto& child) {
                     return child.get() == childToRemove;
                 }),
@@ -62,8 +73,18 @@ public:
         );
     }
 
-    bool isLeaf() const {
-        return children.empty();
+    void sort() {
+        // go upwards to root
+        TreeNode* p = this;
+        while (p->parent != nullptr) {
+            p = p->parent;
+        }
+        p->sortRec();
+    }
+
+    void forEachSorted(std::function<void(T&, int)> fn,int time) {
+        forEach(fn, time);
+        sort();
     }
 
     TreeNode *getLeaf(const bool left) {
@@ -73,20 +94,23 @@ public:
         if (!children.empty()) {
             if (left) {
                 return children.front()->getLeaf(left);
-            } else {
-                return children.back()->getLeaf(left);
             }
+            return children.back()->getLeaf(left);
         }
-        return nullptr;
+        assert(false);
     }
 
-    TreeNode *getLeftMostLeaf() {
-        return getLeaf(true);
-    }
+    const std::vector<std::unique_ptr<TreeNode>>& getChildren() const { return children; }
 
-    TreeNode *getRightMostLeaf() {
-        return getLeaf(false);
-    }
+    int childCount() const { return children.size(); }
+
+    T* getValue() const { return data.get(); }
+
+    bool isLeaf() const { return children.empty(); }
+
+    TreeNode *getLeftMostLeaf() { return getLeaf(true); }
+
+    TreeNode *getRightMostLeaf() { return getLeaf(false); }
 };
 
 
@@ -101,9 +125,10 @@ public:
         return m_root.get();
     }
 
-    TreeNode<T>* getRoot() const {
-        return m_root.get();
-    }
+    TreeNode<T>* getRoot() const { return m_root.get(); }
+
+    std::unique_ptr<TreeNode<T>> getRoot() { return std::move(m_root); }
+
 
     std::vector<TreeNode<T>*> getAllNodes() {
         if (!m_root) return {};
@@ -124,28 +149,13 @@ public:
         }
     }
 
-    std::unique_ptr<TreeNode<T>> getRoot() {
-        return std::move(m_root);
-    }
+    void clear() { m_root.reset(); }
 
-    void clear() {
-        m_root.reset();
-    }
+    bool isEmpty() const { return m_root == nullptr; }
 
-    bool isEmpty() const {
-        return m_root == nullptr;
-    }
+    TreeNode<T>* getLeftMostLeaf() const { return m_root->getLeaf(true); }
 
-    TreeNode<T>* getLeftMostLeaf() const {
-        assert(m_root);
-        return m_root->getLeaf(true);
-    }
-
-    TreeNode<T>* getRightMostLeaf() const {
-        assert(m_root);
-        return m_root->getLeaf(false);
-    }
-
+    TreeNode<T>* getRightMostLeaf() const { return m_root->getLeaf(false); }
 
     std::vector<TreeNode<T>*> traversalPreOrder() {
         std::vector<TreeNode<T>*> result;
@@ -153,8 +163,7 @@ public:
         return result;
     }
 
-    void printNode(std::ostream& os, const TreeNode<T>* node,
-                   const std::string& prefix, bool isLast) const {
+    void printNode(std::ostream& os, const TreeNode<T>* node, const std::string& prefix, bool isLast) const {
         if (!node) return;
 
         os << prefix;
@@ -177,6 +186,7 @@ public:
         tree.printNode(os, tree.m_root.get(), "", true);
         return os;
     }
+
 
 private:
 

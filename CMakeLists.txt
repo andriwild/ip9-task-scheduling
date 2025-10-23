@@ -40,7 +40,6 @@ add_executable(ip9_task_scheduling
         algo/algo.h
         datastructure/graph.h
         model/simulation.h
-        datastructure/event_queue.h
         view/robot_item.h
         model/planner.h
         view/helper.h

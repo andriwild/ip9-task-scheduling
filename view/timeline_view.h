@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 
 #include "helper.h"
+#include "../datastructure/tree.h"
 #include "../model/event.h"
 
 constexpr int TIMELINE_HEIGHT = 500;
@@ -22,7 +23,6 @@ constexpr int TASK_HEIGHT = 30;
 constexpr double TIME_POINTER_HEIGHT = 200.0;
 
 
-using EventTree = std::vector<TreeNode<SimulationEvent>*>;
 
 class Timeline final : public QGraphicsView {
     Q_OBJECT
@@ -156,18 +156,28 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawEvents(const EventTree &events) const {
-        for (auto ev: events) {
+    void drawEvents(Tree<SimulationEvent> &events) const {
+        int driveTime;
+        ROBOT_TASK currentTask;
+
+        for (auto ev: events.traversalPreOrder()) {
             SimulationEvent* currentEvent = ev->getValue();
+
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(currentEvent)) {
                 drawEvent(escortEvent->getTime(), "Meeting");
             } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev->getValue())) {
-                drawDrive(
-                    startDrive->getTime(),
-                    startDrive->m_expectedArrival,
-                    Helper::taskColor(startDrive->m_task)
-                    );
+                driveTime = startDrive->getTime();
+                currentTask = startDrive->task;
             } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev->getValue())) {
+                drawDrive(driveTime, endDrive->getTime(), Helper::taskColor(currentTask));
+            } else if (auto* searchEvent = dynamic_cast<SearchEvent*>(ev->getValue())) {
+                drawEvent(searchEvent->getTime(), "Search");
+            } else if (auto* talkStart = dynamic_cast<TalkingEventStart*>(ev->getValue())) {
+                drawEvent(talkStart->getTime(), "> Talk");
+            } else if (auto* talkEnd = dynamic_cast<TalkingEventEnd*>(ev->getValue())) {
+                drawEvent(talkEnd->getTime(), "Talk >");
+            } else if (auto* tour = dynamic_cast<Tour*>(ev->getValue())) {
+                //drawEvent(tour->getTime(), "Tour");
             }
         }
     }
