@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 
-
 template<typename T>
 class TreeNode {
 private:
@@ -127,7 +126,7 @@ public:
 
     TreeNode<T>* getRoot() const { return m_root.get(); }
 
-    std::unique_ptr<TreeNode<T>> getRoot() { return std::move(m_root); }
+    std::unique_ptr<TreeNode<T>> releaseRoot() { return std::move(m_root); }
 
 
     std::vector<TreeNode<T>*> getAllNodes() {

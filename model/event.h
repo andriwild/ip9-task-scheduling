@@ -45,9 +45,18 @@ public:
     }
 };
 
+class SimulationRoot final : public SimulationEvent {
+public:
+    explicit SimulationRoot(const int time, const std::string& label = ""): SimulationEvent(time, label) {}
+
+    std::string getName() const override { return "Simulation"; }
+
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+        Log::d("Simulation");
+    }
+};
 
 class Tour final : public SimulationEvent {
-
 public:
     explicit Tour(const int time, const std::string& label = ""): SimulationEvent(time, label) {
        color = "\033[31m";
@@ -77,7 +86,6 @@ public:
         robot.setPosition(m_destinationId);
     }
 };
-
 
 class RobotDriveStartEvent final : public SimulationEvent {
 public:
@@ -128,7 +136,6 @@ public:
     }
 };
 
-
 class SearchEvent final : public SimulationEvent {
     const int m_personId;
 
@@ -174,21 +181,35 @@ public:
 class TalkingEventStart : public TalkingEvent {
 public:
     TalkingEventStart(const int time, const int personId, const std::string& label = "" ):
-    TalkingEvent(time, personId, label)
-    {}
+    TalkingEvent(time, personId, label) {}
 
     void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Talking start ...");
     }
-
 };
+
 class TalkingEventEnd: public TalkingEvent {
 public:
     TalkingEventEnd(const int time, const int personId, const std::string& label = "" ):
-    TalkingEvent(time, personId, label)
-    {}
+    TalkingEvent(time, personId, label) {}
 
     void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Talking end...");
+    }
+};
+
+class EscortEvent final : public SimulationEvent {
+    const int m_personId;
+public:
+    EscortEvent( const int time, const int personId, const std::string& label = "" ):
+    SimulationEvent(time, label),
+    m_personId(personId) {
+        color = "\033[23m";
+    }
+
+    std::string getName() const override { return "Escort Person: " + std::to_string(m_personId) ; }
+
+    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+        Log::d("Escorting...");
     }
 };

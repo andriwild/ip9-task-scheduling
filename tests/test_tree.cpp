@@ -15,7 +15,7 @@ protected:
 
 TEST_F(TreeTest, EmptyTreeTest) {
     EXPECT_TRUE(tree.isEmpty());
-    EXPECT_EQ(tree.getRoot(), nullptr);
+    EXPECT_EQ(tree.releaseRoot(), nullptr);
 }
 
 TEST_F(TreeTest, CreateRootTest) {
@@ -24,7 +24,7 @@ TEST_F(TreeTest, CreateRootTest) {
     EXPECT_FALSE(tree.isEmpty());
     EXPECT_NE(root, nullptr);
     EXPECT_EQ(*root->getValue(), 10);
-    EXPECT_EQ(tree.getRoot(), root);
+    EXPECT_EQ(tree.releaseRoot(), root);
 }
 
 TEST_F(TreeTest, RootHasNoParent) {
@@ -246,7 +246,7 @@ TEST_F(TreeTest, MultipleRootCreations) {
     tree.createRoot(std::make_unique<int>(1));
     tree.createRoot(std::make_unique<int>(2));
 
-    EXPECT_EQ(*tree.getRoot()->getValue(), 2);
+    EXPECT_EQ(*tree.releaseRoot()->getValue(), 2);
     EXPECT_EQ(tree.getAllNodes().size(), 1);
 }
 

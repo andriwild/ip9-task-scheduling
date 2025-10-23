@@ -3,6 +3,7 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
+#include "event_plan.h"
 #include "helper.h"
 #include "../datastructure/tree.h"
 #include "../model/event.h"
@@ -18,7 +19,7 @@ constexpr int Z_EVENT = 60;
 // constants
 constexpr int LABEL_OFFSET = 20;
 constexpr int X_LINE_POS = TIMELINE_SCENE_MARGIN;
-constexpr int Y_LINE_POS = 250;
+constexpr int Y_LINE_POS = 400;
 constexpr int TASK_HEIGHT = 30;
 constexpr double TIME_POINTER_HEIGHT = 200.0;
 
@@ -28,7 +29,7 @@ class Timeline final : public QGraphicsView {
     Q_OBJECT
     QGraphicsScene* m_scene;
     Simulation& m_model;
-    const int m_yLinePos = 250;
+    const int m_yLinePos = Y_LINE_POS;
     const int m_tickStep = 10;
     const int m_endLinePos;
     QGraphicsLineItem* m_timePointer;
@@ -59,14 +60,15 @@ public:
         drawPointer(0);
         drawBaseline();
         drawEvents(m_model.getEvents());
+
     }
 
     void drawPointer(const int time) {
         m_timePointer->setLine(
         X_LINE_POS + time,
-        m_yLinePos-100,
+        m_yLinePos - Y_LINE_POS + TIMELINE_SCENE_MARGIN,
         X_LINE_POS + time,
-        m_yLinePos+100
+        m_yLinePos + 100 - TIMELINE_SCENE_MARGIN
         );
         update();
     }
@@ -157,32 +159,23 @@ public:
     }
 
     void drawEvents(Tree<SimulationEvent> &events) const {
-        int driveTime;
-        ROBOT_TASK currentTask;
+        assert(events.getRoot()->parent == nullptr);
+        std::vector<EventPlan*> plans;
+        for (const auto& child: events.getRoot()->getChildren()) {
+            auto eventPlan = new EventPlan(*child.get(), X_LINE_POS);
+            plans.push_back(eventPlan);
+        }
+        std::ranges::reverse(plans);
 
-        for (auto ev: events.traversalPreOrder()) {
-            SimulationEvent* currentEvent = ev->getValue();
-
-            if (auto* escortEvent = dynamic_cast<MeetingEvent*>(currentEvent)) {
-                drawEvent(escortEvent->getTime(), "Meeting");
-            } else if (auto* startDrive = dynamic_cast<RobotDriveStartEvent*>(ev->getValue())) {
-                driveTime = startDrive->getTime();
-                currentTask = startDrive->task;
-            } else if (auto* endDrive = dynamic_cast<RobotDriveEndEvent*>(ev->getValue())) {
-                drawDrive(driveTime, endDrive->getTime(), Helper::taskColor(currentTask));
-            } else if (auto* searchEvent = dynamic_cast<SearchEvent*>(ev->getValue())) {
-                drawEvent(searchEvent->getTime(), "Search");
-            } else if (auto* talkStart = dynamic_cast<TalkingEventStart*>(ev->getValue())) {
-                drawEvent(talkStart->getTime(), "> Talk");
-            } else if (auto* talkEnd = dynamic_cast<TalkingEventEnd*>(ev->getValue())) {
-                drawEvent(talkEnd->getTime(), "Talk >");
-            } else if (auto* tour = dynamic_cast<Tour*>(ev->getValue())) {
-                //drawEvent(tour->getTime(), "Tour");
-            }
+        int offset = Y_LINE_POS - 25;
+        for (const auto plan: plans) {
+            m_scene->addItem(plan);
+            offset -= plan->boundingRect().height() + 25;
+            plan->setPos(0, offset);
         }
     }
 
-    void drawDrive(const int startTime, const int endTime, const QColor &color = Qt::gray) const {
+    void drawBlock(const int startTime, const int endTime, const QColor &color = Qt::gray) const {
         const int duration = endTime - startTime;
         const int start = X_LINE_POS + startTime;
 

@@ -6,49 +6,11 @@
 #include "datastructure/tree.h"
 #include "model/planner.h"
 #include "model/simulation.h"
+#include "util/tree_composer.h"
 #include "view/timeline_view.h"
 
 constexpr int maxSimTime = 3600;
-auto shiftTime = [](SimulationEvent& ev, const int time){ ev.setTime(ev.getTime() + time);};
 
-class EventTreeComposer {
-
-    Tree<SimulationEvent> tree;
-    TreeNode<SimulationEvent>* m_tree;
-public:
-
-    EventTreeComposer* fromNewTree() {
-        m_tree = tree.createRoot(std::make_unique<Tour>(0, ""));
-        return this;
-    }
-    Tree<SimulationEvent> build() {
-        return std::move(tree);
-    }
-
-    EventTreeComposer* on(TreeNode<SimulationEvent>  *tree) {
-        m_tree = tree;
-        return this;
-    }
-
-    EventTreeComposer* prepend(Tree<SimulationEvent> & subtree) {
-        int mainEventTime = m_tree->getLeftMostLeaf()->getValue()->getTime();
-        auto subTreeDuration = subtree.getRightMostLeaf()->getValue()->getTime();
-        auto n = subtree.getRoot();
-        n->forEachSorted(shiftTime, mainEventTime - subTreeDuration);
-        m_tree->addSubtree(std::move(n));
-        return this;
-    }
-
-    EventTreeComposer* append(Tree<SimulationEvent> & subtree) {
-        auto ln = m_tree->getLeftMostLeaf();
-        int t = ln->getValue()->getTime();
-        auto n = subtree.getRoot();
-        n->forEachSorted(shiftTime, t);
-        m_tree->addSubtree(std::move(n));
-        return this;
-    }
-
-};
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -107,47 +69,27 @@ int main(int argc, char *argv[]) {
     personData[0].push_back(6);
     personData[0].push_back(10);
     personData[0].push_back(12);
+    personData[1].push_back(13);
+    personData[1].push_back(12);
+    personData[1].push_back(14);
+    personData[2].push_back(17);
+    personData[2].push_back(18);
 
     constexpr int robotPosition = 0;
     constexpr int dock = 11;
-    constexpr int coffeMachineId = 16;
-    int startTime = 0;
-    int personId = 0;
-    int meetingTime = 1000;
 
     Robot robot(robotPosition, dock);
     Tree<SimulationEvent> eventTree;
 
     Planner planner(graph, robot.getSpeed());
+    auto meetingTree1 = planner.escortSequence(1000, personData,0, 16, dock, dock);
+    auto meetingTree2 = planner.escortSequence(1500, personData,1,  8, dock, dock);
+    auto meetingTree3 = planner.escortSequence(2000, personData,2,  13, dock, dock);
 
-    Tree<SimulationEvent> meetingTree;
-    auto meetingRoot = meetingTree.createRoot(std::make_unique<MeetingEvent>(meetingTime, coffeMachineId, personId, "Meeting"));
-
-    Tree<SimulationEvent> escortTree;
-    auto escortTreeRoot = escortTree.createRoot(std::make_unique<Tour>(0, "Escort Person 0"));
-    planner.tour(escortTreeRoot, personData[personId].back(), coffeMachineId);
-
-    Tree<SimulationEvent> searchPersonTree;
-    auto searchRoot = searchPersonTree.createRoot(std::make_unique<SearchEvent>(0, personId, "Suche Patient 0"));
-    planner.searchPerson( searchRoot, robot.getPosition(), personData[personId] );
-
-    Tree<SimulationEvent> conversationTree;
-    auto convRoot = conversationTree.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation"));
-    planner.talkSequence(convRoot, 10, personId);
-
-    Tree<SimulationEvent> conversationTree2;
-    auto convRoot2 = conversationTree2.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation"));
-    planner.talkSequence(convRoot2, 10, personId);
-
-    EventTreeComposer etc{};
-    etc.on(meetingRoot)
-    ->prepend(conversationTree)
-    ->prepend(escortTree)
-    ->prepend(conversationTree2)
-    ->prepend(searchPersonTree);
-
-    auto root = eventTree.createRoot(std::make_unique<Tour>(0));
-    root->addSubtree(meetingTree.getRoot());
+    auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
+    root->addSubtree(meetingTree1.releaseRoot());
+    root->addSubtree(meetingTree2.releaseRoot());
+    root->addSubtree(meetingTree3.releaseRoot());
 
     std::cout << eventTree << std::endl;
 

@@ -44,6 +44,8 @@ add_executable(ip9_task_scheduling
         model/planner.h
         view/helper.h
         datastructure/tree.h
+        view/event_plan.h
+        util/tree_composer.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES
