@@ -46,12 +46,7 @@ public:
         setRenderHint(QPainter::Antialiasing);
         setScene(m_scene);
         centerOn(0,0);
-        m_timePointer = m_scene->addLine(
-            X_LINE_POS,
-            m_yLinePos - TIME_POINTER_HEIGHT / 2,
-            X_LINE_POS,
-            m_yLinePos + TIME_POINTER_HEIGHT / 2
-            , {Qt::red});
+        m_timePointer = m_scene->addLine( X_LINE_POS, m_yLinePos - TIME_POINTER_HEIGHT / 2, X_LINE_POS, m_yLinePos , {Qt::red} );
 
         connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
         connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);
@@ -59,16 +54,10 @@ public:
         drawPointer(0);
         drawBaseline();
         drawEvents(m_model.getEvents());
-
     }
 
     void drawPointer(const int time) {
-        m_timePointer->setLine(
-        X_LINE_POS + time,
-        m_yLinePos - Y_LINE_POS + TIMELINE_SCENE_MARGIN,
-        X_LINE_POS + time,
-        m_yLinePos + 100 - TIMELINE_SCENE_MARGIN
-        );
+        m_timePointer->setLine( X_LINE_POS + time, m_yLinePos - Y_LINE_POS + TIMELINE_SCENE_MARGIN, X_LINE_POS + time, m_yLinePos );
         update();
     }
 
@@ -85,16 +74,16 @@ public:
         painter->save();
         painter->resetTransform();
 
-        // there is no easy way to get all enum values -> duplicated code
+        // there is no easy way to get all enum values
         std::array<std::pair<QColor, std::string>, 7> allTaskTypes = {
             {
-                {Helper::color(IDLE), Helper::typeToString(IDLE)},
-                {Helper::color(DRIVE), Helper::typeToString(DRIVE)},
-                {Helper::color(ESCORT), Helper::typeToString(ESCORT)},
-                {Helper::color(SEARCH), Helper::typeToString(SEARCH)},
+                {Helper::color(IDLE),    Helper::typeToString(IDLE)},
+                {Helper::color(DRIVE),   Helper::typeToString(DRIVE)},
+                {Helper::color(ESCORT),  Helper::typeToString(ESCORT)},
+                {Helper::color(SEARCH),  Helper::typeToString(SEARCH)},
                 {Helper::color(MEETING), Helper::typeToString(MEETING)},
-                {Helper::color(TOUR), Helper::typeToString(TOUR)},
-                {Helper::color(TALK), Helper::typeToString(TALK)},
+                {Helper::color(TOUR),    Helper::typeToString(TOUR)},
+                {Helper::color(TALK),    Helper::typeToString(TALK)},
             }
         };        int rectPos = 10;
         for (const auto& [color, label] : allTaskTypes) {

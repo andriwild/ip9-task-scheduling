@@ -83,16 +83,12 @@ int main(int argc, char *argv[]) {
     Tree<SimulationEvent> eventTree;
 
     Planner planner(graph, robot.getSpeed());
-    auto meetingTree1 = planner.escortSequence(1200, personData,0, 16, dock, dock);
-    auto meetingTree2 = planner.escortSequence(1500, personData,1,  8, dock, dock);
-    auto meetingTree3 = planner.escortSequence(2000, personData,2,  13, dock, dock);
-    auto meetingTree4 = planner.escortSequence( 400, personData,2,  7, dock, dock);
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    root->addSubtree(meetingTree1.releaseRoot());
-    root->addSubtree(meetingTree2.releaseRoot());
-    root->addSubtree(meetingTree3.releaseRoot());
-    root->addSubtree(meetingTree4.releaseRoot());
+    root->addSubtree(planner.escortSequence(1000, personData,0, 16, dock, dock).releaseRoot());
+    // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
+    // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
+    // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
 
     std::cout << eventTree << std::endl;
 
