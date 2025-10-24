@@ -2,7 +2,7 @@
 
 #include "../algo/rnd.h"
 
-enum ROBOT_TASK { IDLE, DRIVE, ESCORT, SEARCH };
+enum TYPE { IDLE, DRIVE, ESCORT, SEARCH, MEETING, TOUR, TALK };
 
 constexpr double energyUsageStandby = 0.2;
 constexpr double energyUsageDrive = 0.4;
@@ -15,7 +15,7 @@ class Robot {
     bool m_isDriving;
     int m_startDrivingTime;
     double m_energy;
-    ROBOT_TASK m_task = IDLE;
+    TYPE m_task = IDLE;
 
 public:
     explicit Robot(const int position, const int dock, double speed = 3.0, double energy = 100.0):
@@ -85,11 +85,11 @@ public:
         this->m_target = target;
     }
 
-    void setTask(ROBOT_TASK task) {
+    void setTask(TYPE task) {
         m_task = task;
     }
 
-    ROBOT_TASK getTask() const {
+    TYPE getTask() const {
         return m_task;
     }
 

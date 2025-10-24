@@ -5,6 +5,7 @@
 #include "robot.h"
 #include "../datastructure/tree.h"
 #include "../util/util.h"
+#include "../view/helper.h"
 
 
 inline static int nextId;
@@ -16,10 +17,12 @@ protected:
     int m_id;
     int m_time;
     std::string m_label;
-    std::string color = defaultColor;
+    std::string m_color;
 
 public:
-    explicit SimulationEvent(const int t, const std::string& label = ""): m_id(nextId++), m_time(t), m_label(label) {}
+    explicit SimulationEvent(const int t, const std::string &color = defaultColor, const std::string& label = ""):
+    m_id(nextId++), m_time(t), m_label(label), m_color(color)
+    {}
 
     virtual ~SimulationEvent() = default;
 
@@ -35,7 +38,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const SimulationEvent& event) {
-        os << event.color;
+        os << event.m_color;
         os << "[" << event.getId() << "] "
            << std::left << std::setw(20) << event.getName()
            << " (t=" << event.m_time << ")  "
@@ -58,9 +61,8 @@ public:
 
 class Tour final : public SimulationEvent {
 public:
-    explicit Tour(const int time, const std::string& label = ""): SimulationEvent(time, label) {
-       color = "\033[31m";
-    }
+    explicit Tour(const int time, const std::string& label = ""):
+    SimulationEvent(time, Helper::colorAnsi(TOUR), label) { }
 
     std::string getName() const override { return "Tour"; }
 
@@ -74,9 +76,9 @@ class RobotDriveEndEvent final : public SimulationEvent {
 
 public:
     RobotDriveEndEvent(const int time, const int destinationId):
-    SimulationEvent(time),
+    SimulationEvent(time, Helper::colorAnsi(DRIVE)),
     m_destinationId(destinationId)
-    {}
+    { }
 
     std::string getName() const override { return "Drive End Event"; }
 
@@ -90,18 +92,18 @@ public:
 class RobotDriveStartEvent final : public SimulationEvent {
 public:
     const int m_targetId;
-    const ROBOT_TASK task;
+    const TYPE task;
 
     RobotDriveStartEvent(
         const int time,
         const int targetId,
-        const ROBOT_TASK task = DRIVE,
+        const TYPE task = DRIVE,
         const std::string& label = ""
         ):
-    SimulationEvent(time, label),
+    SimulationEvent(time, Helper::colorAnsi(DRIVE) ,label),
     m_targetId(targetId),
     task(task)
-    {}
+    { }
 
     std::string getName() const override { return "Drive Start Event"; }
 
@@ -121,11 +123,10 @@ class MeetingEvent final : public SimulationEvent {
 
 public:
     MeetingEvent(const int time, const int destinationId, const int personId, const std::string& label = ""):
-    SimulationEvent(time, label),
+    SimulationEvent(time, Helper::colorAnsi(MEETING) ,label),
     m_destinationId(destinationId),
-    m_personId(personId) {
-       color ="\033[36m";
-    }
+    m_personId(personId)
+    { }
 
     std::string getName() const override { return "Meeting Event [" + std::to_string(m_id) + "]"; }
     int getPersonId() const { return m_personId; }
@@ -145,10 +146,9 @@ public:
         const int personId,
         const std::string& label = ""
         ):
-    SimulationEvent(time, label),
-    m_personId(personId) {
-       color = "\033[33m";
-    }
+    SimulationEvent(time, Helper::colorAnsi(SEARCH) ,label),
+    m_personId(personId)
+    { }
 
     int getSearchForPersonId() const { return m_personId; }
 
@@ -164,10 +164,9 @@ class TalkingEvent : public SimulationEvent {
 
 public:
     TalkingEvent(const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, label),
-    m_personId(personId) {
-        color = "\033[35m";
-    }
+    SimulationEvent(time, Helper::colorAnsi(TALK) ,label),
+    m_personId(personId)
+    { }
 
     int getSearchForPersonId() const { return m_personId; }
 
@@ -202,10 +201,9 @@ class EscortEvent final : public SimulationEvent {
     const int m_personId;
 public:
     EscortEvent( const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, label),
-    m_personId(personId) {
-        color = "\033[23m";
-    }
+    SimulationEvent(time, Helper::colorAnsi(ESCORT) ,label),
+    m_personId(personId)
+    { }
 
     std::string getName() const override { return "Escort Person: " + std::to_string(m_personId) ; }
 

@@ -74,6 +74,7 @@ int main(int argc, char *argv[]) {
     personData[1].push_back(14);
     personData[2].push_back(17);
     personData[2].push_back(18);
+    personData[3].push_back(4);
 
     constexpr int robotPosition = 0;
     constexpr int dock = 11;
@@ -82,14 +83,16 @@ int main(int argc, char *argv[]) {
     Tree<SimulationEvent> eventTree;
 
     Planner planner(graph, robot.getSpeed());
-    auto meetingTree1 = planner.escortSequence(1000, personData,0, 16, dock, dock);
+    auto meetingTree1 = planner.escortSequence(1200, personData,0, 16, dock, dock);
     auto meetingTree2 = planner.escortSequence(1500, personData,1,  8, dock, dock);
     auto meetingTree3 = planner.escortSequence(2000, personData,2,  13, dock, dock);
+    auto meetingTree4 = planner.escortSequence( 400, personData,2,  7, dock, dock);
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
     root->addSubtree(meetingTree1.releaseRoot());
     root->addSubtree(meetingTree2.releaseRoot());
     root->addSubtree(meetingTree3.releaseRoot());
+    root->addSubtree(meetingTree4.releaseRoot());
 
     std::cout << eventTree << std::endl;
 
@@ -98,7 +101,7 @@ int main(int argc, char *argv[]) {
     Timeline timelineView(model, maxSimTime);
 
     timelineView.show();
-    mapView.show();
+    //mapView.show();
     QApplication::exec();
     return 0;
 }

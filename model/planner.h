@@ -37,10 +37,9 @@ public:
     int searchPerson(TreeNode<SimulationEvent> *root, const int from, const std::vector<int> &searchIds ) const {
         int currentPos = from;
         int currentTimeOffset = root->getValue()->getTime();
-        int searchTourCounter = 0;
         for (const int id: searchIds) {
             Tree<SimulationEvent> tmpTree;
-            auto tmpRoot = tmpTree.createRoot(std::make_unique<Tour>(currentTimeOffset, "Search tour " + std::to_string(searchTourCounter++)));
+            auto tmpRoot = tmpTree.createRoot(std::make_unique<Tour>(currentTimeOffset, "Search"));
             currentTimeOffset = tour(tmpRoot, currentPos, id);
             root->addSubtree(tmpTree.releaseRoot());
             currentPos = id;
@@ -68,28 +67,29 @@ public:
         int dock
     ) {
 
+        std::string pId = "P" + std::to_string(personId);
         Tree<SimulationEvent> meetingTree;
-        auto meetingRoot = meetingTree.createRoot(std::make_unique<MeetingEvent>(meetingTime, meetingLocation, personId, "Meeting"));
+        auto meetingRoot = meetingTree.createRoot(std::make_unique<MeetingEvent>(meetingTime, meetingLocation, personId, "Meeting: " + pId));
 
         Tree<SimulationEvent> escortTree;
-        auto escortTreeRoot = escortTree.createRoot(std::make_unique<EscortEvent>(0, personId, "Escort Person 0"));
-        auto escortTour = escortTreeRoot->addChild(std::make_unique<Tour>(0, "Escort Tour 0"));
+        auto escortTreeRoot = escortTree.createRoot(std::make_unique<EscortEvent>(0, personId, "Escort"));
+        auto escortTour = escortTreeRoot->addChild(std::make_unique<Tour>(0, "Tour"));
         tour(escortTour, personData[personId].back(), meetingLocation);
 
         Tree<SimulationEvent> searchPersonTree;
-        auto searchRoot = searchPersonTree.createRoot(std::make_unique<SearchEvent>(0, personId, "Suche Patient 0"));
+        auto searchRoot = searchPersonTree.createRoot(std::make_unique<SearchEvent>(0, personId, "Search"));
         searchPerson(searchRoot, startLocation, personData[personId] );
 
         Tree<SimulationEvent> conversationTree;
-        auto convRoot = conversationTree.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation"));
+        auto convRoot = conversationTree.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation 1"));
         talkSequence(convRoot, 10, personId);
 
         Tree<SimulationEvent> conversationTree2;
-        auto convRoot2 = conversationTree2.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation"));
+        auto convRoot2 = conversationTree2.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation 2"));
         talkSequence(convRoot2, 10, personId);
 
         Tree<SimulationEvent> dockTree;
-        auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(0, "Go back to dock"));
+        auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(0, "Dock"));
         tour(dockTreeRoot, meetingLocation, dock);
 
         EventTreeComposer etc{};

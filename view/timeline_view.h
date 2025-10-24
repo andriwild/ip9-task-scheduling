@@ -4,11 +4,10 @@
 #include <QGraphicsView>
 
 #include "event_plan.h"
-#include "helper.h"
 #include "../datastructure/tree.h"
 #include "../model/event.h"
 
-constexpr int TIMELINE_HEIGHT = 500;
+constexpr int TIMELINE_HEIGHT = 700;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
 
 // draw ordering
@@ -19,7 +18,7 @@ constexpr int Z_EVENT = 60;
 // constants
 constexpr int LABEL_OFFSET = 20;
 constexpr int X_LINE_POS = TIMELINE_SCENE_MARGIN;
-constexpr int Y_LINE_POS = 400;
+constexpr int Y_LINE_POS = 600;
 constexpr int TASK_HEIGHT = 30;
 constexpr double TIME_POINTER_HEIGHT = 200.0;
 
@@ -87,15 +86,17 @@ public:
         painter->resetTransform();
 
         // there is no easy way to get all enum values -> duplicated code
-        std::array<std::pair<QColor, std::string>, 3> allTaskTypes = {
+        std::array<std::pair<QColor, std::string>, 7> allTaskTypes = {
             {
-                {Qt::darkGreen, "Escort"},
-                {Qt::gray, "Drive"},
-                {Qt::blue, "Dock"},
-                //{{255, 165, 0}, "Charge"},
+                {Helper::color(IDLE), Helper::typeToString(IDLE)},
+                {Helper::color(DRIVE), Helper::typeToString(DRIVE)},
+                {Helper::color(ESCORT), Helper::typeToString(ESCORT)},
+                {Helper::color(SEARCH), Helper::typeToString(SEARCH)},
+                {Helper::color(MEETING), Helper::typeToString(MEETING)},
+                {Helper::color(TOUR), Helper::typeToString(TOUR)},
+                {Helper::color(TALK), Helper::typeToString(TALK)},
             }
-        };
-        int rectPos = 10;
+        };        int rectPos = 10;
         for (const auto& [color, label] : allTaskTypes) {
             constexpr int margin = 15;
             constexpr int labelDistance = 80;
