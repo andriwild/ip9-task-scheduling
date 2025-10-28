@@ -175,7 +175,7 @@ public:
         }
     }
 
-    void drawEvents(Tree<SimulationEvent> &events) {
+    void drawEvents(EV::Tree<SimulationEvent> &events) {
         auto evs = events.traversalPreOrder();
         for (auto ev: evs) {
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev->getValue())) {
@@ -185,15 +185,15 @@ public:
         }
     }
 
-    void drawRobot(Robot& robot) {
+    void drawRobot(Robot* robot) {
         Graph graph = m_model.getGraph();
-        Node dock = graph.getNode(robot.getDock());
+        Node dock = graph.getNode(robot->getDock());
         drawLocation(dock, "Dock", Qt::yellow, O, 15, Z_DOCK);
 
-        int posId = robot.getPosition();
+        int posId = robot->getPosition();
         Node pos = graph.getNode(posId);
-        if (robot.isDriving()) {
-            int targetId = robot.getTarget();
+        if (robot->isDriving()) {
+            int targetId = robot->getTarget();
             Node target = graph.getNode(targetId);
             m_robotItem->setDirection(target.x, target.y);
         } else {

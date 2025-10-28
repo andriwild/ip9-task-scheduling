@@ -26,7 +26,7 @@ public:
 
     virtual ~SimulationEvent() = default;
 
-    virtual void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) = 0;
+    virtual void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) = 0;
     int getId() const { return m_id; }
     int getTime() const { return m_time; };
     virtual void setTime(const int time) { m_time = time; };
@@ -54,7 +54,7 @@ public:
 
     std::string getName() const override { return "Simulation"; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Simulation");
     }
 };
@@ -66,7 +66,7 @@ public:
 
     std::string getName() const override { return "Tour"; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Start Tour");
     }
 };
@@ -82,7 +82,7 @@ public:
 
     std::string getName() const override { return "Drive End Event"; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Robot ends driving");
         robot.stopDriving();
         robot.setPosition(m_destinationId);
@@ -109,7 +109,7 @@ public:
 
     int getTarget() const { return m_targetId; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         robot.startDriving(m_time);
         robot.setTarget(m_targetId);
         robot.setTask(task);
@@ -132,7 +132,7 @@ public:
     int getPersonId() const { return m_personId; }
     int getDestination() const { return m_destinationId; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Meeting event");
     }
 };
@@ -154,7 +154,7 @@ public:
 
     std::string getName() const override { return "Search for Person: " + std::to_string(m_personId) ; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Searching ...");
     }
 };
@@ -172,7 +172,7 @@ public:
 
     std::string getName() const override { return "Talking with Person: " + std::to_string(m_personId) ; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Talking ...");
     }
 };
@@ -182,7 +182,7 @@ public:
     TalkingEventStart(const int time, const int personId, const std::string& label = "" ):
     TalkingEvent(time, personId, label) {}
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Talking start ...");
     }
 };
@@ -192,7 +192,7 @@ public:
     TalkingEventEnd(const int time, const int personId, const std::string& label = "" ):
     TalkingEvent(time, personId, label) {}
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Talking end...");
     }
 };
@@ -207,7 +207,7 @@ public:
 
     std::string getName() const override { return "Escort Person: " + std::to_string(m_personId) ; }
 
-    void execute(Robot &robot, Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
         Log::d("Escorting...");
     }
 };

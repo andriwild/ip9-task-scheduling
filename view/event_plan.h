@@ -16,7 +16,7 @@ class EventPlan : public QGraphicsItemGroup {
     int LINE_GAP = 20;
 
 public:
-    EventPlan(TreeNode<SimulationEvent> &root, const int xOffset,
+    EventPlan(EV::TreeNode<SimulationEvent> &root, const int xOffset,
               QGraphicsItem *parent = nullptr) : QGraphicsItemGroup(parent),
                                                  m_xOffset(xOffset) {
         drawRec(&root);
@@ -63,7 +63,7 @@ private:
         }
     }
 
-    void draw(TreeNode<SimulationEvent> *node, int level) {
+    void draw(EV::TreeNode<SimulationEvent> *node, int level) {
         level = level * LINE_GAP;
         const int s = node->getLeftMostLeaf()->getValue()->getTime();
         const int e = node->getRightMostLeaf()->getValue()->getTime();
@@ -88,7 +88,7 @@ private:
         }
     }
 
-    void drawRec(TreeNode<SimulationEvent> *node, int level = 0) {
+    void drawRec(EV::TreeNode<SimulationEvent> *node, int level = 0) {
         level++;
         if (!node->isLeaf()) {
             for (const auto &child: node->getChildren()) {

@@ -148,7 +148,7 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawEvents(Tree<SimulationEvent> &events) const {
+    void drawEvents(EV::Tree<SimulationEvent> &events) const {
         assert(events.getRoot()->parent == nullptr);
         std::vector<EventPlan*> plans;
         for (const auto& child: events.getRoot()->getChildren()) {

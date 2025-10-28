@@ -8,6 +8,14 @@
 #include "model/simulation.h"
 #include "util/tree_composer.h"
 #include "view/timeline_view.h"
+#include "behaviortree_cpp/bt_factory.h"
+#include "behaviortree_cpp/xml_parsing.h"
+#include <QtConcurrent/QtConcurrent>
+#include <behaviortree_cpp/blackboard.h>
+
+#include "behaviortree_cpp/loggers/bt_cout_logger.h"
+#include "behaviour/nodes/event_handler.h"
+
 
 constexpr int maxSimTime = 3600;
 
@@ -80,24 +88,61 @@ int main(int argc, char *argv[]) {
     constexpr int dock = 11;
 
     Robot robot(robotPosition, dock);
-    Tree<SimulationEvent> eventTree;
+    EV::Tree<SimulationEvent> eventTree;
 
     Planner planner(graph, robot.getSpeed());
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    root->addSubtree(planner.escortSequence(1000, personData,0, 16, dock, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
+    // root->addSubtree(planner.escortSequence(1000, personData,0, 16, dock, dock).releaseRoot());
+    //  root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
+    //  root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
+    //  root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
+
+    EV::Tree<SimulationEvent> dockTree;
+    auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(100, "Tour"));
+    planner.tour(dockTreeRoot, 0, 10);
+    root->addSubtree(dockTree.releaseRoot());
 
     std::cout << eventTree << std::endl;
 
-    Simulation model(graph, robot, eventTree, personData);
-    MapView mapView(model);
-    Timeline timelineView(model, maxSimTime);
+    BT::Tree m_bt;
+    SimTime m_simTime;
+    ReadOnlyClock roClock(&m_simTime);
 
+    BT::BehaviorTreeFactory factory;
+    // factory.registerNodeType<DriveStart>("DriveStart");
+    // factory.registerNodeType<NavigateToPoint>("NavigateToPoint", &robot, &graph, &roClock);
+    factory.registerNodeType<EventHandler>("EventHandler", &eventTree, &roClock);
+
+    m_bt = factory.createTreeFromFile("../tree.xml");
+    m_bt.rootBlackboard().get()->debugMessage();
+    m_bt.rootBlackboard().get()->set("goal", 16);
+    //BT::StdCoutLogger logger(m_bt);
+
+    Simulation model(graph, &robot, eventTree, personData, m_bt, &m_simTime);
+    MapView mapView(model);
+
+    Timeline timelineView(model, maxSimTime);
     timelineView.show();
-    //mapView.show();
+    //BT::printTreeRecursively(tree.rootNode());
+
+    mapView.show();
+
+    QtConcurrent::run([&] {
+        for (int i = 0; i < maxSimTime; ++i) {
+            model.simStep();
+            // std::cout << "simStep: " << m_simTime.getTime() << std::endl;
+            //
+            // m_bt.rootBlackboard().get()->set("goal", 16);
+            // auto keys = m_bt.rootBlackboard().get()->getKeys();
+            // auto goal = m_bt.rootBlackboard().get()->getEntry("goal");
+            // auto p = goal.get()->value;
+            // std::cout << p.cast<std::string>() << std::endl;
+            // for (const auto k: keys) {
+            //     std::cout << k << std::endl;
+            // }
+        }
+    });
     QApplication::exec();
     return 0;
 }
