@@ -6,6 +6,7 @@
 #include "../datastructure/tree.h"
 #include "../util/util.h"
 #include "../view/helper.h"
+#include "behaviortree_cpp/blackboard.h"
 
 
 inline static int nextId;
@@ -26,14 +27,14 @@ public:
 
     virtual ~SimulationEvent() = default;
 
-    virtual void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) = 0;
+    virtual void execute(BT::Blackboard& bb) = 0;
     int getId() const { return m_id; }
     int getTime() const { return m_time; };
     virtual void setTime(const int time) { m_time = time; };
     virtual std::string getName() const  = 0;
     std::string getLabel() const { return m_label; }
 
-    bool operator<(const SimulationEvent& other) {
+    bool operator<(const SimulationEvent& other) const {
         return m_time < other.m_time;
     }
 
@@ -54,7 +55,7 @@ public:
 
     std::string getName() const override { return "Simulation"; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(BT::Blackboard& bb) override {
         Log::d("Simulation");
     }
 };
@@ -66,8 +67,8 @@ public:
 
     std::string getName() const override { return "Tour"; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
-        Log::d("Start Tour");
+    void execute(BT::Blackboard& bb) override {
+        Log::i("Start new Tour");
     }
 };
 
@@ -80,12 +81,10 @@ public:
     m_destinationId(destinationId)
     { }
 
-    std::string getName() const override { return "Drive End Event"; }
+    std::string getName() const override { return "Drive End Event @ [" +std::to_string(m_destinationId) + "]"; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
-        Log::d("Robot ends driving");
-        robot.stopDriving();
-        robot.setPosition(m_destinationId);
+    void execute(BT::Blackboard& bb) override {
+        Log::d("Robot arrived @ " +std::to_string(m_destinationId));
     }
 };
 
@@ -105,15 +104,13 @@ public:
     task(task)
     { }
 
-    std::string getName() const override { return "Drive Start Event"; }
+    std::string getName() const override { return "Drive Start Event to [" + std::to_string(m_targetId) + "]"; }
 
     int getTarget() const { return m_targetId; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
-        robot.startDriving(m_time);
-        robot.setTarget(m_targetId);
-        robot.setTask(task);
-        Log::d("Robot starts driving");
+    void execute(BT::Blackboard& bb) override {
+        bb.set("goal", m_targetId);
+        Log::d("Robot starts driving to " + std::to_string(m_targetId));
     }
 };
 
@@ -132,8 +129,8 @@ public:
     int getPersonId() const { return m_personId; }
     int getDestination() const { return m_destinationId; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
-        Log::d("Meeting event");
+    void execute(BT::Blackboard& bb) override {
+        Log::d("Meeting event of person " + std::to_string(m_personId) + "@" + std::to_string(m_destinationId));
     }
 };
 
@@ -154,8 +151,8 @@ public:
 
     std::string getName() const override { return "Search for Person: " + std::to_string(m_personId) ; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
-        Log::d("Searching ...");
+    void execute(BT::Blackboard& bb) override {
+        Log::d("Searching person " + std::to_string(m_personId));
     }
 };
 
@@ -172,7 +169,7 @@ public:
 
     std::string getName() const override { return "Talking with Person: " + std::to_string(m_personId) ; }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(BT::Blackboard& bb) override {
         Log::d("Talking ...");
     }
 };
@@ -182,7 +179,7 @@ public:
     TalkingEventStart(const int time, const int personId, const std::string& label = "" ):
     TalkingEvent(time, personId, label) {}
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(BT::Blackboard& bb) override {
         Log::d("Talking start ...");
     }
 };
@@ -192,7 +189,7 @@ public:
     TalkingEventEnd(const int time, const int personId, const std::string& label = "" ):
     TalkingEvent(time, personId, label) {}
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(BT::Blackboard& bb) override {
         Log::d("Talking end...");
     }
 };
@@ -205,9 +202,9 @@ public:
     m_personId(personId)
     { }
 
-    std::string getName() const override { return "Escort Person: " + std::to_string(m_personId) ; }
+    std::string getName() const override { return "Escort Person: " + std::to_string(m_personId); }
 
-    void execute(Robot &robot, EV::Tree<SimulationEvent> &eventQueue, bool randomness = true) override {
+    void execute(BT::Blackboard& bb) override {
         Log::d("Escorting...");
     }
 };

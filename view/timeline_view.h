@@ -32,6 +32,7 @@ class Timeline final : public QGraphicsView {
     const int m_tickStep = 10;
     const int m_endLinePos;
     QGraphicsLineItem* m_timePointer;
+    QGraphicsSimpleTextItem* m_stringLabel = nullptr;
 
 public:
     explicit Timeline(Simulation& model, const int simTime, const int tickStep = 10, QWidget *parent=nullptr):
@@ -46,7 +47,7 @@ public:
         setRenderHint(QPainter::Antialiasing);
         setScene(m_scene);
         centerOn(0,0);
-        m_timePointer = m_scene->addLine( X_LINE_POS, m_yLinePos - TIME_POINTER_HEIGHT / 2, X_LINE_POS, m_yLinePos , {Qt::red} );
+        m_timePointer = m_scene->addLine(X_LINE_POS, m_yLinePos - TIME_POINTER_HEIGHT / 2, X_LINE_POS, m_yLinePos , {Qt::red} );
 
         connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
         connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);
@@ -77,13 +78,13 @@ public:
         // there is no easy way to get all enum values
         std::array<std::pair<QColor, std::string>, 7> allTaskTypes = {
             {
-                {Helper::color(IDLE),    Helper::typeToString(IDLE)},
-                {Helper::color(DRIVE),   Helper::typeToString(DRIVE)},
-                {Helper::color(ESCORT),  Helper::typeToString(ESCORT)},
-                {Helper::color(SEARCH),  Helper::typeToString(SEARCH)},
-                {Helper::color(MEETING), Helper::typeToString(MEETING)},
-                {Helper::color(TOUR),    Helper::typeToString(TOUR)},
-                {Helper::color(TALK),    Helper::typeToString(TALK)},
+                {Helper::color(IDLE),    Helper::toString(IDLE)},
+                {Helper::color(DRIVE),   Helper::toString(DRIVE)},
+                {Helper::color(ESCORT),  Helper::toString(ESCORT)},
+                {Helper::color(SEARCH),  Helper::toString(SEARCH)},
+                {Helper::color(MEETING), Helper::toString(MEETING)},
+                {Helper::color(TOUR),    Helper::toString(TOUR)},
+                {Helper::color(TALK),    Helper::toString(TALK)},
             }
         };        int rectPos = 10;
         for (const auto& [color, label] : allTaskTypes) {
@@ -152,7 +153,7 @@ public:
         assert(events.getRoot()->parent == nullptr);
         std::vector<EventPlan*> plans;
         for (const auto& child: events.getRoot()->getChildren()) {
-            auto eventPlan = new EventPlan(*child.get(), X_LINE_POS);
+            auto eventPlan = new EventPlan(*child, X_LINE_POS);
             plans.push_back(eventPlan);
         }
         std::ranges::reverse(plans);
@@ -163,6 +164,21 @@ public:
             offset -= plan->boundingRect().height() + 25;
             plan->setPos(0, offset);
         }
+    }
+
+
+    void drawTimeLabel(const int time) {
+        if (m_stringLabel == nullptr) {
+            m_stringLabel = new QGraphicsSimpleTextItem();
+            m_scene->addItem(m_stringLabel);
+            QFont font = m_stringLabel->font();
+            font.setBold(false);
+            font.setPointSize(12);
+            m_stringLabel->setFont(font);
+            m_stringLabel->setBrush(Qt::black);
+            m_stringLabel->setPos(width() - 40,20);
+        }
+        m_stringLabel->setText(QString::fromStdString(std::to_string(time)));
     }
 
     void drawBlock(const int startTime, const int endTime, const QColor &color = Qt::gray) const {

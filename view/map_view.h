@@ -26,6 +26,7 @@ class MapView final : public QGraphicsView {
     bool m_userZoomed = false;
     Simulation& m_model;
     RobotItem *m_robotItem = new RobotItem();
+    QGraphicsSimpleTextItem* m_stringLabel = nullptr;
 
 public:
     explicit MapView(Simulation& model) :
@@ -35,15 +36,18 @@ public:
         setRenderHint(QPainter::Antialiasing);
         setTransformationAnchor(AnchorUnderMouse);
         setScene(m_scene);
+
         const QPixmap map((FILEPATH + FILENAME).data());
         m_scene->addPixmap(map);
         m_scene->addItem(m_robotItem);
         m_robotItem->setZValue(Z_ROBOT);
 
-        connect(&m_model, &Simulation::graphChanged, this, &MapView::drawGraph);
-        connect(&m_model, &Simulation::robotChanged, this, &MapView::drawRobot);
+
+        connect(&m_model, &Simulation::graphChanged,  this, &MapView::drawGraph);
+        connect(&m_model, &Simulation::robotChanged,  this, &MapView::drawRobot);
         connect(&m_model, &Simulation::eventsChanged, this, &MapView::drawEvents);
         connect(&m_model, &Simulation::personChanged, this, &MapView::drawPersons);
+        connect(&m_model, &Simulation::timeChanged,   this, &MapView::drawTimeLabel);
 
         drawGraph(m_model.getGraph());
         drawRobot(m_model.getRobot());
@@ -72,8 +76,8 @@ public:
     void mousePressEvent(QMouseEvent *event) override {
         const auto pos = mapToScene(event->pos());
         std::cout << pos.x() << "," << pos.y() << std::endl;
-        const double radius = 5;
-        const auto color = Qt::red;
+        constexpr double radius = 5;
+        constexpr auto color = Qt::red;
         m_scene->addEllipse(
             {pos.x() - radius / 2, pos.y() - radius / 2, radius, radius},
             {color},
@@ -127,6 +131,20 @@ public:
     //     painter->drawLine(QNodeF(rect.left(), 0), QNodeF(rect.right(), 0));
     //     painter->drawLine(QNodeF(0, rect.top()), QNodeF(0, rect.bottom()));
     // }
+
+    void drawTimeLabel(const int time) {
+        if (m_stringLabel == nullptr) {
+            m_stringLabel = new QGraphicsSimpleTextItem();
+            m_scene->addItem(m_stringLabel);
+            QFont font = m_stringLabel->font();
+            font.setBold(false);
+            font.setPointSize(12);
+            m_stringLabel->setFont(font);
+            m_stringLabel->setBrush(Qt::black);
+            m_stringLabel->setPos(width() - 40,20);
+        }
+        m_stringLabel->setText(QString::fromStdString(std::to_string(time)));
+    }
 
     void drawLocation(
         const Node &n,

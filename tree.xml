@@ -1,9 +1,17 @@
-<root BTCPP_format="4" >
-    <BehaviorTree ID="MainTree">
-      <Sequence name="root_sequence">
-<!--          <DriveStart goal="{msg}"/>-->
-<!--          <NavigateToPoint goal="{msg}"/>*-->
-          <EventHandler />
-      </Sequence>
-    </BehaviorTree>
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <EventHandler queue="{queue}" goal="{goal}"/>
+      <NavigateToPoint goal="{goal}"/>
+<!--      <Sequence name="Collect Data">-->
+<!--        <SetBlackboard value="set values in bb" output_key="msg"/>-->
+<!--        <LoggerNode msg="{msg}"/>-->
+<!--        <LoggerNode msg="{task}"/>-->
+<!--      </Sequence>-->
+<!--      <Sequence>-->
+<!--        <LoggerNode msg="{task}"/>-->
+<!--      </Sequence>-->
+    </Sequence>
+  </BehaviorTree>
 </root>

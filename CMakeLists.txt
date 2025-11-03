@@ -51,6 +51,7 @@ add_executable(ip9_task_scheduling
         model/sim_time.h
         behaviour/nodes/event_handler.h
         behaviour/nodes/tour.h
+        des/event.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

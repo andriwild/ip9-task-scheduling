@@ -58,7 +58,7 @@ namespace Helper {
         }
         return color;
     }
-    inline std::string typeToString(TYPE task) {
+    inline std::string toString(TYPE task) {
         switch (task) {
             case IDLE:
                 return "Idle";

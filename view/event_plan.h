@@ -4,8 +4,10 @@
 #include <QGraphicsRectItem>
 #include <QPen>
 #include <QBrush>
-#include "../datastructure/tree.h"
 #include <QColor>
+#include "../datastructure/tree.h"
+#include "../model/event.h"
+
 
 class EventPlan : public QGraphicsItemGroup {
     int m_startTime = 0;
@@ -16,9 +18,14 @@ class EventPlan : public QGraphicsItemGroup {
     int LINE_GAP = 20;
 
 public:
-    EventPlan(EV::TreeNode<SimulationEvent> &root, const int xOffset,
-              QGraphicsItem *parent = nullptr) : QGraphicsItemGroup(parent),
-                                                 m_xOffset(xOffset) {
+    EventPlan(
+        EV::TreeNode<SimulationEvent> &root,
+        const int xOffset,
+        QGraphicsItem *parent = nullptr
+        ):
+    QGraphicsItemGroup(parent),
+    m_xOffset(xOffset)
+    {
         drawRec(&root);
     }
 

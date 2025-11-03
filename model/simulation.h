@@ -7,7 +7,6 @@
 #include "sim_time.h"
 #include "../datastructure/graph.h"
 #include "../datastructure/tree.h"
-#include "../behaviour/dummy.h"
 #include "../behaviour/nodes/nav_to_point.h"
 
 class  Simulation final : public QObject {
@@ -37,10 +36,11 @@ public:
     {}
 
     void simStep() {
-        m_tree.tickOnce();
         emit robotChanged(m_robot);
+        emit timeChanged(m_simTime->getTime());
+        m_tree.tickOnce();
         m_simTime->inc();
-        m_tree.sleep(std::chrono::milliseconds(10));
+        //std::cout << "[" <<m_simTime->getTime() << "]\n";
 
         //emit timeChanged(ev->getTime());
         // if (m_allEvents.empty()) {
