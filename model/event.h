@@ -56,6 +56,7 @@ public:
     std::string getName() const override { return "Simulation"; }
 
     void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
         Log::d("Simulation");
     }
 };
@@ -63,7 +64,7 @@ public:
 class Tour final : public SimulationEvent {
 public:
     explicit Tour(const int time, const std::string& label = ""):
-    SimulationEvent(time, Helper::colorAnsi(TOUR), label) { }
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TOUR), label) { }
 
     std::string getName() const override { return "Tour"; }
 
@@ -77,7 +78,7 @@ class RobotDriveEndEvent final : public SimulationEvent {
 
 public:
     RobotDriveEndEvent(const int time, const int destinationId):
-    SimulationEvent(time, Helper::colorAnsi(DRIVE)),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::DRIVE)),
     m_destinationId(destinationId)
     { }
 
@@ -91,15 +92,15 @@ public:
 class RobotDriveStartEvent final : public SimulationEvent {
 public:
     const int m_targetId;
-    const TYPE task;
+    const ROBOT_STATE task;
 
     RobotDriveStartEvent(
         const int time,
         const int targetId,
-        const TYPE task = DRIVE,
+        const ROBOT_STATE task = ROBOT_STATE::DRIVE,
         const std::string& label = ""
         ):
-    SimulationEvent(time, Helper::colorAnsi(DRIVE) ,label),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::DRIVE), label),
     m_targetId(targetId),
     task(task)
     { }
@@ -120,7 +121,7 @@ class MeetingEvent final : public SimulationEvent {
 
 public:
     MeetingEvent(const int time, const int destinationId, const int personId, const std::string& label = ""):
-    SimulationEvent(time, Helper::colorAnsi(MEETING) ,label),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::MEETING) ,label),
     m_destinationId(destinationId),
     m_personId(personId)
     { }
@@ -143,7 +144,7 @@ public:
         const int personId,
         const std::string& label = ""
         ):
-    SimulationEvent(time, Helper::colorAnsi(SEARCH) ,label),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::SEARCH) ,label),
     m_personId(personId)
     { }
 
@@ -152,6 +153,7 @@ public:
     std::string getName() const override { return "Search for Person: " + std::to_string(m_personId) ; }
 
     void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::SEARCH));
         Log::d("Searching person " + std::to_string(m_personId));
     }
 };
@@ -161,7 +163,7 @@ class TalkingEvent : public SimulationEvent {
 
 public:
     TalkingEvent(const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(TALK) ,label),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TALK) ,label),
     m_personId(personId)
     { }
 
@@ -170,6 +172,7 @@ public:
     std::string getName() const override { return "Talking with Person: " + std::to_string(m_personId) ; }
 
     void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::TALK));
         Log::d("Talking ...");
     }
 };
@@ -198,13 +201,14 @@ class EscortEvent final : public SimulationEvent {
     const int m_personId;
 public:
     EscortEvent( const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ESCORT) ,label),
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::ESCORT) ,label),
     m_personId(personId)
     { }
 
     std::string getName() const override { return "Escort Person: " + std::to_string(m_personId); }
 
     void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::ESCORT));
         Log::d("Escorting...");
     }
 };

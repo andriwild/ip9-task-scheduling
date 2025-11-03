@@ -15,7 +15,9 @@
 
 #include "behaviortree_cpp/loggers/bt_cout_logger.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include "behaviour/dummy.h"
 #include "behaviour/nodes/event_handler.h"
+#include "behaviour/nodes/robot_state.h"
 
 
 constexpr int maxSimTime = 3600;
@@ -94,7 +96,7 @@ int main(int argc, char *argv[]) {
     Planner planner(graph, robot.getSpeed());
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    root->addSubtree(planner.escortSequence(700, personData,0, 16, dock, dock).releaseRoot());
+    root->addSubtree(planner.escortSequence(620, personData,0, 16, robotPosition, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
@@ -114,15 +116,12 @@ int main(int argc, char *argv[]) {
     factory.registerNodeType<DriveStart>("DriveStart");
     factory.registerNodeType<NavigateToPoint>("NavigateToPoint", &robot, &graph, &roClock);
     factory.registerNodeType<EventHandler>("EventHandler", &eventTree, &roClock);
+    factory.registerNodeType<RobotState>("RobotState", &robot);
     factory.registerNodeType<SayHello>("SayHello");
     factory.registerNodeType<LogNode>("LoggerNode");
 
     m_bt = factory.createTreeFromFile("../tree.xml");
-    // m_bt.rootBlackboard().get()->debugMessage();
-    m_bt.rootBlackboard().get()->set("queue", std::vector {1,2});
-    m_bt.rootBlackboard().get()->set("task", "drive");
-    m_bt.rootBlackboard().get()->set("msg", "default string");
-    m_bt.rootBlackboard().get()->set("path", std::vector<int>{1,2,3});
+    m_bt.rootBlackboard().get()->set("goal", -1);
 
     // BT::StdCoutLogger logger(m_bt);
 
@@ -142,19 +141,7 @@ int main(int argc, char *argv[]) {
     QtConcurrent::run([&] {
         for (int i = 0; i < maxSimTime; ++i) {
             model.simStep();
-
-            //auto msg = m_bt.rootBlackboard().get()->getEntry("msg");
             m_bt.sleep(std::chrono::milliseconds(100));
-            // std::cout << "simStep: " << m_simTime.getTime() << std::endl;
-            //
-            // m_bt.rootBlackboard().get()->set("goal", 16);
-            // auto keys = m_bt.rootBlackboard().get()->getKeys();
-            // auto goal = m_bt.rootBlackboard().get()->getEntry("goal");
-            // auto p = goal.get()->value;
-            // std::cout << p.cast<std::string>() << std::endl;
-            // for (const auto k: keys) {
-            //     std::cout << k << std::endl;
-            // }
         }
     });
     QApplication::exec();

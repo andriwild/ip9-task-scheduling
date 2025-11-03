@@ -44,7 +44,7 @@ private:
 inline BT::NodeStatus NavigateToPoint::onStart() {
     if ( !getInput<int>("goal", m_goalNode)) {
         std::cout << " [ Robot start ] abort - no goal\n";
-        return BT::NodeStatus::SUCCESS;
+        return BT::NodeStatus::FAILURE;
     }
     //std::cout << "[ Robot start ] - Goal Node: " << std::to_string(m_goalNode) << std::endl;
     const std::vector<int> path = m_graph->dijkstra(m_robot->getPosition()).shortestPath(m_goalNode);
@@ -56,6 +56,7 @@ inline BT::NodeStatus NavigateToPoint::onStart() {
 }
 
 inline BT::NodeStatus NavigateToPoint::onRunning() {
+
     const int timeRemaining = m_arrivalTime - m_clock->getTime();
     const std::string arriveTime = std::to_string(timeRemaining);
     if (timeRemaining <= 0) {

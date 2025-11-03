@@ -78,13 +78,13 @@ public:
         // there is no easy way to get all enum values
         std::array<std::pair<QColor, std::string>, 7> allTaskTypes = {
             {
-                {Helper::color(IDLE),    Helper::toString(IDLE)},
-                {Helper::color(DRIVE),   Helper::toString(DRIVE)},
-                {Helper::color(ESCORT),  Helper::toString(ESCORT)},
-                {Helper::color(SEARCH),  Helper::toString(SEARCH)},
-                {Helper::color(MEETING), Helper::toString(MEETING)},
-                {Helper::color(TOUR),    Helper::toString(TOUR)},
-                {Helper::color(TALK),    Helper::toString(TALK)},
+                {Helper::color(ROBOT_STATE::IDLE),    Helper::toString(ROBOT_STATE::IDLE)},
+                {Helper::color(ROBOT_STATE::DRIVE),   Helper::toString(ROBOT_STATE::DRIVE)},
+                {Helper::color(ROBOT_STATE::ESCORT),  Helper::toString(ROBOT_STATE::ESCORT)},
+                {Helper::color(ROBOT_STATE::SEARCH),  Helper::toString(ROBOT_STATE::SEARCH)},
+                {Helper::color(ROBOT_STATE::MEETING), Helper::toString(ROBOT_STATE::MEETING)},
+                {Helper::color(ROBOT_STATE::TOUR),    Helper::toString(ROBOT_STATE::TOUR)},
+                {Helper::color(ROBOT_STATE::TALK),    Helper::toString(ROBOT_STATE::TALK)},
             }
         };        int rectPos = 10;
         for (const auto& [color, label] : allTaskTypes) {

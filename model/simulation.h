@@ -36,13 +36,11 @@ public:
     {}
 
     void simStep() {
-        emit robotChanged(m_robot);
-        emit timeChanged(m_simTime->getTime());
         m_tree.tickOnce();
         m_simTime->inc();
-        //std::cout << "[" <<m_simTime->getTime() << "]\n";
+        emit robotChanged(m_robot);
+        emit timeChanged(m_simTime->getTime());
 
-        //emit timeChanged(ev->getTime());
         // if (m_allEvents.empty()) {
         //     m_allEvents = m_events.traversalPreOrder();
         // }

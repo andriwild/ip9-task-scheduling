@@ -77,21 +77,21 @@ private:
 
         SimulationEvent *ev = node->getValue();
         if (dynamic_cast<MeetingEvent *>(ev)) {
-            drawBlock(s, e, level, Helper::color(MEETING), ev->getLabel(), ev->getTime());
+            drawBlock(s, e, level, Helper::color(ROBOT_STATE::MEETING), ev->getLabel(), ev->getTime());
         } else if (dynamic_cast<RobotDriveStartEvent *>(ev)) {
             driveStart = ev->getTime();
         } else if (dynamic_cast<RobotDriveEndEvent *>(ev)) {
-            drawBlock(driveStart, ev->getTime(), level, Helper::color(DRIVE));
+            drawBlock(driveStart, ev->getTime(), level, Helper::color(ROBOT_STATE::DRIVE));
         } else if (dynamic_cast<SearchEvent *>(ev)) {
-            drawBlock(s, e, level, Helper::color(SEARCH), ev->getLabel());
+            drawBlock(s, e, level, Helper::color(ROBOT_STATE::SEARCH), ev->getLabel());
         } else if (dynamic_cast<TalkingEventStart *>(ev)) {
             talkStart = ev->getTime();
         } else if (dynamic_cast<TalkingEventEnd *>(ev)) {
-            drawBlock(talkStart, ev->getTime(), level, Helper::color(TALK));
+            drawBlock(talkStart, ev->getTime(), level, Helper::color(ROBOT_STATE::TALK));
         } else if (dynamic_cast<Tour *>(ev)) {
-            drawBlock(s, e, level, Helper::color(TOUR), ev->getLabel());
+            drawBlock(s, e, level, Helper::color(ROBOT_STATE::TOUR), ev->getLabel());
         } else if (dynamic_cast<EscortEvent *>(ev)) {
-            drawBlock(s, e, level, Helper::color(ESCORT), ev->getLabel());
+            drawBlock(s, e, level, Helper::color(ROBOT_STATE::ESCORT), ev->getLabel());
         }
     }
 

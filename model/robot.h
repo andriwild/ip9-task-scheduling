@@ -2,7 +2,15 @@
 
 #include "../algo/rnd.h"
 
-enum TYPE { IDLE, DRIVE, ESCORT, SEARCH, MEETING, TOUR, TALK };
+enum class ROBOT_STATE : int {
+    IDLE = 0,
+    DRIVE = 1,
+    ESCORT = 2,
+    SEARCH = 3,
+    MEETING = 4,
+    TOUR = 5,
+    TALK = 6
+};
 
 constexpr double energyUsageStandby = 0.2;
 constexpr double energyUsageDrive = 0.4;
@@ -15,7 +23,7 @@ class Robot {
     bool m_isDriving;
     int m_startDrivingTime;
     double m_energy;
-    TYPE m_task = IDLE;
+    ROBOT_STATE m_state = ROBOT_STATE::IDLE;
 
 public:
     explicit Robot(const int position, const int dock, double speed = 3.0, double energy = 100.0):
@@ -85,12 +93,12 @@ public:
         this->m_target = target;
     }
 
-    void setTask(TYPE task) {
-        m_task = task;
+    void setTask(const ROBOT_STATE state) {
+        m_state = state;
     }
 
-    TYPE getTask() const {
-        return m_task;
+    ROBOT_STATE getTask() const {
+        return m_state;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Robot& robot) {

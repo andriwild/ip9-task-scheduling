@@ -26,7 +26,8 @@ class MapView final : public QGraphicsView {
     bool m_userZoomed = false;
     Simulation& m_model;
     RobotItem *m_robotItem = new RobotItem();
-    QGraphicsSimpleTextItem* m_stringLabel = nullptr;
+    QGraphicsSimpleTextItem* m_timeCounter = nullptr;
+    QGraphicsSimpleTextItem* m_stateLabel = nullptr;
 
 public:
     explicit MapView(Simulation& model) :
@@ -133,17 +134,31 @@ public:
     // }
 
     void drawTimeLabel(const int time) {
-        if (m_stringLabel == nullptr) {
-            m_stringLabel = new QGraphicsSimpleTextItem();
-            m_scene->addItem(m_stringLabel);
-            QFont font = m_stringLabel->font();
+        if (m_timeCounter == nullptr) {
+            m_timeCounter = new QGraphicsSimpleTextItem();
+            m_scene->addItem(m_timeCounter);
+            QFont font = m_timeCounter->font();
             font.setBold(false);
             font.setPointSize(12);
-            m_stringLabel->setFont(font);
-            m_stringLabel->setBrush(Qt::black);
-            m_stringLabel->setPos(width() - 40,20);
+            m_timeCounter->setFont(font);
+            m_timeCounter->setBrush(Qt::black);
+            m_timeCounter->setPos(width() - 40,20);
         }
-        m_stringLabel->setText(QString::fromStdString(std::to_string(time)));
+        m_timeCounter->setText(QString::fromStdString(std::to_string(time)));
+    }
+
+    void drawStateLabel(Robot* robot) {
+        if (m_stateLabel == nullptr) {
+            m_stateLabel = new QGraphicsSimpleTextItem();
+            m_scene->addItem(m_stateLabel);
+            QFont font = m_stateLabel->font();
+            font.setBold(false);
+            font.setPointSize(12);
+            m_stateLabel->setFont(font);
+            m_stateLabel->setPos(width() - 140,20);
+        }
+        m_stateLabel->setBrush(Helper::color(robot->getTask()));
+        m_stateLabel->setText(QString::fromStdString(Helper::toString(robot->getTask())));
     }
 
     void drawLocation(
@@ -198,26 +213,27 @@ public:
         for (auto ev: evs) {
             if (auto* escortEvent = dynamic_cast<MeetingEvent*>(ev->getValue())) {
                Node node =  m_model.getGraph().getNode(escortEvent->getDestination());
-                drawLocation(node, std::to_string(escortEvent->getPersonId()), Helper::color(MEETING), S);
+                drawLocation(node, std::to_string(escortEvent->getPersonId()), Helper::color(ROBOT_STATE::MEETING), S);
             }
         }
     }
 
     void drawRobot(Robot* robot) {
-        Graph graph = m_model.getGraph();
-        Node dock = graph.getNode(robot->getDock());
+        const Graph graph = m_model.getGraph();
+        const Node dock = graph.getNode(robot->getDock());
         drawLocation(dock, "Dock", Qt::yellow, O, 15, Z_DOCK);
 
-        int posId = robot->getPosition();
-        Node pos = graph.getNode(posId);
+        const Node pos = graph.getNode(robot->getPosition());
         if (robot->isDriving()) {
-            int targetId = robot->getTarget();
-            Node target = graph.getNode(targetId);
+            const int targetId = robot->getTarget();
+            const Node target = graph.getNode(targetId);
             m_robotItem->setDirection(target.x, target.y);
         } else {
             m_robotItem->clearDirection();
         }
         m_robotItem->setPos(pos.x - (15.0 / 2), pos.y - (15.0 / 2));
+
+        drawStateLabel(robot);
     }
 
     void drawPersons(util::PersonData personData) {
@@ -226,7 +242,7 @@ public:
             int personId = p.first;
             auto searchLocation = p.second;
             for (auto sl: searchLocation) {
-                drawLocation(graph.getNode(sl), std::to_string(personId), Helper::color(ESCORT), O);
+                drawLocation(graph.getNode(sl), std::to_string(personId), Helper::color(ROBOT_STATE::ESCORT), O);
             }
         }
 

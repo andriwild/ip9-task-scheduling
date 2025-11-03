@@ -52,6 +52,7 @@ add_executable(ip9_task_scheduling
         behaviour/nodes/event_handler.h
         behaviour/nodes/tour.h
         des/event.h
+        behaviour/nodes/robot_state.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

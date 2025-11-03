@@ -26,7 +26,7 @@ public:
                 std::make_unique<RobotDriveStartEvent>(
                 currentTime,
                 path[pathNode],
-                DRIVE)
+                ROBOT_STATE::DRIVE)
                 );
             root->addChild(std::make_unique<RobotDriveEndEvent>(currentTime + driveTime - 1, path[pathNode]));
             currentTime += driveTime;
