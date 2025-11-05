@@ -11,6 +11,7 @@ constexpr int TIMELINE_HEIGHT = 700;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
 
 // draw ordering
+constexpr int Z_POINTER = 200;
 constexpr int Z_TIMELINE = 100;
 constexpr int Z_TASKS = 50;
 constexpr int Z_EVENT = 60;
@@ -48,6 +49,7 @@ public:
         setScene(m_scene);
         centerOn(0,0);
         m_timePointer = m_scene->addLine(X_LINE_POS, m_yLinePos - TIME_POINTER_HEIGHT / 2, X_LINE_POS, m_yLinePos , {Qt::red} );
+        m_timePointer->setZValue(Z_POINTER);
 
         connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
         connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);

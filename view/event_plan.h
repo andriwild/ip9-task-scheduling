@@ -13,8 +13,7 @@ class EventPlan : public QGraphicsItemGroup {
     int m_startTime = 0;
     int m_xOffset;
     int m_yLevel = 0;
-    int driveStart = 0;
-    int talkStart = 0;
+    int eventStart = 0;
     int LINE_GAP = 20;
 
 public:
@@ -79,19 +78,23 @@ private:
         if (dynamic_cast<MeetingEvent *>(ev)) {
             drawBlock(s, e, level, Helper::color(ROBOT_STATE::MEETING), ev->getLabel(), ev->getTime());
         } else if (dynamic_cast<RobotDriveStartEvent *>(ev)) {
-            driveStart = ev->getTime();
+            eventStart = ev->getTime();
         } else if (dynamic_cast<RobotDriveEndEvent *>(ev)) {
-            drawBlock(driveStart, ev->getTime(), level, Helper::color(ROBOT_STATE::DRIVE));
+            drawBlock(eventStart, ev->getTime(), level, Helper::color(ROBOT_STATE::DRIVE));
         } else if (dynamic_cast<SearchEvent *>(ev)) {
             drawBlock(s, e, level, Helper::color(ROBOT_STATE::SEARCH), ev->getLabel());
         } else if (dynamic_cast<TalkingEventStart *>(ev)) {
-            talkStart = ev->getTime();
+            eventStart = ev->getTime();
         } else if (dynamic_cast<TalkingEventEnd *>(ev)) {
-            drawBlock(talkStart, ev->getTime(), level, Helper::color(ROBOT_STATE::TALK));
+            drawBlock(eventStart, ev->getTime(), level-1, Helper::color(ROBOT_STATE::TALK));
         } else if (dynamic_cast<Tour *>(ev)) {
             drawBlock(s, e, level, Helper::color(ROBOT_STATE::TOUR), ev->getLabel());
         } else if (dynamic_cast<EscortEvent *>(ev)) {
             drawBlock(s, e, level, Helper::color(ROBOT_STATE::ESCORT), ev->getLabel());
+        } else if (dynamic_cast<BufferStartEvent*>(ev)) {
+            eventStart = ev->getTime();
+        } else if (dynamic_cast<BufferEndEvent*>(ev)) {
+            drawBlock(eventStart, e, level-1, Qt::white, ev->getLabel());
         }
     }
 

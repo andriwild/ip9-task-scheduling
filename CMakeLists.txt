@@ -30,13 +30,14 @@ find_package(Qt5 COMPONENTS
 add_executable(ip9_task_scheduling
         main.cpp
         view/timeline_view.h
-        view/map_view.h
+        view/map_view2.h
         model/event.h
         model/robot.h
         algo/rnd.h
         util/util.h
         util/log.h
         util/db.h
+        util/vis_lib.h
         algo/algo.h
         datastructure/graph.h
         model/simulation.h
@@ -53,6 +54,7 @@ add_executable(ip9_task_scheduling
         behaviour/nodes/tour.h
         des/event.h
         behaviour/nodes/robot_state.h
+        view/map.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

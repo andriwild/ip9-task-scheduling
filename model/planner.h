@@ -2,6 +2,7 @@
 
 #include "../util/util.h"
 #include "robot.h"
+#include "../cmake-build-debug/_deps/behaviortree-src/3rdparty/cppzmq/zmq.hpp"
 #include "../datastructure/graph.h"
 #include "../datastructure/tree.h"
 #include "../model/event.h"
@@ -55,7 +56,13 @@ public:
         tmpRoot->addChild(std::make_unique<TalkingEventEnd>(currentTimeOffset + duration, personId, "Bye"));
         root->addSubtree(tmpTree.releaseRoot());
         return currentTimeOffset + duration;
+    }
 
+    int bufferSequence(EV::TreeNode<SimulationEvent> *root, const int duration) {
+        int currentTimeOffset = root->getValue()->getTime();
+        root->addChild(std::make_unique<BufferStartEvent>(currentTimeOffset, "BS"));
+        root->addChild(std::make_unique<BufferEndEvent>(currentTimeOffset + duration, "BE"));
+        return currentTimeOffset + duration;
     }
 
     EV::Tree<SimulationEvent> escortSequence(
@@ -78,7 +85,7 @@ public:
 
         EV::Tree<SimulationEvent> searchPersonTree;
         auto searchRoot = searchPersonTree.createRoot(std::make_unique<SearchEvent>(0, personId, "Search"));
-        searchPerson(searchRoot, startLocation, personData[personId] );
+        searchPerson(searchRoot, startLocation, personData[personId]);
 
         EV::Tree<SimulationEvent> conversationTree;
         auto convRoot = conversationTree.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation 1"));
@@ -92,11 +99,16 @@ public:
         auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(0, "Dock"));
         tour(dockTreeRoot, meetingLocation, dock);
 
+        EV::Tree<SimulationEvent> bufferTree;
+        auto bufferTreeRoot = bufferTree.createRoot(std::make_unique<BufferEvent>(0, "B"));
+        bufferSequence(bufferTreeRoot, 100);
+
         EventTreeComposer etc{};
         etc.on(meetingRoot)
         ->prepend(conversationTree)
         ->prepend(escortTree)
         ->prepend(conversationTree2)
+        ->prepend(bufferTree)
         ->prepend(searchPersonTree)
         ->append(dockTree);
         return meetingTree;

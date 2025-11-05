@@ -212,3 +212,45 @@ public:
         Log::d("Escorting...");
     }
 };
+
+class BufferEvent : public SimulationEvent {
+public:
+    BufferEvent(const int time, const std::string& label = "" ):
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TALK) ,label)
+    {}
+
+    std::string getName() const override { return "Buffer"; }
+
+    void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
+        Log::d("Buffer");
+    }
+};
+
+class BufferStartEvent : public SimulationEvent {
+public:
+    BufferStartEvent(const int time, const std::string& label = "" ):
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::IDLE) ,label)
+    {}
+
+    std::string getName() const override { return "Buffer start"; }
+
+    void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
+        Log::d("Buffer start");
+    }
+};
+
+class BufferEndEvent : public SimulationEvent {
+public:
+    BufferEndEvent(const int time, const std::string& label = "" ):
+    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::IDLE) ,label)
+    {}
+
+    std::string getName() const override { return "Buffer end"; }
+
+    void execute(BT::Blackboard& bb) override {
+        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
+        Log::d("Buffer end");
+    }
+};

@@ -1,6 +1,6 @@
 #include "model/event.h"
 #include "datastructure/graph.h"
-#include "view/map_view.h"
+#include "view/map_view2.h"
 #include "model/robot.h"
 #include "algo/rnd.h"
 #include "datastructure/tree.h"
@@ -18,6 +18,7 @@
 #include "behaviour/dummy.h"
 #include "behaviour/nodes/event_handler.h"
 #include "behaviour/nodes/robot_state.h"
+#include "util/vis_lib.h"
 
 
 constexpr int maxSimTime = 3600;
@@ -25,6 +26,8 @@ constexpr int maxSimTime = 3600;
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+
     Graph graph;
     std::vector nodes = {
         Node(359.183, 202.229),
@@ -96,14 +99,14 @@ int main(int argc, char *argv[]) {
     Planner planner(graph, robot.getSpeed());
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    root->addSubtree(planner.escortSequence(620, personData,0, 16, robotPosition, dock).releaseRoot());
+    root->addSubtree(planner.escortSequence(1000, personData,0, 16, robotPosition, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
 
     // EV::Tree<SimulationEvent> dockTree;
     // auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(100, "Tour"));
-    // planner.tour(dockTreeRoot, 0, 10);
+    // planner.tour(dockTreeRoot, robotPosition, 10);
     // root->addSubtree(dockTree.releaseRoot());
 
     std::cout << eventTree << std::endl;
@@ -130,20 +133,23 @@ int main(int argc, char *argv[]) {
     MapView mapView(model);
 
     Timeline timelineView(model, maxSimTime);
-    timelineView.show();
-    //BT::printTreeRecursively(tree.rootNode());
-    //
-    std::string xml_models = BT::writeTreeNodesModelXML(factory);
-    std::cout << xml_models << std::endl;
-
+    // timelineView.show();
     mapView.show();
 
-    QtConcurrent::run([&] {
-        for (int i = 0; i < maxSimTime; ++i) {
-            model.simStep();
-            m_bt.sleep(std::chrono::milliseconds(100));
-        }
-    });
+    //BT::printTreeRecursively(tree.rootNode());
+    //
+    // std::string xml_models = BT::writeTreeNodesModelXML(factory);
+    // std::cout << xml_models << std::endl;
+
+
+
+
+    // QtConcurrent::run([&] {
+    //     for (int i = 0; i < maxSimTime; ++i) {
+    //         model.simStep();
+    //         m_bt.sleep(std::chrono::milliseconds(100));
+    //     }
+    // });
     QApplication::exec();
     return 0;
 }

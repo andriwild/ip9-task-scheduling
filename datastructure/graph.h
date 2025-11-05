@@ -26,7 +26,6 @@ struct Node {
     }
 };
 
-
 class Graph {
     std::unordered_map<int, Node> m_nodes;
     std::unordered_map<int, std::vector<int>> m_adjList;
@@ -46,6 +45,18 @@ public:
     void addEdge(const int fromId, const int toId) {
         m_adjList[fromId].push_back(toId);
         m_adjList[toId].push_back(fromId);
+    }
+
+    void removeEdge(const int fromId, const int toId) {
+        auto& fromList = m_adjList[fromId];
+        std::erase(fromList, toId);
+
+        auto& toList = m_adjList[toId];
+        std::erase(toList, fromId);
+    }
+
+    std::vector<int> neighbours(const int id) {
+        return m_adjList[id];
     }
 
     size_t nodeCount() const {
