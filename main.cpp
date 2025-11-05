@@ -1,6 +1,6 @@
 #include "model/event.h"
 #include "datastructure/graph.h"
-#include "view/map_view2.h"
+#include "view/map_view.h"
 #include "model/robot.h"
 #include "algo/rnd.h"
 #include "datastructure/tree.h"
@@ -12,71 +12,25 @@
 #include "behaviortree_cpp/xml_parsing.h"
 #include <QtConcurrent/QtConcurrent>
 #include <behaviortree_cpp/blackboard.h>
-
 #include "behaviortree_cpp/loggers/bt_cout_logger.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "behaviour/dummy.h"
 #include "behaviour/nodes/event_handler.h"
 #include "behaviour/nodes/robot_state.h"
-#include "util/vis_lib.h"
+#include "util/grid.h"
+#include "util/map_loader.h"
 
 
 constexpr int maxSimTime = 3600;
+constexpr double GRID_SIZE = 50;
+constexpr double SEGMENT_SCALE = 100.0;
+constexpr bool SHOW_VISITED = false;
 
+const std::string RES_PATH = "/home/andri/repos/ip9-task-scheduling/resources/";
+const std::string MAP_FILENAME = "IMVS_data.bin";
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-
-
-    Graph graph;
-    std::vector nodes = {
-        Node(359.183, 202.229),
-        Node(311.896, 227.382),
-        Node(362.202, 236.437),
-        Node(406.471, 257.566),
-        Node(461.807, 280.706),
-        Node(549.339, 330.006),
-        Node(504.064, 394.398),
-        Node(545.315, 395.404),
-        Node(610.713, 354.153),
-        Node(719.373, 419.55),
-        Node(824.009, 500.04),
-        Node(367.232, 170.034),
-        Node(317.933, 118.722),
-        Node(371.257, 71.4343),
-        Node(424.581, 105.642),
-        Node(256.56, 260.584),
-        Node(206.254, 384.336),
-        Node(130.795, 365.22),
-        Node(230.401, 291.774),
-        Node(394.398, 206.254)
-    };
-    for (auto n: nodes) {
-        graph.addNode(n);
-    }
-    graph.addEdge(0, 1);
-    graph.addEdge(0, 2);
-    graph.addEdge(1, 2);
-    graph.addEdge(0, 11);
-    graph.addEdge(11, 12);
-    graph.addEdge(11, 14);
-    graph.addEdge(13, 14);
-    graph.addEdge(13, 12);
-    graph.addEdge(1, 15);
-    graph.addEdge(18, 15);
-    graph.addEdge(18, 17);
-    graph.addEdge(18, 16);
-    graph.addEdge(3, 2);
-    graph.addEdge(3, 4);
-    graph.addEdge(4, 5);
-    graph.addEdge(5, 8);
-    graph.addEdge(9, 8);
-    graph.addEdge(9, 10);
-    graph.addEdge(5, 6);
-    graph.addEdge(5, 7);
-    graph.addEdge(6, 7);
-    graph.addEdge(19, 2);
-    graph.addEdge(19, 0);
 
     // TODO: expectation that fist search location has biggest change to find the person
     util::PersonData personData;
@@ -90,16 +44,54 @@ int main(int argc, char *argv[]) {
     personData[2].push_back(18);
     personData[3].push_back(4);
 
-    constexpr int robotPosition = 0;
-    constexpr int dock = 11;
+    EV::Tree<SimulationEvent> eventTree;
+
+    std::vector<VisLib::Segment> segments;
+    std::vector<VisLib::Point> points;
+    VisLib::readFile(RES_PATH + MAP_FILENAME, segments, points);
+
+    for (auto& s: segments) {
+        s.m_points[0].m_x *= SEGMENT_SCALE;
+        s.m_points[0].m_y *= SEGMENT_SCALE;
+        s.m_points[1].m_x *= SEGMENT_SCALE;
+        s.m_points[1].m_y *= SEGMENT_SCALE;
+    }
+
+    BT::Tree m_bt;
+    SimTime m_simTime;
+    ReadOnlyClock roClock(&m_simTime);
+
+    Graph graph;
+
+    auto map = new Map(segments, points);
+
+    QRectF bounds = map->boundingRect();
+    const int h = static_cast<int>(bounds.height());
+    const int w = static_cast<int>(bounds.width());
+    double offsetX = bounds.x();
+    double offsetY = bounds.y();
+
+    std::vector<std::vector<Node>> girdLines;
+    createGridGraph(GRID_SIZE, offsetX, offsetY, h, w, graph, girdLines);
+    connectAllGridNodes(graph, girdLines);
+    auto visitedNodes = removeIntersectingEdges(graph, girdLines, segments, offsetX, offsetY, GRID_SIZE);
+
+    int robotPosition = getNearestNode(graph, -930, -980);
+    int dock = getNearestNode(graph, -826, -922);
 
     Robot robot(robotPosition, dock);
-    EV::Tree<SimulationEvent> eventTree;
+    Simulation model(graph, &robot, eventTree, personData, m_bt, &m_simTime);
+    MapView mapView(model, map);
+    if (SHOW_VISITED) {
+        for (auto n: visitedNodes) {
+            mapView.drawLocation(n, "", Qt::green, N, 20, -1);
+        }
+    }
 
     Planner planner(graph, robot.getSpeed());
 
     auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    root->addSubtree(planner.escortSequence(1000, personData,0, 16, robotPosition, dock).releaseRoot());
+    //root->addSubtree(planner.escortSequence(1000, personData,0, 16, robotPosition, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
     // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
@@ -111,9 +103,6 @@ int main(int argc, char *argv[]) {
 
     std::cout << eventTree << std::endl;
 
-    BT::Tree m_bt;
-    SimTime m_simTime;
-    ReadOnlyClock roClock(&m_simTime);
 
     BT::BehaviorTreeFactory factory;
     factory.registerNodeType<DriveStart>("DriveStart");
@@ -127,10 +116,6 @@ int main(int argc, char *argv[]) {
     m_bt.rootBlackboard().get()->set("goal", -1);
 
     // BT::StdCoutLogger logger(m_bt);
-
-    BT::Groot2Publisher publisher(m_bt);
-    Simulation model(graph, &robot, eventTree, personData, m_bt, &m_simTime);
-    MapView mapView(model);
 
     Timeline timelineView(model, maxSimTime);
     // timelineView.show();

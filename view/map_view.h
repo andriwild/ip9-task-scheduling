@@ -10,7 +10,7 @@
 #include "robot_item.h"
 #include "../datastructure/graph.h"
 #include "../model/simulation.h"
-#include "../util/vis_lib.h"
+#include "../util/map_loader.h"
 
 enum DIRECTION { N, O, S, W };
 
@@ -18,9 +18,6 @@ constexpr int Z_DRIVE = 1;
 constexpr int Z_LOCATION = 100;
 constexpr int Z_DOCK = Z_LOCATION - 1;
 constexpr int Z_ROBOT = 200;
-
-const std::string RES_PATH = "/home/andri/repos/ip9-task-scheduling/resources/";
-const std::string MAP_FILENAME = "IMVS_data.bin";
 
 class MapView final : public QGraphicsView {
     Q_OBJECT
@@ -30,20 +27,18 @@ class MapView final : public QGraphicsView {
     RobotItem *m_robotItem = new RobotItem();
     QGraphicsSimpleTextItem *m_timeCounter = nullptr;
     QGraphicsSimpleTextItem *m_stateLabel = nullptr;
-    std::vector<VisLib::Segment> segments;
-    std::vector<VisLib::Point> points;
 
 public:
-    explicit MapView(Simulation &model) : m_model(model) {
+    explicit MapView(Simulation &model, Map* map) : m_model(model) {
         m_scene = new QGraphicsScene(this);
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
         setTransformationAnchor(AnchorUnderMouse);
         setScene(m_scene);
 
-        //m_scene->addItem(m_robotItem);
-        //m_robotItem->setZValue(Z_ROBOT);
-
+        m_scene->addItem(map);
+        m_scene->addItem(m_robotItem);
+        m_robotItem->setZValue(Z_ROBOT);
 
         connect(&m_model, &Simulation::graphChanged, this, &MapView::drawGraph);
         connect(&m_model, &Simulation::robotChanged, this, &MapView::drawRobot);
@@ -51,128 +46,12 @@ public:
         connect(&m_model, &Simulation::personChanged, this, &MapView::drawPersons);
         connect(&m_model, &Simulation::timeChanged, this, &MapView::drawTimeLabel);
 
-        // drawGraph(m_model.getGraph());
-        // drawRobot(m_model.getRobot());
+        drawGraph(m_model.getGraph());
+        drawRobot(m_model.getRobot());
         // drawEvents(m_model.getEvents());
         // drawPersons(m_model.getPersonData());
-
-        VisLib::readFile(RES_PATH + MAP_FILENAME, segments, points);
-
-        const double scale = 100.0;
-        for (auto& s: segments) {
-            s.m_points[0].m_x *= scale;
-            s.m_points[0].m_y *= scale;
-            s.m_points[1].m_x *= scale;
-            s.m_points[1].m_y *= scale;
-        }
-
-        auto m = new Map(segments, points);
-        m_scene->addItem(m);
-        m_scene->setSceneRect(m_scene->itemsBoundingRect());
-
-        QRectF bounds = m->boundingRect();
-        const int h = static_cast<int>(bounds.height());
-        const int w = static_cast<int>(bounds.width());
-        double offsetX = bounds.x();
-        double offsetY = bounds.y();
-
-        std::vector<std::vector<Node>> girdLines;
-        Graph gridGraph;
-        double gridSize = 50.0;
-        createGridGraph(offsetX, offsetY, h, w, gridGraph, gridSize, girdLines);
-        connectAllGridNodes(gridGraph, girdLines);
-        removeIntersectingEdges(gridGraph, gridSize, girdLines, offsetX, offsetY);
-        drawGraph(gridGraph);
     }
 
-    void connectAllGridNodes(Graph& gridGraph, const std::vector<std::vector<Node>>& lines) {
-        Log::d("[ MapView ] Connecting all Grid nodes by edges");
-        std::vector<Node> prevLine;
-        for (auto l : lines) {
-            for (int j = 0; j < l.size(); ++j) {
-                // horizontal
-                if (j + 1 < l.size()) {
-                    gridGraph.addEdge(l[j].id, l[j + 1].id);
-                }
-                // vertical
-                if (!prevLine.empty()) {
-                    gridGraph.addEdge(prevLine[j].id, l[j].id);
-                }
-            }
-            prevLine = l;
-        }
-    }
-
-    void createGridGraph(double &offsetX, double &offsetY, double h, double w, Graph &gridGraph, double &gridSize, std::vector<std::vector<Node>> &lines) {
-        Log::d("[ MapView ] Create Grid Graph");
-
-        const int rows = h / gridSize + 1;
-        const int cols = w / gridSize + 1;
-
-        lines = {};
-        for (int i = 0; i <= rows; ++i) {
-            const double y = offsetY + gridSize * i;
-
-            std::vector<Node> currentLine = {};
-            for (int j = 0; j <= cols; ++j) {
-                const double x = offsetX + gridSize * j;
-                Node n(x, y);
-                gridGraph.addNode(n);
-                currentLine.emplace_back(n);
-            }
-            lines.emplace_back(currentLine);
-        }
-    }
-
-    bool removeIntersectingEdges(Graph& gridGraph, double gridSize, std::vector<std::vector<Node>> girdLines, double offsetX, double offsetY) {
-        Log::d("[ MapView ] Remove intersecting segments edges");
-        for (auto segment: segments) {
-            //drawPath({segment.m_points[0].m_x, segment.m_points[0].m_y},{segment.m_points[1].m_x, segment.m_points[1].m_y},Qt::magenta);
-
-            double gridX1 = segment.m_points[0].m_x - offsetX;
-            double gridY1 = segment.m_points[0].m_y - offsetY;
-            double gridX2 = segment.m_points[1].m_x - offsetX;
-            double gridY2 = segment.m_points[1].m_y - offsetY;
-            assert(gridX1 >= 0);
-            assert(gridX2 >= 0);
-            assert(gridY1 >= 0);
-            assert(gridY2 >= 0);
-            //std::cout << gridX1 << ", " << gridY1 <<  "), (" << gridX2 << ", " << gridY2 << ")" << std::endl;
-
-            gridX1 = roundToGrid(gridX1, gridSize, gridX1 > gridX2);
-            gridX2 = roundToGrid(gridX2, gridSize, gridX2 > gridX1);
-            gridY1 = roundToGrid(gridY1, gridSize, gridY1 > gridY2);
-            gridY2 = roundToGrid(gridY2, gridSize, gridY2 > gridY1);
-
-            //std::cout << "("<< gridX1 << ", " << gridY1 <<  "), (" << gridX2 << ", " << gridY2 << ")" << std::endl;
-
-            int lineX1 = gridX1 / gridSize;
-            int lineX2 = gridX2 / gridSize;
-            int lineY1 = gridY1 / gridSize;
-            int lineY2 = gridY2 / gridSize;
-
-            auto [minX, maxX] = std::minmax(lineX1, lineX2);
-            auto [minY, maxY] = std::minmax(lineY1, lineY2);
-
-            //std::cout << "("<<lineX1 << ", " << lineY1 <<  "), (" << lineX2 << ", " << lineY2 << ")" << std::endl;
-
-            for (int j = minY; j <= maxY; ++j) {
-                for (int i = minX; i <= maxX; ++i) {
-                    assert(j < girdLines.size());
-                    assert(i < girdLines[0].size());
-                    auto n = girdLines[j][i];
-                    auto neighbours = gridGraph.neighbours(n.id);
-                    for (const auto neighbour: neighbours){
-                        if (intersect(segment, {n.x, n.y}, {gridGraph.getNode(neighbour).x, gridGraph.getNode(neighbour).y})) {
-                            gridGraph.removeEdge(n.id, neighbour);
-                        }
-                    }
-                    drawLocation(n, "", Qt::green, N, 12.0);
-                }
-            }
-        }
-        return false;
-    }
 
     void showEvent(QShowEvent *event) override {
         QGraphicsView::showEvent(event);
@@ -280,12 +159,6 @@ public:
         eventLabel->setZValue(Z_LOCATION + 1);
     }
 
-    double roundToGrid(double value, double gridSize, bool up = true) {
-        if (up) {
-            return std::ceil(value / gridSize) * gridSize;
-        }
-        return std::floor(value / gridSize) * gridSize;
-    }
 
     void drawPath(const Node &from, const Node &to, const QColor &color = Qt::black) const {
         QPen pen;
@@ -299,7 +172,7 @@ public:
     void drawGraph(Graph &graph) {
         auto nodes = graph.allNodes();
         for (auto [id, node]: graph.allNodes()) {
-            drawLocation(node, "", Qt::red, N, 7.0);
+            drawLocation(node, std::to_string(node.id), Qt::red, N, 7.0);
             //drawLocation(node, std::to_string(id), Qt::darkGray, N, 0.4);
         }
         for (auto [id, neighbours]: graph.allEdges()) {
@@ -322,7 +195,7 @@ public:
     void drawRobot(Robot *robot) {
         const Graph graph = m_model.getGraph();
         const Node dock = graph.getNode(robot->getDock());
-        drawLocation(dock, "Dock", Qt::yellow, O, 15, Z_DOCK);
+        drawLocation(dock, "Dock", Qt::yellow, O, 30, Z_DOCK);
 
         const Node pos = graph.getNode(robot->getPosition());
         if (robot->isDriving()) {
@@ -332,7 +205,7 @@ public:
         } else {
             m_robotItem->clearDirection();
         }
-        m_robotItem->setPos(pos.x - (15.0 / 2), pos.y - (15.0 / 2));
+        m_robotItem->setPos(pos.x - (ROBOT_SIZE / 2), pos.y - (ROBOT_SIZE / 2));
 
         drawStateLabel(robot);
     }

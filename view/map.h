@@ -3,7 +3,7 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
-#include "../util/vis_lib.h"
+#include "../util/map_loader.h"
 
 class Map: public QGraphicsItemGroup {
     QGraphicsLineItem* m_directionLine = nullptr;

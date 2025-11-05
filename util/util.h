@@ -8,14 +8,14 @@
 namespace util {
     using PersonData = std::unordered_map<int, std::vector<int>>;
 
-    inline double calculateDistance(const Node& p1, const Node& p2) {
-        const double dx = p2.x - p1.x;
-        const double dy = p2.y - p1.y;
+    inline double calculateDistance(const double x1, const double y1, const double x2, const double y2) {
+        const double dx = x2 - x1;
+        const double dy = y2 - y1;
         return std::sqrt(dx * dx + dy * dy);
     }
 
     inline int calcFromTo(const Node &from, const Node &to, const double speed) {
-        const double dist = calculateDistance(from, to);
+        const double dist = calculateDistance(from.x, from.y, to.x, to.y);
         return static_cast<int>(dist / speed);
     }
 
