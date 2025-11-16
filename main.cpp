@@ -19,7 +19,10 @@
 #include "behaviour/nodes/robot_state.h"
 #include "util/grid.h"
 #include "util/map_loader.h"
+#include "sdf/sdf_parser.h"
 
+#include <gz/transport.hh>
+#include <gz/msgs.hh>
 
 constexpr int maxSimTime = 3600;
 constexpr double GRID_SIZE = 50;
@@ -31,6 +34,19 @@ const std::string MAP_FILENAME = "IMVS_data.bin";
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+
+    std::vector<VisLib::Segment> imvsSegments = {};
+    SdfParser sdfParser;
+    //sdfParser.loadSdf(RES_PATH + "imvs.sdf", imvsSegments);
+    std::vector<VisLib::Segment> segments;
+    std::vector<VisLib::Point> points;
+    sdfParser.extractWallSegments(RES_PATH + "imvs_l.sdf", segments, points);
+    for (auto s: segments) {
+        std::cout << s << "\n";
+    }
+
+
 
     // TODO: expectation that fist search location has biggest change to find the person
     util::PersonData personData;
@@ -46,9 +62,7 @@ int main(int argc, char *argv[]) {
 
     EV::Tree<SimulationEvent> eventTree;
 
-    std::vector<VisLib::Segment> segments;
-    std::vector<VisLib::Point> points;
-    VisLib::readFile(RES_PATH + MAP_FILENAME, segments, points);
+    //VisLib::readFile(RES_PATH + MAP_FILENAME, segments, points);
 
     for (auto& s: segments) {
         s.m_points[0].m_x *= SEGMENT_SCALE;
@@ -72,9 +86,9 @@ int main(int argc, char *argv[]) {
     double offsetY = bounds.y();
 
     std::vector<std::vector<Node>> girdLines;
-    createGridGraph(GRID_SIZE, offsetX, offsetY, h, w, graph, girdLines);
-    connectAllGridNodes(graph, girdLines);
-    auto visitedNodes = removeIntersectingEdges(graph, girdLines, segments, offsetX, offsetY, GRID_SIZE);
+    // createGridGraph(GRID_SIZE, offsetX, offsetY, h, w, graph, girdLines);
+    // connectAllGridNodes(graph, girdLines);
+    // auto visitedNodes = removeIntersectingEdges(graph, girdLines, segments, offsetX, offsetY, GRID_SIZE);
 
     int robotPosition = getNearestNode(graph, -930, -980);
     int dock = getNearestNode(graph, -826, -922);
@@ -82,11 +96,12 @@ int main(int argc, char *argv[]) {
     Robot robot(robotPosition, dock);
     Simulation model(graph, &robot, eventTree, personData, m_bt, &m_simTime);
     MapView mapView(model, map);
-    if (SHOW_VISITED) {
-        for (auto n: visitedNodes) {
-            mapView.drawLocation(n, "", Qt::green, N, 20, -1);
-        }
-    }
+    // if (SHOW_VISITED) {
+    //     for (auto n: visitedNodes) {
+    //         mapView.drawLocation(n, "", Qt::green, N, 20, -1);
+    //     }
+    // }
+    mapView.show();
 
     Planner planner(graph, robot.getSpeed());
 
@@ -101,25 +116,24 @@ int main(int argc, char *argv[]) {
     // planner.tour(dockTreeRoot, robotPosition, 10);
     // root->addSubtree(dockTree.releaseRoot());
 
-    std::cout << eventTree << std::endl;
-
-
-    BT::BehaviorTreeFactory factory;
-    factory.registerNodeType<DriveStart>("DriveStart");
-    factory.registerNodeType<NavigateToPoint>("NavigateToPoint", &robot, &graph, &roClock);
-    factory.registerNodeType<EventHandler>("EventHandler", &eventTree, &roClock);
-    factory.registerNodeType<RobotState>("RobotState", &robot);
-    factory.registerNodeType<SayHello>("SayHello");
-    factory.registerNodeType<LogNode>("LoggerNode");
-
-    m_bt = factory.createTreeFromFile("../tree.xml");
-    m_bt.rootBlackboard().get()->set("goal", -1);
+    // std::cout << eventTree << std::endl;
+    //
+    //
+    // BT::BehaviorTreeFactory factory;
+    // factory.registerNodeType<DriveStart>("DriveStart");
+    // factory.registerNodeType<NavigateToPoint>("NavigateToPoint", &robot, &graph, &roClock);
+    // factory.registerNodeType<EventHandler>("EventHandler", &eventTree, &roClock);
+    // factory.registerNodeType<RobotState>("RobotState", &robot);
+    // factory.registerNodeType<SayHello>("SayHello");
+    // factory.registerNodeType<LogNode>("LoggerNode");
+    //
+    // m_bt = factory.createTreeFromFile("../tree.xml");
+    // m_bt.rootBlackboard().get()->set("goal", -1);
 
     // BT::StdCoutLogger logger(m_bt);
 
-    Timeline timelineView(model, maxSimTime);
+    // Timeline timelineView(model, maxSimTime);
     // timelineView.show();
-    mapView.show();
 
     //BT::printTreeRecursively(tree.rootNode());
     //
