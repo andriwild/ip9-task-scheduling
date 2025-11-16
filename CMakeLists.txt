@@ -15,9 +15,14 @@ FetchContent_Declare(
 FetchContent_Declare(
         BehaviorTree
         GIT_REPOSITORY https://github.com/BehaviorTree/BehaviorTree.CPP.git
-        GIT_TAG 4.8.0
+        GIT_TAG 4.7.3
 )
-FetchContent_MakeAvailable(BehaviorTree)
+
+FetchContent_MakeAvailable(googletest BehaviorTree)
+
+find_package(sdformat15 REQUIRED)
+find_package(gz-math8 REQUIRED)
+find_package(gz-transport13 REQUIRED)
 
 find_package(Qt5 COMPONENTS
         Core
@@ -56,6 +61,7 @@ add_executable(ip9_task_scheduling
         behaviour/nodes/robot_state.h
         view/map.h
         util/grid.h
+        sdf/sdf_parser.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES
@@ -70,12 +76,15 @@ target_link_libraries(ip9_task_scheduling
         Qt5::Widgets
         Qt5::Charts
         Qt5::Sql
+        sdformat15::sdformat15
+        gz-math8::gz-math8
+        gz-transport13::gz-transport13
+        gz-msgs10::gz-msgs10
         BT::behaviortree_cpp
 )
 
 add_executable(tests
         tests/test_graph.cpp
-        tests/test_tree.cpp
 )
 
 target_link_libraries(tests
