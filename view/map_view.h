@@ -37,8 +37,8 @@ public:
         setScene(m_scene);
 
         m_scene->addItem(map);
-        m_scene->addItem(m_robotItem);
-        m_robotItem->setZValue(Z_ROBOT);
+        // m_scene->addItem(m_robotItem);
+        // m_robotItem->setZValue(Z_ROBOT);
 
         connect(&m_model, &Simulation::graphChanged, this, &MapView::drawGraph);
         connect(&m_model, &Simulation::robotChanged, this, &MapView::drawRobot);
@@ -47,7 +47,7 @@ public:
         connect(&m_model, &Simulation::timeChanged, this, &MapView::drawTimeLabel);
 
         drawGraph(m_model.getGraph());
-        drawRobot(m_model.getRobot());
+        // drawRobot(m_model.getRobot());
         // drawEvents(m_model.getEvents());
         // drawPersons(m_model.getPersonData());
     }

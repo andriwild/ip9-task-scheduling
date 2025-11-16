@@ -37,5 +37,19 @@ public:
             auto* line = new QGraphicsLineItem({p1, p2}, this);
             line->setPen(pen);
         }
+
+        double radius = 20.0;
+        for (const auto p: m_points) {
+
+            auto qPoint = new QGraphicsEllipseItem(
+                {p.m_x * 100 - radius / 2, p.m_y * 100 - radius / 2, radius, radius}, this
+                );
+
+            QPen pointPen;
+            pointPen.setWidthF(5.0);
+            pointPen.setColor(Qt::blue);
+            qPoint->setPen(pointPen);
+            qPoint->setBrush({Qt::blue, Qt::SolidPattern});
+        }
     }
 };

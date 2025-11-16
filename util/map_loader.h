@@ -124,4 +124,6 @@ namespace VisLib {
 		return (t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0);
 	}
 
+
 }
+
