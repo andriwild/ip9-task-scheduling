@@ -44,33 +44,28 @@ add_executable(ip9_task_scheduling
         main.cpp
         model/event.h
         model/event.cpp
-        model/sim_time.h
         model/simulation.h
-        model/planner.h
         model/robot.h
         model/robot.cpp
         model/robot_state.h
         model/robot_state.cpp
         model/context.h
 
+        view/term.h
+        observer/observer.h
+
         # util/log.h
         # util/db.h
-        # util/tree_composer.h
         util/types.h
 
-        # view/helper.h
         # view/timeline_view.h
         # view/event_plan.h
-
-        # datastructure/tree.h
 
         # behaviour/nodes/nav_to_point.h
         # behaviour/dummy.h
         # behaviour/nodes/event_handler.h
         # behaviour/nodes/tour.h
         # behaviour/nodes/robot_state.h
-
-        # des/event.h
 
         # sim/gz_lib.h
         # sim/ros/transform_node.h

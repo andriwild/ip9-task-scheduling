@@ -1,27 +1,17 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <iostream>
-#include <iomanip>
 #include <vector>
 #include <queue>
 
-#include "../util/convert.h"
 
 class SimulationContext;
 
 class IEvent {
 public:
-    std::string label;
     int time;
-    IEvent(
-        const int time, 
-        const std::string& label = ""
-    ):
-        time(time),
-        label(label)
-    {}
+    IEvent(const int time): time(time) {}
 
     virtual ~IEvent() = default;
 
@@ -32,7 +22,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const IEvent& event) {
-        os << "[" << event.time << "] " << std::setw(15) << event.label;
+        os << "[" << event.time << "]";
         return os;
     }
 };
@@ -53,41 +43,31 @@ using EventQueue  = std::priority_queue<
 
 class SimulationStartEvent : public IEvent {
 public:
-    explicit SimulationStartEvent(int time):
-    IEvent(time, "Simulation Start")
-    {}
+    explicit SimulationStartEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
 };
 
 class SimulationEndEvent : public IEvent {
 public:
-    explicit SimulationEndEvent(int time):
-    IEvent(time, "Simulation End")
-    {}
+    explicit SimulationEndEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
 };
 
 class ArrivedEvent : public IEvent {
 public:
-    explicit ArrivedEvent(int time):
-    IEvent(time, "Robot arrived")
-    {}
+    explicit ArrivedEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
 };
 
 class MissionDispatchEvent : public IEvent {
 public:
-    explicit MissionDispatchEvent(int time):
-    IEvent(time, "Mission dispatch")
-    {}
+    explicit MissionDispatchEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
 };
 
 class MissionCompleteEvent : public IEvent {
 public:
-    explicit MissionCompleteEvent(int time):
-    IEvent(time, "Mission complete")
-    {}
+    explicit MissionCompleteEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
 };
 

@@ -15,6 +15,7 @@
 #include "model/event.h"
 #include "model/robot.h"
 #include "model/context.h"
+#include "view/term.h"
 /*
  * Proces: (exogene / endogen events)
  *
@@ -28,7 +29,7 @@
  *
  */
 
-const double SIM_START_TIME = 8.0 * 3600.0; 
+const int SIM_START_TIME = 8 * 3600; 
 const int NODE_LOBBY = 0; // The therapy location
 const double ROBOT_SPEED = 1.0; // units per second
 
@@ -67,8 +68,11 @@ Robot robot;
 
 
 int main(int argc, char *argv[]) {
-    SimulationContext ctx(robot, eventQueue);
     std::cout << "\nRun Descrete Event Sytem ...\n" << std::endl;
+    SimulationContext ctx(robot, eventQueue);
+
+    TerminalView termView;
+    ctx.addObserver(std::make_shared<TerminalView>(termView));
 
     schedule[1] = a1;
     schedule[3] = a3;
@@ -89,13 +93,12 @@ int main(int argc, char *argv[]) {
         double startSeconds = appt.appointmentTime - (travelTo + travelBack + taskOverhead + buffer);
 
         eventQueue.push(std::make_shared<MissionDispatchEvent>(startSeconds));
-        std::cout << "Planned Dispatch for " << appt.description 
-                  << " at " << toHumanReadable(startSeconds) << std::endl;
     }
 
     while (!eventQueue.empty()) {
         auto e = eventQueue.top();
         eventQueue.pop();
+        ctx.setTime(e->time);
         e->execute(ctx);
     }
 
