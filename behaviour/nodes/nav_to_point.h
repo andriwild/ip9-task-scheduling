@@ -2,7 +2,6 @@
 
 #include <behaviortree_cpp/bt_factory.h>
 
-#include "../../datastructure/graph.h"
 #include "../../model/robot.h"
 #include "../../model/sim_time.h"
 #include "../../util/util.h"
@@ -14,12 +13,10 @@ public:
         const std::string& name,
         const BT::NodeConfig& config,
         Robot* r,
-        Graph* g,
         ReadOnlyClock* clock
     ) : StatefulActionNode(name, config),
         m_goalNode(0),
         m_arrivalTime(0),
-        m_graph(g),
         m_robot(r),
         m_clock(clock) {
         std::cout << "Navigate to point start at time: " << m_clock->getTime() << std::endl;
@@ -36,7 +33,6 @@ public:
 private:
     int m_goalNode;
     int m_arrivalTime;
-    Graph* m_graph;
     Robot* m_robot;
     ReadOnlyClock* m_clock;
 };
@@ -47,11 +43,9 @@ inline BT::NodeStatus NavigateToPoint::onStart() {
         return BT::NodeStatus::FAILURE;
     }
     //std::cout << "[ Robot start ] - Goal Node: " << std::to_string(m_goalNode) << std::endl;
-    const std::vector<int> path = m_graph->dijkstra(m_robot->getPosition()).shortestPath(m_goalNode);
-    const std::vector<int> driveTimes = util::calcDriveTime(path, *m_graph, m_robot->getSpeed());
-    int driveTime = std::accumulate(driveTimes.begin(), driveTimes.end(), 0);
 
-    m_arrivalTime = m_clock->getTime() + driveTime;
+    // TODO: nav2 drive time
+    // m_arrivalTime = m_clock->getTime() + driveTime;
     return BT::NodeStatus::RUNNING;
 }
 

@@ -6,6 +6,7 @@
 #include "event_plan.h"
 #include "../datastructure/tree.h"
 #include "../model/event.h"
+#include "../model/simulation.h"
 
 constexpr int TIMELINE_HEIGHT = 700;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
@@ -54,9 +55,9 @@ public:
         connect(&m_model, &Simulation::timeChanged, this, &Timeline::drawPointer);
         connect(&m_model, &Simulation::eventsChanged, this, &Timeline::drawEvents);
 
-        drawPointer(0);
-        drawBaseline();
-        drawEvents(m_model.getEvents());
+        // drawPointer(0);
+        // drawBaseline();
+        // drawEvents(m_model.getEvents());
     }
 
     void drawPointer(const int time) {
@@ -65,12 +66,12 @@ public:
     }
 
     void wheelEvent(QWheelEvent *event) override {
-        if (event->modifiers() & Qt::ControlModifier) {
-            const double factor = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
-            scale(factor, factor);
-        } else {
-            QGraphicsView::wheelEvent(event);
-        }
+        // if (event->modifiers() & Qt::ControlModifier) {
+        //     const double factor = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
+        //     scale(factor, factor);
+        // } else {
+        //     QGraphicsView::wheelEvent(event);
+        // }
     }
 
     void drawForeground(QPainter *painter, const QRectF &rect) override {
@@ -151,7 +152,7 @@ public:
         eventLabel->setZValue(Z_EVENT + 1);
     }
 
-    void drawEvents(EV::Tree<SimulationEvent> &events) const {
+    void drawEvents(EV::Tree<IEvent> &events) const {
         assert(events.getRoot()->parent == nullptr);
         std::vector<EventPlan*> plans;
         for (const auto& child: events.getRoot()->getChildren()) {

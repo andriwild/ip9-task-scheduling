@@ -1,45 +1,24 @@
 #pragma once
 
-#include "../util/util.h"
-#include "robot.h"
-#include "../cmake-build-debug/_deps/behaviortree-src/3rdparty/cppzmq/zmq.hpp"
-#include "../datastructure/graph.h"
 #include "../datastructure/tree.h"
 #include "../model/event.h"
 #include "../util/tree_composer.h"
 
 class Planner {
-    Graph &m_graph;
     double m_speed;
 
 public:
-    explicit Planner(Graph &graph, const double speed): m_graph(graph), m_speed(speed) {}
+    explicit Planner(const double speed): m_speed(speed) {}
 
-     int tour(EV::TreeNode<SimulationEvent> *root, const int from, const int to) const {
-        const std::vector<int> path = m_graph.dijkstra(from).shortestPath(to);
-        const std::vector<int> driveTimes = util::calcDriveTime(path, m_graph, m_speed);
-
-        // from goal to start
-        int currentTime = root->getValue()->getTime();
-        for (int pathNode = 1; pathNode < path.size(); pathNode++) {
-            const int driveTime = driveTimes[pathNode-1];
-            root->addChild(
-                std::make_unique<RobotDriveStartEvent>(
-                currentTime,
-                path[pathNode],
-                ROBOT_STATE::DRIVE)
-                );
-            root->addChild(std::make_unique<RobotDriveEndEvent>(currentTime + driveTime - 1, path[pathNode]));
-            currentTime += driveTime;
-        }
-        return currentTime;
+     int tour(EV::TreeNode<IEvent> *root, const int from, const int to) const {
+        return 0;
     }
 
-    int searchPerson(EV::TreeNode<SimulationEvent> *root, const int from, const std::vector<int> &searchIds ) const {
+    int searchPerson(EV::TreeNode<IEvent> *root, const int from, const std::vector<int> &searchIds ) const {
         int currentPos = from;
         int currentTimeOffset = root->getValue()->getTime();
         for (const int id: searchIds) {
-            EV::Tree<SimulationEvent> tmpTree;
+            EV::Tree<IEvent> tmpTree;
             auto tmpRoot = tmpTree.createRoot(std::make_unique<Tour>(currentTimeOffset, "Search"));
             currentTimeOffset = tour(tmpRoot, currentPos, id);
             root->addSubtree(tmpTree.releaseRoot());
@@ -48,9 +27,9 @@ public:
         return currentTimeOffset;
     }
 
-    int talkSequence(EV::TreeNode<SimulationEvent> *root, const int duration, int personId) {
+    int talkSequence(EV::TreeNode<IEvent> *root, const int duration, int personId) {
         int currentTimeOffset = root->getValue()->getTime();
-        EV::Tree<SimulationEvent> tmpTree;
+        EV::Tree<IEvent> tmpTree;
         auto tmpRoot = tmpTree.createRoot(std::make_unique<TalkingEvent>(currentTimeOffset, personId));
         tmpRoot->addChild(std::make_unique<TalkingEventStart>(currentTimeOffset, personId, "Hello"));
         tmpRoot->addChild(std::make_unique<TalkingEventEnd>(currentTimeOffset + duration, personId, "Bye"));
@@ -58,16 +37,15 @@ public:
         return currentTimeOffset + duration;
     }
 
-    int bufferSequence(EV::TreeNode<SimulationEvent> *root, const int duration) {
+    int bufferSequence(EV::TreeNode<IEvent> *root, const int duration) {
         int currentTimeOffset = root->getValue()->getTime();
         root->addChild(std::make_unique<BufferStartEvent>(currentTimeOffset, "BS"));
         root->addChild(std::make_unique<BufferEndEvent>(currentTimeOffset + duration, "BE"));
         return currentTimeOffset + duration;
     }
 
-    EV::Tree<SimulationEvent> escortSequence(
+    EV::Tree<IEvent> escortSequence(
         int meetingTime,
-        util::PersonData personData,
         int personId,
         int meetingLocation,
         int startLocation,
@@ -75,31 +53,29 @@ public:
     ) {
 
         std::string pId = "P" + std::to_string(personId);
-        EV::Tree<SimulationEvent> meetingTree;
+        EV::Tree<IEvent> meetingTree;
         auto meetingRoot = meetingTree.createRoot(std::make_unique<MeetingEvent>(meetingTime, meetingLocation, personId, "Meeting: " + pId));
 
-        EV::Tree<SimulationEvent> escortTree;
+        EV::Tree<IEvent> escortTree;
         auto escortTreeRoot = escortTree.createRoot(std::make_unique<EscortEvent>(0, personId, "Escort"));
         auto escortTour = escortTreeRoot->addChild(std::make_unique<Tour>(0, "Tour"));
-        tour(escortTour, personData[personId].back(), meetingLocation);
 
-        EV::Tree<SimulationEvent> searchPersonTree;
+        EV::Tree<IEvent> searchPersonTree;
         auto searchRoot = searchPersonTree.createRoot(std::make_unique<SearchEvent>(0, personId, "Search"));
-        searchPerson(searchRoot, startLocation, personData[personId]);
 
-        EV::Tree<SimulationEvent> conversationTree;
+        EV::Tree<IEvent> conversationTree;
         auto convRoot = conversationTree.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation 1"));
         talkSequence(convRoot, 10, personId);
 
-        EV::Tree<SimulationEvent> conversationTree2;
+        EV::Tree<IEvent> conversationTree2;
         auto convRoot2 = conversationTree2.createRoot(std::make_unique<TalkingEvent>(0, personId, "Conversation 2"));
         talkSequence(convRoot2, 10, personId);
 
-        EV::Tree<SimulationEvent> dockTree;
+        EV::Tree<IEvent> dockTree;
         auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(0, "Dock"));
         tour(dockTreeRoot, meetingLocation, dock);
 
-        EV::Tree<SimulationEvent> bufferTree;
+        EV::Tree<IEvent> bufferTree;
         auto bufferTreeRoot = bufferTree.createRoot(std::make_unique<BufferEvent>(0, "B"));
         bufferSequence(bufferTreeRoot, 100);
 

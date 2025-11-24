@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(ip9_task_scheduling)
 set(CMAKE_CXX_STANDARD 20)
 
+list(APPEND CMAKE_PREFIX_PATH "/opt/ros/jazzy")
+
 enable_testing()
 
 include(FetchContent)
@@ -24,6 +26,12 @@ find_package(sdformat15 REQUIRED)
 find_package(gz-math8 REQUIRED)
 find_package(gz-transport13 REQUIRED)
 
+# ROS2
+find_package(rclcpp REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
+
 find_package(Qt5 COMPONENTS
         Core
         Gui
@@ -34,34 +42,40 @@ find_package(Qt5 COMPONENTS
 
 add_executable(ip9_task_scheduling
         main.cpp
-        view/timeline_view.h
-        view/map_view.h
         model/event.h
-        model/robot.h
-        algo/rnd.h
-        util/util.h
-        util/log.h
-        util/db.h
-        util/map_loader.h
-        algo/algo.h
-        datastructure/graph.h
-        model/simulation.h
-        view/robot_item.h
-        model/planner.h
-        view/helper.h
-        datastructure/tree.h
-        view/event_plan.h
-        util/tree_composer.h
-        behaviour/nodes/nav_to_point.h
-        behaviour/dummy.h
+        model/event.cpp
         model/sim_time.h
-        behaviour/nodes/event_handler.h
-        behaviour/nodes/tour.h
-        des/event.h
-        behaviour/nodes/robot_state.h
-        view/map.h
-        util/grid.h
-        sdf/sdf_parser.h
+        model/simulation.h
+        model/planner.h
+        model/robot.h
+        model/robot.cpp
+        model/robot_state.h
+        model/robot_state.cpp
+        model/context.h
+
+        # util/log.h
+        # util/db.h
+        # util/tree_composer.h
+        util/types.h
+
+        # view/helper.h
+        # view/timeline_view.h
+        # view/event_plan.h
+
+        # datastructure/tree.h
+
+        # behaviour/nodes/nav_to_point.h
+        # behaviour/dummy.h
+        # behaviour/nodes/event_handler.h
+        # behaviour/nodes/tour.h
+        # behaviour/nodes/robot_state.h
+
+        # des/event.h
+
+        # sim/gz_lib.h
+        # sim/ros/transform_node.h
+        # sim/ros/path_node.h
+
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES
@@ -81,16 +95,14 @@ target_link_libraries(ip9_task_scheduling
         gz-transport13::gz-transport13
         gz-msgs10::gz-msgs10
         BT::behaviortree_cpp
+        rclcpp::rclcpp
+        tf2_ros::tf2_ros
+        ${nav2_msgs_TARGETS}
+        ${tf2_geometry_msgs_TARGETS}
 )
 
-add_executable(tests
-        tests/test_graph.cpp
-)
+get_target_property(QT_INCLUDES Qt5::Widgets INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(ip9_task_scheduling PRIVATE ${QT_INCLUDES})
 
-target_link_libraries(tests
-        gtest
-        gtest_main
-)
 
-include(GoogleTest)
-gtest_discover_tests(tests)
+

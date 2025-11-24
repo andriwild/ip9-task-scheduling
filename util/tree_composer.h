@@ -3,27 +3,27 @@
 #include "../datastructure/tree.h"
 #include "../model/event.h"
 
-auto shiftTime = [](SimulationEvent& ev, const int time){ ev.setTime(ev.getTime() + time);};
+auto shiftTime = [](IEvent& ev, const int time){ ev.setTime(ev.getTime() + time);};
 
 class EventTreeComposer {
-    EV::Tree<SimulationEvent> tree;
-    EV::TreeNode<SimulationEvent>* m_tree;
+    EV::Tree<IEvent> tree;
+    EV::TreeNode<IEvent>* m_tree;
 public:
 
     EventTreeComposer* fromNewTree() {
         m_tree = tree.createRoot(std::make_unique<Tour>(0, ""));
         return this;
     }
-    EV::Tree<SimulationEvent> build() {
+    EV::Tree<IEvent> build() {
         return std::move(tree);
     }
 
-    EventTreeComposer* on(EV::TreeNode<SimulationEvent>  *tree) {
+    EventTreeComposer* on(EV::TreeNode<IEvent>  *tree) {
         m_tree = tree;
         return this;
     }
 
-    EventTreeComposer* prepend(EV::Tree<SimulationEvent> & subtree) {
+    EventTreeComposer* prepend(EV::Tree<IEvent> & subtree) {
         int mainEventTime = m_tree->getLeftMostLeaf()->getValue()->getTime();
         auto subTreeDuration = subtree.getRightMostLeaf()->getValue()->getTime();
         auto n = subtree.releaseRoot();
@@ -32,7 +32,7 @@ public:
         return this;
     }
 
-    EventTreeComposer* append(EV::Tree<SimulationEvent> & subtree) {
+    EventTreeComposer* append(EV::Tree<IEvent> & subtree) {
         int t = m_tree->getRightMostLeaf()->getValue()->getTime();
         auto n = subtree.releaseRoot();
         n->forEachSorted(shiftTime, t);

@@ -1,256 +1,121 @@
 #pragma once
 
+#include <memory>
+#include <string>
+#include <iostream>
 #include <iomanip>
+#include <vector>
+#include <queue>
 
-#include "robot.h"
-#include "../datastructure/tree.h"
-#include "../util/util.h"
-#include "../view/helper.h"
-#include "behaviortree_cpp/blackboard.h"
+#include "../util/convert.h"
 
+class SimulationContext;
 
-inline static int nextId;
-
-const std::string defaultColor = "\033[0m";
-
-class SimulationEvent {
-protected:
-    int m_id;
-    int m_time;
-    std::string m_label;
-    std::string m_color;
-
+class IEvent {
 public:
-    explicit SimulationEvent(const int t, const std::string &color = defaultColor, const std::string& label = ""):
-    m_id(nextId++), m_time(t), m_label(label), m_color(color)
+    std::string label;
+    int time;
+    IEvent(
+        const int time, 
+        const std::string& label = ""
+    ):
+        time(time),
+        label(label)
     {}
 
-    virtual ~SimulationEvent() = default;
+    virtual ~IEvent() = default;
 
-    virtual void execute(BT::Blackboard& bb) = 0;
-    int getId() const { return m_id; }
-    int getTime() const { return m_time; };
-    virtual void setTime(const int time) { m_time = time; };
-    virtual std::string getName() const  = 0;
-    std::string getLabel() const { return m_label; }
+    virtual void execute(SimulationContext& ctx) = 0; 
 
-    bool operator<(const SimulationEvent& other) const {
-        return m_time < other.m_time;
+    bool operator<(const IEvent& other) const {
+        return time < other.time;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const SimulationEvent& event) {
-        os << event.m_color;
-        os << "[" << event.getId() << "] "
-           << std::left << std::setw(20) << event.getName()
-           << " (t=" << event.m_time << ")  "
-           << std::setw(15) << event.getLabel();
-        os << defaultColor;
+    friend std::ostream& operator<<(std::ostream& os, const IEvent& event) {
+        os << "[" << event.time << "] " << std::setw(15) << event.label;
         return os;
     }
 };
 
-class SimulationRoot final : public SimulationEvent {
-public:
-    explicit SimulationRoot(const int time, const std::string& label = ""): SimulationEvent(time, label) {}
 
-    std::string getName() const override { return "Simulation"; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
-        Log::d("Simulation");
+struct EventComparator {
+    bool operator()(const std::shared_ptr<IEvent>& a, const std::shared_ptr<IEvent>& b) {
+        if(!a || !b) return false;
+        return a->time > b->time; 
     }
 };
 
-class Tour final : public SimulationEvent {
+using EventQueue  = std::priority_queue<
+    std::shared_ptr<IEvent>,
+    std::vector<std::shared_ptr<IEvent>>,
+    EventComparator
+>;
+
+class SimulationStartEvent : public IEvent {
 public:
-    explicit Tour(const int time, const std::string& label = ""):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TOUR), label) { }
-
-    std::string getName() const override { return "Tour"; }
-
-    void execute(BT::Blackboard& bb) override {
-        Log::i("Start new Tour");
-    }
-};
-
-class RobotDriveEndEvent final : public SimulationEvent {
-    int m_destinationId;
-
-public:
-    RobotDriveEndEvent(const int time, const int destinationId):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::DRIVE)),
-    m_destinationId(destinationId)
-    { }
-
-    std::string getName() const override { return "Drive End Event @ [" +std::to_string(m_destinationId) + "]"; }
-
-    void execute(BT::Blackboard& bb) override {
-        Log::d("Robot arrived @ " +std::to_string(m_destinationId));
-    }
-};
-
-class RobotDriveStartEvent final : public SimulationEvent {
-public:
-    const int m_targetId;
-    const ROBOT_STATE task;
-
-    RobotDriveStartEvent(
-        const int time,
-        const int targetId,
-        const ROBOT_STATE task = ROBOT_STATE::DRIVE,
-        const std::string& label = ""
-        ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::DRIVE), label),
-    m_targetId(targetId),
-    task(task)
-    { }
-
-    std::string getName() const override { return "Drive Start Event to [" + std::to_string(m_targetId) + "]"; }
-
-    int getTarget() const { return m_targetId; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("goal", m_targetId);
-        Log::d("Robot starts driving to " + std::to_string(m_targetId));
-    }
-};
-
-class MeetingEvent final : public SimulationEvent {
-    int m_destinationId;
-    int m_personId;
-
-public:
-    MeetingEvent(const int time, const int destinationId, const int personId, const std::string& label = ""):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::MEETING) ,label),
-    m_destinationId(destinationId),
-    m_personId(personId)
-    { }
-
-    std::string getName() const override { return "Meeting Event [" + std::to_string(m_id) + "]"; }
-    int getPersonId() const { return m_personId; }
-    int getDestination() const { return m_destinationId; }
-
-    void execute(BT::Blackboard& bb) override {
-        Log::d("Meeting event of person " + std::to_string(m_personId) + "@" + std::to_string(m_destinationId));
-    }
-};
-
-class SearchEvent final : public SimulationEvent {
-    const int m_personId;
-
-public:
-    SearchEvent(
-        const int time,
-        const int personId,
-        const std::string& label = ""
-        ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::SEARCH) ,label),
-    m_personId(personId)
-    { }
-
-    int getSearchForPersonId() const { return m_personId; }
-
-    std::string getName() const override { return "Search for Person: " + std::to_string(m_personId) ; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::SEARCH));
-        Log::d("Searching person " + std::to_string(m_personId));
-    }
-};
-
-class TalkingEvent : public SimulationEvent {
-    const int m_personId;
-
-public:
-    TalkingEvent(const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TALK) ,label),
-    m_personId(personId)
-    { }
-
-    int getSearchForPersonId() const { return m_personId; }
-
-    std::string getName() const override { return "Talking with Person: " + std::to_string(m_personId) ; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::TALK));
-        Log::d("Talking ...");
-    }
-};
-
-class TalkingEventStart : public TalkingEvent {
-public:
-    TalkingEventStart(const int time, const int personId, const std::string& label = "" ):
-    TalkingEvent(time, personId, label) {}
-
-    void execute(BT::Blackboard& bb) override {
-        Log::d("Talking start ...");
-    }
-};
-
-class TalkingEventEnd: public TalkingEvent {
-public:
-    TalkingEventEnd(const int time, const int personId, const std::string& label = "" ):
-    TalkingEvent(time, personId, label) {}
-
-    void execute(BT::Blackboard& bb) override {
-        Log::d("Talking end...");
-    }
-};
-
-class EscortEvent final : public SimulationEvent {
-    const int m_personId;
-public:
-    EscortEvent( const int time, const int personId, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::ESCORT) ,label),
-    m_personId(personId)
-    { }
-
-    std::string getName() const override { return "Escort Person: " + std::to_string(m_personId); }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::ESCORT));
-        Log::d("Escorting...");
-    }
-};
-
-class BufferEvent : public SimulationEvent {
-public:
-    BufferEvent(const int time, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::TALK) ,label)
+    explicit SimulationStartEvent(int time):
+    IEvent(time, "Simulation Start")
     {}
-
-    std::string getName() const override { return "Buffer"; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
-        Log::d("Buffer");
-    }
+    void execute(SimulationContext& ctx) override;
 };
 
-class BufferStartEvent : public SimulationEvent {
+class SimulationEndEvent : public IEvent {
 public:
-    BufferStartEvent(const int time, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::IDLE) ,label)
+    explicit SimulationEndEvent(int time):
+    IEvent(time, "Simulation End")
     {}
-
-    std::string getName() const override { return "Buffer start"; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
-        Log::d("Buffer start");
-    }
+    void execute(SimulationContext& ctx) override;
 };
 
-class BufferEndEvent : public SimulationEvent {
+class ArrivedEvent : public IEvent {
 public:
-    BufferEndEvent(const int time, const std::string& label = "" ):
-    SimulationEvent(time, Helper::colorAnsi(ROBOT_STATE::IDLE) ,label)
+    explicit ArrivedEvent(int time):
+    IEvent(time, "Robot arrived")
     {}
-
-    std::string getName() const override { return "Buffer end"; }
-
-    void execute(BT::Blackboard& bb) override {
-        bb.set("robot_task", static_cast<int>(ROBOT_STATE::IDLE));
-        Log::d("Buffer end");
-    }
+    void execute(SimulationContext& ctx) override;
 };
+
+class MissionDispatchEvent : public IEvent {
+public:
+    explicit MissionDispatchEvent(int time):
+    IEvent(time, "Mission dispatch")
+    {}
+    void execute(SimulationContext& ctx) override;
+};
+
+class MissionCompleteEvent : public IEvent {
+public:
+    explicit MissionCompleteEvent(int time):
+    IEvent(time, "Mission complete")
+    {}
+    void execute(SimulationContext& ctx) override;
+};
+
+
+// enum class EventType {
+//     // --- System & Simulation ---
+//     SIMULATION_START,       // Initialisierung (t=0)
+//     SIMULATION_END,         // Ende des Tages (t=24h)
+    
+//     // --- Der "Trigger" aus dem Therapieplan ---
+//     MISSION_DISPATCH,       // Ein Termin steht an (Zeitpunkt: Termin - Puffer)
+
+//     // --- Navigation (Basis-Bewegung) ---
+//     MOVE_ARRIVED,           // Roboter erreicht einen Knoten (Raum/Kreuzung)
+    
+//     // --- Suche & Interaktion (Die "Mission") ---
+//     SCAN_FINISHED,          // 360° Kamera-Scan im Raum abgeschlossen
+//     INTERACTION_FINISHED,   // Gespräch mit Person beendet (Erfolg/Misserfolg)
+//     WAIT_FINISHED,          // Warten beendet (wenn man zu früh beim Termin war)
+    
+//     // --- Eskorte (Spezielle Events während der Begleitung) ---
+//     ESCORT_CHECK,           // Periodischer Check: Ist die Person noch hinter mir?
+    
+//     // --- Sekundäraufgaben (Datenerfassung) ---
+//     DATA_TASK_START,        // Startet eine Datenerfassung (wenn IDLE)
+//     DATA_READING_FINISHED,  // Schild lesen abgeschlossen
+    
+//     // --- Energie & Maintenance ---
+//     BATTERY_LEVEL_CHECK,    // (Optional) Periodischer Check
+//     CHARGING_FINISHED       // Batterie ist wieder voll
+// };

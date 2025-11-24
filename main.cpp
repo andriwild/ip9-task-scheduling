@@ -1,115 +1,160 @@
-#include "model/event.h"
-#include "datastructure/graph.h"
-#include "view/map_view.h"
-#include "model/robot.h"
-#include "algo/rnd.h"
-#include "datastructure/tree.h"
-#include "model/planner.h"
-#include "model/simulation.h"
-#include "util/tree_composer.h"
-#include "view/timeline_view.h"
-#include "behaviortree_cpp/bt_factory.h"
-#include "behaviortree_cpp/xml_parsing.h"
+#include <QApplication>
 #include <QtConcurrent/QtConcurrent>
-#include <behaviortree_cpp/blackboard.h>
-#include "behaviortree_cpp/loggers/bt_cout_logger.h"
-#include "behaviortree_cpp/loggers/groot2_publisher.h"
-#include "behaviour/dummy.h"
-#include "behaviour/nodes/event_handler.h"
-#include "behaviour/nodes/robot_state.h"
-#include "util/grid.h"
-#include "util/map_loader.h"
-#include "sdf/sdf_parser.h"
+// #include <behaviortree_cpp/blackboard.h>
+// #include "behaviour/nodes/robot_state.h"
 
 #include <gz/transport.hh>
 #include <gz/msgs.hh>
+#include <iostream>
+#include <ostream>
+#include <memory>
 
-constexpr int maxSimTime = 3600;
-constexpr double GRID_SIZE = 50;
-constexpr double SEGMENT_SCALE = 100.0;
-constexpr bool SHOW_VISITED = false;
 
-const std::string RES_PATH = "/home/andri/repos/ip9-task-scheduling/resources/";
-const std::string MAP_FILENAME = "IMVS_data.bin";
+#include "util/types.h"
+#include "model/robot.h"
+#include "model/event.h"
+#include "model/robot.h"
+#include "model/context.h"
+/*
+ * Proces: (exogene / endogen events)
+ *
+ * Bootstraping phase:
+ * backward scheduling (meetings)
+ * Machbarkeitsprüfung (konflikte bei der plaunung)
+ *
+ * Simulation phase:
+ * Laufzeitkonflikte
+ *
+ *
+ */
+
+const double SIM_START_TIME = 8.0 * 3600.0; 
+const int NODE_LOBBY = 0; // The therapy location
+const double ROBOT_SPEED = 1.0; // units per second
+
+std::mt19937 rng(42); // Fixed seed for reproducibility
+//
+double getDistance(int nodeA, int nodeB) {
+    return std::abs(nodeA - nodeB) * 10.0;
+}
+
+// Calculates travel time for PLANNING (Deterministic)
+double estimateTravelTime(int nodeA, int nodeB) {
+    double dist = getDistance(nodeA, nodeB);
+    return dist / ROBOT_SPEED; 
+}
+
+// Calculates travel time for SIMULATION (Includes noise/randomness)
+double getRealTravelTime(int nodeA, int nodeB) {
+    double baseTime = estimateTravelTime(nodeA, nodeB);
+    // Add random delay (0 to 10% extra time)
+    std::uniform_real_distribution<double> dist(1.0, 1.1); 
+    return baseTime * dist(rng);
+}
+
+
+
+des::Appointment a1 = {1, 101, 2, SIM_START_TIME + 2*3600, "Patient A (Room 2, 10:00)"};
+des::Appointment a2 = {2, 102, 5, SIM_START_TIME + 5*3600, "Patient B (Room 5, 13:00)"};
+des::Appointment a3 = {3, 103, 8, SIM_START_TIME + 8*3600, "Patient C (Room 8, 16:00)"};
+
+EventQueue eventQueue;
+std::map<int, des::Appointment> schedule;
+
+double currentSimTime = SIM_START_TIME;
+
+Robot robot;
+
 
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    SimulationContext ctx(robot, eventQueue);
+    std::cout << "\nRun Descrete Event Sytem ...\n" << std::endl;
+
+    schedule[1] = a1;
+    schedule[3] = a3;
+    schedule[2] = a2;
 
 
-    std::vector<VisLib::Segment> imvsSegments = {};
-    SdfParser sdfParser;
-    //sdfParser.loadSdf(RES_PATH + "imvs.sdf", imvsSegments);
-    std::vector<VisLib::Segment> segments;
-    std::vector<VisLib::Point> points;
-    sdfParser.extractWallSegments(RES_PATH + "imvs_l.sdf", segments, points);
-    for (auto s: segments) {
-        std::cout << s << "\n";
+    std::vector<des::Appointment> dailyPlan = {a1, a2, a3};
+
+    eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
+    std::cout << "--- BOOTSTRAPPING SCHEDULE ---" << std::endl;
+
+    for (const auto& appt : dailyPlan) {
+        double travelTo = estimateTravelTime(NODE_LOBBY, appt.roomNodeId);
+        double travelBack = estimateTravelTime(appt.roomNodeId, NODE_LOBBY) * 1.5; // Escort is slower
+        double taskOverhead = 30.0 + 120.0; // Scan + Interaction
+        double buffer = 600.0; // 10 min safety buffer
+
+        double startSeconds = appt.appointmentTime - (travelTo + travelBack + taskOverhead + buffer);
+
+        eventQueue.push(std::make_shared<MissionDispatchEvent>(startSeconds));
+        std::cout << "Planned Dispatch for " << appt.description 
+                  << " at " << toHumanReadable(startSeconds) << std::endl;
     }
 
-
-
-    // TODO: expectation that fist search location has biggest change to find the person
-    util::PersonData personData;
-    personData[0].push_back(6);
-    personData[0].push_back(10);
-    personData[0].push_back(12);
-    personData[1].push_back(13);
-    personData[1].push_back(12);
-    personData[1].push_back(14);
-    personData[2].push_back(17);
-    personData[2].push_back(18);
-    personData[3].push_back(4);
-
-    EV::Tree<SimulationEvent> eventTree;
-
-    //VisLib::readFile(RES_PATH + MAP_FILENAME, segments, points);
-
-    for (auto& s: segments) {
-        s.m_points[0].m_x *= SEGMENT_SCALE;
-        s.m_points[0].m_y *= SEGMENT_SCALE;
-        s.m_points[1].m_x *= SEGMENT_SCALE;
-        s.m_points[1].m_y *= SEGMENT_SCALE;
+    while (!eventQueue.empty()) {
+        auto e = eventQueue.top();
+        eventQueue.pop();
+        e->execute(ctx);
     }
 
-    BT::Tree m_bt;
-    SimTime m_simTime;
-    ReadOnlyClock roClock(&m_simTime);
-
-    Graph graph;
-
-    auto map = new Map(segments, points);
-
-    QRectF bounds = map->boundingRect();
-    const int h = static_cast<int>(bounds.height());
-    const int w = static_cast<int>(bounds.width());
-    double offsetX = bounds.x();
-    double offsetY = bounds.y();
-
-    std::vector<std::vector<Node>> girdLines;
-    // createGridGraph(GRID_SIZE, offsetX, offsetY, h, w, graph, girdLines);
-    // connectAllGridNodes(graph, girdLines);
-    // auto visitedNodes = removeIntersectingEdges(graph, girdLines, segments, offsetX, offsetY, GRID_SIZE);
-
-    int robotPosition = getNearestNode(graph, -930, -980);
-    int dock = getNearestNode(graph, -826, -922);
-
-    Robot robot(robotPosition, dock);
-    Simulation model(graph, &robot, eventTree, personData, m_bt, &m_simTime);
-    MapView mapView(model, map);
-    // if (SHOW_VISITED) {
-    //     for (auto n: visitedNodes) {
-    //         mapView.drawLocation(n, "", Qt::green, N, 20, -1);
+    //QApplication app(argc, argv);
+    // DBClient db_client(argv[1], argv[2]);
+    // auto points = db_client.entrances();
+    //
+    // if (points.has_value()) {
+    //     for (const auto& p: points.value()) {
+    //         std::cout << p << std::endl;
+    //         sim::addMarker(std::to_string(p.m_x), -p.m_y, p.m_x, 2.8);
     //     }
     // }
-    mapView.show();
+    // auto p = db_client.personByName("Andri", "Wild");
+    // std::cout << p->id << p->firstName << std::endl;
+    //
+    // // for (const auto& [name, p]: points) {
+    // //     sim::addMarker(name, p.m_x, p.m_y, 2.8);
+    // // }
+    //
+    //
+    // rclcpp::init(argc, argv);
+    // // auto node = std::make_shared<GazeboTfBroadcaster>();
+    // auto planner_node = std::make_shared<PathPlannerNode>();
+    // // std::thread ros_thread([node] { rclcpp::spin(node); });
+    // // std::thread ros_thread2([planner_node] { rclcpp::spin(planner_node); });
+    // //
+    // while (!planner_node->isReady()) {
+    //     std::cout << "Waiting for planner..." << std::endl;
+    //     std::this_thread::sleep_for(std::chrono::seconds(1));
+    // }
+    // std::cout << "Planner ready!" << std::endl;
 
-    Planner planner(graph, robot.getSpeed());
+    //
+    //
+    // std::cout << "start calc test\n";
+    // for (int i = 0; i < 10; i ++) {
+    //
+    //     SimplePose start{0.5, 0.5, 0.0};
+    //     SimplePose goal{1.5, static_cast<double>(i), 0.0};
+    //     PathResult result = planner_node->computeDistance(start, goal);
+    //     std::cout << "end calc test\n";
+    //
+    //     if (result.success) {
+    //         std::cout << "Distance: " << result.distance << " meters" << std::endl;
+    //     } else {
+    //         std::cout << "Failed" << std::endl;
+    //     }
+    // }
 
-    auto root = eventTree.createRoot(std::make_unique<SimulationRoot>(0));
-    //root->addSubtree(planner.escortSequence(1000, personData,0, 16, robotPosition, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence(1500, personData,1,  8, dock, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence(2000, personData,2,  13, dock, dock).releaseRoot());
-    // root->addSubtree(planner.escortSequence( 400, personData,2,  7, dock, dock).releaseRoot());
+    // EV::Tree<IEvent> eventTree;
+    // //
+    // BT::Tree m_bt;
+    // SimTime m_simTime;
+    // // ReadOnlyClock roClock(&m_simTime);
+    // //
+    // //
+    // Robot robot(0, 0);
+    // Simulation model(&robot, eventTree, m_bt, &m_simTime);
 
     // EV::Tree<SimulationEvent> dockTree;
     // auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(100, "Tour"));
@@ -149,6 +194,10 @@ int main(int argc, char *argv[]) {
     //         m_bt.sleep(std::chrono::milliseconds(100));
     //     }
     // });
-    QApplication::exec();
+
+    //QApplication::exec();
+    //rclcpp::shutdown();
+    // ros_thread.join();
+    // ros_thread2.join();
     return 0;
 }

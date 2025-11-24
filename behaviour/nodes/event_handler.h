@@ -7,19 +7,19 @@
 
 
 class EventHandler : public BT::SyncActionNode {
-    EV::Tree<SimulationEvent>* m_eventTree;
-    std::vector<EV::TreeNode<SimulationEvent>*> m_events;
+    EV::Tree<IEvent>* m_eventTree;
+    std::vector<EV::TreeNode<IEvent>*> m_events;
     ReadOnlyClock* m_clock;
     std::shared_ptr<des::BaseEvent> m_nextEvent;
     int index = 0;
-    EV::TreeNode<SimulationEvent>* nextEvent;
+    EV::TreeNode<IEvent>* nextEvent;
     BT::Blackboard* m_bb;
 
 public:
     EventHandler(
         const std::string &name,
         const BT::NodeConfig &config,
-        EV::Tree<SimulationEvent> *events,
+        EV::Tree<IEvent> *events,
         ReadOnlyClock* clock
     )
         : SyncActionNode(name, config),
@@ -30,7 +30,7 @@ public:
 
         m_events = m_eventTree->traversalPreOrder();
         std::sort(m_events.begin(), m_events.end(),
-            [](const EV::TreeNode<SimulationEvent>* ev1, const EV::TreeNode<SimulationEvent>* ev2) {
+            [](const EV::TreeNode<IEvent>* ev1, const EV::TreeNode<IEvent>* ev2) {
                 return ev1->getValue()->getTime() < ev2->getValue()->getTime();
             });
 

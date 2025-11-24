@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QGraphicsItemGroup>
-#include <QGraphicsRectItem>
 #include <QPen>
 #include <QBrush>
 #include <QColor>
@@ -18,7 +17,7 @@ class EventPlan : public QGraphicsItemGroup {
 
 public:
     EventPlan(
-        EV::TreeNode<SimulationEvent> &root,
+        EV::TreeNode<IEvent> &root,
         const int xOffset,
         QGraphicsItem *parent = nullptr
         ):
@@ -69,12 +68,12 @@ private:
         }
     }
 
-    void draw(EV::TreeNode<SimulationEvent> *node, int level) {
+    void draw(EV::TreeNode<IEvent> *node, int level) {
         level = level * LINE_GAP;
         const int s = node->getLeftMostLeaf()->getValue()->getTime();
         const int e = node->getRightMostLeaf()->getValue()->getTime();
 
-        SimulationEvent *ev = node->getValue();
+        IEvent *ev = node->getValue();
         if (dynamic_cast<MeetingEvent *>(ev)) {
             drawBlock(s, e, level, Helper::color(ROBOT_STATE::MEETING), ev->getLabel(), ev->getTime());
         } else if (dynamic_cast<RobotDriveStartEvent *>(ev)) {
@@ -98,7 +97,7 @@ private:
         }
     }
 
-    void drawRec(EV::TreeNode<SimulationEvent> *node, int level = 0) {
+    void drawRec(EV::TreeNode<IEvent> *node, int level = 0) {
         level++;
         if (!node->isLeaf()) {
             for (const auto &child: node->getChildren()) {
