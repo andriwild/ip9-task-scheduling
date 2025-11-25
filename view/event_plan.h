@@ -4,7 +4,6 @@
 #include <QPen>
 #include <QBrush>
 #include <QColor>
-#include "../datastructure/tree.h"
 #include "../model/event.h"
 
 
@@ -17,14 +16,12 @@ class EventPlan : public QGraphicsItemGroup {
 
 public:
     EventPlan(
-        EV::TreeNode<IEvent> &root,
         const int xOffset,
         QGraphicsItem *parent = nullptr
         ):
     QGraphicsItemGroup(parent),
     m_xOffset(xOffset)
     {
-        drawRec(&root);
     }
 
     QRectF boundingRect() const override {

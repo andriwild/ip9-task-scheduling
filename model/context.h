@@ -6,6 +6,7 @@
 #include "robot.h"
 #include "event.h"
 #include "../observer/observer.h"
+#include "../sim/ros/path_node.h"
 
 
 class SimulationContext {
@@ -15,10 +16,16 @@ class SimulationContext {
 public:
     Robot& robot;
     EventQueue& queue;
+    std::shared_ptr<PathPlannerNode> planner;
 
-    explicit SimulationContext(Robot& robot, EventQueue& queue):
+    explicit SimulationContext(
+        Robot& robot, 
+        EventQueue& queue,
+        std::shared_ptr<PathPlannerNode> planner
+    ):
         robot(robot),
-        queue(queue)
+        queue(queue),
+        planner(planner)
     {}
 
     void setTime(int newTime) {

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(ip9_task_scheduling)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/jazzy")
 
@@ -31,6 +32,7 @@ find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 find_package(Qt5 COMPONENTS
         Core
@@ -67,9 +69,9 @@ add_executable(ip9_task_scheduling
         # behaviour/nodes/tour.h
         # behaviour/nodes/robot_state.h
 
-        # sim/gz_lib.h
-        # sim/ros/transform_node.h
-        # sim/ros/path_node.h
+        sim/gz_lib.h
+        sim/ros/path_node.h
+        sim/ros/marker.h
 
 )
 
@@ -93,6 +95,7 @@ target_link_libraries(ip9_task_scheduling
         rclcpp::rclcpp
         tf2_ros::tf2_ros
         ${nav2_msgs_TARGETS}
+        ${visualization_msgs_TARGETS}
         ${tf2_geometry_msgs_TARGETS}
 )
 
@@ -100,4 +103,16 @@ get_target_property(QT_INCLUDES Qt5::Widgets INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(ip9_task_scheduling PRIVATE ${QT_INCLUDES})
 
 
+add_executable(transform_node
+    sim/ros/transform_node.cpp
+)
 
+target_link_libraries(transform_node
+    rclcpp::rclcpp
+    tf2_ros::tf2_ros
+    gz-math8::gz-math8
+    gz-transport13::gz-transport13
+    gz-msgs10::gz-msgs10
+    ${nav2_msgs_TARGETS}
+    ${tf2_geometry_msgs_TARGETS}
+)

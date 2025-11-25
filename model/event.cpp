@@ -29,6 +29,17 @@ void ArrivedEvent::execute(SimulationContext& ctx) {
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
     if(!ctx.robot.isBusy()) {
         ctx.robot.changeState(new MoveState());
+
+        // SimplePose start{0.5, 0.5, 0.0};
+        // SimplePose goal{0.4, 0.5, 0.0};
+        // PathResult result = ctx.planner->computeDistance(start, goal);
+
+        // if (result.success) {
+        //     std::cout << "2 Distance: " << result.distance << " meters" << std::endl;
+        // } else {
+        //     std::cout << "2 Failed to calculate path" << std::endl;
+        // }
+
         ctx.queue.push(std::make_shared<ArrivedEvent>(this->time + 100));
         ctx.notifyLog("Mission Dispatch");
     }

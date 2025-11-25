@@ -3,6 +3,9 @@
 #include <iostream>
 
 namespace des {
+    
+    constexpr double ROBOT_SPEED = 3.0;
+
 	struct Point {
 		double m_x, m_y;
 
@@ -47,9 +50,9 @@ namespace des {
 
     struct Appointment {
         int id;
-        int personId;
-        int roomNodeId;
-        double appointmentTime;
+        std::string personName;
+        std::string roomName;
+        int appointmentTime;
         std::string description;
     };
 }

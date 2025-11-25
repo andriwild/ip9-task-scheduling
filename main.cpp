@@ -3,6 +3,7 @@
 // #include <behaviortree_cpp/blackboard.h>
 // #include "behaviour/nodes/robot_state.h"
 
+#include <cassert>
 #include <gz/transport.hh>
 #include <gz/msgs.hh>
 #include <iostream>
@@ -10,12 +11,20 @@
 #include <memory>
 
 
+#include <gz/transport.hh>
+#include <gz/msgs.hh>
+
 #include "util/types.h"
 #include "model/robot.h"
 #include "model/event.h"
 #include "model/robot.h"
 #include "model/context.h"
 #include "view/term.h"
+#include "sim/ros/path_node.h"
+#include "sim/ros/marker.h"
+#include "sim/gz_lib.h"
+#include "rclcpp/rclcpp.hpp"
+
 /*
  * Proces: (exogene / endogen events)
  *
@@ -35,70 +44,171 @@ const double ROBOT_SPEED = 1.0; // units per second
 
 std::mt19937 rng(42); // Fixed seed for reproducibility
 //
-double getDistance(int nodeA, int nodeB) {
-    return std::abs(nodeA - nodeB) * 10.0;
-}
 
-// Calculates travel time for PLANNING (Deterministic)
-double estimateTravelTime(int nodeA, int nodeB) {
-    double dist = getDistance(nodeA, nodeB);
-    return dist / ROBOT_SPEED; 
-}
 
 // Calculates travel time for SIMULATION (Includes noise/randomness)
-double getRealTravelTime(int nodeA, int nodeB) {
-    double baseTime = estimateTravelTime(nodeA, nodeB);
-    // Add random delay (0 to 10% extra time)
-    std::uniform_real_distribution<double> dist(1.0, 1.1); 
-    return baseTime * dist(rng);
-}
+// double getRealTravelTime(int nodeA, int nodeB) {
+//     double baseTime = estimateTravelTime(nodeA, nodeB);
+//     // Add random delay (0 to 10% extra time)
+//     std::uniform_real_distribution<double> dist(1.0, 1.1); 
+//     return baseTime * dist(rng);
+// }
+std::map<std::string, std::vector<std::string>> employeeLocations = {
+    {"Max", {"5.2B03", "5.2B03", "Kitchen", "Open Zone"}},
+    {"Leo", {"5.2B15", "5.2B10", "5.2B33", "Kitchen"}},
+    {"Fred", {"Open Zone", "Kitchen"}}
+};
 
+des::Appointment a1 = {1, "Max",  "Printer", SIM_START_TIME + 2*3600, "Massage"};
+des::Appointment a2 = {2, "Leo",  "Printer", SIM_START_TIME + 5*3600, "Nachhilfe"};
+des::Appointment a3 = {3, "Fred", "Printer", SIM_START_TIME + 8*3600, "Mitarbeiter Gespräch"};
 
+std::map<std::string, des::Point> locationMap = {
+    // Gazebo coordinates
+    {"0/0", {0.0, 0.0}},
 
-des::Appointment a1 = {1, 101, 2, SIM_START_TIME + 2*3600, "Patient A (Room 2, 10:00)"};
-des::Appointment a2 = {2, 102, 5, SIM_START_TIME + 5*3600, "Patient B (Room 5, 13:00)"};
-des::Appointment a3 = {3, 103, 8, SIM_START_TIME + 8*3600, "Patient C (Room 8, 16:00)"};
+    // imvs left side
+    {"5.2B01", {8.0,  -17.0}},
+    {"5.2B03", {2.2,  -14.0}},
+    {"5.2B04", {-0.8, -12.4}},
+    {"5.2B05", {-4.0, -10.6}},
+
+    // imvs front side
+    {"5.2B010", {-4.8, -4.0}},
+    {"5.2B013", {-3.3, 1.75}},
+    {"5.2B015", {-2.0, 7.6}},
+    {"5.2B016", {-0.3, 14.3}},
+    {"5.2B018", {0.7,  19.0}},
+
+    // imvs meeting rooms 
+    {"5.2B31", {1.2, -8.2}},
+    {"5.2B33", {1.2, -4.8}},
+    {"5.2B34", {1.2, -1.3}},
+
+    // Special Locations
+    {"Dock",   {-2.75, -4.66}},
+    {"Printer",   {3.0,   6.0}},
+    {"Open Zone", {-7.6,  -9.2}},
+    {"Kitchen", {8.0,  -11.6}},
+    {"Floor",     {-1.6,  -7.8}}
+};
 
 EventQueue eventQueue;
-std::map<int, des::Appointment> schedule;
 
 double currentSimTime = SIM_START_TIME;
 
 Robot robot;
 
+des::Point mapToRosLocation(des::Point& point) {
+    return {point.m_y, -point.m_x};
+}
+
+
+
+std::optional<double> estimateTravelTime(
+    std::shared_ptr<PathPlannerNode> planner,
+    const double speed, 
+    const std::string& from, 
+    const std::string& to) 
+{
+    auto fromPoint = mapToRosLocation(locationMap[from]);
+    auto toPoint   = mapToRosLocation(locationMap[to]);
+    auto fromPose  = SimplePose(fromPoint.m_x, fromPoint.m_y, 0.0);
+    auto toPose    = SimplePose(toPoint.m_x, toPoint.m_y, 0.0);
+
+    auto result = planner->computeDistance(fromPose, toPose);
+
+    if (result.success) {
+        std::cout << "Distance: " << result.distance << " meters" << std::endl;
+        return result.distance / ROBOT_SPEED;
+    } else {
+        std::cerr << "Failed to calculate path: " << from << " -> " << to << std::endl;
+    }
+    return std::nullopt;
+}
 
 int main(int argc, char *argv[]) {
-    std::cout << "\nRun Descrete Event Sytem ...\n" << std::endl;
-    SimulationContext ctx(robot, eventQueue);
+    std::cout << "\n--- Descrete Event Sytem ---\n\n";
+
+    rclcpp::init(argc, argv);
+    auto marker_node = std::make_shared<MarkerPublisher>();
+
+    std::vector<MapLocation> rosLocations = {};
+    for (auto [name, p] : locationMap) {
+        auto point = mapToRosLocation(p);
+        rosLocations.emplace_back(name, point.m_x, point.m_y);
+    }
+    marker_node->publishLocations(rosLocations);
+
+    auto planner_node = std::make_shared<PathPlannerNode>();
+    std::thread ros_thread;
+
+    if(planner_node->isReady()) {
+        std::cout << "Planner ready!" << std::endl;
+
+        ros_thread = std::thread([planner_node] { 
+            rclcpp::spin(planner_node); 
+        });
+    } else {
+        std::cerr << "Planner initialization failed!" << std::endl;
+        return 1;
+    }
+
+
+    // auto p1 = mapToRosLocation(locationMap["Printer"]);
+    // auto p2 = mapToRosLocation(locationMap["5.2B01"]);
+    // SimplePose start{p1.m_x, p1.m_y, 0.0};
+    // SimplePose goal{p2.m_x, p2.m_y, 0.0};
+    // PathResult result = planner_node->computeDistance(start, goal);
+
+    
+    // if (result.success) {
+    //     std::cout << "Distance: " << result.distance << " meters" << std::endl;
+    // } else {
+    //     std::cout << "Failed to calculate path" << std::endl;
+    // }
+
+
+    SimulationContext ctx(robot, eventQueue, planner_node);
 
     TerminalView termView;
     ctx.addObserver(std::make_shared<TerminalView>(termView));
 
-    schedule[1] = a1;
-    schedule[3] = a3;
-    schedule[2] = a2;
-
-
-    std::vector<des::Appointment> dailyPlan = {a1, a2, a3};
+    std::vector<des::Appointment> dailyPlan = { a1, a2, a3 };
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
-    std::cout << "--- BOOTSTRAPPING SCHEDULE ---" << std::endl;
 
     for (const auto& appt : dailyPlan) {
-        double travelTo = estimateTravelTime(NODE_LOBBY, appt.roomNodeId);
-        double travelBack = estimateTravelTime(appt.roomNodeId, NODE_LOBBY) * 1.5; // Escort is slower
-        double taskOverhead = 30.0 + 120.0; // Scan + Interaction
-        double buffer = 600.0; // 10 min safety buffer
+        auto employeeLocation = employeeLocations[appt.personName].front();
+        std::string startPos = "Dock";
+        std::optional<double> travelTo = estimateTravelTime(planner_node, des::ROBOT_SPEED, startPos, employeeLocation);
+        std::optional<double> escorting = estimateTravelTime(planner_node, des::ROBOT_SPEED, employeeLocation, appt.roomName);
+        std::optional<double> travelBack = estimateTravelTime(planner_node, des::ROBOT_SPEED, appt.roomName, startPos);
+        double taskOverhead = 30.0 + 120.0; // Scan + Interaction + Search 
+        double buffer = 3 * 60.0; // 3 min safety buffer 
+        
+        std::cout << "value check" << std::endl;
+        assert(travelTo.has_value());
+        assert(escorting.has_value());
+        assert(travelBack.has_value());
 
-        double startSeconds = appt.appointmentTime - (travelTo + travelBack + taskOverhead + buffer);
+        std::cout << "calc start" << std::endl;
+        double startSeconds = appt.appointmentTime - (travelTo.value() + escorting.value() + travelBack.value() + taskOverhead + buffer);
+        std::cout << "enqueuing" << std::endl;
+        std::cout << startSeconds<< std::endl;
 
-        eventQueue.push(std::make_shared<MissionDispatchEvent>(startSeconds));
+        eventQueue.push(std::make_shared<MissionDispatchEvent>(static_cast<int>(startSeconds)));
+        std::cout << "done" << std::endl;
     }
 
+    std::cout << "run loop" << std::endl;
     while (!eventQueue.empty()) {
+        std::cout << "1" << std::endl;
         auto e = eventQueue.top();
         eventQueue.pop();
+        std::cout << "2" << std::endl;
         ctx.setTime(e->time);
+        std::cout << "3" << std::endl;
         e->execute(ctx);
     }
 
@@ -118,54 +228,6 @@ int main(int argc, char *argv[]) {
     // // for (const auto& [name, p]: points) {
     // //     sim::addMarker(name, p.m_x, p.m_y, 2.8);
     // // }
-    //
-    //
-    // rclcpp::init(argc, argv);
-    // // auto node = std::make_shared<GazeboTfBroadcaster>();
-    // auto planner_node = std::make_shared<PathPlannerNode>();
-    // // std::thread ros_thread([node] { rclcpp::spin(node); });
-    // // std::thread ros_thread2([planner_node] { rclcpp::spin(planner_node); });
-    // //
-    // while (!planner_node->isReady()) {
-    //     std::cout << "Waiting for planner..." << std::endl;
-    //     std::this_thread::sleep_for(std::chrono::seconds(1));
-    // }
-    // std::cout << "Planner ready!" << std::endl;
-
-    //
-    //
-    // std::cout << "start calc test\n";
-    // for (int i = 0; i < 10; i ++) {
-    //
-    //     SimplePose start{0.5, 0.5, 0.0};
-    //     SimplePose goal{1.5, static_cast<double>(i), 0.0};
-    //     PathResult result = planner_node->computeDistance(start, goal);
-    //     std::cout << "end calc test\n";
-    //
-    //     if (result.success) {
-    //         std::cout << "Distance: " << result.distance << " meters" << std::endl;
-    //     } else {
-    //         std::cout << "Failed" << std::endl;
-    //     }
-    // }
-
-    // EV::Tree<IEvent> eventTree;
-    // //
-    // BT::Tree m_bt;
-    // SimTime m_simTime;
-    // // ReadOnlyClock roClock(&m_simTime);
-    // //
-    // //
-    // Robot robot(0, 0);
-    // Simulation model(&robot, eventTree, m_bt, &m_simTime);
-
-    // EV::Tree<SimulationEvent> dockTree;
-    // auto dockTreeRoot = dockTree.createRoot(std::make_unique<Tour>(100, "Tour"));
-    // planner.tour(dockTreeRoot, robotPosition, 10);
-    // root->addSubtree(dockTree.releaseRoot());
-
-    // std::cout << eventTree << std::endl;
-    //
     //
     // BT::BehaviorTreeFactory factory;
     // factory.registerNodeType<DriveStart>("DriveStart");
@@ -188,9 +250,6 @@ int main(int argc, char *argv[]) {
     // std::string xml_models = BT::writeTreeNodesModelXML(factory);
     // std::cout << xml_models << std::endl;
 
-
-
-
     // QtConcurrent::run([&] {
     //     for (int i = 0; i < maxSimTime; ++i) {
     //         model.simStep();
@@ -199,8 +258,11 @@ int main(int argc, char *argv[]) {
     // });
 
     //QApplication::exec();
-    //rclcpp::shutdown();
-    // ros_thread.join();
-    // ros_thread2.join();
+    
+    std::cin.get();
+    rclcpp::shutdown();
+    if(ros_thread.joinable()){
+        ros_thread.join();
+    }
     return 0;
 }

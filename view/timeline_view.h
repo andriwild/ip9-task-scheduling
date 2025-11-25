@@ -3,9 +3,6 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
-#include "event_plan.h"
-#include "../datastructure/tree.h"
-#include "../model/event.h"
 #include "../model/simulation.h"
 
 constexpr int TIMELINE_HEIGHT = 700;
