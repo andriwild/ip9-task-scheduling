@@ -15,13 +15,13 @@ FetchContent_Declare(
         GIT_TAG v1.14.0
 )
 
-FetchContent_Declare(
-        BehaviorTree
-        GIT_REPOSITORY https://github.com/BehaviorTree/BehaviorTree.CPP.git
-        GIT_TAG 4.7.3
-)
+# FetchContent_Declare(
+#         BehaviorTree
+#         GIT_REPOSITORY https://github.com/BehaviorTree/BehaviorTree.CPP.git
+#         GIT_TAG 4.7.3
+# )
 
-FetchContent_MakeAvailable(googletest BehaviorTree)
+# FetchContent_MakeAvailable(googletest BehaviorTree)
 
 find_package(sdformat15 REQUIRED)
 find_package(gz-math8 REQUIRED)
@@ -46,15 +46,17 @@ add_executable(ip9_task_scheduling
         main.cpp
         model/event.h
         model/event.cpp
-        model/simulation.h
         model/robot.h
         model/robot.cpp
         model/robot_state.h
         model/robot_state.cpp
         model/context.h
 
-        view/term.h
         observer/observer.h
+
+        view/term.h
+        view/gz.h
+
 
         # util/log.h
         # util/db.h
@@ -91,7 +93,7 @@ target_link_libraries(ip9_task_scheduling
         gz-math8::gz-math8
         gz-transport13::gz-transport13
         gz-msgs10::gz-msgs10
-        BT::behaviortree_cpp
+        # BT::behaviortree_cpp
         rclcpp::rclcpp
         tf2_ros::tf2_ros
         ${nav2_msgs_TARGETS}

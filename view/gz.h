@@ -1,0 +1,31 @@
+#pragma once
+
+#include <string>
+#include <map>
+
+#include "../observer/observer.h"
+#include "../util/types.h"
+#include "../sim/gz_lib.h"
+
+class GazeboView: public IObserver {
+    std::map<std::string, des::Point> locationMap;
+
+public:
+    explicit GazeboView(std::map<std::string, des::Point> locationMap):
+        locationMap(locationMap)
+    {}
+
+    void onLog(int time, const std::string& message) override {
+        // do nothing
+    }
+
+    void onRobotMoved(int time, std::string location) override {
+        auto p = mapToGzLocation(locationMap[location]); // TODO: robustness?
+        sim::moveRobot(p.m_x, p.m_y);
+    };
+
+private:
+    des::Point mapToGzLocation(des::Point& point) {
+        return {-point.m_y, point.m_x};
+    }
+};

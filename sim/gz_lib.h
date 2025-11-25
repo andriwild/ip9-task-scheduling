@@ -12,7 +12,6 @@ namespace sim {
         for (const auto &service: services) {
             std::cout << "  " << service << std::endl;
         }
-
     }
 
     inline void moveRobot(const double x, const double y) {
@@ -23,7 +22,7 @@ namespace sim {
         req.set_name("dingo");
         req.mutable_position()->set_x(x);
         req.mutable_position()->set_y(y);
-        req.mutable_position()->set_z(0.0);
+        req.mutable_position()->set_z(0.1);
         req.mutable_orientation()->set_w(1.0);
 
 
@@ -31,9 +30,7 @@ namespace sim {
         bool result;
         bool executed = node.Request("/world/imvs/set_pose", req, 5000, rep, result);
         if (executed) {
-            if (result)
-                std::cout << "Response: [" << rep.data() << "]" << std::endl;
-            else
+            if (!result)
                 std::cout << "Service call failed" << std::endl;
         } else
             std::cerr << "Service call timed out" << std::endl;

@@ -38,7 +38,15 @@ public:
         }
     }
 
+    PathResult computeDistance(const SimplePose& goal) {
+        return computeDistance(goal, {}, false);
+    }
+
     PathResult computeDistance(const SimplePose& start, const SimplePose& goal) {
+        return computeDistance(goal, start, true);
+    }
+
+    PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {
         PathResult result{false, 0.0};
         result_ready_ = false;
         if (!ready_) return result;
@@ -47,7 +55,7 @@ public:
         goal_msg.start = toPose(start);
         goal_msg.goal = toPose(goal);
         goal_msg.planner_id = "GridBased";
-        goal_msg.use_start = true;
+        goal_msg.use_start = use_start;
 
         auto send_goal_options = rclcpp_action::Client<ComputePathToPose>::SendGoalOptions();
 

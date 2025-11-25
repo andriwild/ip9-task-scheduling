@@ -8,7 +8,6 @@
 #include "../observer/observer.h"
 
 class TerminalView : public IObserver {
-private:
     const std::string RESET   = "\033[0m";
     const std::string RED     = "\033[31m";
     const std::string GREEN   = "\033[32m";
@@ -33,4 +32,10 @@ public:
         std::cout << "[" << toHumanReadable(time) << "] " << message << std::endl;
         std::cout << RESET;
     }
+
+    void onRobotMoved(int time, std::string location) override {
+        std::cout << GREEN;
+        std::cout << "[" << toHumanReadable(time) << "] " << location << std::endl;
+        std::cout << RESET;
+    };
 };
