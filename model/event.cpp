@@ -1,105 +1,103 @@
 #include <memory>
 #include <optional>
+#include <iostream>
 
 #include "robot_state.h"
 #include "event.h"
 #include "context.h"
 
+const std::string NODE_DOCK = "Dock";
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
-    if(ctx.robot.isBusy()) {
+    if (ctx.robot.isBusy()) { 
         ctx.robot.changeState(new IdleState());
     }
-    ctx.notifyLog("Simulation start");
-    ctx.robot.moveTo("Dock");
-    ctx.notifyMoved("Dock");
+    ctx.notifyLog("Simulation started");
+    
+    ctx.robot.moveTo(NODE_DOCK);
+    ctx.notifyMoved(NODE_DOCK);
 }
 
 void SimulationEndEvent::execute(SimulationContext& ctx) {
-    if(ctx.robot.isBusy()) {
-        ctx.robot.changeState(new IdleState());
-    }
-    ctx.notifyLog("Simulation end");
+    ctx.notifyLog("Simulation ended");
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {
     ctx.robot.moveTo(this->location);
     ctx.notifyMoved(ctx.robot.getLocation());
 
-    if(ctx.robot.isSearching()){
-        // TODO: find not always person
-        if(!ctx.getAppointment().has_value()){
-            ctx.notifyLog("[ERROR] Searching without an appointment!");
-        }
-        auto goal = ctx.getAppointment().value().roomName;
-        ctx.robot.changeState(new EscortState());
+    // 2. Logik basierend auf Zustand
+    // BESSER: ctx.robot.getState()->handleArrival(ctx); 
+    // Aber hier ist die optimierte Version deiner Logik:
 
-        auto duration = ctx.travelTime->estimateDuration(
-            ctx.robot.getLocation(), 
-            goal,
-            ctx.robot.getSpeed()
-        );
+    if (ctx.robot.isSearching()) {
+        // Simulation des Findens (Hier Wahrscheinlichkeit einbauen!)
+        bool personFound = true; // TODO: std::bernoulli_distribution(0.5)(ctx.rng);
 
-        if(duration.has_value()) {
-            int estimatedArrival = this->time + duration.value(); // TODO: add uncertainty
-            ctx.queue.push(std::make_shared<ArrivedEvent>(estimatedArrival, goal));
-            ctx.queue.push(std::make_shared<MissionCompleteEvent>(estimatedArrival+1));
-            ctx.notifyLog("Start escorting...");
+        if (personFound) {
+            if (!ctx.getAppointment().has_value()) {
+                ctx.notifyLog("[CRITICAL] Searching without appointment data!");
+                return;
+            }
+
+            ctx.notifyLog("Person found! Starting escort.");
+            auto goal = ctx.getAppointment().value().roomName;
+            
+            ctx.robot.changeState(new EscortState());
+            ctx.scheduleArrival(this->time, goal, true); 
+
         } else {
-            ctx.notifyLog("[ERROR] Failed to calculate path to " + goal);
+            ctx.notifyLog("Person not in " + this->location + ". Checking next room...");
+            
+            // WICHTIG: Der SearchState muss wissen, welche Räume noch übrig sind.
+            // Das erfordert Zugriff auf den State. 
+            // auto* searchState = dynamic_cast<SearchState*>(ctx.robot.getCurrentState());
+            // std::string nextRoom = searchState->popNextRoom();
+            // ctx.scheduleArrival(this->time, nextRoom);
         }
-    } else if(ctx.robot.isEscorting()) {
-        std::string goal = "Dock";
-        ctx.notifyLog("Escorting finished");
 
+    } else if (ctx.robot.isEscorting()) {
+        ctx.notifyLog("Escort finished. Returning to Dock.");
         ctx.robot.changeState(new MoveState());
+        ctx.scheduleArrival(this->time, NODE_DOCK);
 
-        auto duration = ctx.travelTime->estimateDuration(
-            ctx.robot.getLocation(), 
-            goal,
-            ctx.robot.getSpeed()
-        );
-
-        if(duration.has_value()) {
-            int estimatedArrival = this->time + duration.value(); // TODO: add uncertainty
-            ctx.queue.push(std::make_shared<ArrivedEvent>(estimatedArrival, goal));
-            ctx.notifyLog("Moving ...");
-        } else {
-            ctx.notifyLog("[ERROR] Failed to calculate path to " + goal);
-        }
     } else {
+        ctx.notifyLog("Robot is idle at " + this->location);
         ctx.robot.changeState(new IdleState());
     }
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    if(!ctx.robot.isBusy()) {
-        ctx.setAppointment(this->appointment);
-
-        std::string person = this->appointment.personName;
-        std::vector<std::string> locations = ctx.employeeLocations[person];
-        std::string goal = locations.front();
-        locations.erase(locations.begin());
-
-        ctx.robot.changeState(new SearchState(locations));
-
-        auto duration = ctx.travelTime->estimateDuration(
-            ctx.robot.getLocation(), 
-            goal,
-            ctx.robot.getSpeed()
-        );
-
-        if(duration.has_value()) {
-            int estimatedArrival = this->time + duration.value(); // TODO: add uncertainty
-            ctx.queue.push(std::make_shared<ArrivedEvent>(estimatedArrival, goal));
-            ctx.notifyLog("Mission Dispatch");
-        } else {
-            ctx.notifyLog("Failed to calculate path to " + goal);
-        }
+    if (ctx.robot.isBusy()) {
+        ctx.notifyLog("[WARN] Robot busy, ignoring dispatch.");
+        return; 
     }
+
+    ctx.setAppointment(this->appointment);
+    std::string person = this->appointment.personName;
+
+    if (ctx.employeeLocations.find(person) == ctx.employeeLocations.end()) {
+        ctx.notifyLog("[ERROR] Person '" + person + "' not found in database!");
+        return;
+    }
+
+    std::vector<std::string> locations = ctx.employeeLocations.at(person);
+    
+    if (locations.empty()) {
+        ctx.notifyLog("[ERROR] No locations defined for '" + person + "'!");
+        return;
+    }
+
+    std::string firstGoal = locations.front();
+    locations.erase(locations.begin());
+
+    ctx.notifyLog("Mission Dispatch: Searching for " + person);
+    
+    ctx.robot.changeState(new SearchState(locations));
+    ctx.scheduleArrival(this->time, firstGoal);
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.notifyLog("Mission Complete");
+    ctx.notifyLog("Mission Complete. Appointment cleared.");
     ctx.resetAppointment();
 }

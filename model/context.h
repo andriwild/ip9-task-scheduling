@@ -3,6 +3,7 @@
 #include <cassert>
 #include <optional>
 #include <vector>
+#include <memory>
 
 #include "robot.h"
 #include "event.h"
@@ -64,6 +65,26 @@ public:
     void notifyMoved(std::string location) {
         for (auto obs:observers ) {
             obs->onRobotMoved(currentTime, location);
+        }
+    }
+
+    void scheduleArrival(int currentTime, const std::string& target, bool isMissionComplete = false) {
+        auto duration = this->travelTime->estimateDuration(
+            this->robot.getLocation(), 
+            target,
+            this->robot.getSpeed()
+        );
+
+        if (duration.has_value()) {
+            int arrivalTime = currentTime + duration.value(); // TODO: Add uncertainty here
+            this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target));
+
+            if (isMissionComplete) {
+                this->queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
+            }
+            this->notifyLog("Moving to " + target + " (" + std::to_string(duration.value()) + "s)");
+        } else {
+            this->notifyLog("[ERROR] Path planning failed to " + target);
         }
     }
 };
