@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cassert>
+#include <iostream>
 #include <optional>
 #include <vector>
 #include <memory>
+#include <behaviortree_cpp/bt_factory.h>
 
 #include "robot.h"
 #include "event.h"
@@ -22,6 +24,7 @@ public:
     EventQueue& queue;
     std::shared_ptr<TravelTimeEstimator> travelTime;
     std::map<std::string, std::vector<std::string>> employeeLocations;
+    std::shared_ptr<BT::Tree> behaviorTree;
 
     explicit SimulationContext(
         Robot& robot, 
@@ -77,6 +80,7 @@ public:
 
         if (duration.has_value()) {
             int arrivalTime = currentTime + duration.value(); // TODO: Add uncertainty here
+            std::cout << "[DEBUG] calc drive time: " << arrivalTime << ", currentTime: " << currentTime << ", duration: " << duration.value() << std::endl;
             this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target));
 
             if (isMissionComplete) {

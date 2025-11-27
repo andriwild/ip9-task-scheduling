@@ -1,3 +1,4 @@
+#pragma once
 
 #include "path_node.h"
 #include "../../util/types.h"
@@ -22,8 +23,8 @@ public:
 
         assert(fromIt != locationMap.end() && toIt != locationMap.end());
 
-        SimplePose start{ fromIt->second.m_x, fromIt->second.m_y, 0.0 };
-        SimplePose goal{ toIt->second.m_x, toIt->second.m_y, 0.0 };
+        SimplePose start { fromIt->second.m_x, fromIt->second.m_y, 0.0 };
+        SimplePose goal  { toIt->second.m_x, toIt->second.m_y, 0.0 };
         
         auto result = planner->computeDistance(start, goal);
 

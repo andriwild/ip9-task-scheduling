@@ -1,31 +1,29 @@
 #include <QApplication>
 #include <QtConcurrent/QtConcurrent>
-// #include <behaviortree_cpp/blackboard.h>
-// #include "behaviour/nodes/robot_state.h"
+#include <behaviortree_cpp/blackboard.h>
+#include <behaviortree_cpp/bt_factory.h>
 
 #include <cassert>
-#include <gz/transport.hh>
-#include <gz/msgs.hh>
 #include <iostream>
 #include <ostream>
 #include <memory>
 
-
-#include <gz/transport.hh>
-#include <gz/msgs.hh>
-
-#include "model/robot_state.h"
 #include "util/types.h"
+#include "util/data.h"
+
 #include "model/robot.h"
 #include "model/event.h"
 #include "model/robot.h"
 #include "model/context.h"
+#include "model/robot_state.h"
+
 #include "view/term.h"
 #include "view/gz.h"
+
 #include "sim/ros/path_node.h"
 #include "sim/ros/marker.h"
-#include "sim/gz_lib.h"
-#include "rclcpp/rclcpp.hpp"
+
+#include "behaviour/nodes/sim.h"
 
 /*
  * Proces: (exogene / endogen events)
@@ -41,59 +39,10 @@
  */
 
 const int SIM_START_TIME = 8 * 3600; 
-const int NODE_LOBBY = 0; // The therapy location
-const double ROBOT_SPEED = 1.0; // units per second
-
-std::mt19937 rng(42); // Fixed seed for reproducibility
-//
-
-
-// Calculates travel time for SIMULATION (Includes noise/randomness)
-// double getRealTravelTime(int nodeA, int nodeB) {
-//     double baseTime = estimateTravelTime(nodeA, nodeB);
-//     // Add random delay (0 to 10% extra time)
-//     std::uniform_real_distribution<double> dist(1.0, 1.1); 
-//     return baseTime * dist(rng);
-// }
-std::map<std::string, std::vector<std::string>> employeeLocations = {
-    {"Max", {"5.2B03", "5.2B03", "Kitchen", "Open Zone"}},
-    {"Leo", {"5.2B15", "5.2B10", "5.2B33", "Kitchen"}},
-    {"Fred", {"Open Zone", "Kitchen"}}
-};
 
 des::Appointment a1 = {1, "Max",  "Printer", SIM_START_TIME + 2*3600, "Massage"};
 des::Appointment a2 = {2, "Leo",  "Printer", SIM_START_TIME + 5*3600, "Nachhilfe"};
 des::Appointment a3 = {3, "Fred", "Printer", SIM_START_TIME + 8*3600, "Mitarbeiter Gespräch"};
-
-std::map<std::string, des::Point> locationMap = {
-    // Gazebo coordinates
-    {"0/0", {0.0, 0.0}},
-
-    // imvs left side
-    {"5.2B01", {-17.0, -8.0}},
-    {"5.2B03", {-14.0, -2.2}},
-    {"5.2B04", {-12.4, 0.8}},
-    {"5.2B05", {-10.6, 4.0}},
-
-    // imvs front side
-    {"5.2B10", { -4.0, 4.8}},
-    {"5.2B13", { 1.75, 3.3}},
-    {"5.2B15", { 7.6 , 2.0}},
-    {"5.2B16", { 14.3, 0.3}},
-    {"5.2B18", { 19.0, -0.7}},
-
-    // imvs meeting rooms 
-    {"5.2B31", {-8.2, -1.2}},
-    {"5.2B33", {-4.8, -1.2}},
-    {"5.2B34", {-1.3, -1.2}},
-
-    // Special Locations
-    {"Dock",      {-4.66, 2.75}},
-    {"Printer",   { 6.0 , -3.0}},
-    {"Open Zone", {-9.2 , 7.6,}},
-    {"Kitchen",   {-11.6, -8.0}},
-    {"Floor",     {-7.8 , 1.6}}
-};
 
 
 void printQueue(EventQueue queue) {
@@ -104,14 +53,9 @@ void printQueue(EventQueue queue) {
     }
 }
 
-EventQueue eventQueue;
-
-double currentSimTime = SIM_START_TIME;
-
-Robot robot;
-
 int main(int argc, char *argv[]) {
     std::cout << "\n--- Descrete Event Sytem ---\n\n";
+
 
     rclcpp::init(argc, argv);
     auto marker_node = std::make_shared<MarkerPublisher>();
@@ -135,6 +79,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    EventQueue eventQueue;
+    Robot robot;
+
     auto tte = std::make_shared<TravelTimeEstimator>(planner_node, locationMap);
     SimulationContext ctx(robot, eventQueue, tte, employeeLocations);
 
@@ -147,21 +94,52 @@ int main(int argc, char *argv[]) {
 
     for (const auto& appt : dailyPlan) {
         auto employeeLocation = employeeLocations[appt.personName].front();
-        std::string startPos = "Dock";
-        std::optional<double> travelTo = tte->estimateDuration(startPos, employeeLocation, DEFAULT_SPEED);
-        std::optional<double> escorting = tte->estimateDuration(employeeLocation, appt.roomName, DEFAULT_SPEED);
+        std::string startPos = robot.getIdleLocation();
+        std::optional<double> travelTo   = tte->estimateDuration(startPos, employeeLocation, DEFAULT_SPEED);
+        std::optional<double> escorting  = tte->estimateDuration(employeeLocation, appt.roomName, DEFAULT_SPEED);
         std::optional<double> travelBack = tte->estimateDuration(appt.roomName, startPos, DEFAULT_SPEED);
-        double taskOverhead = 30.0 + 120.0; // Scan + Interaction + Search 
+        double taskOverhead = 30.0 + 120.0; // scan + interaction + search 
         double buffer = 3 * 60.0; // 3 min safety buffer 
         
         assert(travelTo.has_value());
         assert(escorting.has_value());
         assert(travelBack.has_value());
 
-        double startSeconds = appt.appointmentTime - (travelTo.value() + escorting.value() + travelBack.value() + taskOverhead + buffer);
+        const double travelTime = travelTo.value() + escorting.value() + travelBack.value();
+        const double startSeconds = appt.appointmentTime - (travelTime + taskOverhead + buffer);
 
         eventQueue.push(std::make_shared<MissionDispatchEvent>(static_cast<int>(startSeconds), appt));
     }
+
+    BT::BehaviorTreeFactory factory;
+    
+    factory.registerNodeType<IsSearching>("IsSearching");
+    factory.registerNodeType<IsEscorting>("IsEscorting");
+    factory.registerNodeType<HandleSearch>("HandleSearch");
+    factory.registerNodeType<HandleEscort>("HandleEscort");
+    factory.registerNodeType<HandleIdle>("HandleIdle");
+
+    static const char* xml_text = R"(
+     <root BTCPP_format="4">
+         <BehaviorTree ID="MainTree">
+            <Fallback>
+                <Sequence>
+                    <IsSearching/>
+                    <HandleSearch/>
+                </Sequence>
+                <Sequence>
+                    <IsEscorting/>
+                    <HandleEscort/>
+                </Sequence>
+                <HandleIdle/>
+            </Fallback>
+         </BehaviorTree>
+     </root>
+    )";
+
+    auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
+    tree->rootBlackboard()->set("ctx", &ctx);
+    ctx.behaviorTree = tree;
 
     while (!eventQueue.empty()) {
         auto e = eventQueue.top();
@@ -171,30 +149,11 @@ int main(int argc, char *argv[]) {
         std::cin.get();
     }
 
-    //QApplication app(argc, argv);
-    // DBClient db_client(argv[1], argv[2]);
-    //
-    // BT::BehaviorTreeFactory factory;
-    // factory.registerNodeType<DriveStart>("DriveStart");
-    // factory.registerNodeType<NavigateToPoint>("NavigateToPoint", &robot, &graph, &roClock);
-    // factory.registerNodeType<EventHandler>("EventHandler", &eventTree, &roClock);
-    // factory.registerNodeType<RobotState>("RobotState", &robot);
-    // factory.registerNodeType<SayHello>("SayHello");
-    // factory.registerNodeType<LogNode>("LoggerNode");
-    //
-    // m_bt = factory.createTreeFromFile("../tree.xml");
-    // m_bt.rootBlackboard().get()->set("goal", -1);
-
     // BT::StdCoutLogger logger(m_bt);
-
     // Timeline timelineView(model, maxSimTime);
     // timelineView.show();
-
-    //BT::printTreeRecursively(tree.rootNode());
-    //
+    // BT::printTreeRecursively(tree.rootNode());
     // std::string xml_models = BT::writeTreeNodesModelXML(factory);
-    // std::cout << xml_models << std::endl;
-
     // QtConcurrent::run([&] {
     //     for (int i = 0; i < maxSimTime; ++i) {
     //         model.simStep();

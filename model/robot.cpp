@@ -8,7 +8,7 @@ void Robot::changeState(RobotState* newState) {
     state->enter(*this);
 }
 
-void Robot::setSpeed(int newSpeed) {
+void Robot::setSpeed(double newSpeed) {
     currentSpeed = newSpeed;
 }
 
@@ -36,6 +36,6 @@ std::string Robot::getLocation() const {
     return currentLocation;
 };
 
-void Robot::moveTo(std::string location) {
+void Robot::setLocation(std::string location) {
     currentLocation = location;
 };

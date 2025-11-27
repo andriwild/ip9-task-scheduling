@@ -12,8 +12,8 @@ enum class RobotStateType {
     CHARGING,
 };
 
-constexpr double DEFAULT_SPEED = 3.0;
-constexpr double ESCORT_SPEED  = 2.0;
+constexpr double DEFAULT_SPEED = 1.0;
+constexpr double ESCORT_SPEED  = 0.8;
 
 
 class RobotState {

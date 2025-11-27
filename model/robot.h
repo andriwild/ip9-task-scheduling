@@ -5,8 +5,9 @@
 #include "robot_state.h"
 
 class Robot {
+    std::string idleLocation = "Dock";
     std::unique_ptr<RobotState> state;
-    int currentSpeed = 0;
+    double currentSpeed = 0;
     std::string currentLocation;
 
 public:
@@ -15,11 +16,18 @@ public:
     }
 
     std::string getLocation() const;
-    void moveTo(std::string location);
+    void setLocation(std::string location);
 
     void changeState(RobotState* newState);
-    void setSpeed(int newSpeed);
+    RobotState* getState() { return state.get(); };
+
+    void setSpeed(double newSpeed);
     double getSpeed() const;
+
+    std::string getIdleLocation() const {
+        return idleLocation;
+    }
+
     bool isBusy();
     bool isSearching();
     bool isEscorting();

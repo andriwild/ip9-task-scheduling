@@ -1,13 +1,15 @@
 <root BTCPP_format="4">
-    <TreeNodesModel>
-        <Action ID="LoggerNode">
-            <input_port name="msg" type="std::string"/>
-        </Action>
-        <Action ID="NavigateToPoint">
-            <input_port name="goal" type="int"/>
-        </Action>
-        <Action ID="SayHello">
-            <output_port name="text" type="std::string"/>
-        </Action>
-    </TreeNodesModel>
+    <BehaviorTree ID="MainTree">
+        <Fallback>
+            <Sequence>
+                <IsSearching/>
+                <HandleSearch/>
+            </Sequence>
+            <Sequence>
+                <IsEscorting/>
+                <HandleEscort/>
+            </Sequence>
+            <HandleIdle/>
+        </Fallback>
+    </BehaviorTree>
 </root>

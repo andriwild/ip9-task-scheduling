@@ -7,7 +7,7 @@ bool IdleState::isBusy() const { return false; };
 
 void IdleState::enter(Robot& robot) { 
     std::cout << "[State] enter idle " << std::endl;
-    robot.setSpeed(0);
+    robot.setSpeed(DEFAULT_SPEED);
 }
 void IdleState::exit(Robot& robot) {
     std::cout << "[State] exit idle " << std::endl;
