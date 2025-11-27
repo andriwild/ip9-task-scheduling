@@ -33,7 +33,7 @@ public:
         std::cout << RESET;
     }
 
-    void onRobotMoved(int time, std::string location) override {
+    void onRobotMoved(int time, const std::string& location) override {
         std::cout << GREEN;
         std::cout << "[" << toHumanReadable(time) << "] " << location << std::endl;
         std::cout << RESET;

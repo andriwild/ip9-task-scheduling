@@ -56,27 +56,18 @@ add_executable(ip9_task_scheduling
 
         view/term.h
         view/gz.h
+        view/timeline.h
+        view/bridge.h
 
-
-        # util/log.h
-        # util/db.h
         util/types.h
         util/data.h
         util/rnd.h
 
-        # view/timeline_view.h
-        # view/event_plan.h
-
         behaviour/nodes/sim.h
-        # behaviour/dummy.h
-        # behaviour/nodes/event_handler.h
-        # behaviour/nodes/tour.h
-        # behaviour/nodes/robot_state.h
 
         sim/gz_lib.h
         sim/ros/path_node.h
         sim/ros/marker.h
-
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES

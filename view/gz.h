@@ -19,7 +19,7 @@ public:
         // do nothing
     }
 
-    void onRobotMoved(int time, std::string location) override {
+    void onRobotMoved(int time, const std::string& location) override {
         auto p = mapToGzLocation(locationMap[location]); // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };

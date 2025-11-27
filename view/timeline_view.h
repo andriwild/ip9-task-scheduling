@@ -3,7 +3,6 @@
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 
-#include "../model/simulation.h"
 
 constexpr int TIMELINE_HEIGHT = 700;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
@@ -26,20 +25,14 @@ constexpr double TIME_POINTER_HEIGHT = 200.0;
 class Timeline final : public QGraphicsView {
     Q_OBJECT
     QGraphicsScene* m_scene;
-    Simulation& m_model;
     const int m_yLinePos = Y_LINE_POS;
     const int m_tickStep = 10;
-    const int m_endLinePos;
+    int m_endTime;
     QGraphicsLineItem* m_timePointer;
     QGraphicsSimpleTextItem* m_stringLabel = nullptr;
 
 public:
-    explicit Timeline(Simulation& model, const int simTime, const int tickStep = 10, QWidget *parent=nullptr):
-    QGraphicsView(parent),
-    m_model(model),
-    m_tickStep(tickStep),
-    m_endLinePos(simTime)
-    {
+    explicit Timeline(): QGraphicsView(parent) {
         m_scene = new QGraphicsScene(this);
         m_scene->setSceneRect(-TIMELINE_SCENE_MARGIN, 0, simTime + TIMELINE_SCENE_MARGIN, TIMELINE_HEIGHT);
         setDragMode(ScrollHandDrag);
@@ -106,7 +99,7 @@ public:
         QGraphicsLineItem* const line  = m_scene->addLine(
             X_LINE_POS,
             m_yLinePos,
-            m_endLinePos - m_tickStep,
+            m_endTime - m_tickStep,
             m_yLinePos,
             {Qt::black, 2}
             );
@@ -205,7 +198,7 @@ public:
 private:
     void drawTicks() const {
         int time = 0;
-        for (int xPosition = X_LINE_POS; xPosition < m_endLinePos; xPosition += m_tickStep) {
+        for (int xPosition = X_LINE_POS; xPosition < m_endTime; xPosition += m_tickStep) {
             if (time % 100 == 0) {
                 constexpr int tickHeight = 5;
                 QGraphicsLineItem* const line = m_scene->addLine(

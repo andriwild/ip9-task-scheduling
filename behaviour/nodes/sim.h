@@ -82,10 +82,6 @@ public:
                     ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation(), true);
                     return BT::NodeStatus::SUCCESS;
                 }
-                for(auto l: ss->locations) {
-                    std::cout << l << ", ";
-                }
-                std::cout << "\n";
                 auto nextLocation = ss->locations.front(); // TODO: take nearest locations
                 ss->locations.erase(ss->locations.begin());
                 ctx->scheduleArrival(currentTime, nextLocation);
