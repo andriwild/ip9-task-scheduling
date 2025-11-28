@@ -5,12 +5,13 @@
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
     if (ctx.robot.isBusy()) { 
-        ctx.robot.changeState(new IdleState());
+        ctx.changeRobotState(new IdleState());
     }
     ctx.notifyLog("Simulation started");
     
     ctx.robot.setLocation(ctx.robot.getIdleLocation());
     ctx.notifyMoved(ctx.robot.getIdleLocation());
+    ctx.changeRobotState(new IdleState);
 }
 
 void SimulationEndEvent::execute(SimulationContext& ctx) {
@@ -57,11 +58,12 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 
     ctx.notifyLog("Mission Dispatch: Searching for " + person);
     
-    ctx.robot.changeState(new SearchState(locations));
+    ctx.changeRobotState(new SearchState(locations));
     ctx.scheduleArrival(this->time, firstGoal);
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Mission Complete. Appointment cleared.");
     ctx.resetAppointment();
+    ctx.changeRobotState(new IdleState());
 }

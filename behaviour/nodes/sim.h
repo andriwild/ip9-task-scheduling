@@ -3,7 +3,6 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
-#include <iostream>
 
 #include "behaviortree_cpp/basic_types.h"
 #include "../../model/context.h"
@@ -69,7 +68,7 @@ public:
             ctx->notifyLog("Person found! Starting escort.");
             auto goal = ctx->getAppointment().value().roomName;
             
-            ctx->robot.changeState(new EscortState());
+            ctx->changeRobotState(new EscortState());
             ctx->scheduleArrival(currentTime, goal); 
         } else {
             ctx->notifyLog("Person not in " + location + ". Checking next room...");
@@ -78,7 +77,7 @@ public:
             if (auto ss = dynamic_cast<SearchState*>(currentState)){
                 if(ss->locations.empty()){
                     ctx->notifyLog("Person not found at any place!");
-                    ctx->robot.changeState(new IdleState());
+                    ctx->changeRobotState(new MoveState());
                     ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation(), true);
                     return BT::NodeStatus::SUCCESS;
                 }
@@ -107,7 +106,7 @@ public:
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         ctx->notifyLog("Escort finished. Returning to Dock.");
-        ctx->robot.changeState(new MoveState());
+        ctx->changeRobotState(new MoveState());
         ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation(), true);
         return BT::NodeStatus::SUCCESS;
     }
@@ -127,7 +126,7 @@ public:
         std::string location = config().blackboard->get<std::string>("location");
 
         ctx->notifyLog("Robot is idle at " + location);
-        ctx->robot.changeState(new IdleState());
+        ctx->changeRobotState(new IdleState());
         return BT::NodeStatus::SUCCESS;
     }
 };

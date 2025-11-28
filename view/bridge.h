@@ -20,7 +20,12 @@ public:
         emit moveReceived(time, QString::fromStdString(location));
     };
 
+    void onStateChanged(int time, const RobotStateType newState) override {
+        emit stateChanged(time, static_cast<int>(newState));
+    };
+
 signals:
     void logReceived(int time, QString message);
     void moveReceived(int time, QString location);
+    void stateChanged(int time, int newState);
 };

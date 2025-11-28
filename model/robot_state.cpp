@@ -15,6 +15,9 @@ void IdleState::exit(Robot& robot) {
 void IdleState::handleEvent(Robot& robot) { 
     std::cout << "[State] handle idle " << std::endl;
 }
+RobotStateType IdleState::getType() const {
+    return RobotStateType::IDLE;
+}
 
 void EscortState::enter(Robot& robot) { 
     std::cout << "[State] enter escort " << std::endl;
@@ -28,6 +31,10 @@ void EscortState::handleEvent(Robot& robot) {
 }
 bool EscortState::isEscorting() const { return true; };
 
+RobotStateType EscortState::getType() const {
+    return RobotStateType::ESCORTING;
+}
+
 
 void MoveState::enter(Robot& robot) { 
     std::cout << "[State] enter move " << std::endl;
@@ -38,6 +45,9 @@ void MoveState::exit(Robot& robot) {
 }
 void MoveState::handleEvent(Robot& robot) { 
     std::cout << "[State] handle move " << std::endl;
+}
+RobotStateType MoveState::getType() const {
+    return RobotStateType::MOVING;
 }
 
 
@@ -53,3 +63,6 @@ void SearchState::handleEvent(Robot& robot) {
 }
 
 bool SearchState::isSearching() const { return true; };
+RobotStateType SearchState::getType() const {
+    return RobotStateType::SEARCHING;
+}

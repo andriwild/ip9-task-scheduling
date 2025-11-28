@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/jazzy")
 
-enable_testing()
+#enable_testing()
 
 include(FetchContent)
 

@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 #include <iostream>
-#include <iomanip>
 
+#include "../util/types.h"
 #include "../observer/observer.h"
 
 class TerminalView : public IObserver {
@@ -14,28 +14,17 @@ class TerminalView : public IObserver {
     const std::string YELLOW  = "\033[33m";
     const std::string CYAN    = "\033[36m";
 
-    std::string toHumanReadable(double totalSeconds) {
-        int hours = static_cast<int>(totalSeconds / 3600.0);
-        int minutes = static_cast<int>((totalSeconds - hours * 3600.0) / 60.0);
-        int seconds = static_cast<int>(totalSeconds) % 60;
-
-        std::ostringstream oss;
-        oss << std::setw(2) << std::setfill('0') << hours << ":"
-            << std::setw(2) << std::setfill('0') << minutes << ":"
-            << std::setw(2) << std::setfill('0') << seconds;
-        return oss.str();
-    }
-
 public:
     void onLog(int time, const std::string& message) override {
         std::cout << RED;
-        std::cout << "[" << toHumanReadable(time) << "] " << message << std::endl;
+        std::cout << "[" << des::toHumanReadableTime(time) << "] " << message << std::endl;
         std::cout << RESET;
     }
 
     void onRobotMoved(int time, const std::string& location) override {
         std::cout << GREEN;
-        std::cout << "[" << toHumanReadable(time) << "] " << location << std::endl;
+        std::cout << "[" << des::toHumanReadableTime(time) << "] " << location << std::endl;
         std::cout << RESET;
     };
+
 };

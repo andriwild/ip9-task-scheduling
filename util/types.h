@@ -1,19 +1,20 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 namespace des {
     
-    constexpr double ROBOT_SPEED = 3.0;
-
 	struct Point {
 		double m_x, m_y;
 
 		Point() = default;
 
 		Point(const double pnt, const double pnt1):
-		m_x(pnt),
-		m_y(pnt1)
+		    m_x(pnt),
+		    m_y(pnt1)
 		{}
 
 		friend std::ostream& operator<<(std::ostream& os, const Point& s) {
@@ -55,5 +56,19 @@ namespace des {
         int appointmentTime;
         std::string description;
     };
+
+    inline std::string toHumanReadableTime(const int sec, bool includeSeconds = true) {
+        int hours = static_cast<int>(sec/ 3600.0);
+        int minutes = static_cast<int>((sec- hours * 3600.0) / 60.0);
+        int seconds = static_cast<int>(sec) % 60;
+    
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0') << hours << ":"
+            << std::setw(2) << std::setfill('0') << minutes;
+        if (includeSeconds){
+            oss << ":" << std::setw(2) << std::setfill('0') << seconds;
+        }
+        return oss.str();
+    }
 }
 

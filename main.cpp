@@ -27,6 +27,7 @@
 #include "sim/ros/marker.h"
 
 #include "behaviour/nodes/sim.h"
+#include "util/types.h"
 
 /*
  * Proces: (exogene / endogen events)
@@ -41,7 +42,8 @@
  *
  */
 
-const int SIM_START_TIME = 8 * 3600; 
+constexpr int SIM_START_TIME = 8 * 3600; 
+constexpr int SIM_END_TIME = SIM_START_TIME + 12 * 3600;
 
 des::Appointment a1 = { 1, "Max",  "Printer", SIM_START_TIME + 2*3600, "Massage" };
 des::Appointment a2 = { 2, "Leo",  "Printer", SIM_START_TIME + 5*3600, "Nachhilfe" };
@@ -62,6 +64,18 @@ void printQueue(EventQueue queue) {
     for(int i = 0; i< size; ++i){
         std::cout << *queue.top() << std::endl;
         queue.pop();
+    }
+}
+
+
+void printDailyPlan(const std::vector<des::Appointment>& plan) {
+    for (const auto& appt : plan) {
+        std::cout << std::setw(3) << appt.id << " | "
+            << std::setw(8) << des::toHumanReadableTime(appt.appointmentTime)
+            << std::setw(12) << appt.personName  
+            << std::setw(12) << appt.roomName 
+            << std::setw(35) << appt.description 
+            << std::endl;
     }
 }
 
@@ -95,7 +109,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<des::Appointment> dailyPlan = { a1, a2, a3 };
 
-    Timeline timelineView(SIM_START_TIME, SIM_START_TIME + 12 * 3600);
+    Timeline timelineView(SIM_START_TIME, SIM_END_TIME);
     timelineView.show();
 
     auto observerBridge = std::make_shared<ObserverBridge>();
@@ -104,6 +118,8 @@ int main(int argc, char *argv[]) {
                      &timelineView, &Timeline::handleLog);
     QObject::connect(observerBridge.get(), &ObserverBridge::moveReceived,
                      &timelineView, &Timeline::handleMove);
+    QObject::connect(observerBridge.get(), &ObserverBridge::stateChanged,
+                     &timelineView, &Timeline::handleStateChange);
 
     ctx.addObserver(observerBridge);
     ctx.addObserver(std::make_shared<TerminalView>(TerminalView()));
@@ -117,8 +133,8 @@ int main(int argc, char *argv[]) {
         std::optional<double> travelTo   = tte->estimateDuration(startPos, employeeLocation, DEFAULT_SPEED);
         std::optional<double> escorting  = tte->estimateDuration(employeeLocation, appt.roomName, DEFAULT_SPEED);
         std::optional<double> travelBack = tte->estimateDuration(appt.roomName, startPos, DEFAULT_SPEED);
-        double taskOverhead = 30.0 + 120.0; // scan + interaction + search 
-        double buffer = 3 * 60.0; // 3 min safety buffer 
+        double taskOverhead = 30.0; // scan + interaction + search 
+        double buffer = 60.0; // 3 min safety buffer 
         
         assert(travelTo.has_value());
         assert(escorting.has_value());
@@ -128,7 +144,10 @@ int main(int argc, char *argv[]) {
         const double startSeconds = appt.appointmentTime - (travelTime + taskOverhead + buffer);
 
         eventQueue.push(std::make_shared<MissionDispatchEvent>(static_cast<int>(startSeconds), appt));
+        timelineView.addMeetingPlan(appt, startSeconds);
     }
+
+    eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
     BT::BehaviorTreeFactory factory;
     
@@ -160,7 +179,9 @@ int main(int argc, char *argv[]) {
     tree->rootBlackboard()->set("ctx", &ctx);
     ctx.behaviorTree = tree;
 
-    timelineView.drawDailyPlan(dailyPlan);
+    printDailyPlan(dailyPlan);
+
+
     std::thread simThread([&] {
         while (!eventQueue.empty()) {
             auto e = eventQueue.top();

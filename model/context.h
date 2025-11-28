@@ -12,6 +12,7 @@
 #include "../util/types.h"
 #include "../observer/observer.h"
 #include "../sim/ros/travel_time_est.h"
+#include "robot_state.h"
 
 
 class SimulationContext {
@@ -59,6 +60,17 @@ public:
         observers.emplace_back(observer);
     }
 
+    void changeRobotState(RobotState* newState) {
+        robot.changeState(newState);
+        notifyRobotStateChanged(newState->getType());
+    }
+
+    void notifyRobotStateChanged(RobotStateType newState) {
+        for (auto obs: observers){
+            obs->onStateChanged(currentTime, newState);
+        }
+    }
+
     void notifyLog(const std::string& msg) {
         for (auto obs: observers){
             obs->onLog(currentTime, msg);
@@ -80,7 +92,6 @@ public:
 
         if (duration.has_value()) {
             int arrivalTime = currentTime + duration.value(); // TODO: Add uncertainty here
-            std::cout << "[DEBUG] calc drive time: " << arrivalTime << ", currentTime: " << currentTime << ", duration: " << duration.value() << std::endl;
             this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target));
 
             if (isMissionComplete) {
