@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <iostream>
 #include <optional>
 #include <vector>
 #include <memory>
@@ -84,11 +83,16 @@ public:
     }
 
     void scheduleArrival(int currentTime, const std::string& target, bool isMissionComplete = false) {
-        auto duration = this->travelTime->estimateDuration(
-            this->robot.getLocation(), 
-            target,
-            this->robot.getSpeed()
-        );
+        const bool needsMoving = robot.getLocation() != target;
+
+        std::optional<double> duration = 1;
+        if (needsMoving) {
+            duration = this->travelTime->estimateDuration(
+                this->robot.getLocation(), 
+                target,
+                this->robot.getSpeed()
+            );
+        }
 
         if (duration.has_value()) {
             int arrivalTime = currentTime + duration.value(); // TODO: Add uncertainty here

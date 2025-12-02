@@ -3,39 +3,39 @@
 
 
 void Robot::changeState(RobotState* newState) {
-    state->exit(*this);
-    state.reset(newState);
-    state->enter(*this);
+    m_state->exit(*this);
+    m_state.reset(newState);
+    m_state->enter(*this);
 }
 
 void Robot::setSpeed(double newSpeed) {
-    currentSpeed = newSpeed;
+    m_currentSpeed = newSpeed;
 }
 
 double Robot::getSpeed() const {
-    return currentSpeed;
+    return m_currentSpeed;
 };
 
 bool Robot::isBusy() {
-    if(!state) return false;
-    return state->isBusy();
+    if(!m_state) return false;
+    return m_state->isBusy();
 };
 
 bool Robot::isSearching() {
-    if(!state) return false;
-    return state->isSearching();
+    if(!m_state) return false;
+    return m_state->isSearching();
 };
 
 
 bool Robot::isEscorting() {
-    if(!state) return false;
-    return state->isEscorting();
+    if(!m_state) return false;
+    return m_state->isEscorting();
 };
 
 std::string Robot::getLocation() const {
-    return currentLocation;
+    return m_currentLocation;
 };
 
 void Robot::setLocation(std::string location) {
-    currentLocation = location;
+    m_currentLocation = location;
 };

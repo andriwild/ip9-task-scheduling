@@ -2,5 +2,5 @@
 cd build
 make -j$(nproc) 
 #clear
-./ip9_task_scheduling
+./ip9_task_scheduling "$@"
 

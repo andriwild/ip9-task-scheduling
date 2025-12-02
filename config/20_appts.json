@@ -1,0 +1,127 @@
+{
+    "find_person_probability": 0.9,
+    "robot_speed": 0.5,
+    "robot_escort_speed": 0.2,
+    "appointments": [
+        {
+            "personName": "Max",
+            "roomName": "Printer",
+            "appointmentTime": 1800,
+            "description": "Drucken (Dringend)"
+        },
+        {
+            "personName": "Anna",
+            "roomName": "5.2B31",
+            "appointmentTime": 3600,
+            "description": "Daily Standup"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "Kitchen",
+            "appointmentTime": 5400,
+            "description": "Kaffee Pause"
+        },
+        {
+            "personName": "Tom",
+            "roomName": "5.2B33",
+            "appointmentTime": 7200,
+            "description": "Code Review"
+        },
+        {
+            "personName": "Sarah",
+            "roomName": "Printer",
+            "appointmentTime": 9000,
+            "description": "Vertrag scannen"
+        },
+        {
+            "personName": "Fred",
+            "roomName": "5.2B34",
+            "appointmentTime": 10800,
+            "description": "Kundenmeeting"
+        },
+        {
+            "personName": "Luici",
+            "roomName": "Open Zone",
+            "appointmentTime": 11500,
+            "description": "Brainstorming"
+        },
+        {
+            "personName": "Ben",
+            "roomName": "5.2B16",
+            "appointmentTime": 12600,
+            "description": "IT Support"
+        },
+        {
+            "personName": "Lisa",
+            "roomName": "Kitchen",
+            "appointmentTime": 14400,
+            "description": "Mittagessen"
+        },
+        {
+            "personName": "Kevin",
+            "roomName": "Printer",
+            "appointmentTime": 16200,
+            "description": "Handouts drucken"
+        },
+        {
+            "personName": "Julia",
+            "roomName": "5.2B01",
+            "appointmentTime": 18000,
+            "description": "Therapie Session"
+        },
+        {
+            "personName": "Max",
+            "roomName": "5.2B31",
+            "appointmentTime": 20800,
+            "description": "Projekt Update"
+        },
+        {
+            "personName": "Anna",
+            "roomName": "Open Zone",
+            "appointmentTime": 23600,
+            "description": "Team Event"
+        },
+        {
+            "personName": "Tom",
+            "roomName": "Printer",
+            "appointmentTime": 25400,
+            "description": "Bericht drucken"
+        },
+        {
+            "personName": "Sarah",
+            "roomName": "5.2B05",
+            "appointmentTime": 28200,
+            "description": "HR Gespräch"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "5.2B18",
+            "appointmentTime": 31000,
+            "description": "Netzwerk Wartung"
+        },
+        {
+            "personName": "Ben",
+            "roomName": "Printer",
+            "appointmentTime": 34000,
+            "description": "Labels drucken"
+        },
+        {
+            "personName": "Luici",
+            "roomName": "5.2B33",
+            "appointmentTime": 37330,
+            "description": "Wrap-Up Meeting"
+        },
+        {
+            "personName": "Lisa",
+            "roomName": "5.2B01",
+            "appointmentTime": 40000,
+            "description": "Feierabend Übergabe"
+        },
+        {
+            "personName": "Fred",
+            "roomName": "Printer",
+            "appointmentTime": 42000,
+            "description": "Logs ausdrucken"
+        }
+    ]
+}

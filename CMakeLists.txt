@@ -22,6 +22,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(googletest BehaviorTree)
+find_package(nlohmann_json REQUIRED)
 
 find_package(sdformat15 REQUIRED)
 find_package(gz-math8 REQUIRED)
@@ -52,6 +53,9 @@ add_executable(ip9_task_scheduling
         model/robot_state.cpp
         model/context.h
 
+        init/config_loader.h
+        init/cli_options.h
+
         observer/observer.h
 
         view/term.h
@@ -66,6 +70,8 @@ add_executable(ip9_task_scheduling
         behaviour/nodes/sim.h
 
         sim/gz_lib.h
+        sim/bt_setup.h
+        sim/scheduler.h
         sim/ros/path_node.h
         sim/ros/marker.h
 )
@@ -89,6 +95,7 @@ target_link_libraries(ip9_task_scheduling
         BT::behaviortree_cpp
         rclcpp::rclcpp
         tf2_ros::tf2_ros
+        nlohmann_json::nlohmann_json
         ${nav2_msgs_TARGETS}
         ${visualization_msgs_TARGETS}
         ${tf2_geometry_msgs_TARGETS}

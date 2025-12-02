@@ -7,7 +7,15 @@
 inline std::map<std::string, std::vector<std::string>> employeeLocations = {
     {"Max", {"5.2B03", "Kitchen", "Open Zone"}},
     {"Leo", {"5.2B15", "5.2B10", "5.2B33", "Kitchen"}},
-    {"Fred", {"Open Zone", "Kitchen"}}
+    {"Fred", {"Open Zone", "Kitchen"}},
+    {"Luici", {"5.2B18", "Kitchen", "Open Zone", "5.2B33"}},
+    {"Anna",  {"5.2B01", "5.2B03", "Open Zone"}},
+    {"Tom",   {"5.2B03", "5.2B05", "Printer"}},
+    {"Sarah", {"5.2B13", "5.2B15", "Kitchen"}},
+    {"Ben",   {"5.2B16", "5.2B18", "Floor"}},
+    {"Lisa",  {"5.2B31", "5.2B34", "Open Zone"}},
+    {"Kevin", {"5.2B10", "Printer", "Kitchen"}},
+    {"Julia", {"5.2B01", "5.2B05", "5.2B31"}}
 };
 
 

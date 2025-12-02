@@ -16,6 +16,7 @@ void SimulationStartEvent::execute(SimulationContext& ctx) {
 
 void SimulationEndEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Simulation ended");
+    ctx.changeRobotState(new IdleState);
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {

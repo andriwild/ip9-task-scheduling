@@ -1,53 +1,23 @@
 #include <QApplication>
 #include <QtConcurrent/QtConcurrent>
-#include <behaviortree_cpp/blackboard.h>
-#include <behaviortree_cpp/bt_factory.h>
-
-#include <cassert>
 #include <iostream>
-#include <ostream>
-#include <memory>
-#include <qobject.h>
+#include <thread>
 
-#include "util/types.h"
-#include "util/data.h"
-
-#include "model/robot.h"
-#include "model/event.h"
-#include "model/robot.h"
-#include "model/context.h"
-#include "model/robot_state.h"
-
+#include "init/cli_options.h"
+#include "init/config_loader.h"
+#include "sim/ros/path_node.h"
+#include "sim/ros/marker.h"
+#include "sim/scheduler.h"
+#include "sim/bt_setup.h"
 #include "view/bridge.h"
 #include "view/term.h"
 #include "view/gz.h"
 #include "view/timeline.h"
+#include "util/data.h"
 
-#include "sim/ros/path_node.h"
-#include "sim/ros/marker.h"
-
-#include "behaviour/nodes/sim.h"
-#include "util/types.h"
-
-/*
- * Proces: (exogene / endogen events)
- *
- * Bootstraping phase:
- * backward scheduling (meetings)
- * Machbarkeitsprüfung (konflikte bei der plaunung)
- *
- * Simulation phase:
- * Laufzeitkonflikte
- *
- *
- */
-
-constexpr int SIM_START_TIME = 8 * 3600; 
-constexpr int SIM_END_TIME = SIM_START_TIME + 12 * 3600;
-
-des::Appointment a1 = { 1, "Max",  "Printer", SIM_START_TIME + 2*3600, "Massage" };
-des::Appointment a2 = { 2, "Leo",  "Printer", SIM_START_TIME + 5*3600, "Nachhilfe" };
-des::Appointment a3 = { 3, "Fred", "Printer", SIM_START_TIME + 8*3600, "Mitarbeiter Gespräch" };
+constexpr int oneHour = 3600;
+constexpr int SIM_START_TIME = 8 * oneHour; 
+constexpr int SIM_END_TIME = SIM_START_TIME + 12 * oneHour;
 
 void publishMarkers() {
     auto marker_node = std::make_shared<MarkerPublisher>();
@@ -58,129 +28,66 @@ void publishMarkers() {
     marker_node->publishLocations(rosLocations);
 }
 
-
-void printQueue(EventQueue queue) {
-    int size = queue.size();
-    for(int i = 0; i< size; ++i){
-        std::cout << *queue.top() << std::endl;
-        queue.pop();
-    }
-}
-
-
-void printDailyPlan(const std::vector<des::Appointment>& plan) {
-    for (const auto& appt : plan) {
-        std::cout << std::setw(3) << appt.id << " | "
-            << std::setw(8) << des::toHumanReadableTime(appt.appointmentTime)
-            << std::setw(12) << appt.personName  
-            << std::setw(12) << appt.roomName 
-            << std::setw(35) << appt.description 
-            << std::endl;
-    }
-}
-
 int main(int argc, char *argv[]) {
-    std::cout << "\n--- Descrete Event Sytem ---\n\n";
+    std::cout << "\033[1m"  <<"\n--- Descrete Event Sytem ---\n";
 
     QApplication app(argc, argv);
+    QCoreApplication::setApplicationName("Discrete Event System");
+    QCoreApplication::setApplicationVersion("1.0");
+
+    CliOptions opts = parseCliArguments(app);
+
+    if (opts.stepMode) std::cout << "[Mode] Step-by-Step active.\n";
+    else if (opts.delayMs > 0) std::cout << "[Mode] Animation delay: " << opts.delayMs << "ms\n";
+    else std::cout << "[Mode] Fast-Forward.\n";
+
+    auto robotConfig  = ConfigLoader::loadRobotConfig("../config/" + opts.robotConfigPath);
+    auto appointments = ConfigLoader::loadAppointmentConfig("../config/" + opts.appointmentConfigPath, SIM_START_TIME);
+    if(!appointments.has_value() || !robotConfig.has_value()) { 
+        return 1; 
+    }
+    ConfigLoader::printRobotConfig(robotConfig.value(), opts.robotConfigPath, opts.appointmentConfigPath);
+
     rclcpp::init(argc, argv);
-
-
     publishMarkers();
+    
     auto planner_node = std::make_shared<PathPlannerNode>();
     std::thread rosThread;
 
     if(planner_node->isReady()) {
-        std::cout << "Planner ready!" << std::endl;
-        rosThread = std::thread([planner_node] { 
-            rclcpp::spin(planner_node); 
-        });
+        std::cout << "Planner ready!\n\n";
+        rosThread = std::thread([planner_node] { rclcpp::spin(planner_node); });
     } else {
-        std::cerr << "Planner initialization failed!" << std::endl;
+        std::cerr << "Planner init failed!\n";
         return 1;
     }
 
     EventQueue eventQueue;
-    Robot robot;
-
+    Robot robot(robotConfig->robot_speed, robotConfig->robot_escort_speed);
     auto tte = std::make_shared<TravelTimeEstimator>(planner_node, locationMap);
+    
     SimulationContext ctx(robot, eventQueue, tte, employeeLocations);
-
-
-    std::vector<des::Appointment> dailyPlan = { a1, a2, a3 };
-
-    Timeline timelineView(SIM_START_TIME, SIM_END_TIME);
-    timelineView.show();
-
-    auto observerBridge = std::make_shared<ObserverBridge>();
-
-    QObject::connect(observerBridge.get(), &ObserverBridge::logReceived,
-                     &timelineView, &Timeline::handleLog);
-    QObject::connect(observerBridge.get(), &ObserverBridge::moveReceived,
-                     &timelineView, &Timeline::handleMove);
-    QObject::connect(observerBridge.get(), &ObserverBridge::stateChanged,
-                     &timelineView, &Timeline::handleStateChange);
-
-    ctx.addObserver(observerBridge);
     ctx.addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx.addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
-    eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
-
-    for (const auto& appt : dailyPlan) {
-        auto employeeLocation = employeeLocations[appt.personName].front();
-        std::string startPos = robot.getIdleLocation();
-        std::optional<double> travelTo   = tte->estimateDuration(startPos, employeeLocation, DEFAULT_SPEED);
-        std::optional<double> escorting  = tte->estimateDuration(employeeLocation, appt.roomName, DEFAULT_SPEED);
-        std::optional<double> travelBack = tte->estimateDuration(appt.roomName, startPos, DEFAULT_SPEED);
-        double taskOverhead = 30.0; // scan + interaction + search 
-        double buffer = 60.0; // 3 min safety buffer 
-        
-        assert(travelTo.has_value());
-        assert(escorting.has_value());
-        assert(travelBack.has_value());
-
-        const double travelTime = travelTo.value() + escorting.value() + travelBack.value();
-        const double startSeconds = appt.appointmentTime - (travelTime + taskOverhead + buffer);
-
-        eventQueue.push(std::make_shared<MissionDispatchEvent>(static_cast<int>(startSeconds), appt));
-        timelineView.addMeetingPlan(appt, startSeconds);
+    Timeline timelineView(SIM_START_TIME, SIM_END_TIME);
+    
+    if(!opts.headless) {
+        timelineView.show();
+        auto bridge = std::make_shared<ObserverBridge>();
+        QObject::connect(bridge.get(), &ObserverBridge::logReceived, &timelineView, &Timeline::handleLog);
+        QObject::connect(bridge.get(), &ObserverBridge::moveReceived, &timelineView, &Timeline::handleMove);
+        QObject::connect(bridge.get(), &ObserverBridge::stateChanged, &timelineView, &Timeline::handleStateChange);
+        ctx.addObserver(bridge);
     }
 
+    eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
+    
+    scheduleAppointments(appointments.value(), ctx, timelineView, employeeLocations);
+    
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
-    BT::BehaviorTreeFactory factory;
-    
-    factory.registerNodeType<IsSearching>("IsSearching");
-    factory.registerNodeType<IsEscorting>("IsEscorting");
-    factory.registerNodeType<HandleSearch>("HandleSearch");
-    factory.registerNodeType<HandleEscort>("HandleEscort");
-    factory.registerNodeType<HandleIdle>("HandleIdle");
-
-    static const char* xml_text = R"(
-     <root BTCPP_format="4">
-         <BehaviorTree ID="MainTree">
-            <Fallback>
-                <Sequence>
-                    <IsSearching/>
-                    <HandleSearch/>
-                </Sequence>
-                <Sequence>
-                    <IsEscorting/>
-                    <HandleEscort/>
-                </Sequence>
-                <HandleIdle/>
-            </Fallback>
-         </BehaviorTree>
-     </root>
-    )";
-
-    auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
-    tree->rootBlackboard()->set("ctx", &ctx);
-    ctx.behaviorTree = tree;
-
-    printDailyPlan(dailyPlan);
-
+    ctx.behaviorTree = setupBehaviorTree(ctx);
 
     std::thread simThread([&] {
         while (!eventQueue.empty()) {
@@ -188,18 +95,21 @@ int main(int argc, char *argv[]) {
             eventQueue.pop();
             ctx.setTime(e->time);
             e->execute(ctx);
-            std::cin.get();
+            
+            if (opts.stepMode) {
+                std::cout << "Press ENTER...";
+                std::cin.get();
+            } else if (opts.delayMs > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
+            }
         }
     });
 
-    // BT::StdCoutLogger logger(m_bt);
-    // BT::printTreeRecursively(tree.rootNode());
-    // std::string xml_models = BT::writeTreeNodesModelXML(factory);
-
     QApplication::exec();
     
-    if(rosThread.joinable()){ rosThread.join(); }
+    if(rosThread.joinable()) rosThread.join();
     rclcpp::shutdown();
-    if(simThread.joinable()){ simThread.join(); }
+    if(simThread.joinable()) simThread.join();
+    
     return 0;
 }

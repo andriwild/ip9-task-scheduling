@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 #include <QWheelEvent>
@@ -63,7 +64,7 @@ class Timeline final : public QGraphicsView {
     QPushButton* m_btnZoomOut;
 
 public:
-    explicit Timeline(int start, int end, double pixelsPerSecond = 10.0): 
+    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025): 
         QGraphicsView(),
         m_simStartTime(start), 
         m_simEndTime(end),
