@@ -1,5 +1,5 @@
 {
-    "find_person_probability": 0.3,
-    "robot_speed": 2.0,
-    "robot_escort_speed": 1.2
+    "find_person_probability": 0.2,
+    "robot_speed": 0.4,
+    "robot_escort_speed": 0.2
 }

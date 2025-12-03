@@ -16,8 +16,9 @@
 
 class SimulationContext {
     int currentTime = 0;
+    double personDetectionProbability;
     std::vector<std::shared_ptr<IObserver>> observers;
-    std::optional<des::Appointment> currentAppointment = std::nullopt;
+    std::optional<des::Appointment*> currentAppointment = std::nullopt;
 
 public:
     Robot& robot;
@@ -29,25 +30,36 @@ public:
     explicit SimulationContext(
         Robot& robot, 
         EventQueue& queue,
+        double personDetectionProbability,
         std::shared_ptr<TravelTimeEstimator> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
         robot(robot),
         queue(queue),
         travelTime(travelTime),
-        employeeLocations(employeeLocations)
+        employeeLocations(employeeLocations),
+        personDetectionProbability(personDetectionProbability)
     {}
 
-    void setAppointment(const des::Appointment& appt) {
-        currentAppointment = appt;
+    void setAppointment(des::Appointment& appt) {
+        currentAppointment = &appt;
     }
 
-    void resetAppointment() {
+    void completeAppointment() {
+        if(currentTime > currentAppointment.value()->appointmentTime) {
+            currentAppointment.value()->state = des::AppointmentState::COMPLETED_LATE;
+        } else {
+            currentAppointment.value()->state = des::AppointmentState::COMPLETED;
+        }
         currentAppointment = std::nullopt;
     }
 
-    std::optional<des::Appointment> getAppointment() const {
+    std::optional<des::Appointment*> getAppointment() const {
         return currentAppointment;
+    }
+
+    void updateAppointmentState(const des::AppointmentState& newState) {
+        currentAppointment.value()->state = newState;
     }
 
     void setTime(int newTime) {
@@ -81,6 +93,8 @@ public:
             obs->onRobotMoved(currentTime, location);
         }
     }
+
+    double getPersonDetectionProbability() const { return personDetectionProbability; };
 
     void scheduleArrival(int currentTime, const std::string& target, bool isMissionComplete = false) {
         const bool needsMoving = robot.getLocation() != target;

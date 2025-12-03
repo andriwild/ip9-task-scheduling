@@ -5,7 +5,7 @@
 
 
 inline std::map<std::string, std::vector<std::string>> employeeLocations = {
-    {"Max", {"5.2B03", "Kitchen", "Open Zone"}},
+    {"Max", {"5.2B03","5.2B10" , "Kitchen", "Open Zone"}},
     {"Leo", {"5.2B15", "5.2B10", "5.2B33", "Kitchen"}},
     {"Fred", {"Open Zone", "Kitchen"}},
     {"Luici", {"5.2B18", "Kitchen", "Open Zone", "5.2B33"}},

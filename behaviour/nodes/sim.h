@@ -57,7 +57,7 @@ public:
         int currentTime      = config().blackboard.get()->get<int>("current_time");
         std::string location = config().blackboard.get()->get<std::string>("location");
 
-        bool personFound = rnd::uni() > 0.5;
+        bool personFound = rnd::uni() < ctx->getPersonDetectionProbability();
 
         if (personFound) {
             if (!ctx->getAppointment().has_value()) {
@@ -66,7 +66,7 @@ public:
             }
 
             ctx->notifyLog("Person found! Starting escort.");
-            auto goal = ctx->getAppointment().value().roomName;
+            auto goal = ctx->getAppointment().value()->roomName;
             
             ctx->changeRobotState(new EscortState());
             ctx->scheduleArrival(currentTime, goal); 
@@ -78,6 +78,7 @@ public:
                 if(ss->locations.empty()){
                     ctx->notifyLog("Person not found at any place!");
                     ctx->changeRobotState(new MoveState());
+                    // TODO: appointment failed 
                     ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation(), true);
                     return BT::NodeStatus::SUCCESS;
                 }
@@ -121,7 +122,6 @@ public:
     }
 
     BT::NodeStatus tick() override {
-
         auto ctx             = config().blackboard.get()->get<SimulationContext*>("ctx");
         std::string location = config().blackboard->get<std::string>("location");
 

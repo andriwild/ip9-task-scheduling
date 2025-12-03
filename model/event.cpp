@@ -35,12 +35,14 @@ void ArrivedEvent::execute(SimulationContext& ctx) {
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
     if (ctx.robot.isBusy()) {
+        this->appointment->state = des::AppointmentState::FAILED;
         ctx.notifyLog("[WARN] Robot busy, ignoring dispatch.");
         return; 
     }
 
-    ctx.setAppointment(this->appointment);
-    std::string person = this->appointment.personName;
+    ctx.setAppointment(*(this->appointment));
+    ctx.updateAppointmentState(des::AppointmentState::IN_PROGRESS);
+    std::string person = this->appointment->personName;
 
     if (ctx.employeeLocations.find(person) == ctx.employeeLocations.end()) {
         ctx.notifyLog("[ERROR] Person '" + person + "' not found in database!");
@@ -65,6 +67,6 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Mission Complete. Appointment cleared.");
-    ctx.resetAppointment();
+    ctx.completeAppointment();
     ctx.changeRobotState(new IdleState());
 }

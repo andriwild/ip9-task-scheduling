@@ -49,12 +49,22 @@ namespace des {
 		int assignedRoomId;
 	};
 
+    enum AppointmentState { 
+        PENDING, 
+        COMPLETED,
+        COMPLETED_LATE,
+        IN_PROGRESS, 
+        FAILED, 
+        CANCELLED 
+    };
+
     struct Appointment {
         int id;
         std::string personName;
         std::string roomName;
         int appointmentTime;
         std::string description;
+        AppointmentState state = PENDING;
     };
 
     inline std::string toHumanReadableTime(const int sec, bool includeSeconds = true) {

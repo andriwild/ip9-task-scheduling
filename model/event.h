@@ -71,8 +71,8 @@ public:
 
 class MissionDispatchEvent : public IEvent {
 public:
-    des::Appointment appointment;
-    explicit MissionDispatchEvent(int time, des::Appointment appt): 
+    des::Appointment* appointment;
+    explicit MissionDispatchEvent(int time, des::Appointment* appt): 
         IEvent(time),
         appointment(appt)
     {}

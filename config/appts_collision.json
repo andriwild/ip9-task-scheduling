@@ -1,0 +1,16 @@
+{
+    "appointments": [
+        {
+            "personName": "Max",
+            "roomName": "5.2B18",
+            "appointmentTime": 7200,
+            "description": "Massage"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "5.2B01",
+            "appointmentTime": 7300,
+            "description": "Nachhilfe"
+        }
+    ]
+}

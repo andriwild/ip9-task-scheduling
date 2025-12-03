@@ -9,6 +9,7 @@
 #include "sim/ros/marker.h"
 #include "sim/scheduler.h"
 #include "sim/bt_setup.h"
+#include "util/types.h"
 #include "view/bridge.h"
 #include "view/term.h"
 #include "view/gz.h"
@@ -66,7 +67,7 @@ int main(int argc, char *argv[]) {
     Robot robot(robotConfig->robot_speed, robotConfig->robot_escort_speed);
     auto tte = std::make_shared<TravelTimeEstimator>(planner_node, locationMap);
     
-    SimulationContext ctx(robot, eventQueue, tte, employeeLocations);
+    SimulationContext ctx(robot, eventQueue, robotConfig.value().personFindProbability, tte, employeeLocations);
     ctx.addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx.addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
@@ -97,13 +98,30 @@ int main(int argc, char *argv[]) {
             e->execute(ctx);
             
             if (opts.stepMode) {
-                std::cout << "Press ENTER...";
                 std::cin.get();
             } else if (opts.delayMs > 0) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
             }
         }
+        int completeCounter = 0;
+        int completeLateCounter = 0;
+        int failedCounter = 0;
+        for (auto& appt: appointments.value()){
+            if(appt.state == des::AppointmentState::COMPLETED) completeCounter ++;
+            if(appt.state == des::AppointmentState::COMPLETED_LATE) completeLateCounter++;
+            if(appt.state == des::AppointmentState::FAILED) failedCounter++;
+        }
+
+        int nAppts = appointments.value().size();
+        std::cout << completeCounter << " / " << nAppts << " completeCounter" << std::endl;
+        std::cout << completeLateCounter << " / " << nAppts << " completeLateCounter" << std::endl;
+        std::cout << failedCounter << " / " << nAppts << " failed" << std::endl;
+
+        std::cout << "\033[1m" << "\nSimulation complete!" << std::endl;
+        std::cin.get();
+        QCoreApplication::quit();
     });
+
 
     QApplication::exec();
     
