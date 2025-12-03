@@ -26,6 +26,7 @@ void publishMarkers() {
     for (auto [name, p] : locationMap) {
         rosLocations.emplace_back(name, p.m_x, p.m_y);
     }
+    std::cout << "publish marker" << std::endl;
     marker_node->publishLocations(rosLocations);
 }
 
@@ -42,15 +43,14 @@ int main(int argc, char *argv[]) {
     else if (opts.delayMs > 0) std::cout << "[Mode] Animation delay: " << opts.delayMs << "ms\n";
     else std::cout << "[Mode] Fast-Forward.\n";
 
-    auto robotConfig  = ConfigLoader::loadRobotConfig("../config/" + opts.robotConfigPath);
+    auto simConfig    = ConfigLoader::loadDESConfig("../config/" + opts.simConfigPath);
     auto appointments = ConfigLoader::loadAppointmentConfig("../config/" + opts.appointmentConfigPath, SIM_START_TIME);
-    if(!appointments.has_value() || !robotConfig.has_value()) { 
+    if(!appointments.has_value() || !simConfig.has_value()) { 
         return 1; 
     }
-    ConfigLoader::printRobotConfig(robotConfig.value(), opts.robotConfigPath, opts.appointmentConfigPath);
+    ConfigLoader::printDESConfig(simConfig.value(), opts.simConfigPath, opts.appointmentConfigPath);
 
     rclcpp::init(argc, argv);
-    publishMarkers();
     
     auto planner_node = std::make_shared<PathPlannerNode>();
     std::thread rosThread;
@@ -64,10 +64,10 @@ int main(int argc, char *argv[]) {
     }
 
     EventQueue eventQueue;
-    Robot robot(robotConfig->robot_speed, robotConfig->robot_escort_speed);
+    Robot robot(simConfig->robot_speed, simConfig->robot_escort_speed);
     auto tte = std::make_shared<TravelTimeEstimator>(planner_node, locationMap);
     
-    SimulationContext ctx(robot, eventQueue, robotConfig.value().personFindProbability, tte, employeeLocations);
+    SimulationContext ctx(robot, eventQueue, simConfig.value().personFindProbability, tte, employeeLocations);
     ctx.addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx.addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
@@ -89,6 +89,8 @@ int main(int argc, char *argv[]) {
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
     ctx.behaviorTree = setupBehaviorTree(ctx);
+
+    publishMarkers();
 
     std::thread simThread([&] {
         while (!eventQueue.empty()) {

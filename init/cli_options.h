@@ -7,7 +7,7 @@ struct CliOptions {
     bool stepMode;
     bool headless;
     int delayMs;
-    std::string robotConfigPath;
+    std::string simConfigPath;
     std::string appointmentConfigPath;
 };
 

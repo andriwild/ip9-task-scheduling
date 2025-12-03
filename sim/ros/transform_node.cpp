@@ -1,6 +1,5 @@
 #include <string>
 
-#include "rclcpp/rclcpp.hpp"
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "geometry_msgs/msg/transform_stamped.hpp"
@@ -23,20 +22,20 @@ public:
     this->declare_parameter("robot_name", "dingo");
     this->declare_parameter("base_frame", "base_link");
 
-    _pub_frequency = this->get_parameter("publish_frequency").as_double();
-    _world_name = this->get_parameter("world_name").as_string();
-    _robot_name = this->get_parameter("robot_name").as_string();
-    _base_link = this->get_parameter("base_frame").as_string();
+    m_pub_frequency = this->get_parameter("publish_frequency").as_double();
+    m_world_name = this->get_parameter("world_name").as_string();
+    m_robot_name = this->get_parameter("robot_name").as_string();
+    m_base_link = this->get_parameter("base_frame").as_string();
 
-    _tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+    m_tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
     // Subscribe to Gazebo topic
-    std::string topic = "/world/" + _world_name + "/pose/info";
+    std::string topic = "/world/" + m_world_name + "/pose/info";
 
-    if (!_gz_node.Subscribe(topic, &GazeboTfBroadcaster::onPoseInfo, this)) {
-      RCLCPP_ERROR(this->get_logger(), "Fehler beim Subscriben auf %s", topic.c_str());
+    if (!m_gz_node.Subscribe(topic, &GazeboTfBroadcaster::onPoseInfo, this)) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to subscribe to %s", topic.c_str());
     } else {
-      RCLCPP_INFO(this->get_logger(), "Subscribed auf Gazebo topic: %s", topic.c_str());
+      RCLCPP_INFO(this->get_logger(), "Subscribed to Gazebo topic: %s", topic.c_str());
     }
   }
 
@@ -45,9 +44,9 @@ private:
     auto now = this->now();
 
     // reduce publish frequency
-    if (_pub_frequency > 0.0 && _last_published.seconds() > 0.0) {
-      double elapsed = (now - _last_published).seconds();
-      if (elapsed < 1.0 / _pub_frequency) {
+    if (m_pub_frequency > 0.0 && m_last_published.seconds() > 0.0) {
+      double elapsed = (now - m_last_published).seconds();
+      if (elapsed < 1.0 / m_pub_frequency) {
         return;
       }
     }
@@ -55,7 +54,7 @@ private:
     for (int i = 0; i < msg.pose_size(); ++i) {
       const auto &pose = msg.pose(i);
 
-      if (pose.name() == _robot_name) {
+      if (pose.name() == m_robot_name) {
 
         // no transform (map -> odom used for drift)
         geometry_msgs::msg::TransformStamped map_to_odom;
@@ -73,7 +72,7 @@ private:
         geometry_msgs::msg::TransformStamped odom_to_base;
         odom_to_base.header.stamp = now;
         odom_to_base.header.frame_id = "odom";
-        odom_to_base.child_frame_id = _base_link;
+        odom_to_base.child_frame_id = m_base_link;
 
         tf2::Quaternion gazebo_quat(
           pose.orientation().x(),
@@ -99,23 +98,22 @@ private:
         odom_to_base.transform.rotation.y = corrected_quat.y();
         odom_to_base.transform.rotation.z = corrected_quat.z();
 
-        _tf_broadcaster->sendTransform(map_to_odom);
-        _tf_broadcaster->sendTransform(odom_to_base);
+        m_tf_broadcaster->sendTransform(map_to_odom);
+        m_tf_broadcaster->sendTransform(odom_to_base);
 
-        _last_published = now;
+        m_last_published = now;
         break;
       }
     }
   }
 
-  gz::transport::Node _gz_node;
-  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> _tf_static_broadcaster;
-  std::shared_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
-  double _pub_frequency;
-  rclcpp::Time _last_published{0, 0, RCL_ROS_TIME};
-  std::string _world_name;
-  std::string _robot_name;
-  std::string _base_link;
+  gz::transport::Node m_gz_node;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
+  double m_pub_frequency;
+  rclcpp::Time m_last_published{0, 0, RCL_ROS_TIME};
+  std::string m_world_name;
+  std::string m_robot_name;
+  std::string m_base_link;
 };
 
 int main(int argc, char** argv) {

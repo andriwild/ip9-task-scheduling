@@ -22,7 +22,7 @@ struct RobotConfig {
 
 class ConfigLoader {
 public:
-    static std::optional<RobotConfig>loadRobotConfig(std::string filePath) {
+    static std::optional<RobotConfig>loadDESConfig(std::string filePath) {
         auto jsonOpt = getJson(filePath);
         if(!jsonOpt.has_value()) {
             return std::nullopt;
@@ -80,7 +80,7 @@ public:
     };
 
 
-    static void printRobotConfig(
+    static void printDESConfig(
         const RobotConfig& config, 
         const std::string& robotFilePath, 
         const std::string& apptFilePath 
