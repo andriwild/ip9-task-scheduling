@@ -74,8 +74,8 @@ public:
 
 class MissionDispatchEvent : public IEvent {
 public:
-    des::Appointment* appointment;
-    explicit MissionDispatchEvent(int time, des::Appointment* appt): 
+    std::shared_ptr<des::Appointment> appointment;
+    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt): 
         IEvent(time),
         appointment(appt)
     {}

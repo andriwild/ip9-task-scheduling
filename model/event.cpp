@@ -64,7 +64,7 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
         return; 
     }
 
-    ctx.setAppointment(*(this->appointment));
+    ctx.setAppointment(this->appointment);
     ctx.updateAppointmentState(des::MissionState::IN_PROGRESS);
     std::string person = this->appointment->personName;
 

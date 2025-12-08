@@ -14,6 +14,7 @@ struct SimConfig {
     double drive_variance;
 };
 
+using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
 
 class ConfigLoader {
 public:
@@ -39,7 +40,7 @@ public:
         return config;
     };
 
-    static std::optional<std::vector<des::Appointment>>loadAppointmentConfig(
+    static std::optional<AppointmentList>loadAppointmentConfig(
         std::string filePath, 
         int sim_start_time
     ) {
@@ -48,7 +49,7 @@ public:
             return std::nullopt;
         }
 
-        std::vector<des::Appointment> appointments;
+        AppointmentList appointments;
         try {
             auto jAppts= json.value()["appointments"];
             appointments.reserve(jAppts.size());
@@ -65,7 +66,7 @@ public:
                 int time = item.at("appointmentTime").get<int>();
                 appointment.appointmentTime = time + sim_start_time;
             
-                appointments.emplace_back(appointment);
+                appointments.emplace_back(std::make_shared<des::Appointment>(appointment));
             }
 
         } catch (const nlohmann::json::type_error& e){

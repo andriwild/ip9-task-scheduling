@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <qgraphicsitem.h>
 #include <QGraphicsView>
 #include <QWheelEvent>
@@ -34,7 +33,7 @@ struct VisualEvent {
 };
 
 struct VisualAppointment {
-    des::Appointment appt;
+    std::shared_ptr<des::Appointment> appt;
     int startTime;
 };
 
@@ -85,7 +84,7 @@ public:
         updateScene();
     }
 
-    void addMeetingPlan(des::Appointment appt, int startTime) {
+    void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
         m_appointments.push_back({appt, startTime});
         drawMeetingPlan(appt, startTime); 
     }
@@ -328,9 +327,10 @@ private:
         text->setZValue(Z_MARKER);
     }
 
-    void drawMeetingPlan(const des::Appointment& appt, int startTime) {
+    void drawMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
+
         double startX   = timeToX(startTime);
-        double meetingX = timeToX(appt.appointmentTime);
+        double meetingX = timeToX(appt.get()->appointmentTime);
         double durationWidth = meetingX - startX;
 
         if (durationWidth < 0) durationWidth = 0;
@@ -339,7 +339,7 @@ private:
             QPen(Qt::NoPen), QBrush(QColor(100, 100, 100, 50)));
         rect->setZValue(Z_PLAN_LINE);
 
-        QString labelText = QString::fromStdString(appt.description + " (" + appt.personName + ")");
-        drawEventMarker({ appt.appointmentTime, labelText, "MEETING" }, Qt::red);
+        QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
+        drawEventMarker({ appt.get()->appointmentTime, labelText, "MEETING" }, Qt::red);
     }
 };

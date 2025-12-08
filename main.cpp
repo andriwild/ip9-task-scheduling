@@ -96,7 +96,9 @@ int main(int argc, char *argv[]) {
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     
-    scheduleAppointments(appointments.value(), ctx, timelineView, employeeLocations);
+    if(appointments.has_value()){
+        scheduleAppointments(appointments.value(), ctx, timelineView, employeeLocations);
+    }
     
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 

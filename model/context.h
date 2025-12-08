@@ -19,7 +19,7 @@ class SimulationContext {
     double personDetectionProbability;
     double driveTimeVariance;
     std::vector<std::shared_ptr<IObserver>> observers;
-    des::Appointment* currentAppointment = nullptr;
+    std::shared_ptr<des::Appointment> currentAppointment = nullptr;
 
 public:
     Robot& robot;
@@ -44,18 +44,20 @@ public:
         driveTimeVariance(driveTimeVariance)
     {}
 
-    void setAppointment(des::Appointment& appt) {
-        currentAppointment = &appt;
+    void setAppointment(std::shared_ptr<des::Appointment> appt) {
+        currentAppointment = appt;
     }
 
     void completeAppointment() {
         assert(currentAppointment != nullptr);
+        std::cout << "calc time diff" << std::endl;
         int  timeDiff = currentTime - currentAppointment->appointmentTime;
         notifyMissionComplete(currentAppointment->state, timeDiff);
-        currentAppointment = nullptr;
+        std::cout << "notifed obs" << std::endl;
+        std::cout << "reset appt pointer" << std::endl;
     }
 
-    const des::Appointment* getAppointment() const {
+    const std::shared_ptr<des::Appointment> getAppointment() const {
         return currentAppointment;
     }
 
