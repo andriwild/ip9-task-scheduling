@@ -4,13 +4,11 @@
 #include <behaviortree_cpp/loggers/bt_cout_logger.h>
 #include <thread>
 
-#include "behaviour/logger.h"
 #include "init/cli_options.h"
 #include "init/config_loader.h"
 #include "sim/ros/path_node.h"
 #include "sim/ros/marker.h"
 #include "sim/scheduler.h"
-#include "util/types.h"
 #include "observer/bridge.h"
 #include "observer/term.h"
 #include "observer/gz.h"
@@ -19,9 +17,9 @@
 #include "util/data.h"
 #include "behaviour/bt_setup.h"
 
-constexpr int oneHour = 3600;
-constexpr int SIM_START_TIME = 8 * oneHour; 
-constexpr int SIM_END_TIME = SIM_START_TIME + 12 * oneHour;
+constexpr int HOUR = 3600;
+constexpr int SIM_START_TIME = 8 * HOUR; 
+constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
 
 void publishMarkers() {
     auto marker_node = std::make_shared<MarkerPublisher>();
@@ -70,7 +68,14 @@ int main(int argc, char *argv[]) {
     Robot robot(simConfig->robot_speed, simConfig->robot_escort_speed);
     auto tte = std::make_shared<PathPlanner>(planner_node, locationMap);
     
-    SimulationContext ctx(robot, eventQueue, simConfig.value().personFindProbability, tte, employeeLocations);
+    SimulationContext ctx(
+        robot, 
+        eventQueue, 
+        simConfig.value().personFindProbability, 
+        simConfig.value().drive_variance, 
+        tte, 
+        employeeLocations
+    );
 
     auto metrics = std::make_shared<Metrics>(Metrics());
     ctx.addObserver(metrics);
@@ -117,10 +122,10 @@ int main(int argc, char *argv[]) {
         }
 
         std::cout << "\033[1m" << "\nSimulation complete!" << std::endl;
-        std::cin.get();
 
         metrics->show();
 
+        std::cin.get();
         QCoreApplication::quit();
         QApplication::quit();
     });

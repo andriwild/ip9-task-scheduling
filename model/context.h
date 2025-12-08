@@ -9,6 +9,7 @@
 #include "event.h"
 #include "robot_state.h"
 #include "../util/types.h"
+#include "../util/rnd.h"
 #include "../observer/observer.h"
 #include "../sim/ros/path_planner.h"
 
@@ -16,6 +17,7 @@
 class SimulationContext {
     int currentTime = 0;
     double personDetectionProbability;
+    double driveTimeVariance;
     std::vector<std::shared_ptr<IObserver>> observers;
     des::Appointment* currentAppointment = nullptr;
 
@@ -30,6 +32,7 @@ public:
         Robot& robot, 
         EventQueue& queue,
         double personDetectionProbability,
+        double driveTimeVariance,
         std::shared_ptr<PathPlanner> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
@@ -37,7 +40,8 @@ public:
         queue(queue),
         travelTime(travelTime),
         employeeLocations(employeeLocations),
-        personDetectionProbability(personDetectionProbability)
+        personDetectionProbability(personDetectionProbability),
+        driveTimeVariance(driveTimeVariance)
     {}
 
     void setAppointment(des::Appointment& appt) {
@@ -100,6 +104,8 @@ public:
 
     double getPersonDetectionProbability() const { return personDetectionProbability; };
 
+    double getdriveTimeVariance() const { return driveTimeVariance; };
+
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
 
@@ -111,7 +117,9 @@ public:
             assert(distance.has_value());
 
             double travelTime = distance.value() / this->robot.getDefaultSpeed();
-            arrivalTime = currentTime + travelTime; // TODO: Add uncertainty here
+
+            double noiseFactor = rnd::getNormalDist(1.0, 0.1);
+            arrivalTime = currentTime + (travelTime * noiseFactor);
             
             this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
             this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s)");

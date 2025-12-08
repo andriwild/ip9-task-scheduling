@@ -10,6 +10,11 @@ namespace rnd {
         return dist(rng);
     }
 
+    inline double getNormalDist(const double from, const double to) {
+        std::normal_distribution<double> dist(from, to);
+        return dist(rng);
+    }
+
     inline double uni() {
     	int r;
     	do {
