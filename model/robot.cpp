@@ -1,4 +1,5 @@
 #include "robot.h"
+
 #include "robot_state.h"
 
 
@@ -30,6 +31,12 @@ bool Robot::isSearching() {
 bool Robot::isEscorting() {
     if(!m_state) return false;
     return m_state->isEscorting();
+};
+
+
+bool Robot::isConversate() {
+    if(!m_state) return false;
+    return m_state->isConversate();
 };
 
 std::string Robot::getLocation() const {

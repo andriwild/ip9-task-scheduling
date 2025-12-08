@@ -3,11 +3,13 @@
 #include <string>
 
 #include "../model/robot_state.h"
+#include "../util/types.h"
 
 class IObserver {
 public:
     virtual ~IObserver() = default;
-    virtual void onLog(int time, const std::string& message) = 0;
-    virtual void onRobotMoved(int time, const std::string& location) = 0;
-    virtual void onStateChanged(int time, const RobotStateType type) {};
+    virtual void onLog(int time, const std::string& message) {};
+    virtual void onRobotMoved(int time, const std::string& location, double distance) {};
+    virtual void onStateChanged(int time, const RobotStateType& type) {};
+    virtual void onMissionComplete(int time, des::MissionState&, int timeDiff) {};
 };

@@ -10,6 +10,7 @@ class Robot {
     double m_currentSpeed = 0;
     double m_defaultSpeed;
     double m_escortSpeed;
+    double m_energy = 100.0;
     std::string m_currentLocation;
 
 public:
@@ -38,4 +39,5 @@ public:
     bool isBusy();
     bool isSearching();
     bool isEscorting();
+    bool isConversate();
 };

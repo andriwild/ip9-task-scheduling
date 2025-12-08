@@ -10,7 +10,7 @@ void SimulationStartEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Simulation started");
     
     ctx.robot.setLocation(ctx.robot.getIdleLocation());
-    ctx.notifyMoved(ctx.robot.getIdleLocation());
+    ctx.notifyMoved(ctx.robot.getIdleLocation(), 0);
     ctx.changeRobotState(new IdleState);
 }
 
@@ -19,9 +19,32 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(new IdleState);
 }
 
+void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
+    bool successful = true;
+    if(successful) {
+        ctx.notifyLog("Conversation ended successful. Person for escorting convinced.");
+        ctx.changeRobotState(new EscortState());
+        ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
+    } else {
+        ctx.updateAppointmentState(des::MissionState::FAILED);
+        ctx.changeRobotState(new IdleState());
+    }
+    ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
+    //ctx.behaviorTree->tickOnce();
+}
+
+void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
+    ctx.notifyLog("Drop Off Conversation ended");
+    ctx.updateAppointmentState(des::MissionState::COMPLETED);
+    ctx.changeRobotState(new IdleState());
+    ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
+    ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
+    ctx.behaviorTree->tickOnce();
+}
+
 void ArrivedEvent::execute(SimulationContext& ctx) {
     ctx.robot.setLocation(this->location);
-    ctx.notifyMoved(ctx.robot.getLocation());
+    ctx.notifyMoved(ctx.robot.getLocation(), this->distance);
 
     if (ctx.behaviorTree) {
         ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
@@ -35,13 +58,14 @@ void ArrivedEvent::execute(SimulationContext& ctx) {
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
     if (ctx.robot.isBusy()) {
-        this->appointment->state = des::AppointmentState::FAILED;
+        ctx.updateAppointmentState(des::MissionState::CANCELLED);
+        this->appointment->state = des::MissionState::FAILED;
         ctx.notifyLog("[WARN] Robot busy, ignoring dispatch.");
         return; 
     }
 
     ctx.setAppointment(*(this->appointment));
-    ctx.updateAppointmentState(des::AppointmentState::IN_PROGRESS);
+    ctx.updateAppointmentState(des::MissionState::IN_PROGRESS);
     std::string person = this->appointment->personName;
 
     if (ctx.employeeLocations.find(person) == ctx.employeeLocations.end()) {
@@ -68,5 +92,4 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Mission Complete. Appointment cleared.");
     ctx.completeAppointment();
-    ctx.changeRobotState(new IdleState());
 }

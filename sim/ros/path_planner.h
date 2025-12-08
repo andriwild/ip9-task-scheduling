@@ -3,13 +3,13 @@
 #include "path_node.h"
 #include "../../util/types.h"
 
-class TravelTimeEstimator {
+class PathPlanner {
 private:
     std::shared_ptr<PathPlannerNode> planner;
     std::map<std::string, des::Point> locationMap;
 
 public:
-    TravelTimeEstimator(
+    PathPlanner(
         std::shared_ptr<PathPlannerNode> planner,
         std::map<std::string, des::Point> locationMap
     ):
@@ -17,7 +17,7 @@ public:
         locationMap(locationMap)
     {}
 
-    std::optional<double> estimateDuration(const std::string& from, const std::string& to, const double speed) {
+    std::optional<double> estimateDistance(const std::string& from, const std::string& to) {
         auto fromIt = locationMap.find(from);
         auto toIt   = locationMap.find(to);
 
@@ -30,6 +30,6 @@ public:
 
         if (!result.success) return std::nullopt;
 
-        return result.distance / speed;
+        return result.distance;
     }
 };

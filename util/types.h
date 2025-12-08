@@ -49,10 +49,9 @@ namespace des {
 		int assignedRoomId;
 	};
 
-    enum AppointmentState { 
+    enum MissionState { 
         PENDING, 
         COMPLETED,
-        COMPLETED_LATE,
         IN_PROGRESS, 
         FAILED, 
         CANCELLED 
@@ -64,7 +63,7 @@ namespace des {
         std::string roomName;
         int appointmentTime;
         std::string description;
-        AppointmentState state = PENDING;
+        MissionState state = PENDING;
     };
 
     inline std::string toHumanReadableTime(const int sec, bool includeSeconds = true) {

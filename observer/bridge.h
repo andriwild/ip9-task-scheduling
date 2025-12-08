@@ -16,11 +16,11 @@ public:
         emit logReceived(time, QString::fromStdString(message));
     }
 
-    void onRobotMoved(int time, const std::string& location) override {
+    void onRobotMoved(int time, const std::string& location, double distance) override {
         emit moveReceived(time, QString::fromStdString(location));
     };
 
-    void onStateChanged(int time, const RobotStateType newState) override {
+    void onStateChanged(int time, const RobotStateType& newState) override {
         emit stateChanged(time, static_cast<int>(newState));
     };
 

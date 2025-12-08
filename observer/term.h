@@ -21,7 +21,7 @@ public:
         std::cout << RESET;
     }
 
-    void onRobotMoved(int time, const std::string& location) override {
+    void onRobotMoved(int time, const std::string& location, double distance) override {
         std::cout << GREEN;
         std::cout << "[" << des::toHumanReadableTime(time) << "] " << location << std::endl;
         std::cout << RESET;

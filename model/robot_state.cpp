@@ -66,3 +66,20 @@ bool SearchState::isSearching() const { return true; };
 RobotStateType SearchState::getType() const {
     return RobotStateType::SEARCHING;
 }
+
+
+void ConversateState::enter(Robot& robot) { 
+    std::cout << "[State] enter conversation" << std::endl;
+    robot.setSpeed(robot.getDefaultSpeed());
+}
+void ConversateState::exit(Robot& robot) {
+    std::cout << "[State] exit conversation " << std::endl;
+}
+void ConversateState::handleEvent(Robot& robot) { 
+    std::cout << "[State] handle conversation" << std::endl;
+}
+
+bool ConversateState::isConversate() const { return true; };
+RobotStateType ConversateState::getType() const {
+    return RobotStateType::CONVERSATE;
+}

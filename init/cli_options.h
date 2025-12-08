@@ -36,7 +36,7 @@ inline CliOptions parseCliArguments(const QCoreApplication& app) {
 
     const QStringList args = parser.positionalArguments();
 
-    std::string rConfig = "robot.json";
+    std::string rConfig = "sim_config.json";
     if (parser.isSet(robotConfigOption)) rConfig = parser.value(robotConfigOption).toStdString();
     else if (!args.isEmpty()) rConfig = args.at(0).toStdString();
 

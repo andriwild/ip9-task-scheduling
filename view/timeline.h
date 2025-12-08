@@ -131,6 +131,7 @@ protected:
                 case RobotStateType::ESCORTING: return QColor(200, 150, 50);
                 case RobotStateType::CHARGING: return Qt::yellow;
                 case RobotStateType::SEARCHING: return QColor(200, 100, 100);
+                case RobotStateType::CONVERSATE: return QColor(180, 215, 230);
                 default: return Qt::gray;
             }
         };

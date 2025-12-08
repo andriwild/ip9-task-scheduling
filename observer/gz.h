@@ -15,11 +15,7 @@ public:
         locationMap(locationMap)
     {}
 
-    void onLog(int time, const std::string& message) override {
-        // do nothing
-    }
-
-    void onRobotMoved(int time, const std::string& location) override {
+    void onRobotMoved(int time, const std::string& location, double distance) override {
         auto p = mapToGzLocation(locationMap[location]); // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };

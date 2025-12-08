@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include "../util/types.h"
+#include "robot_state.h"
 
 
 class SimulationContext;
@@ -60,10 +61,12 @@ public:
 
 class ArrivedEvent : public IEvent {
 public:
+    double distance;
     std::string location;
-    explicit ArrivedEvent(int time, std::string location): 
+    explicit ArrivedEvent(int time, std::string location, double distance): 
         IEvent(time),
-        location(location)
+        location(location),
+        distance(distance)
     {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "ArrivedEvent"; };
@@ -85,4 +88,19 @@ public:
     explicit MissionCompleteEvent(int time): IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "MissionCompleteEvent"; };
+};
+
+
+class FoundPersonConversationCompleteEvent : public IEvent {
+public:
+    explicit FoundPersonConversationCompleteEvent(int time): IEvent(time) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "FoundPersonConversationCompleteEvent"; };
+};
+
+class DropOffConversationCompleteEvent : public IEvent {
+public:
+    explicit DropOffConversationCompleteEvent(int time): IEvent(time) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "DropOffConversationCompleteEvent"; };
 };

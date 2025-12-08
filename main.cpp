@@ -1,20 +1,23 @@
 #include <QApplication>
 #include <QtConcurrent/QtConcurrent>
 #include <iostream>
+#include <behaviortree_cpp/loggers/bt_cout_logger.h>
 #include <thread>
 
+#include "behaviour/logger.h"
 #include "init/cli_options.h"
 #include "init/config_loader.h"
 #include "sim/ros/path_node.h"
 #include "sim/ros/marker.h"
 #include "sim/scheduler.h"
-#include "sim/bt_setup.h"
 #include "util/types.h"
-#include "view/bridge.h"
-#include "view/term.h"
-#include "view/gz.h"
+#include "observer/bridge.h"
+#include "observer/term.h"
+#include "observer/gz.h"
+#include "observer/metrics.h"
 #include "view/timeline.h"
 #include "util/data.h"
+#include "behaviour/bt_setup.h"
 
 constexpr int oneHour = 3600;
 constexpr int SIM_START_TIME = 8 * oneHour; 
@@ -43,8 +46,8 @@ int main(int argc, char *argv[]) {
     else if (opts.delayMs > 0) std::cout << "[Mode] Animation delay: " << opts.delayMs << "ms\n";
     else std::cout << "[Mode] Fast-Forward.\n";
 
-    auto simConfig    = ConfigLoader::loadDESConfig("../config/" + opts.simConfigPath);
-    auto appointments = ConfigLoader::loadAppointmentConfig("../config/" + opts.appointmentConfigPath, SIM_START_TIME);
+    auto simConfig    = ConfigLoader::loadDESConfig("config/" + opts.simConfigPath);
+    auto appointments = ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
     if(!appointments.has_value() || !simConfig.has_value()) { 
         return 1; 
     }
@@ -65,11 +68,15 @@ int main(int argc, char *argv[]) {
 
     EventQueue eventQueue;
     Robot robot(simConfig->robot_speed, simConfig->robot_escort_speed);
-    auto tte = std::make_shared<TravelTimeEstimator>(planner_node, locationMap);
+    auto tte = std::make_shared<PathPlanner>(planner_node, locationMap);
     
     SimulationContext ctx(robot, eventQueue, simConfig.value().personFindProbability, tte, employeeLocations);
+
+    auto metrics = std::make_shared<Metrics>(Metrics());
+    ctx.addObserver(metrics);
     ctx.addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx.addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
+
 
     Timeline timelineView(SIM_START_TIME, SIM_END_TIME);
     
@@ -90,6 +97,9 @@ int main(int argc, char *argv[]) {
 
     ctx.behaviorTree = setupBehaviorTree(ctx);
 
+    //BT::StdCoutLogger logger_cout(*ctx.behaviorTree);
+    //SimpleLogger logger(*ctx.behaviorTree);
+
     publishMarkers();
 
     std::thread simThread([&] {
@@ -105,23 +115,14 @@ int main(int argc, char *argv[]) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
             }
         }
-        int completeCounter = 0;
-        int completeLateCounter = 0;
-        int failedCounter = 0;
-        for (auto& appt: appointments.value()){
-            if(appt.state == des::AppointmentState::COMPLETED) completeCounter ++;
-            if(appt.state == des::AppointmentState::COMPLETED_LATE) completeLateCounter++;
-            if(appt.state == des::AppointmentState::FAILED) failedCounter++;
-        }
-
-        int nAppts = appointments.value().size();
-        std::cout << completeCounter << " / " << nAppts << " completeCounter" << std::endl;
-        std::cout << completeLateCounter << " / " << nAppts << " completeLateCounter" << std::endl;
-        std::cout << failedCounter << " / " << nAppts << " failed" << std::endl;
 
         std::cout << "\033[1m" << "\nSimulation complete!" << std::endl;
         std::cin.get();
+
+        metrics->show();
+
         QCoreApplication::quit();
+        QApplication::quit();
     });
 
 

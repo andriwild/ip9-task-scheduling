@@ -1,29 +1,28 @@
 #pragma once
 
 #include <cassert>
-#include <optional>
 #include <vector>
 #include <memory>
 #include <behaviortree_cpp/bt_factory.h>
 
 #include "robot.h"
 #include "event.h"
+#include "robot_state.h"
 #include "../util/types.h"
 #include "../observer/observer.h"
-#include "../sim/ros/travel_time_est.h"
-#include "robot_state.h"
+#include "../sim/ros/path_planner.h"
 
 
 class SimulationContext {
     int currentTime = 0;
     double personDetectionProbability;
     std::vector<std::shared_ptr<IObserver>> observers;
-    std::optional<des::Appointment*> currentAppointment = std::nullopt;
+    des::Appointment* currentAppointment = nullptr;
 
 public:
     Robot& robot;
     EventQueue& queue;
-    std::shared_ptr<TravelTimeEstimator> travelTime;
+    std::shared_ptr<PathPlanner> travelTime;
     std::map<std::string, std::vector<std::string>> employeeLocations;
     std::shared_ptr<BT::Tree> behaviorTree;
 
@@ -31,7 +30,7 @@ public:
         Robot& robot, 
         EventQueue& queue,
         double personDetectionProbability,
-        std::shared_ptr<TravelTimeEstimator> travelTime,
+        std::shared_ptr<PathPlanner> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
         robot(robot),
@@ -46,20 +45,19 @@ public:
     }
 
     void completeAppointment() {
-        if(currentTime > currentAppointment.value()->appointmentTime) {
-            currentAppointment.value()->state = des::AppointmentState::COMPLETED_LATE;
-        } else {
-            currentAppointment.value()->state = des::AppointmentState::COMPLETED;
-        }
-        currentAppointment = std::nullopt;
+        assert(currentAppointment != nullptr);
+        int  timeDiff = currentTime - currentAppointment->appointmentTime;
+        notifyMissionComplete(currentAppointment->state, timeDiff);
+        currentAppointment = nullptr;
     }
 
-    std::optional<des::Appointment*> getAppointment() const {
+    const des::Appointment* getAppointment() const {
         return currentAppointment;
     }
 
-    void updateAppointmentState(const des::AppointmentState& newState) {
-        currentAppointment.value()->state = newState;
+    void updateAppointmentState(const des::MissionState& newState) {
+        assert(currentAppointment != nullptr);
+        currentAppointment->state = newState;
     }
 
     void setTime(int newTime) {
@@ -76,6 +74,12 @@ public:
         notifyRobotStateChanged(newState->getType());
     }
 
+    void notifyMissionComplete(des::MissionState state, int timeDiff) {
+        for (auto obs: observers){
+            obs->onMissionComplete(currentTime, state, timeDiff);
+        }
+    }
+
     void notifyRobotStateChanged(RobotStateType newState) {
         for (auto obs: observers){
             obs->onStateChanged(currentTime, newState);
@@ -88,36 +92,33 @@ public:
         }
     }
 
-    void notifyMoved(std::string location) {
+    void notifyMoved(std::string location, double distance) {
         for (auto obs:observers ) {
-            obs->onRobotMoved(currentTime, location);
+            obs->onRobotMoved(currentTime, location, distance);
         }
     }
 
     double getPersonDetectionProbability() const { return personDetectionProbability; };
 
-    void scheduleArrival(int currentTime, const std::string& target, bool isMissionComplete = false) {
-        const bool needsMoving = robot.getLocation() != target;
+    void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
+        int arrivalTime = currentTime + 1;
 
-        std::optional<double> duration = 1;
-        if (needsMoving) {
-            duration = this->travelTime->estimateDuration(
-                this->robot.getLocation(), 
-                target,
-                this->robot.getSpeed()
-            );
+        if(robot.getLocation() == target){
+            this->queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
+            this->notifyLog("Already at " + target);
+        } else {
+            std::optional<double> distance = this->travelTime->estimateDistance( this->robot.getLocation(), target);
+            assert(distance.has_value());
+
+            double travelTime = distance.value() / this->robot.getDefaultSpeed();
+            arrivalTime = currentTime + travelTime; // TODO: Add uncertainty here
+            
+            this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
+            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s)");
         }
 
-        if (duration.has_value()) {
-            int arrivalTime = currentTime + duration.value(); // TODO: Add uncertainty here
-            this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target));
-
-            if (isMissionComplete) {
-                this->queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
-            }
-            this->notifyLog("Moving to " + target + " (" + std::to_string(duration.value()) + "s)");
-        } else {
-            this->notifyLog("[ERROR] Path planning failed to " + target);
+        if (isMissionComplete) {
+            this->queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
         }
     }
 };

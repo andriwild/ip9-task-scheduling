@@ -1,5 +1,22 @@
 cmake_minimum_required(VERSION 3.16)
 project(ip9_task_scheduling)
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "Using CCache for faster compilation")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+else()
+    message(STATUS "CCache not found. Install it for faster builds.")
+endif()
+
+find_program(MOLD_PROGRAM mold)
+if(MOLD_PROGRAM)
+    message(STATUS "Using Mold linker")
+    add_link_options("-fuse-ld=mold")
+else()
+    message(STATUS "Mold not found. Using default linker.")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -57,22 +74,26 @@ add_executable(ip9_task_scheduling
         init/cli_options.h
 
         observer/observer.h
+        observer/term.h
+        observer/gz.h
+        observer/bridge.h
+        observer/metrics.h
 
-        view/term.h
-        view/gz.h
         view/timeline.h
-        view/bridge.h
 
         util/types.h
         util/data.h
         util/rnd.h
 
-        behaviour/nodes/sim.h
+        behaviour/bt_setup.h
+        behaviour/search.h
+        behaviour/escort.h
+        behaviour/idle.h
 
         sim/gz_lib.h
-        sim/bt_setup.h
         sim/scheduler.h
         sim/ros/path_node.h
+        sim/ros/path_planner.h
         sim/ros/marker.h
 )
 

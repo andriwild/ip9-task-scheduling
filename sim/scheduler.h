@@ -21,18 +21,19 @@ inline void scheduleAppointments(
         auto startPos = ctx.robot.getIdleLocation();
         double speed  = ctx.robot.getDefaultSpeed();
         
-        std::optional<double> travelTo   = ctx.travelTime->estimateDuration(startPos, employeeLocation, speed);
-        std::optional<double> escorting  = ctx.travelTime->estimateDuration(employeeLocation, appt.roomName, speed);
-        std::optional<double> travelBack = ctx.travelTime->estimateDuration(appt.roomName, startPos, speed);
+        std::optional<double> travelTo   = ctx.travelTime->estimateDistance(startPos, employeeLocation);
+        std::optional<double> escorting  = ctx.travelTime->estimateDistance(employeeLocation, appt.roomName);
+        std::optional<double> travelBack = ctx.travelTime->estimateDistance(appt.roomName, startPos);
+
+        assert(travelTo.has_value());
+        assert(escorting.has_value());
+        assert(travelBack.has_value());
         
         double taskOverhead = 30;
         double buffer = 60;
         
-        assert(travelTo.has_value());
-        assert(escorting.has_value());
-        assert(travelBack.has_value());
-
-        const double travelTime = travelTo.value() + escorting.value() + travelBack.value();
+        const double accTravelDist =  travelTo.value() + escorting.value() + travelBack.value();
+        const double travelTime = accTravelDist / ctx.robot.getDefaultSpeed();
         const int startSeconds = appt.appointmentTime - (travelTime + taskOverhead + buffer);
 
         ctx.queue.push(std::make_shared<MissionDispatchEvent>(startSeconds, &appt));
