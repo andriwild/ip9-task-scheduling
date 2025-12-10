@@ -75,6 +75,7 @@ public:
         std::cout << "\033[1m" << "--- Movement ---" << "\033[0m" << "\n";
         std::cout << "Total Distance:    " << std::fixed << std::setprecision(2) << movedDistance << " meters\n";
 
+        std::cout << "\n";
         std::cout << "\033[1m" << "--- General ---" << "\033[0m" << "\n";
         std::cout << "Utilization:       " << std::fixed << std::setprecision(2) << (searchTime + escortTime) / totalTime * 100 << " %\n";
         std::cout << "=================================\n\n";

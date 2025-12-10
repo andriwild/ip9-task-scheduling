@@ -16,8 +16,7 @@
 
 class SimulationContext {
     int currentTime = 0;
-    double personDetectionProbability;
-    double driveTimeVariance;
+    std::shared_ptr<des::SimConfig> simConfig;
     std::vector<std::shared_ptr<IObserver>> observers;
     std::shared_ptr<des::Appointment> currentAppointment = nullptr;
 
@@ -31,8 +30,7 @@ public:
     explicit SimulationContext(
         Robot& robot, 
         EventQueue& queue,
-        double personDetectionProbability,
-        double driveTimeVariance,
+        std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlanner> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
@@ -40,8 +38,7 @@ public:
         queue(queue),
         travelTime(travelTime),
         employeeLocations(employeeLocations),
-        personDetectionProbability(personDetectionProbability),
-        driveTimeVariance(driveTimeVariance)
+        simConfig(simConfig)
     {}
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
@@ -104,9 +101,9 @@ public:
         }
     }
 
-    double getPersonDetectionProbability() const { return personDetectionProbability; };
-
-    double getdriveTimeVariance() const { return driveTimeVariance; };
+    double getConversationFoundStd() const { return simConfig->conversationFoundStd; };
+    double getConversationDropOffStd() const { return simConfig->conversationDropOffStd; };
+    double getdriveTimeVariance() const { return simConfig->driveStd; };
 
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
@@ -121,10 +118,11 @@ public:
             double travelTime = distance.value() / this->robot.getDefaultSpeed();
 
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
-            arrivalTime = currentTime + (travelTime * noiseFactor);
+            double completeTravelTime = travelTime * noiseFactor;
+            arrivalTime = currentTime + completeTravelTime;
             
             this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
-            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s)");
+            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(completeTravelTime - travelTime) + ")");
         }
 
         if (isMissionComplete) {

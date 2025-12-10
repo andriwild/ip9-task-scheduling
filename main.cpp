@@ -46,9 +46,12 @@ int main(int argc, char *argv[]) {
 
     auto simConfig    = ConfigLoader::loadDESConfig("config/" + opts.simConfigPath);
     auto appointments = ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
+
     if(!appointments.has_value() || !simConfig.has_value()) { 
+        std::cerr << "Failed to read config!\n\n";
         return 1; 
     }
+
     ConfigLoader::printDESConfig(simConfig.value(), opts.simConfigPath, opts.appointmentConfigPath);
 
     rclcpp::init(argc, argv);
@@ -65,15 +68,14 @@ int main(int argc, char *argv[]) {
     }
 
     EventQueue eventQueue;
-    Robot robot(simConfig->robot_speed, simConfig->robot_escort_speed);
-    auto tte = std::make_shared<PathPlanner>(planner_node, locationMap);
+    Robot robot(simConfig.value()->robotSpeed, simConfig.value()->robotEscortSpeed);
+    auto pathPlanner = std::make_shared<PathPlanner>(planner_node, locationMap);
     
     SimulationContext ctx(
         robot, 
         eventQueue, 
-        simConfig.value().personFindProbability, 
-        simConfig.value().drive_variance, 
-        tte, 
+        simConfig.value(), 
+        pathPlanner, 
         employeeLocations
     );
 

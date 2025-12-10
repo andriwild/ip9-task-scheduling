@@ -32,8 +32,7 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
 
-        bool personFound = rnd::uni() < ctx->getPersonDetectionProbability();
-
+        bool personFound = rnd::uni() < ctx->getConversationFoundStd();
         if (personFound){
             ctx->notifyLog("Person found: " + ctx->getAppointment()->personName);
             return BT::NodeStatus::SUCCESS;

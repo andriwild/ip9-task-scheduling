@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <optional>
@@ -7,18 +8,11 @@
 #include "../util/types.h"
 
 
-struct SimConfig {
-    double personFindProbability;
-    double robot_speed;
-    double robot_escort_speed;
-    double drive_variance;
-};
-
 using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
 
 class ConfigLoader {
 public:
-    static std::optional<SimConfig>loadDESConfig(std::string filePath) {
+    static std::optional<std::shared_ptr<des::SimConfig>> loadDESConfig(std::string filePath) {
         auto jsonOpt = getJson(filePath);
         if(!jsonOpt.has_value()) {
             return std::nullopt;
@@ -27,17 +21,20 @@ public:
         auto json = jsonOpt.value();
         
         // parse config
-        SimConfig config;
+        des::SimConfig config;
         try {
-            config.personFindProbability = json.at("find_person_probability");
-            config.robot_speed           = json.at("robot_speed");
-            config.robot_escort_speed    = json.at("robot_escort_speed");
-            config.drive_variance        = json.at("drive_std");
+            config.personFindProbability     = json.at("find_person_probability");
+            config.robotSpeed               = json.at("robot_speed");
+            config.robotEscortSpeed        = json.at("robot_escort_speed");
+            config.driveStd            = json.at("drive_std");
+            config.conversationFoundStd    = json.at("conversation_found_std");
+            config.conversationDropOffStd = json.at("conversation_drop_off_std");
+
         } catch (const nlohmann::json::type_error& e){
             std::cerr << "Failed to parse json file: " << filePath << std::endl;
             return std::nullopt;
         }
-        return config;
+        return std::make_shared<des::SimConfig>(config);
     };
 
     static std::optional<AppointmentList>loadAppointmentConfig(
@@ -78,7 +75,7 @@ public:
 
 
     static void printDESConfig(
-        const SimConfig& config, 
+        const std::shared_ptr<des::SimConfig> config, 
         const std::string& simFilePath, 
         const std::string& apptFilePath 
     ) {
@@ -88,9 +85,11 @@ public:
 
         std::cout << std::left << std::setw(W) << "Sim Config"         << ": " << simFilePath << std::endl;
         std::cout << std::left << std::setw(W) << "Apptiontemt Config" << ": " << apptFilePath<< std::endl;
-        std::cout << std::left << std::setw(W) << "Person Find Prob."  << ": " << config.personFindProbability << std::endl;
-        std::cout << std::left << std::setw(W) << "Sim Speed"          << ": " << config.robot_speed << std::endl;
-        std::cout << std::left << std::setw(W) << "Escort Speed"       << ": " << config.robot_escort_speed << std::endl;
+        std::cout << std::left << std::setw(W) << "Person Find Prob."  << ": " << config.get()->personFindProbability << std::endl;
+        std::cout << std::left << std::setw(W) << "Sim Speed"          << ": " << config.get()->robotSpeed << std::endl;
+        std::cout << std::left << std::setw(W) << "Escort Speed"       << ": " << config.get()->robotEscortSpeed << std::endl;
+        std::cout << std::left << std::setw(W) << "conversation_found_std"    << ": " << config.get()->conversationFoundStd<< std::endl;
+        std::cout << std::left << std::setw(W) << "conversation_drop_off_std" << ": " << config.get()->conversationDropOffStd<< std::endl;
 
         std::cout << "----------------------------\n" << std::endl;
     }

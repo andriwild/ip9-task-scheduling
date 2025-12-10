@@ -40,6 +40,15 @@ namespace des {
 		}
 	};
 
+    struct SimConfig {
+        double personFindProbability;
+        double robotSpeed;
+        double robotEscortSpeed;
+        double driveStd;
+        double conversationFoundStd;
+        double conversationDropOffStd;
+    };
+
 	struct Person {
 		int id;
 		std::string firstName;

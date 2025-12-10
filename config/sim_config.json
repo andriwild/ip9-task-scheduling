@@ -1,6 +1,8 @@
 {
-    "find_person_probability": 0.2,
-    "drive_std": 0.2, 
+    "find_person_probability": 0.3,
+    "drive_std": 0.25, 
     "robot_speed": 0.3,
-    "robot_escort_speed": 0.2
+    "robot_escort_speed": 0.2,
+    "conversation_found_std": 0.7,
+    "conversation_drop_off_std": 0.7
 }
