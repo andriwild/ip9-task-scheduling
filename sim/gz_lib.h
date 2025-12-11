@@ -38,7 +38,6 @@ namespace sim {
 
 
     inline void addMarker(const std::string id, const double x, const double y, const double z, const double r = 0.2) {
-
         gz::transport::Node node;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

@@ -72,6 +72,8 @@ add_executable(ip9_task_scheduling
 
         init/config_loader.h
         init/cli_options.h
+        init/des_application.h
+        init/des_application.cpp
 
         observer/observer.h
         observer/term.h

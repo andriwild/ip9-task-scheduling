@@ -34,7 +34,6 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
     }
     ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
-    //ctx.behaviorTree->tickOnce();
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {

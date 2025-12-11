@@ -28,7 +28,7 @@ public:
         if(ctx->robot.getLocation() == ctx->robot.getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
         } else {
-            ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
+            ctx->changeRobotState(std::make_unique<MoveState>(MoveState()));
             ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation());
         }
         return BT::NodeStatus::FAILURE;
