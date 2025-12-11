@@ -20,15 +20,17 @@ public:
 
         auto json = jsonOpt.value();
         
-        // parse config
         des::SimConfig config;
         try {
-            config.personFindProbability     = json.at("find_person_probability");
-            config.robotSpeed               = json.at("robot_speed");
+            config.personFindProbability   = json.at("find_person_probability");
+            config.robotSpeed              = json.at("robot_speed");
             config.robotEscortSpeed        = json.at("robot_escort_speed");
-            config.driveStd            = json.at("drive_std");
+            config.driveStd                = json.at("drive_std");
             config.conversationFoundStd    = json.at("conversation_found_std");
-            config.conversationDropOffStd = json.at("conversation_drop_off_std");
+            config.conversationDropOffStd  = json.at("conversation_drop_off_std");
+            config.missionOverhead         = json.at("missionOverhead");
+            config.timeBuffer              = json.at("timeBuffer");
+
 
         } catch (const nlohmann::json::type_error& e){
             std::cerr << "Failed to parse json file: " << filePath << std::endl;

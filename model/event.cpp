@@ -22,12 +22,14 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     bool successful = rnd::uni() > ctx.getConversationFoundStd();
     if(successful) {
-        ctx.notifyLog("Conversation ended successful. Person for escorting convinced.");
+        ctx.notifyLog("Conversation ended successful. Person for accompany convinced.");
         ctx.changeRobotState(new EscortState());
         ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
     } else {
+        ctx.notifyLog("Conversation failed.");
         ctx.updateAppointmentState(des::MissionState::FAILED);
         ctx.changeRobotState(new IdleState());
+        ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
     }
     ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
     //ctx.behaviorTree->tickOnce();
@@ -39,6 +41,7 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.notifyLog("Conversation ended successful. Person dropped off.");
         ctx.updateAppointmentState(des::MissionState::COMPLETED);
     } else {
+        ctx.notifyLog("Conversation failed.");
         ctx.updateAppointmentState(des::MissionState::FAILED);
     }
     ctx.changeRobotState(new IdleState());

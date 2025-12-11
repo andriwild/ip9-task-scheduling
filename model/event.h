@@ -5,7 +5,6 @@
 #include <vector>
 #include <queue>
 #include "../util/types.h"
-#include "robot_state.h"
 
 
 class SimulationContext;

@@ -59,10 +59,11 @@ int main(int argc, char *argv[]) {
     auto planner_node = std::make_shared<PathPlannerNode>();
     std::thread rosThread;
 
-    if(planner_node->isReady()) {
+    if (planner_node->isReady()) {
         std::cout << "Planner ready!\n\n";
         rosThread = std::thread([planner_node] { rclcpp::spin(planner_node); });
     } else {
+        // TODO: introduce INIT ERROR for all possible failures
         std::cerr << "Planner init failed!\n";
         return 1;
     }
@@ -90,20 +91,24 @@ int main(int argc, char *argv[]) {
     if(!opts.headless) {
         timelineView.show();
         auto bridge = std::make_shared<ObserverBridge>();
-        QObject::connect(bridge.get(), &ObserverBridge::logReceived, &timelineView, &Timeline::handleLog);
+        QObject::connect(bridge.get(), &ObserverBridge::logReceived,  &timelineView, &Timeline::handleLog);
         QObject::connect(bridge.get(), &ObserverBridge::moveReceived, &timelineView, &Timeline::handleMove);
         QObject::connect(bridge.get(), &ObserverBridge::stateChanged, &timelineView, &Timeline::handleStateChange);
         ctx.addObserver(bridge);
     }
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
+    eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
     
-    if(appointments.has_value()){
-        scheduleAppointments(appointments.value(), ctx, timelineView, employeeLocations);
+    auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
+
+    for(const auto& mission: missions) {
+        double buffer = simConfig.value()->timeBuffer - simConfig.value()->missionOverhead;
+        mission->time = mission->time - buffer;
+        eventQueue.push(mission);
+        timelineView.addMeetingPlan(mission->appointment, mission->time);
     }
     
-    eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
-
     ctx.behaviorTree = setupBehaviorTree(ctx);
 
     //BT::StdCoutLogger logger_cout(*ctx.behaviorTree);

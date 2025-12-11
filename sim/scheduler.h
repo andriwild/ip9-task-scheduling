@@ -7,14 +7,13 @@
 
 #include "../model/event.h"
 #include "../model/context.h"
-#include "../view/timeline.h"
 
-inline void scheduleAppointments(
-    std::vector<std::shared_ptr<des::Appointment>> appointments,
-    SimulationContext& ctx,
-    Timeline& timelineView,
-    std::map<std::string, std::vector<std::string>>& locations
+inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
+    std::vector<std::shared_ptr<des::Appointment>>& appointments,
+    std::map<std::string, std::vector<std::string>>& locations,
+    SimulationContext& ctx
 ) {
+    std::vector<std::shared_ptr<MissionDispatchEvent>> missions;
     for (auto& appt : appointments) {
         auto employeeLocation = locations[appt->personName].front();
 
@@ -29,14 +28,10 @@ inline void scheduleAppointments(
         assert(escorting.has_value());
         assert(travelBack.has_value());
         
-        double taskOverhead = 30;
-        double buffer = 60;
-        
         const double accTravelDist =  travelTo.value() + escorting.value() + travelBack.value();
         const double travelTime = accTravelDist / ctx.robot.getDefaultSpeed();
-        const int startSeconds = appt.get()->appointmentTime - (travelTime + taskOverhead + buffer);
-
-        ctx.queue.push(std::make_shared<MissionDispatchEvent>(startSeconds, appt));
-        timelineView.addMeetingPlan(appt, startSeconds);
+        const int startSeconds = appt.get()->appointmentTime - travelTime;
+        missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appt));
     }
+    return missions;
 }

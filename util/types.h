@@ -47,6 +47,8 @@ namespace des {
         double driveStd;
         double conversationFoundStd;
         double conversationDropOffStd;
+        double missionOverhead;
+        double timeBuffer;
     };
 
 	struct Person {
