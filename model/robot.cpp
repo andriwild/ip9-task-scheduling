@@ -3,9 +3,9 @@
 #include "robot_state.h"
 
 
-void Robot::changeState(RobotState* newState) {
+void Robot::changeState(std::unique_ptr<RobotState> newState) {
     m_state->exit(*this);
-    m_state.reset(newState);
+    m_state = std::move(newState);
     m_state->enter(*this);
 }
 

@@ -7,7 +7,6 @@
 
 #include "../model/context.h"
 #include "../model/robot_state.h"
-#include "../util/rnd.h"
 
 class Docking: public BT::SyncActionNode {
 public:
@@ -29,7 +28,7 @@ public:
         if(ctx->robot.getLocation() == ctx->robot.getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
         } else {
-            ctx->changeRobotState(new MoveState());
+            ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
             ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation());
         }
         return BT::NodeStatus::FAILURE;
@@ -47,7 +46,7 @@ public:
         auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
         assert(ctx->robot.getLocation() == ctx->robot.getIdleLocation());
         ctx->notifyLog("Robot is idle at " + ctx->robot.getLocation());
-        ctx->changeRobotState(new IdleState());
+        ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
         return BT::NodeStatus::SUCCESS;
     }
 };

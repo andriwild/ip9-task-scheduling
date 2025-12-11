@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "robot_state.h"
 #include "event.h"
 #include "context.h"
@@ -5,30 +7,30 @@
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
     if (ctx.robot.isBusy()) { 
-        ctx.changeRobotState(new IdleState());
+        ctx.changeRobotState(std::make_unique<IdleState>(IdleState()));
     }
     ctx.notifyLog("Simulation started");
     
     ctx.robot.setLocation(ctx.robot.getIdleLocation());
     ctx.notifyMoved(ctx.robot.getIdleLocation(), 0);
-    ctx.changeRobotState(new IdleState);
+    ctx.changeRobotState(std::make_unique<IdleState>(IdleState()));
 }
 
 void SimulationEndEvent::execute(SimulationContext& ctx) {
     ctx.notifyLog("Simulation ended");
-    ctx.changeRobotState(new IdleState);
+    ctx.changeRobotState(std::make_unique<IdleState>(IdleState()));
 }
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     bool successful = rnd::uni() > ctx.getConversationFoundStd();
     if(successful) {
         ctx.notifyLog("Conversation ended successful. Person for accompany convinced.");
-        ctx.changeRobotState(new EscortState());
+        ctx.changeRobotState(std::make_unique<EscortState>(EscortState()));
         ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
     } else {
         ctx.notifyLog("Conversation failed.");
         ctx.updateAppointmentState(des::MissionState::FAILED);
-        ctx.changeRobotState(new IdleState());
+        ctx.changeRobotState(std::make_unique<IdleState>(IdleState()));
         ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
     }
     ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
@@ -44,7 +46,7 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.notifyLog("Conversation failed.");
         ctx.updateAppointmentState(des::MissionState::FAILED);
     }
-    ctx.changeRobotState(new IdleState());
+    ctx.changeRobotState(std::make_unique<IdleState>(IdleState()));
     ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
     ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.behaviorTree->tickOnce();
@@ -93,7 +95,7 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 
     ctx.notifyLog("Mission Dispatch: Searching for " + person);
     
-    ctx.changeRobotState(new SearchState(locations));
+    ctx.changeRobotState(std::make_unique<SearchState>(SearchState(locations)));
     ctx.scheduleArrival(this->time, firstGoal);
 }
 

@@ -4,6 +4,7 @@
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/basic_types.h>
+#include <memory>
 
 #include "../model/context.h"
 #include "../model/robot_state.h"
@@ -58,7 +59,7 @@ public:
         // TODO: add time randomness
         auto target = ctx->getAppointment()->roomName;
         ctx->queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(currentTime + 10));
-        ctx->changeRobotState(new ConversateState());
+        ctx->changeRobotState(std::make_unique<ConversateState>(ConversateState()));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -132,7 +133,7 @@ public:
 
         ctx->notifyLog("Aborting Search!");
         ctx->updateAppointmentState(des::MissionState::FAILED);
-        ctx->changeRobotState(new IdleState());
+        ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
         return BT::NodeStatus::SUCCESS;
     }
 };

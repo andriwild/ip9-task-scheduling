@@ -32,7 +32,7 @@ public:
             config.timeBuffer              = json.at("timeBuffer");
 
 
-        } catch (const nlohmann::json::type_error& e){
+        } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse json file: " << filePath << std::endl;
             return std::nullopt;
         }

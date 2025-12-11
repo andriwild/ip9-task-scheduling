@@ -23,7 +23,7 @@ public:
     std::string getLocation() const;
     void setLocation(std::string location);
 
-    void changeState(RobotState* newState);
+    void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() { return m_state.get(); };
 
     void setSpeed(double newSpeed);

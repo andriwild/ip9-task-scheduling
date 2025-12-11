@@ -72,9 +72,9 @@ public:
         observers.emplace_back(observer);
     }
 
-    void changeRobotState(RobotState* newState) {
-        robot.changeState(newState);
-        notifyRobotStateChanged(newState->getType());
+    void changeRobotState(std::unique_ptr<RobotState> newState) {
+        robot.changeState(std::move(newState));
+        notifyRobotStateChanged(robot.getState()->getType());
     }
 
     void notifyMissionComplete(des::MissionState state, int timeDiff) {
