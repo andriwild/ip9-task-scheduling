@@ -2,5 +2,6 @@ CompileFlags:
   CompilationDatabase: build/
   Add:
     - "-Ibuild/_deps/behaviortree-src/include"
+    - "-I/home/andri/repos/ip9-task-scheduling/rviz_plugin/install/des_msgs/include/des_msgs"
     - "-std=c++20"
     - "-fPIC"

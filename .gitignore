@@ -3,3 +3,6 @@
 .cache
 build
 todo.md
+rviz_plugin/build
+rviz_plugin/install
+rviz_plugin/log

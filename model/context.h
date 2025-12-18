@@ -11,7 +11,7 @@
 #include "../util/types.h"
 #include "../util/rnd.h"
 #include "../observer/observer.h"
-#include "../sim/ros/path_planner.h"
+#include "../sim/ros/path_node.h"
 
 
 class SimulationContext {
@@ -23,7 +23,7 @@ class SimulationContext {
 public:
     Robot& robot;
     EventQueue& queue;
-    std::shared_ptr<PathPlanner> travelTime;
+    std::shared_ptr<PathPlannerNode> travelTime;
     std::map<std::string, std::vector<std::string>> employeeLocations;
     std::shared_ptr<BT::Tree> behaviorTree;
 
@@ -31,7 +31,7 @@ public:
         Robot& robot, 
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<PathPlanner> travelTime,
+        std::shared_ptr<PathPlannerNode> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
         robot(robot),

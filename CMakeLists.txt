@@ -21,6 +21,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_PREFIX_PATH "/opt/ros/jazzy")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/rviz_plugin/install")
 
 #enable_testing()
 
@@ -51,6 +52,7 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(des_msgs REQUIRED)
 
 find_package(Qt5 COMPONENTS
         Core
@@ -95,8 +97,8 @@ add_executable(ip9_task_scheduling
         sim/gz_lib.h
         sim/scheduler.h
         sim/ros/path_node.h
-        sim/ros/path_planner.h
         sim/ros/marker.h
+        sim/ros/controller.h
 )
 
 set_target_properties(ip9_task_scheduling PROPERTIES
@@ -122,10 +124,11 @@ target_link_libraries(ip9_task_scheduling
         ${nav2_msgs_TARGETS}
         ${visualization_msgs_TARGETS}
         ${tf2_geometry_msgs_TARGETS}
+        ${des_msgs_LIBRARIES}
 )
 
 get_target_property(QT_INCLUDES Qt5::Widgets INTERFACE_INCLUDE_DIRECTORIES)
-target_include_directories(ip9_task_scheduling PRIVATE ${QT_INCLUDES})
+target_include_directories(ip9_task_scheduling PRIVATE ${QT_INCLUDES} ${des_msgs_INCLUDE_DIRS})
 
 
 add_executable(transform_node
@@ -140,4 +143,5 @@ target_link_libraries(transform_node
     gz-msgs10::gz-msgs10
     ${nav2_msgs_TARGETS}
     ${tf2_geometry_msgs_TARGETS}
+    ${des_msgs_LIBRARIES}
 )

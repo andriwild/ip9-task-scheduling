@@ -23,6 +23,7 @@ if [ $? -eq 0 ]; then
     
     cd ..
     
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/rviz_plugin/install/des_msgs/lib
     ./build/ip9_task_scheduling "$@"
 else
     echo "❌ Build failed!"
