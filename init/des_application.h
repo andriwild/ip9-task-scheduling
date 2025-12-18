@@ -15,6 +15,7 @@
 #include "../observer/term.h"
 #include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
+#include "../sim/ros/controller.h"
 #include "../sim/scheduler.h"
 #include "../util/data.h"
 #include "../view/timeline.h"
@@ -32,7 +33,6 @@ private:
     bool init();
     void setupSimulation();
     void setupObservers();
-    void publishMarkers();
 
     // Qt Application
     std::unique_ptr<QApplication> app;
@@ -46,10 +46,10 @@ private:
     std::shared_ptr<SimulationContext> ctx;
     EventQueue eventQueue;
     std::shared_ptr<Robot> robot;
-    std::shared_ptr<PathPlanner> pathPlanner;
 
     // ROS
-    std::shared_ptr<PathPlannerNode> planner_node;
+    std::shared_ptr<PathPlannerNode> plannerNode;
+    std::shared_ptr<ControllerNode> controllerNode;
     std::thread rosThread;
     std::thread simThread;
 

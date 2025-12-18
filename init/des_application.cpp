@@ -1,4 +1,6 @@
 #include "des_application.h"
+#include <chrono>
+#include <thread>
 
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
@@ -34,50 +36,43 @@ bool DesApplication::init() {
 
     rclcpp::init(0, nullptr);
 
-    planner_node = std::make_shared<PathPlannerNode>();
+    plannerNode    = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode = std::make_shared<ControllerNode>();
 
-    if (planner_node->isReady()) {
-        std::cout << "Planner ready!\n\n";
-        rosThread = std::thread([this] { rclcpp::spin(planner_node); });
-    } else {
+    if (!plannerNode->isReady()) {
         std::cerr << "Planner init failed!\n";
         return false;
     }
+    std::cout << "Planner ready!\n\n";
+
+    rosThread = std::thread([this] { 
+        rclcpp::executors::MultiThreadedExecutor executor;
+        executor.add_node(plannerNode);
+        executor.add_node(controllerNode);
+        executor.spin();
+    });
 
     return true;
 }
 
-void DesApplication::publishMarkers() {
-    auto marker_node = std::make_shared<MarkerPublisher>();
-    std::vector<MapLocation> rosLocations = {};
-    for (auto [name, p] : locationMap) {
-        rosLocations.emplace_back(name, p.m_x, p.m_y);
-    }
-    std::cout << "publish marker" << std::endl;
-    marker_node->publishLocations(rosLocations);
-}
-
 void DesApplication::setupSimulation() {
     robot = std::make_shared<Robot>(simConfig.value()->robotSpeed, simConfig.value()->robotEscortSpeed);
-    pathPlanner = std::make_shared<PathPlanner>(planner_node, locationMap);
 
     ctx = std::make_shared<SimulationContext>(
         *robot, 
         eventQueue, 
         simConfig.value(), 
-        pathPlanner, 
+        plannerNode, 
         employeeLocations
     );
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
-    auto missions =
-        scheduleAppointments(appointments.value(), employeeLocations, *ctx);
+    auto missions = scheduleAppointments(appointments.value(), employeeLocations, *ctx);
 
     for (const auto &mission : missions) {
-        double buffer =
-            simConfig.value()->timeBuffer - simConfig.value()->missionOverhead;
+        double buffer = simConfig.value()->timeBuffer + simConfig.value()->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
     }
@@ -109,8 +104,7 @@ int DesApplication::run() {
     }
 
     robot = std::make_shared<Robot>(simConfig.value()->robotSpeed, simConfig.value()->robotEscortSpeed);
-    pathPlanner = std::make_shared<PathPlanner>(planner_node, locationMap);
-    ctx = std::make_shared<SimulationContext>(*robot, eventQueue, simConfig.value(), pathPlanner, employeeLocations);
+    ctx   = std::make_shared<SimulationContext>(*robot, eventQueue, simConfig.value(), plannerNode, employeeLocations);
 
     setupObservers();
 
@@ -129,20 +123,26 @@ int DesApplication::run() {
 
     ctx->behaviorTree = setupBehaviorTree(*ctx);
 
-    publishMarkers();
+    auto applicationState = controllerNode->currentState.load();
 
-    simThread = std::thread([this] {
-        while (!eventQueue.empty()) {
-            auto e = eventQueue.top();
-            eventQueue.pop();
-            ctx->setTime(e->time);
-            e->execute(*ctx);
+    simThread = std::thread([&] {
+        while (rclcpp::ok() && !eventQueue.empty()) {
+            if (applicationState == RUN) {
+                auto e = eventQueue.top();
+                eventQueue.pop();
+                ctx->setTime(e->time);
+                e->execute(*ctx);
 
-            if (opts.stepMode) {
-                std::cin.get();
-            } else if (opts.delayMs > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
+                if (opts.stepMode) {
+                    std::cin.get();
+                } else if (opts.delayMs > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
+                }
+
+            } else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
+            applicationState = controllerNode->currentState.load();
         }
 
         std::cout << "\033[1m" << "\nSimulation complete!" << std::endl;
