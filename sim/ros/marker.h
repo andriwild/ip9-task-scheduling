@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
+#include "../../util/types.h"
 
 struct MapLocation {
     std::string name;
@@ -10,7 +11,7 @@ struct MapLocation {
 
 class MarkerPublisher : public rclcpp::Node {
 public:
-    MarkerPublisher() : Node("marker_publisher") {
+    MarkerPublisher() : Node("des_marker_publisher") {
         rclcpp::QoS qos_profile(1);
         qos_profile.transient_local();
 
@@ -82,6 +83,16 @@ public:
         }
 
         marker_pub_->publish(marker_array);
+    }
+
+
+
+    void publishMarkers(std::map<std::string, des::Point> locationMap) {
+        std::vector<MapLocation> rosLocations = {};
+        for (auto [name, p] : locationMap) {
+            rosLocations.emplace_back(name, p.m_x, p.m_y);
+        }
+        this->publishLocations(rosLocations);
     }
 
 private:

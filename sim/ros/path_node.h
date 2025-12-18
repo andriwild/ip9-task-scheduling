@@ -11,6 +11,7 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <tf2/LinearMath/Quaternion.h>
+#include "../../util/types.h"
 
 struct SimplePose {
     double x, y, yaw;
@@ -26,12 +27,15 @@ public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode() : Node("path_planner_node") {
-        client_ = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
+    PathPlannerNode(std::map<std::string, des::Point> locationMap) :
+        Node("des_path_planner_node"),
+        locationMap(locationMap)
+    {
+        m_client = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
 
         RCLCPP_INFO(this->get_logger(), "Waiting for planner server...");
-        ready_ = client_->wait_for_action_server(std::chrono::seconds(5));
-        if (ready_) {
+        m_ready = m_client->wait_for_action_server(std::chrono::seconds(5));
+        if (m_ready) {
             RCLCPP_INFO(this->get_logger(), "Planner server ready!");
         } else {
             RCLCPP_ERROR(this->get_logger(), "Planner server not available!");
@@ -48,8 +52,8 @@ public:
 
     PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {
         PathResult result{false, 0.0};
-        result_ready_ = false;
-        if (!ready_) return result;
+        m_resultReady = false;
+        if (!m_ready) return result;
 
         auto goal_msg = ComputePathToPose::Goal();
         goal_msg.start = toPose(start);
@@ -61,26 +65,43 @@ public:
 
         send_goal_options.result_callback =
             [this](const GoalHandle::WrappedResult & wrapped) {
-                std::lock_guard lock(mutex_);
+                std::lock_guard lock(m_mutex);
                 if (wrapped.code == rclcpp_action::ResultCode::SUCCEEDED) {
-                    current_result_.success = true;
-                    current_result_.distance = calcDistance(wrapped.result->path);
+                    m_currentResult.success = true;
+                    m_currentResult.distance = calcDistance(wrapped.result->path);
                 }
-                result_ready_ = true;
-                cv_.notify_one();
+                m_resultReady = true;
+                m_cv.notify_one();
             };
 
-        client_->async_send_goal(goal_msg, send_goal_options);
+        m_client->async_send_goal(goal_msg, send_goal_options);
 
-        std::unique_lock lock(mutex_);
-        if (cv_.wait_for(lock, std::chrono::seconds(15), [this]{ return result_ready_; })) {
-            result = current_result_;
+        std::unique_lock lock(m_mutex);
+        if (m_cv.wait_for(lock, std::chrono::seconds(15), [this]{ return m_resultReady; })) {
+            result = m_currentResult;
         }
 
         return result;
     }
 
-    bool isReady() const { return ready_; }
+    bool isReady() const { return m_ready; }
+
+
+    std::optional<double> estimateDistance(const std::string& from, const std::string& to) {
+        auto fromIt = locationMap.find(from);
+        auto toIt   = locationMap.find(to);
+
+        assert(fromIt != locationMap.end() && toIt != locationMap.end());
+
+        SimplePose start { fromIt->second.m_x, fromIt->second.m_y, 0.0 };
+        SimplePose goal  { toIt->second.m_x, toIt->second.m_y, 0.0 };
+        
+        auto result = computeDistance(start, goal);
+
+        if (!result.success) return std::nullopt;
+
+        return result.distance;
+    }
 
 private:
     geometry_msgs::msg::PoseStamped toPose(const SimplePose& p) {
@@ -114,11 +135,12 @@ private:
         return d;
     }
 
-    rclcpp_action::Client<ComputePathToPose>::SharedPtr client_;
-    bool ready_{false};
+    rclcpp_action::Client<ComputePathToPose>::SharedPtr m_client;
+    bool m_ready{false};
 
-    std::mutex mutex_;
-    std::condition_variable cv_;
-    bool result_ready_{false};
-    PathResult current_result_{false, 0.0};
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
+    bool m_resultReady{false};
+    PathResult m_currentResult{false, 0.0};
+    std::map<std::string, des::Point> locationMap;
 };
