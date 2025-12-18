@@ -28,7 +28,7 @@ public:
         if(ctx->robot.getLocation() == ctx->robot.getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
         } else {
-            ctx->changeRobotState(std::make_unique<MoveState>(MoveState()));
+            ctx->changeRobotState(std::make_unique<MoveState>());
             ctx->scheduleArrival(currentTime, ctx->robot.getIdleLocation());
         }
         return BT::NodeStatus::FAILURE;
@@ -46,7 +46,7 @@ public:
         auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
         assert(ctx->robot.getLocation() == ctx->robot.getIdleLocation());
         ctx->notifyLog("Robot is idle at " + ctx->robot.getLocation());
-        ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
+        ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;
     }
 };

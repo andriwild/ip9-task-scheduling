@@ -59,7 +59,7 @@ public:
         // TODO: add time randomness
         auto target = ctx->getAppointment()->roomName;
         ctx->queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(currentTime + 10));
-        ctx->changeRobotState(std::make_unique<ConversateState>(ConversateState()));
+        ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -133,7 +133,7 @@ public:
 
         ctx->notifyLog("Aborting Search!");
         ctx->updateAppointmentState(des::MissionState::FAILED);
-        ctx->changeRobotState(std::make_unique<IdleState>(IdleState()));
+        ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;
     }
 };
