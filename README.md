@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- cmake
-- ninja-build
-- mold
+```sh
+rosdep install --from-paths src --ignore-src -r -y
+ ```
 

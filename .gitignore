@@ -2,7 +2,9 @@
 /.fleet/
 .cache
 build
+install
+log
 todo.md
-rviz_plugin/build
-rviz_plugin/install
-rviz_plugin/log
+ros2_ws/build
+ros2_ws/install
+ros2_ws/log

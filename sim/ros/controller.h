@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "des_msgs/srv/set_des_state.hpp"
+#include "event_system_interfaces/srv/set_des_state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include <bitset>
