@@ -1,11 +1,9 @@
 #include <QVBoxLayout>
-#include <des_panel/des_panel.hpp>
+#include <event_system_rviz/des_panel.hpp>
 #include <memory>
 #include <rviz_common/display_context.hpp>
 
-#include "des_msgs/srv/set_des_state.hpp"
-
-
+#include "event_system_interfaces/srv/set_des_state.hpp"
 
 namespace des_panel {
 
@@ -27,7 +25,7 @@ DesPanel::DesPanel(QWidget *parent) : Panel(parent) {
     layout->addWidget(m_btnPause);
     layout->addWidget(m_btnReset);
 
-    QObject::connect(m_btnRun, &QPushButton::released, this, &DesPanel::btnRunClick);
+    QObject::connect(m_btnRun,   &QPushButton::released, this, &DesPanel::btnRunClick);
     QObject::connect(m_btnPause, &QPushButton::released, this, &DesPanel::btnPauseClick);
     QObject::connect(m_btnReset, &QPushButton::released, this, &DesPanel::btnResetClick);
 }
@@ -39,11 +37,11 @@ void DesPanel::onInitialize() {
 
     rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
 
-    client = node->create_client<des_msgs::srv::SetDesState>("set_des_state");
+    client = node->create_client<event_system_interfaces::srv::SetDesState>("set_des_state");
 }
 
 void DesPanel::btnRunClick() {
-    auto request = std::make_shared<des_msgs::srv::SetDesState_Request>();
+    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
     request->new_state = RUN;
 
     client->async_send_request(
@@ -53,7 +51,7 @@ void DesPanel::btnRunClick() {
 }
 
 void DesPanel::btnPauseClick() {
-    auto request = std::make_shared<des_msgs::srv::SetDesState_Request>();
+    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
     request->new_state = PAUSE;
 
     client->async_send_request(
@@ -63,7 +61,7 @@ void DesPanel::btnPauseClick() {
 }
 
 void DesPanel::btnResetClick() {
-    auto request = std::make_shared<des_msgs::srv::SetDesState_Request>();
+    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
     request->new_state = RESET;
 
     client->async_send_request(

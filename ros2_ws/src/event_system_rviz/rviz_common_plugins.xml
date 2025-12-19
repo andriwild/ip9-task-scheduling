@@ -1,4 +1,4 @@
-<library path="des_panel">
+<library path="event_system_rviz">
   <class type="des_panel::DesPanel" base_class_type="rviz_common::Panel">
     <description>Descrete Event System</description>
   </class>
