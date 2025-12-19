@@ -13,6 +13,17 @@
     <test_depend>ament_lint_common</test_depend>
 
     <depend>behaviortree_cpp</depend>
+    <depend>rclcpp</depend>
+    <depend>tf2_ros</depend>
+    <depend>geometry_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>visualization_msgs</depend>
+    <depend>nlohmann_json</depend>
+    <depend>gz-math8</depend>
+    <depend>gz-transport13</depend>
+    <depend>event_system_interfaces</depend>
+    <depend>nav2_msgs</depend>
+    <build_depend>qtbase5-dev</build_depend>
 
     <export>
         <build_type>ament_cmake</build_type>
