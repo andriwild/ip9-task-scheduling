@@ -21,7 +21,7 @@
     <depend>nlohmann_json</depend>
     <depend>gz-math8</depend>
     <depend>gz-transport13</depend>
-    <depend>event_system_interfaces</depend>
+    <depend>event_system_msgs</depend>
     <depend>nav2_msgs</depend>
     <build_depend>qtbase5-dev</build_depend>
 

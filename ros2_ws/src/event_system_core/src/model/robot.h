@@ -15,9 +15,9 @@ class Robot {
 
 public:
     Robot(const double defaultSpeed, const double escortSpeed):
+        m_state(std::make_unique<IdleState>()),
         m_defaultSpeed(defaultSpeed),
-        m_escortSpeed(escortSpeed),
-        m_state(std::make_unique<IdleState>())
+        m_escortSpeed(escortSpeed)
     {}
 
     std::string getLocation() const;

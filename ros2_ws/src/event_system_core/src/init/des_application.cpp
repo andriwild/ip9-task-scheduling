@@ -2,6 +2,8 @@
 #include <chrono>
 #include <thread>
 
+#include "event_system_msgs/srv/set_system_state.hpp"
+
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
@@ -24,20 +26,21 @@ DesApplication::~DesApplication() {
 }
 
 bool DesApplication::init() {
-    simConfig = ConfigLoader::loadDESConfig("config/" + opts.simConfigPath);
     appointments = ConfigLoader::loadAppointmentConfig(
-        "config/" + opts.appointmentConfigPath, SIM_START_TIME);
+        "config/" + opts.appointmentConfigPath, 
+        SIM_START_TIME
+    );
 
-    if (!appointments.has_value() || !simConfig.has_value()) {
+    if (!appointments.has_value()) {
         std::cerr << "Failed to read config!\n\n";
         return false;
     }
-    ConfigLoader::printDESConfig(simConfig.value(), opts.simConfigPath, opts.appointmentConfigPath);
 
     rclcpp::init(0, nullptr);
 
-    plannerNode    = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode = std::make_shared<ControllerNode>();
+    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode   = std::make_shared<ControllerNode>();
+    systemConfigNode = std::make_shared<ConfigNode>();
 
     if (!plannerNode->isReady()) {
         std::cerr << "Planner init failed!\n";
@@ -49,33 +52,11 @@ bool DesApplication::init() {
         rclcpp::executors::MultiThreadedExecutor executor;
         executor.add_node(plannerNode);
         executor.add_node(controllerNode);
+        executor.add_node(systemConfigNode);
         executor.spin();
     });
 
     return true;
-}
-
-void DesApplication::setupSimulation() {
-    robot = std::make_shared<Robot>(simConfig.value()->robotSpeed, simConfig.value()->robotEscortSpeed);
-
-    ctx = std::make_shared<SimulationContext>(
-        *robot, 
-        eventQueue, 
-        simConfig.value(), 
-        plannerNode, 
-        employeeLocations
-    );
-
-    eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
-
-    auto missions = scheduleAppointments(appointments.value(), employeeLocations, *ctx);
-
-    for (const auto &mission : missions) {
-        double buffer = simConfig.value()->timeBuffer + simConfig.value()->missionOverhead;
-        mission->time = mission->time - buffer;
-        eventQueue.push(mission);
-    }
 }
 
 void DesApplication::setupObservers() {
@@ -102,9 +83,10 @@ int DesApplication::run() {
     if (!init()) {
         return 1;
     }
+    auto config = systemConfigNode->currentConfig.load();
 
-    robot = std::make_shared<Robot>(simConfig.value()->robotSpeed, simConfig.value()->robotEscortSpeed);
-    ctx   = std::make_shared<SimulationContext>(*robot, eventQueue, simConfig.value(), plannerNode, employeeLocations);
+    robot = std::make_shared<Robot>(config.robotSpeed, config.robotEscortSpeed);
+    ctx   = std::make_shared<SimulationContext>(*robot, eventQueue, config, plannerNode, employeeLocations);
 
     setupObservers();
 
@@ -114,8 +96,7 @@ int DesApplication::run() {
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, *ctx);
 
     for (const auto &mission : missions) {
-        double buffer =
-            simConfig.value()->timeBuffer - simConfig.value()->missionOverhead;
+        double buffer = config.timeBuffer - config.missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
         timelineView->addMeetingPlan(mission->appointment, mission->time);
@@ -127,7 +108,7 @@ int DesApplication::run() {
 
     simThread = std::thread([&] {
         while (rclcpp::ok() && !eventQueue.empty()) {
-            if (applicationState == RUN) {
+            if (applicationState == event_system_msgs::srv::SetSystemState::Request::RUN) {
                 auto e = eventQueue.top();
                 eventQueue.pop();
                 ctx->setTime(e->time);

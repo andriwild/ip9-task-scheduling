@@ -16,6 +16,7 @@
 #include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
 #include "../sim/ros/controller.h"
+#include "../sim/ros/config.h"
 #include "../sim/scheduler.h"
 #include "../util/data.h"
 #include "../view/timeline.h"
@@ -39,7 +40,6 @@ private:
     CliOptions opts;
 
     // Configuration
-    std::optional<std::shared_ptr<des::SimConfig>> simConfig;
     std::optional<std::vector<std::shared_ptr<des::Appointment>>> appointments;
 
     // Simulation Data
@@ -50,6 +50,7 @@ private:
     // ROS
     std::shared_ptr<PathPlannerNode> plannerNode;
     std::shared_ptr<ControllerNode> controllerNode;
+    std::shared_ptr<ConfigNode> systemConfigNode;
     std::thread rosThread;
     std::thread simThread;
 

@@ -1,66 +1,58 @@
-// Service test: ros2 service call /set_des_state event_system_interfaces/srv/SetDesState
+// Service test: ros2 service call /set_des_state event_system_msgs/srv/SetSystemState
 // "{new_state: 1}"
 
 #pragma once
 
+#include <rclcpp/rclcpp.hpp>
 #include <tf2/LinearMath/Quaternion.h>
-
 #include <bitset>
 #include <cmath>
 #include <iostream>
 
-#include "event_system_interfaces/srv/set_des_state.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "event_system_msgs/srv/set_system_state.hpp"
 
-enum SimState { IDLE = 0, RUN = 1 << 0, PAUSE = 1 << 1, RESET = 1 << 2 };
 
-class ControllerNode : public rclcpp::Node
-{
+class ControllerNode : public rclcpp::Node {
 public:
-  std::atomic<SimState> currentState{IDLE};
+    std::atomic<int> currentState{0};
 
-  ControllerNode() : Node("des_controller_node")
-  {
-    subscription_ = this->create_service<event_system_interfaces::srv::SetDesState>(
-        "/set_des_state", std::bind(&ControllerNode::topicCallback, this, std::placeholders::_1,
-                                    std::placeholders::_2));
-  }
+    ControllerNode() : Node("des_controller_node") {
+        m_subscription = this->create_service<event_system_msgs::srv::SetSystemState>(
+            "/set_des_state", 
+            std::bind(&ControllerNode::topicCallback, this, std::placeholders::_1, std::placeholders::_2)
+        );
+    }
 
 private:
-  void topicCallback(
-      const std::shared_ptr<event_system_interfaces::srv::SetDesState::Request> request,
-      std::shared_ptr<event_system_interfaces::srv::SetDesState::Response> response)
-  {
-    std::cout << "Bits: " << std::bitset<8>(request->new_state) << std::endl;
-    std::cout << "[CONTROLLER] message received" << std::endl;
+    void topicCallback(
+        const std::shared_ptr<event_system_msgs::srv::SetSystemState::Request> request,
+        std::shared_ptr<event_system_msgs::srv::SetSystemState::Response> response) {
+        std::cout << "Bits: " << std::bitset<8>(request->command_id) << std::endl;
+        std::cout << "[CONTROLLER] message received" << std::endl;
 
-    response->success = true;
-    switch (request->new_state) {
-      case RUN:
-        currentState.store(RUN);
-        response->message = "Running";
-        std::cout << "START" << std::endl;
-        break;
-      case PAUSE:
-        currentState.store(PAUSE);
-        response->message = "Paused";
-        std::cout << "PAUSE" << std::endl;
-        break;
-      case IDLE:
-        currentState.store(IDLE);
-        response->message = "Idle";
-        std::cout << "IDLE" << std::endl;
-        break;
-      case RESET:
-        response->message = "Reset";
-        currentState.store(RESET);
-        std::cout << "RESET" << std::endl;
-        break;
-      default:
-        response->success = false;
-        response->message = "failed";
+        response->success = true;
+        int newState = event_system_msgs::srv::SetSystemState::Request::PAUSE;
+
+        switch (request->command_id) {
+            case event_system_msgs::srv::SetSystemState::Request::RUN:
+                newState = event_system_msgs::srv::SetSystemState::Request::RUN;
+                response->message = "Running";
+                break;
+            case event_system_msgs::srv::SetSystemState::Request::PAUSE:
+                newState = event_system_msgs::srv::SetSystemState::Request::PAUSE;
+                response->message = "Paused";
+                break;
+            case event_system_msgs::srv::SetSystemState::Request::RESET:
+                newState = event_system_msgs::srv::SetSystemState::Request::RESET;
+                response->message = "Reset";
+                std::cout << "RESET" << std::endl;
+                break;
+            default:
+                response->success = false;
+                response->message = "failed";
+        }
+        currentState.store(newState);
     }
-  }
 
-  rclcpp::Service<event_system_interfaces::srv::SetDesState>::SharedPtr subscription_;
+    rclcpp::Service<event_system_msgs::srv::SetSystemState>::SharedPtr m_subscription;
 };

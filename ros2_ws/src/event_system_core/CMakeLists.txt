@@ -19,7 +19,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(gz-math8 REQUIRED)
 find_package(gz-transport13 REQUIRED)
-find_package(event_system_interfaces REQUIRED)
+find_package(event_system_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets Charts Sql REQUIRED)
 
@@ -38,6 +38,7 @@ target_link_libraries(event_system_core
   nlohmann_json::nlohmann_json
   gz-math8::gz-math8
   gz-transport13::gz-transport13
+  atomic
 )
 
 ament_target_dependencies(event_system_core
@@ -47,7 +48,7 @@ ament_target_dependencies(event_system_core
   std_msgs
   behaviortree_cpp
   visualization_msgs
-  event_system_interfaces
+  event_system_msgs
   nav2_msgs
 )
 

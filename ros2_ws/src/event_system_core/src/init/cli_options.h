@@ -1,7 +1,12 @@
 #pragma once
+
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include <string>
+
+inline std::string DEFAULT_SIM_CONFIG = "sim_config.json";
+inline std::string DEFAULT_APPTS      = "appointments.json";
+
 
 struct CliOptions {
     bool stepMode;
@@ -36,11 +41,11 @@ inline CliOptions parseCliArguments(const QCoreApplication& app) {
 
     const QStringList args = parser.positionalArguments();
 
-    std::string rConfig = "sim_config.json";
+    std::string rConfig = DEFAULT_SIM_CONFIG;
     if (parser.isSet(robotConfigOption)) rConfig = parser.value(robotConfigOption).toStdString();
     else if (!args.isEmpty()) rConfig = args.at(0).toStdString();
 
-    std::string aConfig = "appointments.json";
+    std::string aConfig = DEFAULT_APPTS;
     if (parser.isSet(appointmentConfigOption)) aConfig = parser.value(appointmentConfigOption).toStdString();
     else if (args.size() > 1) aConfig = args.at(1).toStdString();
 

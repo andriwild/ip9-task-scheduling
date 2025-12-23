@@ -16,7 +16,7 @@
 
 class SimulationContext {
     int currentTime = 0;
-    std::shared_ptr<des::SimConfig> simConfig;
+    des::SimConfig simConfig;
     std::vector<std::shared_ptr<IObserver>> observers;
     std::shared_ptr<des::Appointment> currentAppointment = nullptr;
 
@@ -30,7 +30,7 @@ public:
     explicit SimulationContext(
         Robot& robot, 
         EventQueue& queue,
-        std::shared_ptr<des::SimConfig> simConfig,
+        des::SimConfig simConfig,
         std::shared_ptr<PathPlannerNode> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
@@ -101,9 +101,9 @@ public:
         }
     }
 
-    double getConversationFoundStd() const { return simConfig->conversationFoundStd; };
-    double getConversationDropOffStd() const { return simConfig->conversationDropOffStd; };
-    double getdriveTimeVariance() const { return simConfig->driveStd; };
+    double getConversationFoundStd() const { return simConfig.conversationFoundStd; };
+    double getConversationDropOffStd() const { return simConfig.conversationDropOffStd; };
+    double getdriveTimeVariance() const { return simConfig.driveStd; };
 
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;

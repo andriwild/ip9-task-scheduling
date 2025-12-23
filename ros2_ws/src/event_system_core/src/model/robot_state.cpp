@@ -12,7 +12,7 @@ void IdleState::enter(Robot& robot) {
 void IdleState::exit(Robot& robot) {
     std::cout << "[State] exit idle " << std::endl;
 }
-void IdleState::handleEvent(Robot& robot) { 
+void IdleState::handleEvent(Robot& _) { 
     std::cout << "[State] handle idle " << std::endl;
 }
 RobotStateType IdleState::getType() const {

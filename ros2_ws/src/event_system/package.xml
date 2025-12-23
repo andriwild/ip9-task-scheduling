@@ -16,7 +16,7 @@
     <depend>event_system_core</depend>
     <depend>event_system_rviz</depend>
     <depend>event_system_tf_transform</depend>
-    <depend>event_system_interfaces</depend>
+    <depend>event_system_msgs</depend>
 
     <export>
         <build_type>ament_cmake</build_type>
