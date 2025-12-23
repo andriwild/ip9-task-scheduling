@@ -6,13 +6,13 @@
 
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
-    if (ctx.robot.isBusy()) { 
+    if (ctx.robot->isBusy()) { 
         ctx.changeRobotState(std::make_unique<IdleState>());
     }
     ctx.notifyLog("Simulation started");
     
-    ctx.robot.setLocation(ctx.robot.getIdleLocation());
-    ctx.notifyMoved(ctx.robot.getIdleLocation(), 0);
+    ctx.robot->setLocation(ctx.robot->getIdleLocation());
+    ctx.notifyMoved(ctx.robot->getIdleLocation(), 0);
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
@@ -52,8 +52,8 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {
-    ctx.robot.setLocation(this->location);
-    ctx.notifyMoved(ctx.robot.getLocation(), this->distance);
+    ctx.robot->setLocation(this->location);
+    ctx.notifyMoved(ctx.robot->getLocation(), this->distance);
 
     if (ctx.behaviorTree) {
         ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
@@ -66,7 +66,7 @@ void ArrivedEvent::execute(SimulationContext& ctx) {
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    if (ctx.robot.isBusy()) {
+    if (ctx.robot->isBusy()) {
         ctx.updateAppointmentState(des::MissionState::CANCELLED);
         this->appointment->state = des::MissionState::FAILED;
         ctx.notifyLog("[WARN] Robot busy, ignoring dispatch.");

@@ -34,6 +34,7 @@ private:
     bool init();
     void setupSimulation();
     void setupObservers();
+    void setupQueue(std::shared_ptr<des::SimConfig> config);
 
     // Qt Application
     std::unique_ptr<QApplication> app;

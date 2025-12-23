@@ -1,5 +1,6 @@
 #include "des_application.h"
 #include <chrono>
+#include <memory>
 #include <thread>
 
 #include "event_system_msgs/srv/set_system_state.hpp"
@@ -56,6 +57,8 @@ bool DesApplication::init() {
         executor.spin();
     });
 
+    timelineView = std::make_unique<Timeline>(SIM_START_TIME, SIM_END_TIME);
+
     return true;
 }
 
@@ -65,7 +68,7 @@ void DesApplication::setupObservers() {
     ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
-    timelineView = std::make_unique<Timeline>(SIM_START_TIME, SIM_END_TIME);
+
 
     if (!opts.headless) {
         timelineView->show();
@@ -77,18 +80,10 @@ void DesApplication::setupObservers() {
     }
 }
 
-int DesApplication::run() {
-    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n";
 
-    if (!init()) {
-        return 1;
-    }
-    auto config = systemConfigNode->currentConfig.load();
-
-    robot = std::make_shared<Robot>(config.robotSpeed, config.robotEscortSpeed);
+void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
+    robot = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
     ctx   = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode, employeeLocations);
-
-    setupObservers();
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
@@ -96,13 +91,27 @@ int DesApplication::run() {
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
     for (const auto &mission : missions) {
-        double buffer = config.timeBuffer - config.missionOverhead;
+        double buffer = config->timeBuffer - config->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
         timelineView->addMeetingPlan(mission->appointment, mission->time);
     }
 
     ctx->behaviorTree = setupBehaviorTree(ctx);
+
+}
+
+int DesApplication::run() {
+    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n";
+
+    if (!init()) {
+        return 1;
+    }
+
+    auto config = std::make_shared<des::SimConfig>(systemConfigNode->currentConfig.load());
+
+    setupQueue(config);
+    setupObservers();
 
     auto applicationState = controllerNode->currentState.load();
 
@@ -113,13 +122,6 @@ int DesApplication::run() {
                 eventQueue.pop();
                 ctx->setTime(e->time);
                 e->execute(*ctx);
-
-                if (opts.stepMode) {
-                    std::cin.get();
-                } else if (opts.delayMs > 0) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(opts.delayMs));
-                }
-
             } else {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }

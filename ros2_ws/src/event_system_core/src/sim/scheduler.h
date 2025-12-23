@@ -17,7 +17,7 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
     for (auto& appt : appointments) {
         auto employeeLocation = locations[appt->personName].front();
 
-        auto startPos = ctx->robot.getIdleLocation();
+        auto startPos = ctx->robot->getIdleLocation();
         
         std::optional<double> travelTo   = ctx->travelTime->estimateDistance(startPos, employeeLocation);
         std::optional<double> escorting  = ctx->travelTime->estimateDistance(employeeLocation, appt.get()->roomName);
@@ -28,7 +28,7 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
         assert(travelBack.has_value());
         
         const double accTravelDist =  travelTo.value() + escorting.value() + travelBack.value();
-        const double travelTime = accTravelDist / ctx->robot.getDefaultSpeed();
+        const double travelTime = accTravelDist / ctx->robot->getDefaultSpeed();
         const int startSeconds = appt.get()->appointmentTime - travelTime;
         missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appt));
     }
