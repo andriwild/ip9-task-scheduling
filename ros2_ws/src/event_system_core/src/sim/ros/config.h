@@ -6,7 +6,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <cmath>
-#include <iostream>
 #include "../../util/types.h"
 
 #include "event_system_msgs/srv/set_system_config.hpp"
@@ -14,7 +13,19 @@
 
 class ConfigNode: public rclcpp::Node {
 public:
-    std::atomic<des::SimConfig> currentConfig {};
+    std::atomic<des::SimConfig> currentConfig { 
+        des::SimConfig {
+            0.2,
+            0.3,
+            0.2,
+            0.1,
+            0.3,
+            0.4,
+            10,
+            30
+        }
+    };
+
 
     ConfigNode() : Node("des_config_node") {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(

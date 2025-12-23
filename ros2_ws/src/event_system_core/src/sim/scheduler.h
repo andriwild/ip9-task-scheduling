@@ -18,7 +18,6 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
         auto employeeLocation = locations[appt->personName].front();
 
         auto startPos = ctx.robot.getIdleLocation();
-        double speed  = ctx.robot.getDefaultSpeed();
         
         std::optional<double> travelTo   = ctx.travelTime->estimateDistance(startPos, employeeLocation);
         std::optional<double> escorting  = ctx.travelTime->estimateDistance(employeeLocation, appt.get()->roomName);
