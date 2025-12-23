@@ -47,11 +47,8 @@ public:
 
     void completeAppointment() {
         assert(currentAppointment != nullptr);
-        std::cout << "calc time diff" << std::endl;
         int  timeDiff = currentTime - currentAppointment->appointmentTime;
         notifyMissionComplete(currentAppointment->state, timeDiff);
-        std::cout << "notifed obs" << std::endl;
-        std::cout << "reset appt pointer" << std::endl;
     }
 
     const std::shared_ptr<des::Appointment> getAppointment() const {
@@ -63,8 +60,12 @@ public:
         currentAppointment->state = newState;
     }
 
+    void resetTime(int newTime) {
+        currentTime = newTime;
+    }
+
     void setTime(int newTime) {
-        assert(newTime > currentTime);
+        assert(newTime >= currentTime);
         currentTime = newTime;
     }
 

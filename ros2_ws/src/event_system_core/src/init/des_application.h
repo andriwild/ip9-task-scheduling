@@ -13,52 +13,54 @@
 #include "../observer/gz.h"
 #include "../observer/metrics.h"
 #include "../observer/term.h"
+#include "../sim/ros/config.h"
+#include "../sim/ros/controller.h"
 #include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
-#include "../sim/ros/controller.h"
-#include "../sim/ros/config.h"
 #include "../sim/scheduler.h"
 #include "../util/data.h"
 #include "../view/timeline.h"
 #include "cli_options.h"
 #include "config_loader.h"
 
-class DesApplication {
+class DesApplication
+{
 public:
-    DesApplication(int argc, char *argv[]);
-    ~DesApplication();
+  DesApplication(int argc, char * argv[]);
+  ~DesApplication();
 
-    int run();
+  int run();
 
 private:
-    bool init();
-    void setupSimulation();
-    void setupObservers();
-    void setupQueue(std::shared_ptr<des::SimConfig> config);
+  bool init();
+  void reset();
+  void setupSimulation();
+  void setupObservers();
+  void setupQueue(std::shared_ptr<des::SimConfig> config);
 
-    // Qt Application
-    std::unique_ptr<QApplication> app;
-    CliOptions opts;
+  // Qt Application
+  std::unique_ptr<QApplication> app;
+  CliOptions opts;
 
-    // Configuration
-    std::optional<std::vector<std::shared_ptr<des::Appointment>>> appointments;
+  // Configuration
+  std::optional<std::vector<std::shared_ptr<des::Appointment>>> appointments;
 
-    // Simulation Data
-    std::shared_ptr<SimulationContext> ctx;
-    EventQueue eventQueue;
-    std::shared_ptr<Robot> robot;
+  // Simulation Data
+  std::shared_ptr<SimulationContext> ctx;
+  EventQueue eventQueue;
+  std::shared_ptr<Robot> robot;
 
-    // ROS
-    std::shared_ptr<PathPlannerNode> plannerNode;
-    std::shared_ptr<ControllerNode> controllerNode;
-    std::shared_ptr<ConfigNode> systemConfigNode;
-    std::thread rosThread;
-    std::thread simThread;
+  // ROS
+  std::shared_ptr<PathPlannerNode> plannerNode;
+  std::shared_ptr<ControllerNode> controllerNode;
+  std::shared_ptr<ConfigNode> systemConfigNode;
+  std::thread rosThread;
+  std::thread simThread;
 
-    // Observers
-    std::shared_ptr<Metrics> metrics;
-    std::shared_ptr<ObserverBridge> bridge;
+  // Observers
+  std::shared_ptr<Metrics> metrics;
+  std::shared_ptr<ObserverBridge> bridge;
 
-    // View
-    std::unique_ptr<Timeline> timelineView;
+  // View
+  std::unique_ptr<Timeline> timelineView;
 };

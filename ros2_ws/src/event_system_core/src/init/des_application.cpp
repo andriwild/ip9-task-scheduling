@@ -1,4 +1,5 @@
 #include "des_application.h"
+
 #include <chrono>
 #include <memory>
 #include <thread>
@@ -9,7 +10,7 @@ constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
 
-DesApplication::DesApplication(int argc, char *argv[]) {
+DesApplication::DesApplication(int argc, char * argv[]) {
     app = std::make_unique<QApplication>(argc, argv);
     QCoreApplication::setApplicationName("Discrete Event System");
     QCoreApplication::setApplicationVersion("1.0");
@@ -27,10 +28,8 @@ DesApplication::~DesApplication() {
 }
 
 bool DesApplication::init() {
-    appointments = ConfigLoader::loadAppointmentConfig(
-        "config/" + opts.appointmentConfigPath, 
-        SIM_START_TIME
-    );
+    appointments =
+        ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
 
     if (!appointments.has_value()) {
         std::cerr << "Failed to read config!\n\n";
@@ -39,8 +38,8 @@ bool DesApplication::init() {
 
     rclcpp::init(0, nullptr);
 
-    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode   = std::make_shared<ControllerNode>();
+    plannerNode = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode = std::make_shared<ControllerNode>();
     systemConfigNode = std::make_shared<ConfigNode>();
 
     if (!plannerNode->isReady()) {
@@ -49,7 +48,7 @@ bool DesApplication::init() {
     }
     std::cout << "Planner ready!\n\n";
 
-    rosThread = std::thread([this] { 
+    rosThread = std::thread([this] {
         rclcpp::executors::MultiThreadedExecutor executor;
         executor.add_node(plannerNode);
         executor.add_node(controllerNode);
@@ -68,29 +67,29 @@ void DesApplication::setupObservers() {
     ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
-
-
     if (!opts.headless) {
         timelineView->show();
         bridge = std::make_shared<ObserverBridge>();
-        QObject::connect(bridge.get(), &ObserverBridge::logReceived,  timelineView.get(), &Timeline::handleLog);
-        QObject::connect(bridge.get(), &ObserverBridge::moveReceived, timelineView.get(), &Timeline::handleMove);
-        QObject::connect(bridge.get(), &ObserverBridge::stateChanged, timelineView.get(), &Timeline::handleStateChange);
+        QObject::connect(bridge.get(), &ObserverBridge::logReceived, timelineView.get(),
+                         &Timeline::handleLog);
+        QObject::connect(bridge.get(), &ObserverBridge::moveReceived, timelineView.get(),
+                         &Timeline::handleMove);
+        QObject::connect(bridge.get(), &ObserverBridge::stateChanged, timelineView.get(),
+                         &Timeline::handleStateChange);
         ctx->addObserver(bridge);
     }
 }
 
-
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     robot = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
-    ctx   = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode, employeeLocations);
+    ctx = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode, employeeLocations);
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
-    for (const auto &mission : missions) {
+    for (const auto& mission : missions) {
         double buffer = config->timeBuffer - config->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
@@ -98,7 +97,27 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     }
 
     ctx->behaviorTree = setupBehaviorTree(ctx);
+}
 
+void DesApplication::reset() {
+    while (!eventQueue.empty()) {
+        eventQueue.pop();
+    }
+
+    timelineView->clear();
+    appointments = ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
+
+    if (!appointments.has_value()) {
+        std::cerr << "Failed to read config!\n\n";
+        return;
+    }
+
+    auto config = std::make_shared<des::SimConfig>(systemConfigNode->currentConfig.load());
+    setupQueue(config);
+
+    ctx->resetTime(SIM_START_TIME);
+
+    std::cout << "System Reset Complete. Waiting for Start..." << std::endl;
 }
 
 int DesApplication::run() {
@@ -116,7 +135,23 @@ int DesApplication::run() {
     auto applicationState = controllerNode->currentState.load();
 
     simThread = std::thread([&] {
-        while (rclcpp::ok() && !eventQueue.empty()) {
+        while (rclcpp::ok()) {
+            applicationState = controllerNode->currentState.load();
+
+            if (applicationState == event_system_msgs::srv::SetSystemState::Request::RESET) {
+                reset();
+                // Wait for state change to avoid multiple resets or immediate start if not desired
+                while (controllerNode->currentState.load() == event_system_msgs::srv::SetSystemState::Request::RESET) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+                continue;
+            }
+
+            if (eventQueue.empty()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
             if (applicationState == event_system_msgs::srv::SetSystemState::Request::RUN) {
                 auto e = eventQueue.top();
                 eventQueue.pop();
@@ -125,7 +160,6 @@ int DesApplication::run() {
             } else {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
-            applicationState = controllerNode->currentState.load();
         }
 
         std::cout << "\033[1m" << "\nSimulation complete!" << std::endl;
