@@ -8,7 +8,7 @@
 #include "escort.h"
 #include "idle.h"
 
-inline std::shared_ptr<BT::Tree> setupBehaviorTree(SimulationContext& ctx) {
+inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
     BT::BehaviorTreeFactory factory;
     
     // search
@@ -79,7 +79,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(SimulationContext& ctx) {
     )";
 
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
-    tree->rootBlackboard()->set("ctx", &ctx);
+    tree->rootBlackboard()->set("ctx", ctx);
 
     //std::string xml_models = BT::writeTreeNodesModelXML(factory);
     return tree;

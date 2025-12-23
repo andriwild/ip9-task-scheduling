@@ -21,14 +21,14 @@ class SimulationContext {
     std::shared_ptr<des::Appointment> currentAppointment = nullptr;
 
 public:
-    Robot& robot;
+    std::shared_ptr<Robot> robot;
     EventQueue& queue;
     std::shared_ptr<PathPlannerNode> travelTime;
     std::map<std::string, std::vector<std::string>> employeeLocations;
     std::shared_ptr<BT::Tree> behaviorTree;
 
     explicit SimulationContext(
-        Robot& robot, 
+        std::shared_ptr<Robot> robot, 
         EventQueue& queue,
         des::SimConfig simConfig,
         std::shared_ptr<PathPlannerNode> travelTime,
@@ -73,8 +73,8 @@ public:
     }
 
     void changeRobotState(std::unique_ptr<RobotState> newState) {
-        robot.changeState(std::move(newState));
-        notifyRobotStateChanged(robot.getState()->getType());
+        robot->changeState(std::move(newState));
+        notifyRobotStateChanged(robot->getState()->getType());
     }
 
     void notifyMissionComplete(des::MissionState state, int timeDiff) {
@@ -108,14 +108,14 @@ public:
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
 
-        if(robot.getLocation() == target){
+        if(robot->getLocation() == target){
             this->queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
             this->notifyLog("Already at " + target);
         } else {
-            std::optional<double> distance = this->travelTime->estimateDistance( this->robot.getLocation(), target);
+            std::optional<double> distance = this->travelTime->estimateDistance( this->robot->getLocation(), target);
             assert(distance.has_value());
 
-            double travelTime = distance.value() / this->robot.getDefaultSpeed();
+            double travelTime = distance.value() / this->robot->getDefaultSpeed();
 
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
             double completeTravelTime = travelTime * noiseFactor;

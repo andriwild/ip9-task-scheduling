@@ -4,6 +4,7 @@
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/basic_types.h>
+#include <memory>
 
 #include "../model/context.h"
 #include "../model/robot_state.h"
@@ -21,7 +22,7 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx             = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx             = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         std::string location = config().blackboard->get<std::string>("location");
         int currentTime      = config().blackboard.get()->get<int>("current_time");
 

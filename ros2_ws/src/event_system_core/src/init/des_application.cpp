@@ -86,14 +86,14 @@ int DesApplication::run() {
     auto config = systemConfigNode->currentConfig.load();
 
     robot = std::make_shared<Robot>(config.robotSpeed, config.robotEscortSpeed);
-    ctx   = std::make_shared<SimulationContext>(*robot, eventQueue, config, plannerNode, employeeLocations);
+    ctx   = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode, employeeLocations);
 
     setupObservers();
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
-    auto missions = scheduleAppointments(appointments.value(), employeeLocations, *ctx);
+    auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
     for (const auto &mission : missions) {
         double buffer = config.timeBuffer - config.missionOverhead;
@@ -102,7 +102,7 @@ int DesApplication::run() {
         timelineView->addMeetingPlan(mission->appointment, mission->time);
     }
 
-    ctx->behaviorTree = setupBehaviorTree(*ctx);
+    ctx->behaviorTree = setupBehaviorTree(ctx);
 
     auto applicationState = controllerNode->currentState.load();
 

@@ -17,7 +17,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         return ctx->robot.isSearching() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -31,7 +31,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         bool personFound = rnd::uni() < ctx->getConversationFoundStd();
         if (personFound){
@@ -53,7 +53,7 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         // TODO: add time randomness
@@ -76,7 +76,7 @@ public:
     }
     
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         auto currentState = ctx->robot.getState();
@@ -103,7 +103,7 @@ public:
     }
     
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         auto searchState = dynamic_cast<SearchState*>(ctx->robot.getState());
@@ -124,12 +124,11 @@ public:
     {}
 
     static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") };
+        return { BT::InputPort<int>("ctx") };
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
-        int currentTime = config().blackboard.get()->get<int>("current_time");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         ctx->notifyLog("Aborting Search!");
         ctx->updateAppointmentState(des::MissionState::FAILED);

@@ -17,7 +17,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         return ctx->robot.isEscorting() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -30,7 +30,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         bool successful = true;
         ctx->notifyLog("Arrived with person at meeting location.");
         return successful ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
@@ -48,7 +48,7 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
+        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
         ctx->notifyLog("Start drop off conversation!");
 
@@ -65,12 +65,12 @@ public:
     {}
 
     static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") };
+        return { BT::InputPort<int>("ctx") };
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<SimulationContext*>("ctx");
-        int currentTime = config().blackboard.get()->get<int>("current_time");
+ 
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         ctx->notifyLog("Aborting Escort!");
         ctx->updateAppointmentState(des::MissionState::FAILED);
