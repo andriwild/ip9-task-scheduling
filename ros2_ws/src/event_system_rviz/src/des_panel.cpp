@@ -3,12 +3,9 @@
 #include <memory>
 #include <rviz_common/display_context.hpp>
 
-#include "event_system_interfaces/srv/set_des_state.hpp"
+#include "event_system_msgs/srv/set_system_state.hpp"
 
 namespace des_panel {
-
-enum SimState { IDLE = 0, RUN = 1 << 0, PAUSE = 1 << 1, RESET = 1 << 2 };
-
 
 DesPanel::DesPanel(QWidget *parent) : Panel(parent) {
     const auto layout = new QVBoxLayout(this);
@@ -33,38 +30,38 @@ DesPanel::DesPanel(QWidget *parent) : Panel(parent) {
 DesPanel::~DesPanel() = default;
 
 void DesPanel::onInitialize() {
-    node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
+    m_nodePtr = getDisplayContext()->getRosNodeAbstraction().lock();
 
-    rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+    rclcpp::Node::SharedPtr node = m_nodePtr->get_raw_node();
 
-    client = node->create_client<event_system_interfaces::srv::SetDesState>("set_des_state");
+    m_client = node->create_client<event_system_msgs::srv::SetSystemState>("set_des_state");
 }
 
 void DesPanel::btnRunClick() {
-    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
-    request->new_state = RUN;
+    auto request = std::make_shared<event_system_msgs::srv::SetSystemState_Request>();
+    request->command_id = event_system_msgs::srv::SetSystemState::Request::RUN;
 
-    client->async_send_request(
+    m_client->async_send_request(
         request,
         std::bind(&DesPanel::onServiceResponse, this, std::placeholders::_1)
     );
 }
 
 void DesPanel::btnPauseClick() {
-    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
-    request->new_state = PAUSE;
+    auto request = std::make_shared<event_system_msgs::srv::SetSystemState_Request>();
+    request->command_id = event_system_msgs::srv::SetSystemState::Request::PAUSE;
 
-    client->async_send_request(
+    m_client->async_send_request(
         request,
         std::bind(&DesPanel::onServiceResponse, this, std::placeholders::_1)
     );
 }
 
 void DesPanel::btnResetClick() {
-    auto request = std::make_shared<event_system_interfaces::srv::SetDesState_Request>();
-    request->new_state = RESET;
+    auto request = std::make_shared<event_system_msgs::srv::SetSystemState_Request>();
+    request->command_id = event_system_msgs::srv::SetSystemState::Request::RESET;
 
-    client->async_send_request(
+    m_client->async_send_request(
         request,
         std::bind(&DesPanel::onServiceResponse, this, std::placeholders::_1)
     );

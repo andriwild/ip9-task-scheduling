@@ -6,9 +6,9 @@
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 #include <std_msgs/msg/byte.hpp>
 
-#include "event_system_interfaces/srv/set_des_state.hpp"
+#include "event_system_msgs/srv/set_system_state.hpp"
 
-using ServiceResponseFuture = rclcpp::Client<event_system_interfaces::srv::SetDesState>::SharedFuture;
+using ServiceResponseFuture = rclcpp::Client<event_system_msgs::srv::SetSystemState>::SharedFuture;
 namespace des_panel {
 
 class DesPanel : public rviz_common::Panel {
@@ -20,9 +20,9 @@ class DesPanel : public rviz_common::Panel {
     void onInitialize() override;
 
 protected:
-    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
-    rclcpp::Service<event_system_interfaces::srv::SetDesState>::SharedPtr service_;
-    rclcpp::Client<event_system_interfaces::srv::SetDesState>::SharedPtr client;
+    std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> m_nodePtr;
+    rclcpp::Service<event_system_msgs::srv::SetSystemState>::SharedPtr m_service;
+    rclcpp::Client<event_system_msgs::srv::SetSystemState>::SharedPtr m_client;
 
     QLabel * m_stateLabel;
     QPushButton * m_btnRun;

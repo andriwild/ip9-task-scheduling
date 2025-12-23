@@ -2,4 +2,7 @@
   <class type="des_panel::DesPanel" base_class_type="rviz_common::Panel">
     <description>Descrete Event System</description>
   </class>
+  <class type="des_system_config::DesSystemConfig" base_class_type="rviz_common::Panel">
+    <description>Descrete Event System Config</description>
+  </class>
 </library>

@@ -2,37 +2,48 @@ cmake_minimum_required(VERSION 3.8)
 project(event_system_rviz)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rviz_common REQUIRED)
-find_package(event_system_interfaces REQUIRED)
+find_package(event_system_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
+
 qt5_wrap_cpp(MOC_FILES
   include/event_system_rviz/des_panel.hpp
+  include/event_system_rviz/des_system_config.hpp
 )
 
-add_library(des_panel src/des_panel.cpp ${MOC_FILES})
-target_include_directories(des_panel PUBLIC
+add_library(event_system_rviz
+  src/des_panel.cpp
+  src/des_system_config.cpp
+  ${MOC_FILES}
+)
+
+target_include_directories(event_system_rviz PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(des_panel
+
+ament_target_dependencies(event_system_rviz
   pluginlib
   rviz_common
-event_system_interfaces
+  event_system_msgs
 )
-install(TARGETS des_panel
+
+install(TARGETS event_system_rviz
         EXPORT export_event_system_rviz
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
 )
+
+
 install(DIRECTORY include/
         DESTINATION include
 )
