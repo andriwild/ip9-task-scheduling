@@ -1,5 +1,0 @@
-# Request
-byte new_state
----
-bool success
-string message
