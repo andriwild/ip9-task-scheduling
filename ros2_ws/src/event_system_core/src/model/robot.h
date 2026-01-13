@@ -5,11 +5,11 @@
 #include "robot_state.h"
 
 class Robot {
-    std::string m_idleLocation = "Dock";
+    std::string m_idleLocation = "IMVS_Dock";
     std::unique_ptr<RobotState> m_state;
     double m_currentSpeed = 0;
     double m_defaultSpeed;
-    double m_escortSpeed;
+    double m_accompanySpeed;
     double m_energy = 100.0;
     std::string m_currentLocation;
 
@@ -17,8 +17,11 @@ public:
     Robot(const double defaultSpeed, const double escortSpeed):
         m_state(std::make_unique<IdleState>()),
         m_defaultSpeed(defaultSpeed),
-        m_escortSpeed(escortSpeed)
+        m_accompanySpeed(escortSpeed)
     {}
+
+    void setDefaultSpeed(double speed) { m_defaultSpeed = speed; }
+    void setAccompanytSpeed(double speed) { m_accompanySpeed = speed; }
 
     std::string getLocation() const;
     void setLocation(std::string location);
@@ -34,7 +37,7 @@ public:
     }
 
     double getDefaultSpeed() const { return m_defaultSpeed; }
-    double getEscortSpeed() const { return m_escortSpeed; }
+    double getEscortSpeed() const { return m_accompanySpeed; }
 
     bool isBusy();
     bool isSearching();

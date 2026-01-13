@@ -34,11 +34,11 @@ public:
         std::shared_ptr<PathPlannerNode> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ):
+        simConfig(simConfig),
         robot(robot),
         queue(queue),
         travelTime(travelTime),
-        employeeLocations(employeeLocations),
-        simConfig(simConfig)
+        employeeLocations(employeeLocations)
     {}
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
@@ -100,6 +100,10 @@ public:
         for (auto obs:observers ) {
             obs->onRobotMoved(currentTime, location, distance);
         }
+    }
+
+    void setConfig(des::SimConfig newConfig) {
+        simConfig = std::make_shared<des::SimConfig>(newConfig);
     }
 
     double getConversationFoundStd() const { return simConfig->conversationFoundStd; };

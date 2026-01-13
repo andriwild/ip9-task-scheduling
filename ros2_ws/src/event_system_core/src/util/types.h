@@ -8,21 +8,23 @@
 namespace des {
     
 	struct Point {
-		double m_x, m_y;
+		double m_x, m_y, m_yaw;
 
 		Point() = default;
 
-		Point(const double pnt, const double pnt1):
+		Point(const double pnt, const double pnt1, const double yaw):
 		    m_x(pnt),
-		    m_y(pnt1)
+		    m_y(pnt1),
+            m_yaw(yaw)
 		{}
 
 		friend std::ostream& operator<<(std::ostream& os, const Point& s) {
-			os << "(" << s.m_x << ", " << s.m_y << ")";
+			os << "(" << s.m_x << ", " << s.m_y << ", " << s.m_yaw << ")";
 			return os;
 		}
 
 	};
+
 	struct Segment {
 		int id;
 		Point m_points[2];
@@ -40,6 +42,22 @@ namespace des {
 		}
 	};
 
+
+    struct Location {
+        std::string m_name;
+        Point m_p;
+    
+        explicit Location(const std::string& name, const Point p):
+            m_name(name),
+            m_p(p) 
+        {}
+    
+        friend std::ostream& operator<<(std::ostream& os, const Location& l) {
+            os << l.m_name << l.m_p;
+            return os;
+        }
+    };
+
     struct SimConfig {
         double personFindProbability;
         double robotSpeed;
@@ -49,6 +67,20 @@ namespace des {
         double conversationDropOffStd;
         double missionOverhead;
         double timeBuffer;
+
+        friend std::ostream& operator<<(std::ostream& os, const SimConfig& c) {
+            os << "............\n";
+            os << "personFindProbability: " << c.personFindProbability << "\n";
+            os << "robotSpeed: " << c.robotSpeed << "\n";
+            os << "robotEscortSpeed: " << c.robotEscortSpeed << "\n";
+            os << "driveStd: " << c.driveStd << "\n";
+            os << "conversationFoundStd: " << c.conversationFoundStd << "\n";
+            os << "conversationDropOffStd: " << c.conversationDropOffStd << "\n";
+            os << "missionOverhead: " << c.missionOverhead << "\n";
+            os << "timeBuffer: " << c.timeBuffer << "\n";
+            os << "............\n";
+            return os;
+        }
     };
 
 	struct Person {

@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QVariant>
 #include <QSql>
+#include <QSqlError>
 #include <optional>
 
 #include "types.h"
@@ -19,9 +20,10 @@ class DBClient {
     const int m_port = 5432;
 
 public:
-    explicit DBClient(std::string user, std::string pw)
-    : m_user(std::move(user)), m_pw(std::move(pw)) {
-       init();
+    explicit DBClient(std::string user, std::string pw): 
+        m_user(std::move(user)),
+        m_pw(std::move(pw)) {
+        init();
     }
 
     ~DBClient() {
@@ -35,7 +37,7 @@ public:
 
     bool init() {
         m_db = QSqlDatabase::addDatabase("QPSQL");
-        m_db.setPort(5432);
+        m_db.setPort(m_port);
         m_db.setHostName(m_host.data());
         m_db.setDatabaseName(m_dbName.data());
         m_db.setUserName(m_user.data());
@@ -48,23 +50,28 @@ public:
         return true;
     }
 
-    std::optional<std::vector<des::Point>> entrances() {
-        if (!m_db.open()) {
-            std::cerr << "Database not connected" << std::endl;
-            return std::nullopt;
-        }
-        std::vector<des::Point> points = {};
-
-        QSqlQuery query("SELECT ST_AsText(coord) FROM room_entrance");
-
-        while (query.next()) {
-            QString wkt = query.value(0).toString();
-            wkt.remove("POINT Z (").remove("POINT(").remove(")");
-            QStringList coords = wkt.split(" ");
-            points.emplace_back( coords[0].toDouble(), coords[1].toDouble() );
-        }
-        return { points };
+std::optional<std::vector<des::Location>> waypoints() {
+    if (!m_db.isOpen() && !m_db.open()) {
+        std::cerr << "Database error: " << m_db.lastError().text().toStdString() << std::endl;
+        return std::nullopt;
     }
+    std::vector<des::Location> locations;
+    QSqlQuery query;
+    if (!query.exec("SELECT name, ST_X(coordinate), ST_Y(coordinate), yaw FROM points_of_interest")) {
+        std::cerr << "Query failed: " << query.lastError().text().toStdString() << std::endl;
+        return std::nullopt;
+    }
+    while (query.next()) {
+        QString name  = query.value(0).toString();
+        double x = query.value(1).toDouble();
+        double y = query.value(2).toDouble();
+        double yaw = query.value(3).toDouble(); 
+        des::Point p = { x, y, yaw };
+        locations.emplace_back(name.toStdString(), p); 
+    }
+    
+    return locations;
+}
 
 
     std::optional<des::Person> personByName(const std::string& firstName, const std::string& lastName) {

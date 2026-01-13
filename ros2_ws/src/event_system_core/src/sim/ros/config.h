@@ -26,7 +26,6 @@ public:
         }
     };
 
-
     ConfigNode() : Node("des_config_node") {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(
             "/set_des_config", 
@@ -34,11 +33,14 @@ public:
         );
     }
 
+    bool isDirty() { return m_dirty; }
+    void configUpdated() { m_dirty = false; }
+
 private:
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
         std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
-        auto config = des::SimConfig{
+        auto config = des::SimConfig {
             request->find_person_probability,
             request->robot_speed,
             request->robot_escort_speed,
@@ -51,7 +53,9 @@ private:
         currentConfig.store(config);
         response->success = true;
         response->message = "successful";
+        m_dirty = true;
     }
 
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;
+    bool m_dirty;
 };
