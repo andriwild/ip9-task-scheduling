@@ -58,7 +58,7 @@ struct SimConfig {
     std::string appointmentsPath;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& c) {
-        os << "............\n";
+        os << "---------------------\n";
         os << "personFindProbability: "     << c.personFindProbability << "\n";
         os << "robotSpeed: "                << c.robotSpeed << "\n";
         os << "robotEscortSpeed: "          << c.robotEscortSpeed << "\n";
@@ -68,7 +68,7 @@ struct SimConfig {
         os << "missionOverhead: "           << c.missionOverhead << "\n";
         os << "timeBuffer: "                << c.timeBuffer << "\n";
         os << "appointmentsPath: "          << c.appointmentsPath << "\n";
-        os << "............\n";
+        os << "---------------------";
         return os;
     }
 };
@@ -82,11 +82,13 @@ struct Person {
     int assignedRoomId;
 };
 
-enum MissionState { PENDING,
-                    COMPLETED,
-                    IN_PROGRESS,
-                    FAILED,
-                    CANCELLED };
+enum MissionState { 
+    PENDING,
+    COMPLETED,
+    IN_PROGRESS,
+    FAILED,
+    CANCELLED 
+};
 
 struct Appointment {
     int id;

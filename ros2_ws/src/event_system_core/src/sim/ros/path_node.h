@@ -45,21 +45,11 @@ public:
     }
 
     PathResult computeDistance(const SimplePose& goal) {
-        auto t1 = std::chrono::high_resolution_clock::now();
-        auto r = computeDistance(goal, {}, false);
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-        std::cout << "Duration: " << duration.count() << " ms" << std::endl;
-        return r;
+        return computeDistance(goal, {}, false);
     }
 
     PathResult computeDistance(const SimplePose& start, const SimplePose& goal) {
-        auto t1 = std::chrono::high_resolution_clock::now();
-        auto r = computeDistance(goal, start, true);
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-        std::cout << "Duration: " << duration.count() << " ms" << std::endl;
-        return r;
+        return computeDistance(goal, start, true);
     }
 
     PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {

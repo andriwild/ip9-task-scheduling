@@ -33,15 +33,15 @@ std::optional<std::vector<des::Location>> DesApplication::loadPointsOfInterest()
 
 bool DesApplication::initROS() {
     rclcpp::init(0, nullptr);
-    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode   = std::make_shared<ControllerNode>();
-    systemConfigNode = std::make_shared<ConfigNode>(robot, ctx);
+    plannerNode = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode = std::make_shared<ControllerNode>();
+    systemConfigNode = std::make_shared<ConfigNode>();
 
     if (!plannerNode->isReady()) {
         std::cerr << "Planner init failed!\n";
         return false;
     }
-    std::cout << "Planner ready!\n\n";
+    std::cout << "Planner ready!\n";
 
     rosThread = std::thread([this] {
         rclcpp::executors::MultiThreadedExecutor executor;
@@ -65,6 +65,11 @@ bool DesApplication::init() {
     if (!pointsOfInterest.has_value()) {
         std::cerr << "Failed to connect DB!\n\n";
         return false;
+    }
+
+    for (auto poi : pointsOfInterest.value()) {
+        std::cout << poi << std::endl;
+        locationMap[poi.m_name] = poi.m_p;
     }
 
     if (!initROS()) {
@@ -104,13 +109,11 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
 }
 
 void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
-    std::cout << "Reset ..." << std::endl;
     while (!eventQueue.empty()) {
         eventQueue.pop();
     }
 
     if (rosObserver) {
-        std::cout << "Clean up Timeline" << std::endl;
         rosObserver->publishReset();
     }
 
@@ -121,7 +124,6 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
         return;
     }
 
-    std::cout << "Setup Queue" << std::endl;
     setupQueue(config);
 
     ctx->resetTime(SIM_START_TIME);
@@ -143,16 +145,18 @@ int DesApplication::run() {
         return 1;
     }
 
-    robot  = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
     config = std::make_shared<des::SimConfig>(systemConfigNode->getConfig());
+    robot  = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
 
     ctx = std::make_shared<SimulationContext>(
         robot,
         eventQueue,
         config,
         plannerNode,
-        employeeLocations
-    );
+        employeeLocations);
+
+    systemConfigNode->setRobot(robot);
+    systemConfigNode->setContext(ctx);
 
     setupQueue(config);
     setupObservers();
@@ -160,7 +164,6 @@ int DesApplication::run() {
     auto applicationState = controllerNode->currentState.load();
 
     simThread = std::thread([&] {
-
         while (rclcpp::ok()) {
             applicationState = controllerNode->currentState.load();
 

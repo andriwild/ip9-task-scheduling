@@ -1,18 +1,18 @@
 #pragma once
 
-#include <cassert>
-#include <vector>
-#include <memory>
 #include <behaviortree_cpp/bt_factory.h>
 
-#include "robot.h"
-#include "event.h"
-#include "robot_state.h"
-#include "../util/types.h"
-#include "../util/rnd.h"
+#include <cassert>
+#include <memory>
+#include <vector>
+
 #include "../observer/observer.h"
 #include "../sim/ros/path_node.h"
-
+#include "../util/rnd.h"
+#include "../util/types.h"
+#include "event.h"
+#include "robot.h"
+#include "robot_state.h"
 
 class SimulationContext {
     int currentTime = 0;
@@ -28,18 +28,15 @@ public:
     std::shared_ptr<BT::Tree> behaviorTree;
 
     explicit SimulationContext(
-        std::shared_ptr<Robot> robot, 
+        std::shared_ptr<Robot> robot,
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> travelTime,
-        std::map<std::string, std::vector<std::string>> employeeLocations
-    ):
-        simConfig(simConfig),
-        robot(robot),
-        queue(queue),
-        travelTime(travelTime),
-        employeeLocations(employeeLocations)
-    {}
+        std::map<std::string, std::vector<std::string>> employeeLocations) : simConfig(simConfig),
+                                                                             robot(robot),
+                                                                             queue(queue),
+                                                                             travelTime(travelTime),
+                                                                             employeeLocations(employeeLocations) {}
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
         currentAppointment = appt;
@@ -47,7 +44,7 @@ public:
 
     void completeAppointment() {
         assert(currentAppointment != nullptr);
-        int  timeDiff = currentTime - currentAppointment->appointmentTime;
+        int timeDiff = currentTime - currentAppointment->appointmentTime;
         notifyMissionComplete(currentAppointment->state, timeDiff);
     }
 
@@ -79,31 +76,33 @@ public:
     }
 
     void notifyMissionComplete(des::MissionState state, int timeDiff) {
-        for (auto obs: observers){
+        for (auto obs : observers) {
             obs->onMissionComplete(currentTime, state, timeDiff);
         }
     }
 
     void notifyRobotStateChanged(RobotStateType newState) {
-        for (auto obs: observers){
+        for (auto obs : observers) {
             obs->onStateChanged(currentTime, newState);
         }
     }
 
     void notifyLog(const std::string& msg) {
-        for (auto obs: observers){
+        for (auto obs : observers) {
             obs->onLog(currentTime, msg);
         }
     }
 
     void notifyMoved(std::string location, double distance) {
-        for (auto obs:observers ) {
+        for (auto obs : observers) {
             obs->onRobotMoved(currentTime, location, distance);
         }
     }
 
     void setConfig(des::SimConfig newConfig) {
         simConfig = std::make_shared<des::SimConfig>(newConfig);
+        std::cout << "New config active" << std::endl;
+        std::cout << *simConfig << std::endl;
     }
 
     double getConversationFoundStd() const { return simConfig->conversationFoundStd; };
@@ -113,11 +112,11 @@ public:
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
 
-        if(robot->getLocation() == target){
+        if (robot->getLocation() == target) {
             this->queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
             this->notifyLog("Already at " + target);
         } else {
-            std::optional<double> distance = this->travelTime->estimateDistance( this->robot->getLocation(), target);
+            std::optional<double> distance = this->travelTime->estimateDistance(this->robot->getLocation(), target);
             assert(distance.has_value());
 
             double travelTime = distance.value() / this->robot->getDefaultSpeed();
@@ -125,7 +124,7 @@ public:
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
             double completeTravelTime = travelTime * noiseFactor;
             arrivalTime = currentTime + completeTravelTime;
-            
+
             this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
             this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(completeTravelTime - travelTime) + ")");
         }

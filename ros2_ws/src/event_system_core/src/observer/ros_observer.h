@@ -9,7 +9,10 @@ class RosObserver : public IObserver {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
         m_publisher = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>(
-            "/timeline_events", rclcpp::QoS(10));
+            "/timeline_events",
+            rclcpp::QoS(10)
+        );
+        publishReset();
     }
 
     void onLog(int time, const std::string& message) override {
