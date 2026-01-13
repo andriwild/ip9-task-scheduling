@@ -1,21 +1,23 @@
 #pragma once
 
-#include <QLabel>
-#include <QPushButton>
-#include <QDoubleSpinBox>
 #include <QCheckBox>
+#include <QDoubleSpinBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
 #include <rviz_common/panel.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 
 #include "event_system_msgs/srv/set_system_config.hpp"
 
 using ServiceResponseFuture = rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedFuture;
-namespace des_system_config {
+namespace des_system_config
+{
 
-class DesSystemConfig: public rviz_common::Panel {
+class DesSystemConfig : public rviz_common::Panel {
     Q_OBJECT
 
-public:
+    public:
     explicit DesSystemConfig(QWidget * parent = 0);
     ~DesSystemConfig() override;
     void onInitialize() override;
@@ -33,6 +35,7 @@ protected:
     QDoubleSpinBox * m_missionOverhead;
     QDoubleSpinBox * m_timeBuffer;
     QCheckBox * m_enableLogging;
+    QLineEdit * m_appointmentsPath;
 
     QPushButton * m_btnSetConfig;
     QLabel * m_statusLabel;
@@ -42,4 +45,4 @@ private Q_SLOTS:
     void onServiceResponse(ServiceResponseFuture future);
 };
 
-}
+}  // namespace des_system_config

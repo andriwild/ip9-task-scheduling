@@ -3,7 +3,8 @@
 #include <memory>
 #include <rviz_common/display_context.hpp>
 
-namespace des_system_config {
+namespace des_system_config
+{
 
 DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     const auto layout = new QFormLayout(this);
@@ -43,18 +44,22 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
 
     m_enableLogging = new QCheckBox();
 
+    m_appointmentsPath = new QLineEdit();
+    m_appointmentsPath->setText("appointments.json");
+
     m_btnSetConfig = new QPushButton("Set Config");
-    m_statusLabel  = new QLabel("[status]");
+    m_statusLabel = new QLabel("[status]");
 
     layout->addRow("Find Person Prob:", m_findPersonProb);
-    layout->addRow("Drive Std:",        m_driveStd);
-    layout->addRow("Robot Speed:",      m_robotSpeed);
-    layout->addRow("Escort Speed:",     m_robotEscortSpeed);
-    layout->addRow("Conv Found Std:",   m_conversationFoundStd);
+    layout->addRow("Drive Std:", m_driveStd);
+    layout->addRow("Robot Speed:", m_robotSpeed);
+    layout->addRow("Escort Speed:", m_robotEscortSpeed);
+    layout->addRow("Conv Found Std:", m_conversationFoundStd);
     layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
     layout->addRow("Mission Overhead:", m_missionOverhead);
-    layout->addRow("Time Buffer:",      m_timeBuffer);
-    layout->addRow("Enable Logging:",   m_enableLogging);
+    layout->addRow("Time Buffer:", m_timeBuffer);
+    layout->addRow("Enable Logging:", m_enableLogging);
+    layout->addRow("Appointments Path:", m_appointmentsPath);
     layout->addRow(m_btnSetConfig);
     layout->addRow(m_statusLabel);
 
@@ -69,19 +74,19 @@ void DesSystemConfig::onInitialize() {
     m_client = node->create_client<event_system_msgs::srv::SetSystemConfig>("/set_des_config");
 }
 
-void DesSystemConfig::onSetConfig()
-{
+void DesSystemConfig::onSetConfig() {
     auto request = std::make_shared<event_system_msgs::srv::SetSystemConfig::Request>();
 
-    request->find_person_probability   = m_findPersonProb->value();
-    request->drive_std                 = m_driveStd->value();
-    request->robot_speed               = m_robotSpeed->value();
-    request->robot_escort_speed        = m_robotEscortSpeed->value();
-    request->conversation_found_std    = m_conversationFoundStd->value();
+    request->find_person_probability = m_findPersonProb->value();
+    request->drive_std = m_driveStd->value();
+    request->robot_speed = m_robotSpeed->value();
+    request->robot_escort_speed = m_robotEscortSpeed->value();
+    request->conversation_found_std = m_conversationFoundStd->value();
     request->conversation_drop_off_std = m_conversationDropOffStd->value();
-    request->mission_overhead          = m_missionOverhead->value();
-    request->time_buffer               = m_timeBuffer->value();
-    request->enable_logging            = m_enableLogging->isChecked();
+    request->mission_overhead = m_missionOverhead->value();
+    request->time_buffer = m_timeBuffer->value();
+    request->enable_logging = m_enableLogging->isChecked();
+    request->appointments_path = m_appointmentsPath->text().toStdString();
 
     m_statusLabel->setText("Sending...");
 

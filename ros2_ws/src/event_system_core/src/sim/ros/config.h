@@ -3,54 +3,51 @@
 
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <tf2/LinearMath/Quaternion.h>
-#include <cmath>
-#include "../../util/types.h"
 
+#include <cmath>
+#include <rclcpp/rclcpp.hpp>
+
+#include "../../util/types.h"
 #include "event_system_msgs/srv/set_system_config.hpp"
 
-
-class ConfigNode: public rclcpp::Node {
+class ConfigNode : public rclcpp::Node {
 public:
-    std::atomic<des::SimConfig> currentConfig { 
-        des::SimConfig {
-            0.2,
-            0.3,
-            0.2,
-            0.1,
-            0.3,
-            0.4,
-            10,
-            30
-        }
-    };
+    des::SimConfig getConfig()
+    {
+        std::lock_guard<std::mutex> lock(m_configMutex);
+        return currentConfig;
+    }
 
-    ConfigNode() : Node("des_config_node") {
+    ConfigNode() : Node("des_config_node")
+    {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(
-            "/set_des_config", 
-            std::bind(&ConfigNode::topicCallback, this, std::placeholders::_1, std::placeholders::_2)
-        );
+            "/set_des_config",
+            std::bind(&ConfigNode::topicCallback, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     bool isDirty() { return m_dirty; }
     void configUpdated() { m_dirty = false; }
 
 private:
+    des::SimConfig currentConfig{
+        des::SimConfig{0.2, 0.3, 0.2, 0.1, 0.3, 0.4, 10, 30, "appointments.json"}};
+    std::mutex m_configMutex;
+
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
-        std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
-        auto config = des::SimConfig {
-            request->find_person_probability,
-            request->robot_speed,
-            request->robot_escort_speed,
-            request->drive_std,
-            request->conversation_found_std,
-            request->conversation_drop_off_std,
-            request->mission_overhead,
-            request->time_buffer
-        };
-        currentConfig.store(config);
+        std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response)
+    {
+        auto config =
+            des::SimConfig{request->find_person_probability, request->robot_speed,
+                request->robot_escort_speed,      request->drive_std,
+                request->conversation_found_std,  request->conversation_drop_off_std,
+                request->mission_overhead,        request->time_buffer,
+                request->appointments_path};
+        {
+            std::lock_guard<std::mutex> lock(m_configMutex);
+            currentConfig = config;
+        }
         response->success = true;
         response->message = "successful";
         m_dirty = true;
