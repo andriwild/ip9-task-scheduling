@@ -16,12 +16,7 @@ public:
     {}
 
     void onRobotMoved(int time, const std::string& location, double distance) override {
-        auto p = mapToGzLocation(locationMap[location]); // TODO: robustness?
+        auto p = locationMap[location]; // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };
-
-private:
-    des::Point mapToGzLocation(des::Point& point) {
-        return {-point.m_y, point.m_x};
-    }
 };

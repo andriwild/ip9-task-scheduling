@@ -18,7 +18,7 @@ public:
   : Node("gazebo_tf_broadcaster")
   {
     this->declare_parameter("publish_frequency", 1.0);
-    this->declare_parameter("world_name", "imvs");
+    this->declare_parameter("world_name", "fhnw");
     this->declare_parameter("robot_name", "dingo");
     this->declare_parameter("base_frame", "base_link");
 
@@ -81,22 +81,14 @@ private:
           pose.orientation().w()
         );
 
-        // -90° yaw correction to gazebo
-        tf2::Quaternion rotation_correction;
-        rotation_correction.setRPY(0, 0, -M_PI / 2);
-
-        tf2::Quaternion corrected_quat = rotation_correction * gazebo_quat;
-        corrected_quat.normalize();
-
-        // y and x swapped
-        odom_to_base.transform.translation.x = pose.position().y();
-        odom_to_base.transform.translation.y = -pose.position().x();
+        odom_to_base.transform.translation.x = pose.position().x();
+        odom_to_base.transform.translation.y = pose.position().y();
         odom_to_base.transform.translation.z = pose.position().z();
 
-        odom_to_base.transform.rotation.w = corrected_quat.w();
-        odom_to_base.transform.rotation.x = corrected_quat.x();
-        odom_to_base.transform.rotation.y = corrected_quat.y();
-        odom_to_base.transform.rotation.z = corrected_quat.z();
+        odom_to_base.transform.rotation.w = pose.orientation().w();
+        odom_to_base.transform.rotation.x = pose.orientation().x();
+        odom_to_base.transform.rotation.y = pose.orientation().y();
+        odom_to_base.transform.rotation.z = pose.orientation().z();
 
         m_tf_broadcaster->sendTransform(map_to_odom);
         m_tf_broadcaster->sendTransform(odom_to_base);

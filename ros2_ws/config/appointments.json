@@ -2,13 +2,13 @@
     "appointments": [
         {
             "personName": "Max",
-            "roomName": "Printer",
+            "roomName": "IMVS_Printer",
             "appointmentTime": 7200,
             "description": "Massage"
         },
         {
             "personName": "Leo",
-            "roomName": "Printer",
+            "roomName": "IMVS_Printer",
             "appointmentTime": 18000,
             "description": "Nachhilfe"
         }

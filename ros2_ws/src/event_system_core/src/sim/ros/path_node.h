@@ -1,6 +1,7 @@
 // How to write action clients: https://automaticaddison.com/how-to-create-an-action-ros-2-jazzy/
 #pragma once
 
+#include <chrono>
 #include <mutex>
 #include <cmath>
 
@@ -9,6 +10,7 @@
 #include <nav2_msgs/action/compute_path_to_pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <string>
 #include <tf2/LinearMath/Quaternion.h>
 #include "../../util/types.h"
 
@@ -42,11 +44,21 @@ public:
     }
 
     PathResult computeDistance(const SimplePose& goal) {
-        return computeDistance(goal, {}, false);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto r = computeDistance(goal, {}, false);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+        std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+        return r;
     }
 
     PathResult computeDistance(const SimplePose& start, const SimplePose& goal) {
-        return computeDistance(goal, start, true);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto r = computeDistance(goal, start, true);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+        std::cout << "Duration: " << duration.count() << " ms" << std::endl;
+        return r;
     }
 
     PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {
@@ -90,7 +102,11 @@ public:
         auto fromIt = locationMap.find(from);
         auto toIt   = locationMap.find(to);
 
-        assert(fromIt != locationMap.end() && toIt != locationMap.end());
+        std::cout << from << " -> " << to << std::endl;
+        if(fromIt == locationMap.end() && toIt == locationMap.end()){
+                assert(false);
+        }
+
 
         SimplePose start { fromIt->second.m_x, fromIt->second.m_y, 0.0 };
         SimplePose goal  { toIt->second.m_x, toIt->second.m_y, 0.0 };

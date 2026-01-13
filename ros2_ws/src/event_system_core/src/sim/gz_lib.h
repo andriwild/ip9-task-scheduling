@@ -8,7 +8,7 @@ namespace sim {
         gz::transport::Node node;
         std::vector<std::string> services;
         node.ServiceList(services);
-        std::cout << "Verfügbare Services:" << std::endl;
+        std::cout << "Available Services:" << std::endl;
         for (const auto &service: services) {
             std::cout << "  " << service << std::endl;
         }
@@ -28,7 +28,7 @@ namespace sim {
 
         gz::msgs::Boolean rep;
         bool result;
-        bool executed = node.Request("/world/imvs/set_pose", req, 5000, rep, result);
+        bool executed = node.Request("/world/fhnw/set_pose", req, 5000, rep, result);
         if (executed) {
             if (!result)
                 std::cout << "Service call failed" << std::endl;
@@ -72,7 +72,7 @@ namespace sim {
         req.set_sdf(ss.str());
 
 
-        bool executed = node.Request("/world/imvs/create", req, 1000, res, result);
+        bool executed = node.Request("/world/fhnw/create", req, 1000, res, result);
         if (executed)
         {
             if (result)
