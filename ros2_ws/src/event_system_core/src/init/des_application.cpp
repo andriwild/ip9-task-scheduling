@@ -8,6 +8,9 @@
 
 #include "event_system_msgs/srv/set_system_state.hpp"
 
+std::string DEFAULT_SIM_CONFIG = "sim_config.json";
+std::string DEFAULT_APPTS      = "appointments.json";
+
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
@@ -16,7 +19,6 @@ DesApplication::DesApplication(int argc, char * argv[]) {
     app = std::make_unique<QApplication>(argc, argv);
     QCoreApplication::setApplicationName("Discrete Event System");
     QCoreApplication::setApplicationVersion("1.0");
-    opts = parseCliArguments(*app);
 }
 
 DesApplication::~DesApplication() {
@@ -39,7 +41,7 @@ std::optional<std::vector<des::Location>> DesApplication::loadPointsOfInterest()
 }
 
 bool DesApplication::init() {
-    appointments = ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
+    appointments = ConfigLoader::loadAppointmentConfig("config/" + DEFAULT_SIM_CONFIG, SIM_START_TIME);
     pointsOfInterest = loadPointsOfInterest();
 
     if (!appointments.has_value()) {
@@ -88,21 +90,18 @@ void DesApplication::setupObservers() {
     ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 
-    if (!opts.headless) {
-        timelineView->show();
-        bridge = std::make_shared<ObserverBridge>();
-        QObject::connect(bridge.get(), &ObserverBridge::logReceived, timelineView.get(), &Timeline::handleLog);
-        QObject::connect(bridge.get(), &ObserverBridge::moveReceived, timelineView.get(), &Timeline::handleMove);
-        QObject::connect(bridge.get(), &ObserverBridge::stateChanged, timelineView.get(), &Timeline::handleStateChange);
-        ctx->addObserver(bridge);
-    }
+    timelineView->show();
+    bridge = std::make_shared<ObserverBridge>();
+    QObject::connect(bridge.get(), &ObserverBridge::logReceived, timelineView.get(), &Timeline::handleLog);
+    QObject::connect(bridge.get(), &ObserverBridge::moveReceived, timelineView.get(), &Timeline::handleMove);
+    QObject::connect(bridge.get(), &ObserverBridge::stateChanged, timelineView.get(), &Timeline::handleStateChange);
+    ctx->addObserver(bridge);
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config)
 {
     robot = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
-    ctx = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode,
-                                              employeeLocations);
+    ctx = std::make_shared<SimulationContext>(robot, eventQueue, config, plannerNode, employeeLocations);
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
@@ -126,7 +125,7 @@ void DesApplication::reset() {
         eventQueue.pop();
     }
 
-    appointments = ConfigLoader::loadAppointmentConfig("config/" + opts.appointmentConfigPath, SIM_START_TIME);
+    appointments = ConfigLoader::loadAppointmentConfig("config/" + DEFAULT_APPTS, SIM_START_TIME);
 
     if (!appointments.has_value()) {
         std::cerr << "Failed to read config!\n\n";

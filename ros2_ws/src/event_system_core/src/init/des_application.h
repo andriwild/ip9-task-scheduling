@@ -21,7 +21,6 @@
 #include "../util/data.h"
 #include "../util/db.h"
 #include "../view/timeline.h"
-#include "cli_options.h"
 #include "config_loader.h"
 
 class DesApplication
@@ -43,7 +42,6 @@ private:
 
     // Qt Application
     std::unique_ptr<QApplication> app;
-    CliOptions opts;
 
     // Configuration
     std::optional<std::vector<std::shared_ptr<des::Appointment>>> appointments;

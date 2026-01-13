@@ -12,33 +12,6 @@ using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
 
 class ConfigLoader {
 public:
-    static std::optional<std::shared_ptr<des::SimConfig>> loadDESConfig(std::string filePath) {
-        auto jsonOpt = getJson(filePath);
-        if(!jsonOpt.has_value()) {
-            return std::nullopt;
-        }
-
-        auto json = jsonOpt.value();
-        
-        des::SimConfig config;
-        try {
-            config.personFindProbability   = json.at("find_person_probability");
-            config.robotSpeed              = json.at("robot_speed");
-            config.robotEscortSpeed        = json.at("robot_escort_speed");
-            config.driveStd                = json.at("drive_std");
-            config.conversationFoundStd    = json.at("conversation_found_std");
-            config.conversationDropOffStd  = json.at("conversation_drop_off_std");
-            config.missionOverhead         = json.at("missionOverhead");
-            config.timeBuffer              = json.at("timeBuffer");
-
-
-        } catch (const nlohmann::json::type_error& e) {
-            std::cerr << "Failed to parse json file: " << filePath << std::endl;
-            return std::nullopt;
-        }
-        return std::make_shared<des::SimConfig>(config);
-    };
-
     static std::optional<AppointmentList>loadAppointmentConfig(
         std::string filePath, 
         int sim_start_time
