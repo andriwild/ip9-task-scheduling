@@ -17,11 +17,14 @@ set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
   include/event_system_rviz/des_panel.hpp
   include/event_system_rviz/des_system_config.hpp
+  include/event_system_rviz/des_timeline_panel.hpp
+  include/event_system_rviz/timeline.hpp
 )
 
 add_library(event_system_rviz
   src/des_panel.cpp
   src/des_system_config.cpp
+  src/des_timeline_panel.cpp
   ${MOC_FILES}
 )
 

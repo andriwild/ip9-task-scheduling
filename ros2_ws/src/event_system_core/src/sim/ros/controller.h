@@ -28,7 +28,6 @@ private:
   void topicCallback(const std::shared_ptr<event_system_msgs::srv::SetSystemState::Request> request,
                      std::shared_ptr<event_system_msgs::srv::SetSystemState::Response> response)
   {
-    std::cout << "Bits: " << std::bitset<8>(request->command_id) << std::endl;
     std::cout << "[CONTROLLER] message received" << std::endl;
 
     response->success = true;

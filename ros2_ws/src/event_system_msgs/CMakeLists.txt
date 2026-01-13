@@ -13,6 +13,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "srv/SetSystemState.srv"
     "srv/SetSystemConfig.srv"
     "msg/SystemConfig.msg"
+    "msg/TimelineEvent.msg"
 )
 
 if(BUILD_TESTING)

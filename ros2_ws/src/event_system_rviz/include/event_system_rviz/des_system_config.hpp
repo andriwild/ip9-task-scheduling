@@ -27,19 +27,19 @@ protected:
     rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_client;
     rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subscriber;
 
-    QDoubleSpinBox * m_findPersonProb;
-    QDoubleSpinBox * m_driveStd;
-    QDoubleSpinBox * m_robotSpeed;
-    QDoubleSpinBox * m_robotEscortSpeed;
-    QDoubleSpinBox * m_conversationFoundStd;
-    QDoubleSpinBox * m_conversationDropOffStd;
-    QDoubleSpinBox * m_missionOverhead;
-    QDoubleSpinBox * m_timeBuffer;
-    QCheckBox * m_enableLogging;
-    QLineEdit * m_appointmentsPath;
+    QDoubleSpinBox* m_findPersonProb;
+    QDoubleSpinBox* m_driveStd;
+    QDoubleSpinBox* m_robotSpeed;
+    QDoubleSpinBox* m_robotEscortSpeed;
+    QDoubleSpinBox* m_conversationFoundStd;
+    QDoubleSpinBox* m_conversationDropOffStd;
+    QDoubleSpinBox* m_missionOverhead;
+    QDoubleSpinBox* m_timeBuffer;
+    QCheckBox* m_enableLogging;
+    QLineEdit* m_appointmentsPath;
 
-    QPushButton * m_btnSetConfig;
-    QLabel * m_statusLabel;
+    QPushButton* m_btnSetConfig;
+    QLabel* m_statusLabel;
 
 private Q_SLOTS:
     void onSetConfig();

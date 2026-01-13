@@ -5,6 +5,7 @@
 #include <mutex>
 #include <cmath>
 
+#include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <nav2_msgs/action/compute_path_to_pose.hpp>
@@ -102,11 +103,13 @@ public:
         auto fromIt = locationMap.find(from);
         auto toIt   = locationMap.find(to);
 
-        std::cout << from << " -> " << to << std::endl;
-        if(fromIt == locationMap.end() && toIt == locationMap.end()){
-                assert(false);
+        if(fromIt == locationMap.end() || toIt == locationMap.end()){
+            std::cerr << "ERROR\t" <<  from << " or " << to << "  not found in map!" << std::endl;
+            for(auto [k,_]: locationMap) {
+                std::cout << k << std::endl;
+            }
+            return std::nullopt;
         }
-
 
         SimplePose start { fromIt->second.m_x, fromIt->second.m_y, 0.0 };
         SimplePose goal  { toIt->second.m_x, toIt->second.m_y, 0.0 };

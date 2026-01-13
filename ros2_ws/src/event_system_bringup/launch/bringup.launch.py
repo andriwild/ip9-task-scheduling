@@ -18,4 +18,20 @@ def generate_launch_description():
                 'use_sim_time': use_sim_time,
             }]
         ),
+        Node(
+            package='event_system_tf_transform',
+            executable='transform_node',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+            }]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+            }]
+        )
     ])

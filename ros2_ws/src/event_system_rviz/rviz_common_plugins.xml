@@ -5,4 +5,7 @@
   <class type="des_system_config::DesSystemConfig" base_class_type="rviz_common::Panel">
     <description>Descrete Event System Config</description>
   </class>
+  <class type="des_timeline_panel::DesTimelinePanel" base_class_type="rviz_common::Panel">
+    <description>Descrete Event System Timeline</description>
+  </class>
 </library>

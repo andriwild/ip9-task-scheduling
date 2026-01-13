@@ -2,3 +2,5 @@ log
 install
 build
 /log/
+./config/sim_config.json
+

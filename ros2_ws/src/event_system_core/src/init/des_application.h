@@ -1,39 +1,45 @@
 #pragma once
 
 #include <QApplication>
-#include <iostream>
 #include <memory>
 #include <thread>
 #include <vector>
 
-#include "../behaviour/bt_setup.h"
 #include "../model/context.h"
 #include "../model/event.h"
-#include "../observer/bridge.h"
-#include "../observer/gz.h"
 #include "../observer/metrics.h"
-#include "../observer/term.h"
+#include "../observer/ros_observer.h"
 #include "../sim/ros/config.h"
 #include "../sim/ros/controller.h"
 #include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
-#include "../sim/scheduler.h"
 #include "../util/data.h"
-#include "../util/db.h"
-#include "../view/timeline.h"
-#include "config_loader.h"
 
-class DesApplication
-{
+class DesApplication {
 public:
-    DesApplication(int argc, char * argv[]);
-    ~DesApplication();
+
+    DesApplication(int argc, char * argv[]) {
+        app = std::make_unique<QApplication>(argc, argv);
+        QCoreApplication::setApplicationName("Discrete Event System");
+        QCoreApplication::setApplicationVersion("1.0");
+    }
+
+    ~DesApplication() {
+        if (rosThread.joinable()) {
+            rosThread.join();
+        }
+        rclcpp::shutdown();
+        if (simThread.joinable()) {
+            simThread.join();
+        }
+    }
 
     int run();
 
 private:
     bool init();
-    void reset();
+    bool initROS();
+    void reset(std::shared_ptr<des::SimConfig> config);
     void setupSimulation();
     void setupObservers();
     void updateConfig(des::SimConfig config);
@@ -48,6 +54,7 @@ private:
 
     // Simulation Data
     std::shared_ptr<SimulationContext> ctx;
+    std::shared_ptr<des::SimConfig> config;
     EventQueue eventQueue;
     std::shared_ptr<Robot> robot;
     std::optional<std::vector<des::Location>> pointsOfInterest;
@@ -61,8 +68,7 @@ private:
 
     // Observers
     std::shared_ptr<Metrics> metrics;
-    std::shared_ptr<ObserverBridge> bridge;
 
     // View
-    std::unique_ptr<Timeline> timelineView;
+    std::shared_ptr<RosObserver> rosObserver;
 };

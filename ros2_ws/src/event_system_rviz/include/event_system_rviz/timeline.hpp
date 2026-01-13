@@ -10,8 +10,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../model/robot_state.h"
-#include "../util/types.h"
+#include "timeline_types.hpp"
 
 constexpr int TIMELINE_HEIGHT = 350;
 constexpr int TIMELINE_SCENE_MARGIN = 50;
@@ -47,8 +46,8 @@ class Timeline final : public QGraphicsView {
     Q_OBJECT
 
     QGraphicsScene * m_scene;
-    const int m_simEndTime;
     const int m_simStartTime;
+    const int m_simEndTime;
     int m_duration;
 
     double m_pixelsPerSecond;
@@ -65,10 +64,9 @@ class Timeline final : public QGraphicsView {
 public:
     explicit Timeline(int start, int end, double pixelsPerSecond = 0.025)
         : QGraphicsView(),
-        m_simStartTime(start),
-        m_simEndTime(end),
-        m_pixelsPerSecond(pixelsPerSecond)
-    {
+          m_simStartTime(start),
+          m_simEndTime(end),
+          m_pixelsPerSecond(pixelsPerSecond) {
         m_duration = m_simEndTime - m_simStartTime;
         m_scene = new QGraphicsScene(this);
 
@@ -123,6 +121,10 @@ public slots:
         viewport()->update();
     }
 
+    void handleReset() {
+        clear();
+    }
+
     void zoomIn() { applyZoom(1.5); }
     void zoomOut() { applyZoom(0.66); }
 
@@ -133,18 +135,18 @@ protected:
         int barY = Y_LINE_POS;
 
         auto getColor = [](int type) -> QColor {
-            switch (static_cast<RobotStateType>(type)) {
-                case RobotStateType::IDLE:
+            switch (static_cast<des::RobotStateType>(type)) {
+                case des::RobotStateType::IDLE:
                     return Qt::lightGray;
-                case RobotStateType::MOVING:
+                case des::RobotStateType::MOVING:
                     return QColor(100, 200, 100);
-                case RobotStateType::ESCORTING:
+                case des::RobotStateType::ESCORTING:
                     return QColor(200, 150, 50);
-                case RobotStateType::CHARGING:
+                case des::RobotStateType::CHARGING:
                     return Qt::yellow;
-                case RobotStateType::SEARCHING:
+                case des::RobotStateType::SEARCHING:
                     return QColor(200, 100, 100);
-                case RobotStateType::CONVERSATE:
+                case des::RobotStateType::CONVERSATE:
                     return QColor(180, 215, 230);
                 default:
                     return Qt::gray;
@@ -190,8 +192,8 @@ protected:
         const double MIN_TICK_PX = 10.0;
         const double MIN_LABEL_PX = 80.0;
 
-        const std::vector<int> intervals = {1,   2,    5,    10,   30,    60,    120,  300,
-            600, 1800, 3600, 7200, 14400, 21600, 43200};
+        const std::vector<int> intervals = {1, 2, 5, 10, 30, 60, 120, 300,
+                                            600, 1800, 3600, 7200, 14400, 21600, 43200};
 
         int tickStep = 3600;
         for (int interval : intervals) {
@@ -368,8 +370,7 @@ private:
                                      QBrush(QColor(100, 100, 100, 50)));
         rect->setZValue(Z_PLAN_LINE);
 
-        QString labelText =
-            QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
+        QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
         drawEventMarker({appt.get()->appointmentTime, labelText, "MEETING"}, Qt::red);
     }
 };
