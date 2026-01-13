@@ -8,22 +8,34 @@
 #include <cmath>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../../init/config_loader.h"
 #include "../../util/types.h"
+#include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
 
 class ConfigNode : public rclcpp::Node {
 public:
-    des::SimConfig getConfig()
-    {
+    des::SimConfig getConfig() {
         std::lock_guard<std::mutex> lock(m_configMutex);
         return currentConfig;
     }
 
-    ConfigNode() : Node("des_config_node")
-    {
+    ConfigNode() : Node("des_config_node") {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(
             "/set_des_config",
             std::bind(&ConfigNode::topicCallback, this, std::placeholders::_1, std::placeholders::_2));
+
+        m_publisher = this->create_publisher<event_system_msgs::msg::SystemConfig>(
+            "/system_config", rclcpp::QoS(1).transient_local());
+
+        // Load initial config
+        auto loadedConfig = ConfigLoader::loadSimConfig("config/sim_config.json");
+        if (loadedConfig.has_value()) {
+            currentConfig = loadedConfig.value();
+        } else {
+            std::cerr << "Failed to load sim_config.json, using defaults." << std::endl;
+        }
+        publishConfig();
     }
 
     bool isDirty() { return m_dirty; }
@@ -36,23 +48,42 @@ private:
 
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
-        std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response)
-    {
+        std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
         auto config =
             des::SimConfig{request->find_person_probability, request->robot_speed,
-                request->robot_escort_speed,      request->drive_std,
-                request->conversation_found_std,  request->conversation_drop_off_std,
-                request->mission_overhead,        request->time_buffer,
-                request->appointments_path};
+                           request->robot_escort_speed, request->drive_std,
+                           request->conversation_found_std, request->conversation_drop_off_std,
+                           request->mission_overhead, request->time_buffer,
+                           request->appointments_path};
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
             currentConfig = config;
         }
+        ConfigLoader::saveSimConfig("config/sim_config.json", config);
+        publishConfig();
         response->success = true;
         response->message = "successful";
         m_dirty = true;
     }
 
+    void publishConfig() {
+        auto msg = event_system_msgs::msg::SystemConfig();
+        {
+            std::lock_guard<std::mutex> lock(m_configMutex);
+            msg.find_person_probability     = currentConfig.personFindProbability;
+            msg.drive_std                   = currentConfig.driveStd;
+            msg.robot_speed                 = currentConfig.robotSpeed;
+            msg.robot_escort_speed          = currentConfig.robotEscortSpeed;
+            msg.conversation_found_std      = currentConfig.conversationFoundStd;
+            msg.conversation_drop_off_std   = currentConfig.conversationDropOffStd;
+            msg.mission_overhead            = currentConfig.missionOverhead;
+            msg.time_buffer                 = currentConfig.timeBuffer;
+            msg.appointments_path           = currentConfig.appointmentsPath;
+        }
+        m_publisher->publish(msg);
+    }
+
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;
+    rclcpp::Publisher<event_system_msgs::msg::SystemConfig>::SharedPtr m_publisher;
     bool m_dirty;
 };

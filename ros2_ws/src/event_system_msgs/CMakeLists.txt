@@ -12,6 +12,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
     "srv/SetSystemState.srv"
     "srv/SetSystemConfig.srv"
+    "msg/SystemConfig.msg"
 )
 
 if(BUILD_TESTING)

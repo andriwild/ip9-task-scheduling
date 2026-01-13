@@ -11,10 +11,10 @@ struct Point {
 
     Point() = default;
 
-    Point(const double pnt, const double pnt1, const double yaw) : m_x(pnt), m_y(pnt1), m_yaw(yaw) {}
+    Point(const double pnt, const double pnt1, const double yaw): 
+        m_x(pnt), m_y(pnt1), m_yaw(yaw) {}
 
-    friend std::ostream& operator<<(std::ostream& os, const Point& s)
-    {
+    friend std::ostream& operator<<(std::ostream& os, const Point& s) {
         os << "(" << s.m_x << ", " << s.m_y << ", " << s.m_yaw << ")";
         return os;
     }
@@ -26,11 +26,9 @@ struct Segment {
 
     Segment() = default;
 
-    Segment(const int segment_id, const Point& p1, const Point& p2) : id(segment_id), m_points{p1, p2}
-    {
+    Segment(const int segment_id, const Point& p1, const Point& p2) : id(segment_id), m_points{p1, p2} {
     }
-    friend std::ostream& operator<<(std::ostream& os, const Segment& s)
-    {
+    friend std::ostream& operator<<(std::ostream& os, const Segment& s) {
         os << "Segment id=" << s.id << ", p1=" << s.m_points[0] << ", p2=" << s.m_points[1];
         return os;
     }
@@ -42,8 +40,7 @@ struct Location {
 
     explicit Location(const std::string& name, const Point p) : m_name(name), m_p(p) {}
 
-    friend std::ostream& operator<<(std::ostream& os, const Location& l)
-    {
+    friend std::ostream& operator<<(std::ostream& os, const Location& l) {
         os << l.m_name << l.m_p;
         return os;
     }
@@ -62,15 +59,15 @@ struct SimConfig {
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& c) {
         os << "............\n";
-        os << "personFindProbability: " << c.personFindProbability << "\n";
-        os << "robotSpeed: " << c.robotSpeed << "\n";
-        os << "robotEscortSpeed: " << c.robotEscortSpeed << "\n";
-        os << "driveStd: " << c.driveStd << "\n";
-        os << "conversationFoundStd: " << c.conversationFoundStd << "\n";
-        os << "conversationDropOffStd: " << c.conversationDropOffStd << "\n";
-        os << "missionOverhead: " << c.missionOverhead << "\n";
-        os << "timeBuffer: " << c.timeBuffer << "\n";
-        os << "appointmentsPath: " << c.appointmentsPath << "\n";
+        os << "personFindProbability: "     << c.personFindProbability << "\n";
+        os << "robotSpeed: "                << c.robotSpeed << "\n";
+        os << "robotEscortSpeed: "          << c.robotEscortSpeed << "\n";
+        os << "driveStd: "                  << c.driveStd << "\n";
+        os << "conversationFoundStd: "      << c.conversationFoundStd << "\n";
+        os << "conversationDropOffStd: "    << c.conversationDropOffStd << "\n";
+        os << "missionOverhead: "           << c.missionOverhead << "\n";
+        os << "timeBuffer: "                << c.timeBuffer << "\n";
+        os << "appointmentsPath: "          << c.appointmentsPath << "\n";
         os << "............\n";
         return os;
     }
@@ -85,7 +82,11 @@ struct Person {
     int assignedRoomId;
 };
 
-enum MissionState { PENDING, COMPLETED, IN_PROGRESS, FAILED, CANCELLED };
+enum MissionState { PENDING,
+                    COMPLETED,
+                    IN_PROGRESS,
+                    FAILED,
+                    CANCELLED };
 
 struct Appointment {
     int id;
