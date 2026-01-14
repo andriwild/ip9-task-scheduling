@@ -19,7 +19,7 @@ class DesSystemConfig : public rviz_common::Panel {
 
 public:
     explicit DesSystemConfig(QWidget * parent = 0);
-    ~DesSystemConfig() override;
+    ~DesSystemConfig() = default;
     void onInitialize() override;
 
 protected:

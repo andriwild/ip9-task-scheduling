@@ -15,8 +15,10 @@
 #include "config_loader.h"
 #include "event_system_msgs/srv/set_system_state.hpp"
 
-std::string DEFAULT_SIM_CONFIG = "sim_config.json";
-std::string DEFAULT_APPTS = "appointments.json";
+using SystemState = event_system_msgs::srv::SetSystemState::Request;
+
+const std::string DEFAULT_SIM_CONFIG = "sim_config.json";
+const std::string DEFAULT_APPTS = "appointments.json";
 
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
@@ -58,12 +60,12 @@ bool DesApplication::init() {
     pointsOfInterest = loadPointsOfInterest();
 
     if (!appointments.has_value()) {
-        std::cerr << "Failed to read config!\n\n";
+        std::cerr << "Failed to read config!\n";
         return false;
     }
 
     if (!pointsOfInterest.has_value()) {
-        std::cerr << "Failed to connect DB!\n\n";
+        std::cerr << "Failed to connect DB!\n";
         return false;
     }
 
@@ -81,7 +83,7 @@ bool DesApplication::init() {
 }
 
 void DesApplication::setupObservers() {
-    metrics = std::make_shared<Metrics>(Metrics());
+    metrics     = std::make_shared<Metrics>(Metrics());
     rosObserver = std::make_shared<RosObserver>(systemConfigNode);
 
     ctx->addObserver(metrics);
@@ -125,9 +127,7 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
     }
 
     setupQueue(config);
-
     ctx->resetTime(SIM_START_TIME);
-
     std::cout << "System Reset Complete. Waiting for Start..." << std::endl;
 }
 
@@ -167,18 +167,24 @@ int DesApplication::run() {
         while (rclcpp::ok()) {
             applicationState = controllerNode->currentState.load();
 
-            if (applicationState == event_system_msgs::srv::SetSystemState::Request::RESET) {
-                reset(config);
-                controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
-            }
+            switch(applicationState) {
+                case SystemState::RESET:
+                    reset(config);
+                    controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
+                    break;
 
-            if (applicationState == event_system_msgs::srv::SetSystemState::Request::RUN && !eventQueue.empty()) {
-                auto e = eventQueue.top();
-                eventQueue.pop();
-                ctx->setTime(e->time);
-                e->execute(*ctx);
-            } else {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                case SystemState::PAUSE:
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    break;
+
+                case SystemState::RUN:
+                    if(!eventQueue.empty()) {
+                        auto e = eventQueue.top();
+                        eventQueue.pop();
+                        ctx->setTime(e->time);
+                        e->execute(*ctx);
+                    }
+                    break;
             }
         }
 

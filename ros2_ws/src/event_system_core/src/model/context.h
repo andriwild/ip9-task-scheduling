@@ -32,11 +32,14 @@ public:
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> travelTime,
-        std::map<std::string, std::vector<std::string>> employeeLocations) : simConfig(simConfig),
-                                                                             robot(robot),
-                                                                             queue(queue),
-                                                                             travelTime(travelTime),
-                                                                             employeeLocations(employeeLocations) {}
+        std::map<std::string, std::vector<std::string>> employeeLocations
+    ): 
+        simConfig(simConfig),
+        robot(robot),
+        queue(queue),
+        travelTime(travelTime),
+        employeeLocations(employeeLocations) 
+    {}
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
         currentAppointment = appt;
@@ -105,6 +108,7 @@ public:
         std::cout << *simConfig << std::endl;
     }
 
+    double getPersonFindProbability() const { return simConfig->personFindProbability; };
     double getConversationFoundStd() const { return simConfig->conversationFoundStd; };
     double getConversationDropOffStd() const { return simConfig->conversationDropOffStd; };
     double getdriveTimeVariance() const { return simConfig->driveStd; };

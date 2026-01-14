@@ -26,8 +26,10 @@ struct Segment {
 
     Segment() = default;
 
-    Segment(const int segment_id, const Point& p1, const Point& p2) : id(segment_id), m_points{p1, p2} {
-    }
+    Segment(const int segment_id, const Point& p1, const Point& p2):
+        id(segment_id), m_points{p1, p2} 
+    {}
+
     friend std::ostream& operator<<(std::ostream& os, const Segment& s) {
         os << "Segment id=" << s.id << ", p1=" << s.m_points[0] << ", p2=" << s.m_points[1];
         return os;
@@ -57,18 +59,19 @@ struct SimConfig {
     double timeBuffer;
     std::string appointmentsPath;
 
-    friend std::ostream& operator<<(std::ostream& os, const SimConfig& c) {
-        os << "---------------------\n";
-        os << "personFindProbability: "     << c.personFindProbability << "\n";
-        os << "robotSpeed: "                << c.robotSpeed << "\n";
-        os << "robotEscortSpeed: "          << c.robotEscortSpeed << "\n";
-        os << "driveStd: "                  << c.driveStd << "\n";
-        os << "conversationFoundStd: "      << c.conversationFoundStd << "\n";
-        os << "conversationDropOffStd: "    << c.conversationDropOffStd << "\n";
-        os << "missionOverhead: "           << c.missionOverhead << "\n";
-        os << "timeBuffer: "                << c.timeBuffer << "\n";
-        os << "appointmentsPath: "          << c.appointmentsPath << "\n";
-        os << "---------------------";
+    friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
+        const int W = 25;
+        std::cout << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
+        std::cout << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability    << std::endl;
+        std::cout << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed               << std::endl;
+        std::cout << std::left << std::setw(W) << "robotEscortSpeed"         << ": " << config.robotEscortSpeed         << std::endl;
+        std::cout << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
+        std::cout << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
+        std::cout << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;
+        std::cout << std::left << std::setw(W) << "missionOverhead"          << ": " << config.missionOverhead          << std::endl;
+        std::cout << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer               << std::endl;
+        std::cout << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath         << std::endl;
+        std::cout << "----------------------------\n" << std::endl;
         return os;
     }
 };

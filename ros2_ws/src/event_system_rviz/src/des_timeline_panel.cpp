@@ -43,7 +43,6 @@ void DesTimelinePanel::onTimelineEvent(const event_system_msgs::msg::TimelineEve
         appt->description = msg->description;
         appt->personName = msg->person_name;
         appt->appointmentTime = msg->time + msg->duration;  // Reconstruct appointment time
-
         m_timeline->addMeetingPlan(appt, msg->time);
     } else if (msg->type == event_system_msgs::msg::TimelineEvent::RESET) {
         m_timeline->handleReset();

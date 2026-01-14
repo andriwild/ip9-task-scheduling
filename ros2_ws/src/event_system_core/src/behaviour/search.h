@@ -33,7 +33,7 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        bool personFound = rnd::uni() < ctx->getConversationFoundStd();
+        bool personFound = rnd::uni() < ctx->getPersonFindProbability();
         if (personFound){
             ctx->notifyLog("Person found: " + ctx->getAppointment()->personName);
             return BT::NodeStatus::SUCCESS;
@@ -53,7 +53,7 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         // TODO: add time randomness

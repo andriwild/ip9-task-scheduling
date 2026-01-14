@@ -62,6 +62,7 @@ public:
             config.conversationDropOffStd   = j.at("conversation_drop_off_std").get<double>();
             config.missionOverhead          = j.at("missionOverhead").get<double>();
             config.timeBuffer               = j.at("timeBuffer").get<double>();
+
             if (j.contains("appointments_path")) {
                 config.appointmentsPath = j.at("appointments_path").get<std::string>();
             } else {
@@ -95,26 +96,6 @@ public:
         return true;
     }
 
-    static void printDESConfig(
-        const std::shared_ptr<des::SimConfig> config,
-        const std::string& simFilePath,
-        const std::string& apptFilePath) 
-    {
-        const int W = 25;
-
-        std::cout << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
-
-        std::cout << std::left << std::setw(W) << "Sim Config"                  << ": " << simFilePath << std::endl;
-        std::cout << std::left << std::setw(W) << "Apptiontemt Config"          << ": " << apptFilePath << std::endl;
-        std::cout << std::left << std::setw(W) << "Person Find Prob."           << ": " << config.get()->personFindProbability << std::endl;
-        std::cout << std::left << std::setw(W) << "Sim Speed"                   << ": " << config.get()->robotSpeed << std::endl;
-        std::cout << std::left << std::setw(W) << "Escort Speed"                << ": " << config.get()->robotEscortSpeed << std::endl;
-        std::cout << std::left << std::setw(W) << "conversation_found_std"      << ": " << config.get()->conversationFoundStd << std::endl;
-        std::cout << std::left << std::setw(W) << "conversation_drop_off_std"   << ": " << config.get()->conversationDropOffStd << std::endl;
-
-        std::cout << "----------------------------\n"
-                  << std::endl;
-    }
 
 private:
     static std::optional<nlohmann::json> getJson(std::string& filePath) {

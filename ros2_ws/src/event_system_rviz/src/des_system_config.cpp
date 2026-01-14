@@ -5,41 +5,34 @@
 
 namespace des_system_config {
 
+
 DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     const auto layout = new QFormLayout(this);
 
     m_findPersonProb = new QDoubleSpinBox();
     m_findPersonProb->setRange(0.0, 1.0);
     m_findPersonProb->setSingleStep(0.01);
-    m_findPersonProb->setValue(0.5);
 
     m_driveStd = new QDoubleSpinBox();
     m_driveStd->setRange(0.0, 100.0);
-    m_driveStd->setValue(1.0);
 
     m_robotSpeed = new QDoubleSpinBox();
     m_robotSpeed->setRange(0.0, 10.0);
-    m_robotSpeed->setValue(1.0);
 
     m_robotEscortSpeed = new QDoubleSpinBox();
     m_robotEscortSpeed->setRange(0.0, 10.0);
-    m_robotEscortSpeed->setValue(0.5);
 
     m_conversationFoundStd = new QDoubleSpinBox();
     m_conversationFoundStd->setRange(0.0, 100.0);
-    m_conversationFoundStd->setValue(5.0);
 
     m_conversationDropOffStd = new QDoubleSpinBox();
     m_conversationDropOffStd->setRange(0.0, 100.0);
-    m_conversationDropOffStd->setValue(5.0);
 
     m_missionOverhead = new QDoubleSpinBox();
     m_missionOverhead->setRange(0.0, 100.0);
-    m_missionOverhead->setValue(10.0);
 
     m_timeBuffer = new QDoubleSpinBox();
     m_timeBuffer->setRange(0.0, 100.0);
-    m_timeBuffer->setValue(5.0);
 
     m_enableLogging = new QCheckBox();
 
@@ -50,9 +43,9 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_statusLabel = new QLabel("[status]");
 
     layout->addRow("Find Person Prob:", m_findPersonProb);
-    layout->addRow("Drive Std:", m_driveStd);
+    layout->addRow("Drive time Std:", m_driveStd);
     layout->addRow("Robot Speed:", m_robotSpeed);
-    layout->addRow("Escort Speed:", m_robotEscortSpeed);
+    layout->addRow("Accompany Speed:", m_robotEscortSpeed);
     layout->addRow("Conv Found Std:", m_conversationFoundStd);
     layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
     layout->addRow("Mission Overhead:", m_missionOverhead);
@@ -65,7 +58,6 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     QObject::connect(m_btnSetConfig, &QPushButton::released, this, &DesSystemConfig::onSetConfig);
 }
 
-DesSystemConfig::~DesSystemConfig() = default;
 
 void DesSystemConfig::onInitialize() {
     m_nodePtr = getDisplayContext()->getRosNodeAbstraction().lock();
@@ -94,8 +86,7 @@ void DesSystemConfig::onSetConfig() {
 
     m_statusLabel->setText("Sending...");
 
-    m_client->async_send_request(
-        request, std::bind(&DesSystemConfig::onServiceResponse, this, std::placeholders::_1));
+    m_client->async_send_request(request, std::bind(&DesSystemConfig::onServiceResponse, this, std::placeholders::_1));
 }
 
 void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
