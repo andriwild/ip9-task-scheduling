@@ -1,7 +1,4 @@
 {
-    "find_person_probability": 0.9,
-    "robot_speed": 0.5,
-    "robot_escort_speed": 0.2,
     "appointments": [
         {
             "personName": "Max",

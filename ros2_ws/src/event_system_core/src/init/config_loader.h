@@ -57,7 +57,7 @@ public:
             config.personFindProbability    = j.at("find_person_probability").get<double>();
             config.driveStd                 = j.at("drive_std").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();
-            config.robotEscortSpeed         = j.at("robot_escort_speed").get<double>();
+            config.robotAccompanySpeed         = j.at("robot_accompany_speed").get<double>();
             config.conversationFoundStd     = j.at("conversation_found_std").get<double>();
             config.conversationDropOffStd   = j.at("conversation_drop_off_std").get<double>();
             config.missionOverhead          = j.at("missionOverhead").get<double>();
@@ -80,7 +80,7 @@ public:
         j["find_person_probability"]    = config.personFindProbability;
         j["drive_std"]                  = config.driveStd;
         j["robot_speed"]                = config.robotSpeed;
-        j["robot_escort_speed"]         = config.robotEscortSpeed;
+        j["robot_accompany_speed"]         = config.robotAccompanySpeed;
         j["conversation_found_std"]     = config.conversationFoundStd;
         j["conversation_drop_off_std"]  = config.conversationDropOffStd;
         j["missionOverhead"]            = config.missionOverhead;

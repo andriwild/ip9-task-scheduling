@@ -14,10 +14,10 @@ class Robot {
     std::string m_currentLocation;
 
 public:
-    Robot(const double defaultSpeed, const double escortSpeed):
+    Robot(const double defaultSpeed, const double accompanySpeed):
         m_state(std::make_unique<IdleState>()),
         m_defaultSpeed(defaultSpeed),
-        m_accompanySpeed(escortSpeed)
+        m_accompanySpeed(accompanySpeed)
     {}
 
     void setDefaultSpeed(double speed) { m_defaultSpeed = speed; }
@@ -37,10 +37,10 @@ public:
     }
 
     double getDefaultSpeed() const { return m_defaultSpeed; }
-    double getEscortSpeed() const { return m_accompanySpeed; }
+    double getAccompanySpeed() const { return m_accompanySpeed; }
 
     bool isBusy();
     bool isSearching();
-    bool isEscorting();
+    bool isAccompany();
     bool isConversate();
 };

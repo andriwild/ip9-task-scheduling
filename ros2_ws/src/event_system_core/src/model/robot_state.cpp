@@ -19,20 +19,20 @@ RobotStateType IdleState::getType() const {
     return RobotStateType::IDLE;
 }
 
-void EscortState::enter(Robot& robot) { 
-    std::cout << "[State] enter escort " << std::endl;
-    robot.setSpeed(robot.getEscortSpeed());
+void AccompanyState::enter(Robot& robot) { 
+    std::cout << "[State] enter accompany " << std::endl;
+    robot.setSpeed(robot.getAccompanySpeed());
 }
-void EscortState::exit(Robot& robot) {
-    std::cout << "[State] exit escort " << std::endl;
+void AccompanyState::exit(Robot& robot) {
+    std::cout << "[State] exit accompany " << std::endl;
 }
-void EscortState::handleEvent(Robot& robot) { 
-    std::cout << "[State] handle escort " << std::endl;
+void AccompanyState::handleEvent(Robot& robot) { 
+    std::cout << "[State] handle accompany " << std::endl;
 }
-bool EscortState::isEscorting() const { return true; };
+bool AccompanyState::isAccompany() const { return true; };
 
-RobotStateType EscortState::getType() const {
-    return RobotStateType::ESCORTING;
+RobotStateType AccompanyState::getType() const {
+    return RobotStateType::ACCOMPANY;
 }
 
 

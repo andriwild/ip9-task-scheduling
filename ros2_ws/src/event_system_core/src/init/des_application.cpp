@@ -133,7 +133,7 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
 
 void DesApplication::updateConfig(des::SimConfig config) {
     robot->setDefaultSpeed(config.robotSpeed);
-    robot->setAccompanytSpeed(config.robotEscortSpeed);
+    robot->setAccompanytSpeed(config.robotAccompanySpeed);
     ctx->setConfig(config);
     std::cout << config << std::endl;
 }
@@ -146,7 +146,7 @@ int DesApplication::run() {
     }
 
     config = std::make_shared<des::SimConfig>(systemConfigNode->getConfig());
-    robot  = std::make_shared<Robot>(config->robotSpeed, config->robotEscortSpeed);
+    robot  = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
 
     ctx = std::make_shared<SimulationContext>(
         robot,

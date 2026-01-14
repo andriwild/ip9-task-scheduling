@@ -9,7 +9,7 @@ namespace des {
 enum class RobotStateType {
     IDLE,
     MOVING,
-    ESCORTING,
+    ACCOMPANY,
     SEARCHING,
     CHARGING,
     CONVERSATE

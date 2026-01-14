@@ -5,7 +5,7 @@
 
 class Metrics:  public IObserver {
     int searchTime = 0;
-    int escortTime = 0;
+    int accompanyTime = 0;
     int idleTime = 0;
     int moveTime = 0;
     int talkTime = 0;
@@ -27,7 +27,7 @@ class Metrics:  public IObserver {
 public:
 
     void show() {
-        int totalDriveTime = escortTime + searchTime + moveTime;
+        int totalDriveTime = accompanyTime + searchTime + moveTime;
         double totalTime = static_cast<double>(chargingTime +  idleTime + totalDriveTime);
         
         std::cout << "\n" << "\033[1;33m" << "=== SIMULATION METRICS REPORT ===" << "\033[0m" << "\n\n";
@@ -43,7 +43,7 @@ public:
         printRow(totalTime, "Idle",      idleTime);
         printRow(totalTime, "Moving",    moveTime);
         printRow(totalTime, "Searching", searchTime);
-        printRow(totalTime, "Escorting", escortTime);
+        printRow(totalTime, "Accompany", accompanyTime);
         printRow(totalTime, "Charging",  chargingTime);
 
         std::cout << "----------------------------------------\n";
@@ -77,7 +77,7 @@ public:
 
         std::cout << "\n";
         std::cout << "\033[1m" << "--- General ---" << "\033[0m" << "\n";
-        std::cout << "Utilization:       " << std::fixed << std::setprecision(2) << (searchTime + escortTime) / totalTime * 100 << " %\n";
+        std::cout << "Utilization:       " << std::fixed << std::setprecision(2) << (searchTime + accompanyTime) / totalTime * 100 << " %\n";
         std::cout << "=================================\n\n";
     }
 
@@ -87,7 +87,7 @@ public:
         
         switch(lastState) {
             case RobotStateType::CHARGING:   chargingTime += passedTime; break;
-            case RobotStateType::ESCORTING:  escortTime   += passedTime; break;
+            case RobotStateType::ACCOMPANY:  accompanyTime   += passedTime; break;
             case RobotStateType::SEARCHING:  searchTime   += passedTime; break;
             case RobotStateType::IDLE:       idleTime     += passedTime; break;
             case RobotStateType::MOVING:     moveTime     += passedTime; break;

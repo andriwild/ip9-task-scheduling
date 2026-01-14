@@ -25,7 +25,7 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     bool successful = rnd::uni() > ctx.getConversationFoundStd();
     if(successful) {
         ctx.notifyLog("Conversation ended successful. Person for accompany convinced.");
-        ctx.changeRobotState(std::make_unique<EscortState>());
+        ctx.changeRobotState(std::make_unique<AccompanyState>());
         ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
     } else {
         ctx.notifyLog("Conversation failed.");

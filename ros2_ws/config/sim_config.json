@@ -5,7 +5,7 @@
     "drive_std": 3.25,
     "find_person_probability": 0.5,
     "missionOverhead": 30.0,
-    "robot_escort_speed": 1.2000000476837158,
+    "robot_accompany_speed": 1.2000000476837158,
     "robot_speed": 0.38999998569488525,
     "timeBuffer": 65.0
 }

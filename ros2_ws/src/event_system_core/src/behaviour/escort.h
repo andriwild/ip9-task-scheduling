@@ -10,15 +10,15 @@
 #include "../model/robot_state.h"
 
 
-class IsEscorting : public BT::ConditionNode {
+class IsAccompany : public BT::ConditionNode {
 public:
-    IsEscorting(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
+    IsAccompany(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        return ctx->robot->isEscorting() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        return ctx->robot->isAccompany() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
  
@@ -58,9 +58,9 @@ public:
     }
 };
 
-class AbortEscort: public BT::SyncActionNode {
+class AbortAccompany: public BT::SyncActionNode {
 public:
-    AbortEscort(const std::string& name, const BT::NodeConfig& config):
+    AbortAccompany(const std::string& name, const BT::NodeConfig& config):
         BT::SyncActionNode(name, config) 
     {}
 
@@ -72,7 +72,7 @@ public:
  
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        ctx->notifyLog("Aborting Escort!");
+        ctx->notifyLog("Aborting Accompany!");
         ctx->updateAppointmentState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;

@@ -54,7 +54,7 @@ private:
             des::SimConfig{
                 request->find_person_probability,
                 request->robot_speed,
-                request->robot_escort_speed,
+                request->robot_accompany_speed,
                 request->drive_std,
                 request->conversation_found_std,
                 request->conversation_drop_off_std,
@@ -70,7 +70,7 @@ private:
         response->success = true;
         response->message = "successful";
         if (m_robot) {
-            m_robot->setAccompanytSpeed(config.robotEscortSpeed);
+            m_robot->setAccompanytSpeed(config.robotAccompanySpeed);
             m_robot->setSpeed(config.robotSpeed);
         }
         if (m_ctx) {
@@ -85,7 +85,7 @@ private:
             msg.find_person_probability = currentConfig.personFindProbability;
             msg.drive_std = currentConfig.driveStd;
             msg.robot_speed = currentConfig.robotSpeed;
-            msg.robot_escort_speed = currentConfig.robotEscortSpeed;
+            msg.robot_accompany_speed = currentConfig.robotAccompanySpeed;
             msg.conversation_found_std = currentConfig.conversationFoundStd;
             msg.conversation_drop_off_std = currentConfig.conversationDropOffStd;
             msg.mission_overhead = currentConfig.missionOverhead;

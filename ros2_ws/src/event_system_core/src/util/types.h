@@ -51,7 +51,7 @@ struct Location {
 struct SimConfig {
     double personFindProbability;
     double robotSpeed;
-    double robotEscortSpeed;
+    double robotAccompanySpeed;
     double driveStd;
     double conversationFoundStd;
     double conversationDropOffStd;
@@ -64,7 +64,7 @@ struct SimConfig {
         std::cout << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
         std::cout << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability    << std::endl;
         std::cout << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed               << std::endl;
-        std::cout << std::left << std::setw(W) << "robotEscortSpeed"         << ": " << config.robotEscortSpeed         << std::endl;
+        std::cout << std::left << std::setw(W) << "robotAccompanySpeed"      << ": " << config.robotAccompanySpeed      << std::endl;
         std::cout << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
         std::cout << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
         std::cout << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;

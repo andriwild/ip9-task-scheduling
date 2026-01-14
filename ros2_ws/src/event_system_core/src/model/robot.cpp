@@ -28,9 +28,9 @@ bool Robot::isSearching() {
 };
 
 
-bool Robot::isEscorting() {
+bool Robot::isAccompany() {
     if(!m_state) return false;
-    return m_state->isEscorting();
+    return m_state->isAccompany();
 };
 
 

@@ -16,14 +16,14 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<ScanLocation>("ScanLocation");
     factory.registerNodeType<HasNextLocation>("HasNextLocation");
     factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
-    factory.registerNodeType<StartEscortConversation>("StartEscortConversation");
+    factory.registerNodeType<StartAccompanyConversation>("StartAccompanyConversation");
     factory.registerNodeType<AbortSearch>("AbortSearch");
 
-    // escort
-    factory.registerNodeType<IsEscorting>("IsEscorting");
+    // accompany
+    factory.registerNodeType<IsAccompany>("IsAccompany");
     factory.registerNodeType<ArrivedWithPerson>("ArrivedWithPerson");
     factory.registerNodeType<StartDropoffConversation>("StartDropoffConversation");
-    factory.registerNodeType<AbortEscort>("AbortEscort");
+    factory.registerNodeType<AbortAccompany>("AbortAccompany");
 
     // idle
     factory.registerNodeType<Docking>("Docking");
@@ -34,7 +34,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
          <BehaviorTree ID="MainTree">
             <Fallback name="Fallback_MainStrategy">
                 <SubTree ID="SearchRoutine" _autoremap="true"/>
-                <SubTree ID="EscortRoutine" _autoremap="true"/>
+                <SubTree ID="AccompanyRoutine" _autoremap="true"/>
                 <SubTree ID="IdleRoutine" _autoremap="true"/>
             </Fallback>
          </BehaviorTree>
@@ -45,7 +45,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                 <Fallback name="Fallback_SearchActions">
                     <Sequence name="Seq_FoundTarget">
                         <ScanLocation/>
-                        <StartEscortConversation/>
+                        <StartAccompanyConversation/>
                     </Sequence>
                     <Sequence name="Seq_NextLocation">
                         <HasNextLocation/>
@@ -56,15 +56,15 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
             </Sequence>
         </BehaviorTree>
 
-        <BehaviorTree ID="EscortRoutine">
-            <Sequence name="Seq_EscortMain">
-                <IsEscorting/>
-                <Fallback name="Fallback_EscortActions">
+        <BehaviorTree ID="AccompanyRoutine">
+            <Sequence name="Seq_AccompanyMain">
+                <IsAccompany/>
+                <Fallback name="Fallback_AccompanyActions">
                     <Sequence name="Seq_ArrivalAndDropoff">
                         <ArrivedWithPerson/>
                         <StartDropoffConversation/>
                     </Sequence>
-                    <AbortEscort/>
+                    <AbortAccompany/>
                 </Fallback>
             </Sequence>
         </BehaviorTree>

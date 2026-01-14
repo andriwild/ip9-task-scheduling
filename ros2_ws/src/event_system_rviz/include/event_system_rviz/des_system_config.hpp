@@ -30,7 +30,7 @@ protected:
     QDoubleSpinBox* m_findPersonProb;
     QDoubleSpinBox* m_driveStd;
     QDoubleSpinBox* m_robotSpeed;
-    QDoubleSpinBox* m_robotEscortSpeed;
+    QDoubleSpinBox* m_robotAccompanySpeed;
     QDoubleSpinBox* m_conversationFoundStd;
     QDoubleSpinBox* m_conversationDropOffStd;
     QDoubleSpinBox* m_missionOverhead;

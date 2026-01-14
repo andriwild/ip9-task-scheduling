@@ -140,7 +140,7 @@ protected:
                     return Qt::lightGray;
                 case des::RobotStateType::MOVING:
                     return QColor(100, 200, 100);
-                case des::RobotStateType::ESCORTING:
+                case des::RobotStateType::ACCOMPANY:
                     return QColor(200, 150, 50);
                 case des::RobotStateType::CHARGING:
                     return Qt::yellow;

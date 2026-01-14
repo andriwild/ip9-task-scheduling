@@ -8,7 +8,7 @@ class Robot;
 enum class RobotStateType {
     IDLE,
     MOVING,
-    ESCORTING,
+    ACCOMPANY,
     SEARCHING,
     CHARGING,
     CONVERSATE
@@ -20,7 +20,7 @@ public:
     virtual ~RobotState() = default;
     virtual bool isBusy() const { return true; };
     virtual bool isSearching() const { return false; };
-    virtual bool isEscorting() const { return false; };
+    virtual bool isAccompany() const { return false; };
     virtual bool isConversate() const { return false; };
     virtual void enter(Robot& robot) = 0;
     virtual void handleEvent(Robot& robot) = 0;
@@ -45,12 +45,12 @@ public:
     RobotStateType getType() const override;
 };
 
-class EscortState : public  RobotState {
+class AccompanyState : public  RobotState {
 public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    bool isEscorting() const override;
+    bool isAccompany() const override;
     RobotStateType getType() const override;
 };
 

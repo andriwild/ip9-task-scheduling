@@ -19,8 +19,8 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_robotSpeed = new QDoubleSpinBox();
     m_robotSpeed->setRange(0.0, 10.0);
 
-    m_robotEscortSpeed = new QDoubleSpinBox();
-    m_robotEscortSpeed->setRange(0.0, 10.0);
+    m_robotAccompanySpeed = new QDoubleSpinBox();
+    m_robotAccompanySpeed->setRange(0.0, 10.0);
 
     m_conversationFoundStd = new QDoubleSpinBox();
     m_conversationFoundStd->setRange(0.0, 100.0);
@@ -45,7 +45,7 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     layout->addRow("Find Person Prob:", m_findPersonProb);
     layout->addRow("Drive time Std:", m_driveStd);
     layout->addRow("Robot Speed:", m_robotSpeed);
-    layout->addRow("Accompany Speed:", m_robotEscortSpeed);
+    layout->addRow("Accompany Speed:", m_robotAccompanySpeed);
     layout->addRow("Conv Found Std:", m_conversationFoundStd);
     layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
     layout->addRow("Mission Overhead:", m_missionOverhead);
@@ -76,7 +76,7 @@ void DesSystemConfig::onSetConfig() {
     request->find_person_probability = m_findPersonProb->value();
     request->drive_std = m_driveStd->value();
     request->robot_speed = m_robotSpeed->value();
-    request->robot_escort_speed = m_robotEscortSpeed->value();
+    request->robot_accompany_speed = m_robotAccompanySpeed->value();
     request->conversation_found_std = m_conversationFoundStd->value();
     request->conversation_drop_off_std = m_conversationDropOffStd->value();
     request->mission_overhead = m_missionOverhead->value();
@@ -109,7 +109,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_findPersonProb->setValue(msg->find_person_probability);
     m_driveStd->setValue(msg->drive_std);
     m_robotSpeed->setValue(msg->robot_speed);
-    m_robotEscortSpeed->setValue(msg->robot_escort_speed);
+    m_robotAccompanySpeed->setValue(msg->robot_accompany_speed);
     m_conversationFoundStd->setValue(msg->conversation_found_std);
     m_conversationDropOffStd->setValue(msg->conversation_drop_off_std);
     m_missionOverhead->setValue(msg->mission_overhead);

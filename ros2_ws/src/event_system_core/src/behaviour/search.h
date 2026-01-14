@@ -42,9 +42,9 @@ public:
     }
 };
 
-class StartEscortConversation: public BT::SyncActionNode {
+class StartAccompanyConversation: public BT::SyncActionNode {
 public:
-    StartEscortConversation(const std::string& name, const BT::NodeConfig& config):
+    StartAccompanyConversation(const std::string& name, const BT::NodeConfig& config):
         BT::SyncActionNode(name, config) 
     {}
 
