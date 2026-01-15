@@ -11,14 +11,6 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value=use_sim_time),
 
         Node(
-            package='event_system_core',
-            executable='event_system_core',
-            output='screen',
-            parameters=[{
-                'use_sim_time': use_sim_time,
-            }]
-        ),
-        Node(
             package='event_system_tf_transform',
             executable='transform_node',
             output='screen',
@@ -33,5 +25,13 @@ def generate_launch_description():
             parameters=[{
                 'use_sim_time': use_sim_time,
             }]
-        )
+        ),
+        Node(
+            package='event_system_core',
+            executable='event_system_core',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+            }]
+        ),
     ])

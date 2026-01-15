@@ -26,6 +26,10 @@ class Metrics:  public IObserver {
 
 public:
 
+    std::string getName() override {
+        return "Metrics";
+    }
+
     void show() {
         int totalDriveTime = accompanyTime + searchTime + moveTime;
         double totalTime = static_cast<double>(chargingTime +  idleTime + totalDriveTime);

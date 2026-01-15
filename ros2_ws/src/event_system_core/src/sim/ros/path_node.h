@@ -31,7 +31,7 @@ public:
 
     PathPlannerNode(std::map<std::string, des::Point> locationMap) :
         Node("des_path_planner_node"),
-        locationMap(locationMap)
+        m_locationMap(locationMap)
     {
         m_client = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
 
@@ -90,12 +90,12 @@ public:
 
 
     std::optional<double> estimateDistance(const std::string& from, const std::string& to) {
-        auto fromIt = locationMap.find(from);
-        auto toIt   = locationMap.find(to);
+        auto fromIt = m_locationMap.find(from);
+        auto toIt   = m_locationMap.find(to);
 
-        if(fromIt == locationMap.end() || toIt == locationMap.end()){
+        if(fromIt == m_locationMap.end() || toIt == m_locationMap.end()){
             std::cerr << "ERROR\t" <<  from << " or " << to << "  not found in map!" << std::endl;
-            for(auto [k,_]: locationMap) {
+            for(auto [k,_]: m_locationMap) {
                 std::cout << k << std::endl;
             }
             return std::nullopt;
@@ -150,5 +150,5 @@ private:
     std::condition_variable m_cv;
     bool m_resultReady{false};
     PathResult m_currentResult{false, 0.0};
-    std::map<std::string, des::Point> locationMap;
+    std::map<std::string, des::Point> m_locationMap;
 };

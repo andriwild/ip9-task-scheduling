@@ -37,14 +37,14 @@ public:
     int run();
 
 private:
-    bool init();
+    bool loadAppointments();
+    bool loadPointsOfInterest(bool printPOIS);
     bool initROS();
     void reset(std::shared_ptr<des::SimConfig> config);
     void setupSimulation();
     void setupObservers();
     void updateConfig(des::SimConfig config);
     void setupQueue(std::shared_ptr<des::SimConfig> config);
-    std::optional<std::vector<des::Location>> loadPointsOfInterest();
 
     // Qt Application
     std::unique_ptr<QApplication> app;

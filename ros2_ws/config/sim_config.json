@@ -2,7 +2,7 @@
     "appointments_path": "appointments.json",
     "conversation_drop_off_std": 0.009999999776482582,
     "conversation_found_std": 0.009999999776482582,
-    "drive_std": 3.25,
+    "drive_std": 0.25,
     "find_person_probability": 0.5,
     "missionOverhead": 30.0,
     "robot_accompany_speed": 1.2000000476837158,

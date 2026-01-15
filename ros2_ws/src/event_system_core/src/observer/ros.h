@@ -14,6 +14,10 @@ public:
         );
     }
 
+    std::string getName() override {
+        return "ROS";
+    }
+
     void onLog(int time, const std::string& message) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;

@@ -39,7 +39,9 @@ public:
         queue(queue),
         travelTime(travelTime),
         employeeLocations(employeeLocations) 
-    {}
+    {
+        std::cout << "Simulation Context created! (ctor)" << std::endl;
+    }
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
         currentAppointment = appt;
@@ -70,6 +72,7 @@ public:
     }
 
     void addObserver(std::shared_ptr<IObserver> observer) {
+        std::cout << "Observer added: " << observer->getName() << std::endl;
         observers.emplace_back(observer);
     }
 

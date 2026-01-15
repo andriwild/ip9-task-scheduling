@@ -22,13 +22,27 @@ constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
 
-std::optional<std::vector<des::Location>> DesApplication::loadPointsOfInterest() {
+bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
     auto db = DBClient("wsr_user", "wsr_password");
     if (db.init()) {
         std::cout << "Successful connected to DB" << std::endl;
-        return db.waypoints();
     }
-    return std::nullopt;
+
+    pointsOfInterest =  db.waypoints();
+    if (!pointsOfInterest.has_value()) {
+        std::cout << "No points of interest loaded!" << std::endl;
+        return false;
+    }
+    
+
+    for (auto poi : pointsOfInterest.value()) {
+        locationMap[poi.m_name] = poi.m_p;
+        if(printPOIS) {
+            std::cout << poi << std::endl;
+        }
+    }
+    std::cout << "Successful loaded points of interest!" << std::endl;
+    return true;
 }
 
 bool DesApplication::initROS() {
@@ -50,33 +64,17 @@ bool DesApplication::initROS() {
         executor.add_node(systemConfigNode);
         executor.spin();
     });
+    std::cout << "Launched all ROS Nodes!" << std::endl;
     return true;
 }
 
-bool DesApplication::init() {
-    appointments = ConfigLoader::loadAppointmentConfig("config/" + DEFAULT_SIM_CONFIG, SIM_START_TIME);
-    pointsOfInterest = loadPointsOfInterest();
-
+bool DesApplication::loadAppointments() {
+    appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
     if (!appointments.has_value()) {
-        std::cerr << "Failed to read config!\n";
         return false;
     }
 
-    if (!pointsOfInterest.has_value()) {
-        std::cerr << "Failed to connect DB!\n";
-        return false;
-    }
-
-    for (auto poi : pointsOfInterest.value()) {
-        std::cout << poi << std::endl;
-        locationMap[poi.m_name] = poi.m_p;
-    }
-
-    if (!initROS()) {
-        std::cerr << "Failed to create ROS Nodes!\n\n";
-        return false;
-    }
-
+    std::cout << "Successful loaded appointments!" << std::endl;
     return true;
 }
 
@@ -91,6 +89,7 @@ void DesApplication::setupObservers() {
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
+    std::cout << "Start filling event queue...";
     eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
@@ -105,7 +104,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
         }
     }
 
-    ctx->behaviorTree = setupBehaviorTree(ctx);
+    std::cout << " - Done!" << std::endl;
 }
 
 void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
@@ -139,28 +138,42 @@ void DesApplication::updateConfig(des::SimConfig config) {
 int DesApplication::run() {
     std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n" << "\033[0m";
 
-    if (!init()) {
+    if (!loadPointsOfInterest()) {
+        std::cerr << "Failed to load points of interest!\n";
+        return 1;
+    }
+
+    if (!initROS()) {
+        std::cerr << "Failed to create ROS Nodes!\n";
         return 1;
     }
 
     config = std::make_shared<des::SimConfig>(systemConfigNode->getConfig());
     robot  = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
 
+    if (!loadAppointments()) {
+        std::cerr << "Failed to load appointments!\n";
+        return 1;
+    }
+
     ctx = std::make_shared<SimulationContext>(
         robot,
         eventQueue,
         config,
         plannerNode,
-        employeeLocations);
+        employeeLocations
+    );
 
     systemConfigNode->setRobot(robot);
     systemConfigNode->setContext(ctx);
 
     setupObservers();
     setupQueue(config);
+    ctx->behaviorTree = setupBehaviorTree(ctx);
 
     auto applicationState = controllerNode->currentState.load();
 
+    std::cout << "Start Simulation Thread" << std::endl;
     simThread = std::thread([&] {
         while (rclcpp::ok()) {
             applicationState = controllerNode->currentState.load();

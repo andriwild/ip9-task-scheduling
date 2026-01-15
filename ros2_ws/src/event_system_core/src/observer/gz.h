@@ -11,6 +11,11 @@ class GazeboView: public IObserver {
     std::map<std::string, des::Point> locationMap;
 
 public:
+
+    std::string getName() override {
+        return "Gazebo";
+    }
+
     explicit GazeboView(std::map<std::string, des::Point> locationMap):
         locationMap(locationMap)
     {}
@@ -19,4 +24,6 @@ public:
         auto p = locationMap[location]; // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };
+
+
 };

@@ -15,6 +15,10 @@ class TerminalView : public IObserver {
     const std::string CYAN    = "\033[36m";
 
 public:
+    std::string getName() override {
+        return "Terminal";
+    }
+
     void onLog(int time, const std::string& message) override {
         std::cout << RED;
         std::cout << "[" << des::toHumanReadableTime(time) << "] " << message << std::endl;

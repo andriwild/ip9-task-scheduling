@@ -9,6 +9,7 @@
 #include "idle.h"
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
+    std::cout << "Build Behavior Tree ...";
     BT::BehaviorTreeFactory factory;
     
     // search
@@ -82,6 +83,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     tree->rootBlackboard()->set("ctx", ctx);
 
     //std::string xml_models = BT::writeTreeNodesModelXML(factory);
+    std::cout << " - Done!" << std::endl;
     return tree;
 }
 
