@@ -61,17 +61,17 @@ struct SimConfig {
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 25;
-        std::cout << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
-        std::cout << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability    << std::endl;
-        std::cout << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed               << std::endl;
-        std::cout << std::left << std::setw(W) << "robotAccompanySpeed"      << ": " << config.robotAccompanySpeed      << std::endl;
-        std::cout << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
-        std::cout << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
-        std::cout << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;
-        std::cout << std::left << std::setw(W) << "missionOverhead"          << ": " << config.missionOverhead          << std::endl;
-        std::cout << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer               << std::endl;
-        std::cout << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath         << std::endl;
-        std::cout << "----------------------------\n" << std::endl;
+        os << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
+        os << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability    << std::endl;
+        os << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed               << std::endl;
+        os << std::left << std::setw(W) << "robotAccompanySpeed"      << ": " << config.robotAccompanySpeed      << std::endl;
+        os << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
+        os << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
+        os << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;
+        os << std::left << std::setw(W) << "missionOverhead"          << ": " << config.missionOverhead          << std::endl;
+        os << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer               << std::endl;
+        os << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath         << std::endl;
+        os << "----------------------------\n" << std::endl;
         return os;
     }
 };
@@ -100,6 +100,18 @@ struct Appointment {
     int appointmentTime;
     std::string description;
     MissionState state = PENDING;
+
+    friend std::ostream& operator<<(std::ostream& os, const Appointment& appt) {
+        const int W = 25;
+        os << "\n" << "\033[1m" << "--- Appointment ---"    << "\033[0m" << std::endl;
+        os << std::left << std::setw(W) << "id"             << ": " << appt.id<< std::endl;
+        os << std::left << std::setw(W) << "state"          << ": " << appt.state << std::endl;
+        os << std::left << std::setw(W) << "description"    << ": " << appt.description << std::endl;
+        os << std::left << std::setw(W) << "time"           << ": " << appt.appointmentTime << std::endl;
+        os << std::left << std::setw(W) << "personName"     << ": " << appt.personName << std::endl;
+        os << std::left << std::setw(W) << "roomName"       << ": " << appt.roomName << std::endl;
+        return os;
+    }
 };
 
 inline std::string toHumanReadableTime(const int sec, bool includeSeconds = true) {

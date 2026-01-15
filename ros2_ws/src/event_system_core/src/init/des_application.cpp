@@ -8,14 +8,12 @@
 
 #include "../behaviour/bt_setup.h"
 #include "../observer/gz.h"
-#include "../observer/ros_observer.h"
+#include "../observer/ros.h"
 #include "../observer/term.h"
 #include "../sim/scheduler.h"
 #include "../util/db.h"
 #include "config_loader.h"
 #include "event_system_msgs/srv/set_system_state.hpp"
-
-using SystemState = event_system_msgs::srv::SetSystemState::Request;
 
 const std::string DEFAULT_SIM_CONFIG = "sim_config.json";
 const std::string DEFAULT_APPTS = "appointments.json";
@@ -35,8 +33,8 @@ std::optional<std::vector<des::Location>> DesApplication::loadPointsOfInterest()
 
 bool DesApplication::initROS() {
     rclcpp::init(0, nullptr);
-    plannerNode = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode = std::make_shared<ControllerNode>();
+    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode   = std::make_shared<ControllerNode>();
     systemConfigNode = std::make_shared<ConfigNode>();
 
     if (!plannerNode->isReady()) {
@@ -158,8 +156,8 @@ int DesApplication::run() {
     systemConfigNode->setRobot(robot);
     systemConfigNode->setContext(ctx);
 
-    setupQueue(config);
     setupObservers();
+    setupQueue(config);
 
     auto applicationState = controllerNode->currentState.load();
 
@@ -168,16 +166,16 @@ int DesApplication::run() {
             applicationState = controllerNode->currentState.load();
 
             switch(applicationState) {
-                case SystemState::RESET:
+                case SystemState::Request::RESET:
                     reset(config);
                     controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
                     break;
 
-                case SystemState::PAUSE:
+                case SystemState::Request::PAUSE:
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     break;
 
-                case SystemState::RUN:
+                case SystemState::Request::RUN:
                     if(!eventQueue.empty()) {
                         auto e = eventQueue.top();
                         eventQueue.pop();

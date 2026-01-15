@@ -8,7 +8,7 @@
 #include "../model/context.h"
 #include "../model/event.h"
 #include "../observer/metrics.h"
-#include "../observer/ros_observer.h"
+#include "../observer/ros.h"
 #include "../sim/ros/config.h"
 #include "../sim/ros/controller.h"
 #include "../sim/ros/marker.h"

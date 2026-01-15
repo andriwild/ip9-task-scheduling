@@ -10,6 +10,7 @@
 #include <cmath>
 #include <vector>
 
+#include "../../event_system_core/src/model/robot_state.h"
 #include "timeline_types.hpp"
 
 constexpr int TIMELINE_HEIGHT = 350;
@@ -25,22 +26,6 @@ constexpr int Z_STATE_LINE = 50;
 constexpr int Z_PLAN_LINE = 80;
 constexpr int Z_MARKER = 50;
 
-struct VisualEvent {
-    int time;
-    QString label;
-    QString type;
-};
-
-struct VisualAppointment {
-    std::shared_ptr<des::Appointment> appt;
-    int startTime;
-};
-
-struct VisualStateBlock {
-    int startTime;
-    int endTime;
-    int type;
-};
 
 class Timeline final : public QGraphicsView {
     Q_OBJECT
@@ -58,17 +43,18 @@ class Timeline final : public QGraphicsView {
     std::vector<VisualStateBlock> m_states;
     VisualStateBlock m_currentOpenState;
 
-    QPushButton * m_btnZoomIn;
-    QPushButton * m_btnZoomOut;
+    QPushButton* m_btnZoomIn;
+    QPushButton* m_btnZoomOut;
 
 public:
-    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025)
-        : QGraphicsView(),
-          m_simStartTime(start),
-          m_simEndTime(end),
-          m_pixelsPerSecond(pixelsPerSecond) {
+    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025):
+        QGraphicsView(),
+        m_simStartTime(start),
+        m_simEndTime(end),
+        m_pixelsPerSecond(pixelsPerSecond) {
         m_duration = m_simEndTime - m_simStartTime;
         m_scene = new QGraphicsScene(this);
+        m_currentOpenState = {-1, -1, 0};
 
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
@@ -83,7 +69,7 @@ public:
     }
 
     void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        m_appointments.push_back({appt, startTime});
+        m_appointments.push_back({ appt, startTime });
         drawMeetingPlan(appt, startTime);
     }
 
@@ -135,18 +121,18 @@ protected:
         int barY = Y_LINE_POS;
 
         auto getColor = [](int type) -> QColor {
-            switch (static_cast<des::RobotStateType>(type)) {
-                case des::RobotStateType::IDLE:
+            switch (static_cast<RobotStateType>(type)) {
+                case RobotStateType::IDLE:
                     return Qt::lightGray;
-                case des::RobotStateType::MOVING:
+                case RobotStateType::MOVING:
                     return QColor(100, 200, 100);
-                case des::RobotStateType::ACCOMPANY:
+                case RobotStateType::ACCOMPANY:
                     return QColor(200, 150, 50);
-                case des::RobotStateType::CHARGING:
+                case RobotStateType::CHARGING:
                     return Qt::yellow;
-                case des::RobotStateType::SEARCHING:
+                case RobotStateType::SEARCHING:
                     return QColor(200, 100, 100);
-                case des::RobotStateType::CONVERSATE:
+                case RobotStateType::CONVERSATE:
                     return QColor(180, 215, 230);
                 default:
                     return Qt::gray;
@@ -167,7 +153,7 @@ protected:
             painter->fillRect(QRectF(x1, barY, x2 - x1, barHeight), getColor(block.type));
         }
 
-        if (m_currentOpenState.endTime != -1) {
+        if (m_currentOpenState.endTime != -1 && m_currentOpenState.startTime != -1) {
             double x1 = timeToX(m_currentOpenState.startTime);
             double x2 = timeToX(m_simEndTime);
             painter->fillRect(QRectF(x1, barY, x2 - x1, barHeight), getColor(m_currentOpenState.type));
@@ -320,8 +306,12 @@ private:
         m_scene->clear();
 
         double totalWidth = m_duration * m_pixelsPerSecond;
-        m_scene->setSceneRect(-TIMELINE_SCENE_MARGIN, 0, totalWidth + (TIMELINE_SCENE_MARGIN * 2),
-                              TIMELINE_HEIGHT);
+        m_scene->setSceneRect(
+            -TIMELINE_SCENE_MARGIN,
+            0,
+            totalWidth + (TIMELINE_SCENE_MARGIN * 2),
+            TIMELINE_HEIGHT
+        );
 
         for (const auto& item : m_appointments) {
             drawMeetingPlan(item.appt, item.startTime);
@@ -329,6 +319,7 @@ private:
         for (const auto& evt : m_events) {
             drawEventMarker(evt);
         }
+        update();
     }
 
     double timeToX(int time) const {

@@ -5,7 +5,7 @@
 
 #include "../model/context.h"
 #include "search.h"
-#include "escort.h"
+#include "accompany.h"
 #include "idle.h"
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
