@@ -42,14 +42,11 @@ public:
 class EnterIdle : public BT::ConditionNode
 {
 public:
-  EnterIdle(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config)
-  {
-  }
+  EnterIdle(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) { }
 
   static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
-  BT::NodeStatus tick() override
-  {
+  BT::NodeStatus tick() override {
     auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
     assert(ctx->robot->getLocation() == ctx->robot->getIdleLocation());
     ctx->notifyLog("Robot is idle at " + ctx->robot->getLocation());

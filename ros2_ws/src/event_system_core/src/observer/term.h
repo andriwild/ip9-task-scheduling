@@ -21,14 +21,14 @@ public:
 
     void onLog(int time, const std::string& message) override {
         std::cout << RED;
-        std::cout << "[" << des::toHumanReadableTime(time) << "] " << message << std::endl;
-        std::cout << RESET;
+        std::cout << "[" << des::toHumanReadableTime(time) << "] " << message;
+        std::cout << RESET << std::endl;
     }
 
     void onRobotMoved(int time, const std::string& location, double distance) override {
         std::cout << GREEN;
-        std::cout << "[" << des::toHumanReadableTime(time) << "] " << location << std::endl;
-        std::cout << RESET;
+        std::cout << "[" << des::toHumanReadableTime(time) << "] " << location;
+        std::cout << RESET << std::endl;
     };
 
 };

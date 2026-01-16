@@ -103,13 +103,13 @@ struct Appointment {
 
     friend std::ostream& operator<<(std::ostream& os, const Appointment& appt) {
         const int W = 25;
-        os << "\n" << "\033[1m" << "--- Appointment ---"    << "\033[0m" << std::endl;
-        os << std::left << std::setw(W) << "id"             << ": " << appt.id<< std::endl;
-        os << std::left << std::setw(W) << "state"          << ": " << appt.state << std::endl;
-        os << std::left << std::setw(W) << "description"    << ": " << appt.description << std::endl;
-        os << std::left << std::setw(W) << "time"           << ": " << appt.appointmentTime << std::endl;
-        os << std::left << std::setw(W) << "personName"     << ": " << appt.personName << std::endl;
-        os << std::left << std::setw(W) << "roomName"       << ": " << appt.roomName << std::endl;
+        os << "\n" << "\033[1m" << "--- Appointment ---" << "\033[0m" << std::endl;
+        os << std::left << std::setw(W) << "id"          << ": " << appt.id<< std::endl;
+        os << std::left << std::setw(W) << "state"       << ": " << appt.state << std::endl;
+        os << std::left << std::setw(W) << "description" << ": " << appt.description << std::endl;
+        os << std::left << std::setw(W) << "time"        << ": " << appt.appointmentTime << std::endl;
+        os << std::left << std::setw(W) << "personName"  << ": " << appt.personName << std::endl;
+        os << std::left << std::setw(W) << "roomName"    << ": " << appt.roomName << std::endl;
         return os;
     }
 };

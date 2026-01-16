@@ -19,11 +19,11 @@ public:
     }
 
     void onLog(int time, const std::string& message) override {
-        auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = time;
-        msg.type = event_system_msgs::msg::TimelineEvent::LOG;
-        msg.label = message;
-        m_publisher->publish(msg);
+        // auto msg = event_system_msgs::msg::TimelineEvent();
+        // msg.time = time;
+        // msg.type = event_system_msgs::msg::TimelineEvent::LOG;
+        // msg.label = message;
+        // m_publisher->publish(msg);
     }
 
     void onRobotMoved(int time, const std::string& location, double distance) override {

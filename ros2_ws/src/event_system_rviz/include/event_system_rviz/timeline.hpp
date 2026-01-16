@@ -10,7 +10,6 @@
 #include <cmath>
 #include <vector>
 
-#include "../../event_system_core/src/model/robot_state.h"
 #include "timeline_types.hpp"
 
 constexpr int TIMELINE_HEIGHT = 350;
@@ -120,25 +119,6 @@ protected:
         int barHeight = 10;
         int barY = Y_LINE_POS;
 
-        auto getColor = [](int type) -> QColor {
-            switch (static_cast<RobotStateType>(type)) {
-                case RobotStateType::IDLE:
-                    return Qt::lightGray;
-                case RobotStateType::MOVING:
-                    return QColor(100, 200, 100);
-                case RobotStateType::ACCOMPANY:
-                    return QColor(200, 150, 50);
-                case RobotStateType::CHARGING:
-                    return Qt::yellow;
-                case RobotStateType::SEARCHING:
-                    return QColor(200, 100, 100);
-                case RobotStateType::CONVERSATE:
-                    return QColor(180, 215, 230);
-                default:
-                    return Qt::gray;
-            }
-        };
-
         for (const auto& block : m_states) {
             if (timeToX(block.endTime) < rect.left()) {
                 continue;
@@ -150,7 +130,7 @@ protected:
             double x1 = timeToX(block.startTime);
             double x2 = timeToX(block.endTime);
 
-            painter->fillRect(QRectF(x1, barY, x2 - x1, barHeight), getColor(block.type));
+            painter->fillRect(QRectF(x1, barY + getYPos(block.type), x2 - x1, barHeight), getColor(block.type));
         }
 
         if (m_currentOpenState.endTime != -1 && m_currentOpenState.startTime != -1) {
