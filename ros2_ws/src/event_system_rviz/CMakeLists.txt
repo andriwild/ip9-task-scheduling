@@ -11,6 +11,7 @@ find_package(pluginlib REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(event_system_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(Qt5 COMPONENTS Charts REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 
@@ -18,6 +19,7 @@ qt5_wrap_cpp(MOC_FILES
   include/event_system_rviz/des_panel.hpp
   include/event_system_rviz/des_system_config.hpp
   include/event_system_rviz/des_timeline_panel.hpp
+  include/event_system_rviz/des_metrics_panel.hpp
   include/event_system_rviz/timeline.hpp
 )
 
@@ -25,6 +27,7 @@ add_library(event_system_rviz
   src/des_panel.cpp
   src/des_system_config.cpp
   src/des_timeline_panel.cpp
+  src/des_metrics_panel.cpp
   ${MOC_FILES}
 )
 
@@ -38,6 +41,7 @@ ament_target_dependencies(event_system_rviz
   rviz_common
   event_system_msgs
 )
+target_link_libraries(event_system_rviz Qt5::Charts)
 
 install(TARGETS event_system_rviz
         EXPORT export_event_system_rviz

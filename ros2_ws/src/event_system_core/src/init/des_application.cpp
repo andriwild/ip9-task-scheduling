@@ -25,16 +25,15 @@ bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
         std::cout << "Successful connected to DB" << std::endl;
     }
 
-    pointsOfInterest =  db.waypoints();
+    pointsOfInterest = db.waypoints();
     if (!pointsOfInterest.has_value()) {
         std::cout << "No points of interest loaded!" << std::endl;
         return false;
     }
-    
 
     for (auto poi : pointsOfInterest.value()) {
         locationMap[poi.m_name] = poi.m_p;
-        if(printPOIS) {
+        if (printPOIS) {
             std::cout << poi << std::endl;
         }
     }
@@ -44,9 +43,10 @@ bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
 
 bool DesApplication::initROS() {
     rclcpp::init(0, nullptr);
-    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode   = std::make_shared<ControllerNode>();
+    plannerNode = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode = std::make_shared<ControllerNode>();
     systemConfigNode = std::make_shared<ConfigNode>();
+    metricsNode = std::make_shared<MetricsNode>();
 
     if (!plannerNode->isReady()) {
         std::cerr << "Planner init failed!\n";
@@ -59,6 +59,7 @@ bool DesApplication::initROS() {
         executor.add_node(plannerNode);
         executor.add_node(controllerNode);
         executor.add_node(systemConfigNode);
+        executor.add_node(metricsNode);
         executor.spin();
     });
     std::cout << "Launched all ROS Nodes!" << std::endl;
@@ -72,15 +73,14 @@ bool DesApplication::loadAppointments() {
         return false;
     }
 
-    std::cout << "Successful loaded appointments! (" << appointments.value().size()<< ")" << std::endl;
+    std::cout << "Successful loaded appointments! (" << appointments.value().size() << ")" << std::endl;
     return true;
 }
 
 void DesApplication::setupObservers() {
-    metrics     = std::make_shared<Metrics>(Metrics());
     rosObserver = std::make_shared<RosObserver>(systemConfigNode);
 
-    ctx->addObserver(metrics);
+    ctx->addObserver(metricsNode);
     ctx->addObserver(rosObserver);
     ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
     ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
@@ -93,18 +93,16 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
 
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
-    int pubCounter = 0;
     for (const auto& mission : missions) {
         double buffer = config->timeBuffer - config->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
         if (rosObserver) {
             rosObserver->publishMeeting(mission->appointment, mission->time);
-            pubCounter++;
         }
     }
 
-    std::cout << " - Done! ("<< pubCounter << ")" << std::endl;
+    std::cout << " - Done!" << std::endl;
 }
 
 void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
@@ -137,7 +135,8 @@ void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
 }
 
 int DesApplication::run() {
-    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n" << "\033[0m";
+    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n"
+              << "\033[0m";
 
     if (!loadPointsOfInterest()) {
         std::cerr << "Failed to load points of interest!\n";
@@ -150,7 +149,7 @@ int DesApplication::run() {
     }
 
     config = systemConfigNode->getConfig();
-    robot  = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
+    robot = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
 
     if (!loadAppointments()) {
         std::cerr << "Failed to load appointments!\n";
@@ -162,8 +161,7 @@ int DesApplication::run() {
         eventQueue,
         config,
         plannerNode,
-        employeeLocations
-    );
+        employeeLocations);
 
     systemConfigNode->setRobot(robot);
     systemConfigNode->setContext(ctx);
@@ -175,14 +173,12 @@ int DesApplication::run() {
     std::cout << "Start Simulation Thread" << std::endl;
     simThread = std::thread([&] {
         while (rclcpp::ok()) {
-
-
-            if(systemConfigNode->isConfigDirty()){
+            if (systemConfigNode->isConfigDirty()) {
                 updateConfig(systemConfigNode->getConfig());
                 systemConfigNode->clearDirty();
             }
 
-            switch(controllerNode->currentState.load()) {
+            switch (controllerNode->currentState.load()) {
                 case SystemState::Request::RESET:
                     reset(config);
                     controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
@@ -193,7 +189,7 @@ int DesApplication::run() {
                     break;
 
                 case SystemState::Request::RUN:
-                    if(!eventQueue.empty()) {
+                    if (!eventQueue.empty()) {
                         auto e = eventQueue.top();
                         eventQueue.pop();
                         ctx->setTime(e->time);
@@ -204,8 +200,6 @@ int DesApplication::run() {
         }
 
         std::cout << "\033[1m" << "\nSimulation complete!" << "\033[0m" << std::endl;
-
-        metrics->show();
 
         std::cin.get();
         QCoreApplication::quit();

@@ -44,7 +44,7 @@ public:
 
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
         auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = appt->appointmentTime;  // Using startTime as the event time
+        msg.time = startTime;  // Using startTime as the event time
         msg.type = event_system_msgs::msg::TimelineEvent::MEETING;
         msg.duration = appt->appointmentTime - startTime;  // Assuming duration is diff
         msg.description = appt->description;

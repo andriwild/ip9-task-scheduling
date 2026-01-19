@@ -8,4 +8,7 @@
   <class type="des_timeline_panel::DesTimelinePanel" base_class_type="rviz_common::Panel">
     <description>Descrete Event System Timeline</description>
   </class>
+  <class type="des_metrics_panel::DesMetricsPanel" base_class_type="rviz_common::Panel">
+    <description>Descrete Event System Metrics</description>
+  </class>
 </library>

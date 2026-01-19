@@ -17,7 +17,6 @@
 
 class DesApplication {
 public:
-
     DesApplication(int argc, char * argv[]) {
         app = std::make_unique<QApplication>(argc, argv);
         QCoreApplication::setApplicationName("Discrete Event System");
@@ -67,7 +66,7 @@ private:
     std::thread simThread;
 
     // Observers
-    std::shared_ptr<Metrics> metrics;
+    std::shared_ptr<MetricsNode> metricsNode;
 
     // View
     std::shared_ptr<RosObserver> rosObserver;

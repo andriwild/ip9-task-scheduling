@@ -7,7 +7,7 @@ bool IdleState::isBusy() const { return false; };
 
 void IdleState::enter(Robot& robot) { 
     std::cout << "[State] enter idle " << std::endl;
-    robot.setSpeed(robot.getDefaultSpeed());
+    robot.setSpeed(robot.getSpeed());
 }
 void IdleState::exit(Robot& robot) {
     std::cout << "[State] exit idle " << std::endl;
@@ -38,7 +38,7 @@ RobotStateType AccompanyState::getType() const {
 
 void MoveState::enter(Robot& robot) { 
     std::cout << "[State] enter move " << std::endl;
-    robot.setSpeed(robot.getDefaultSpeed());
+    robot.setSpeed(robot.getSpeed());
 }
 void MoveState::exit(Robot& robot) {
     std::cout << "[State] exit move " << std::endl;
@@ -53,7 +53,7 @@ RobotStateType MoveState::getType() const {
 
 void SearchState::enter(Robot& robot) { 
     std::cout << "[State] enter search " << std::endl;
-    robot.setSpeed(robot.getDefaultSpeed());
+    robot.setSpeed(robot.getSpeed());
 }
 void SearchState::exit(Robot& robot) {
     std::cout << "[State] exit search " << std::endl;
@@ -70,7 +70,7 @@ RobotStateType SearchState::getType() const {
 
 void ConversateState::enter(Robot& robot) { 
     std::cout << "[State] enter conversation" << std::endl;
-    robot.setSpeed(robot.getDefaultSpeed());
+    robot.setSpeed(robot.getSpeed());
 }
 void ConversateState::exit(Robot& robot) {
     std::cout << "[State] exit conversation " << std::endl;
