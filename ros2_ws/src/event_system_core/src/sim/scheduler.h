@@ -28,7 +28,7 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
         assert(travelBack.has_value());
         
         const double accTravelDist =  travelTo.value() + accompany.value() + travelBack.value();
-        const double travelTime = accTravelDist / ctx->robot->getDefaultSpeed();
+        const double travelTime = accTravelDist / ctx->robot->getSpeed();
         const int startSeconds = appt.get()->appointmentTime - travelTime;
         missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appt));
     }

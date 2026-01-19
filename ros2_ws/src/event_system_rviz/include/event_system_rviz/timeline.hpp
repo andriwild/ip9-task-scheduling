@@ -29,8 +29,8 @@ class Timeline final : public QGraphicsView {
     Q_OBJECT
 
     QGraphicsScene * m_scene;
-    const int m_simStartTime;
-    const int m_simEndTime;
+    int m_simStartTime;
+    int m_simEndTime;
     int m_duration;
 
     double m_pixelsPerSecond;
@@ -65,6 +65,13 @@ public:
         updateScene();
     }
 
+    void setRange(int start, int end) {
+        m_simStartTime = start;
+        m_simEndTime = end;
+        m_duration = m_simEndTime - m_simStartTime;
+        updateScene();
+    }
+
     void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
         m_appointments.push_back({appt, startTime});
         drawMeetingPlan(appt, startTime);
@@ -75,6 +82,7 @@ public:
         m_events.clear();
         m_states.clear();
         m_currentOpenState = VisualStateBlock();
+        m_currentOpenState.startTime = -1;  // Reset to invalid
         m_currentOpenState.endTime = -1;
         updateScene();
     }
@@ -92,7 +100,8 @@ public slots:
     }
 
     void handleStateChange(int time, int newState) {
-        if (m_currentOpenState.endTime == -1) {
+        // Only close the previous state if it was valid (startTime != -1)
+        if (m_currentOpenState.startTime != -1) {
             m_currentOpenState.endTime = time;
             m_states.push_back(m_currentOpenState);
         }

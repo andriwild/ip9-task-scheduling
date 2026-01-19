@@ -119,7 +119,7 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
     appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
 
     if (!appointments.has_value()) {
-        std::cerr << "Failed to read config!\n\n";
+        std::cerr << "Failed to read config!\n";
         return;
     }
 
@@ -130,7 +130,7 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
 
 void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
     config = newConfig;
-    robot->setDefaultSpeed(config->robotSpeed);
+    robot->setSpeed(config->robotSpeed);
     robot->setAccompanytSpeed(config->robotAccompanySpeed);
     ctx->setConfig(config);
     std::cout << *config.get() << std::endl;

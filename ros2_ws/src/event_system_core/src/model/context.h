@@ -126,7 +126,7 @@ public:
             std::optional<double> distance = this->travelTime->estimateDistance(this->robot->getLocation(), target);
             assert(distance.has_value());
 
-            double travelTime = distance.value() / this->robot->getDefaultSpeed();
+            double travelTime = distance.value() / this->robot->getSpeed();
 
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
             double completeTravelTime = travelTime * noiseFactor;
