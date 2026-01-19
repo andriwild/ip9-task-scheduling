@@ -25,7 +25,6 @@ constexpr int Z_STATE_LINE = 50;
 constexpr int Z_PLAN_LINE = 80;
 constexpr int Z_MARKER = 50;
 
-
 class Timeline final : public QGraphicsView {
     Q_OBJECT
 
@@ -42,15 +41,14 @@ class Timeline final : public QGraphicsView {
     std::vector<VisualStateBlock> m_states;
     VisualStateBlock m_currentOpenState;
 
-    QPushButton* m_btnZoomIn;
-    QPushButton* m_btnZoomOut;
+    QPushButton * m_btnZoomIn;
+    QPushButton * m_btnZoomOut;
 
 public:
-    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025):
-        QGraphicsView(),
-        m_simStartTime(start),
-        m_simEndTime(end),
-        m_pixelsPerSecond(pixelsPerSecond) {
+    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025) : QGraphicsView(),
+                                                                            m_simStartTime(start),
+                                                                            m_simEndTime(end),
+                                                                            m_pixelsPerSecond(pixelsPerSecond) {
         m_duration = m_simEndTime - m_simStartTime;
         m_scene = new QGraphicsScene(this);
         m_currentOpenState = {-1, -1, 0};
@@ -68,7 +66,7 @@ public:
     }
 
     void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        m_appointments.push_back({ appt, startTime });
+        m_appointments.push_back({appt, startTime});
         drawMeetingPlan(appt, startTime);
     }
 
@@ -290,8 +288,7 @@ private:
             -TIMELINE_SCENE_MARGIN,
             0,
             totalWidth + (TIMELINE_SCENE_MARGIN * 2),
-            TIMELINE_HEIGHT
-        );
+            TIMELINE_HEIGHT);
 
         for (const auto& item : m_appointments) {
             drawMeetingPlan(item.appt, item.startTime);
@@ -299,7 +296,7 @@ private:
         for (const auto& evt : m_events) {
             drawEventMarker(evt);
         }
-        update();
+        viewport()->update();
     }
 
     double timeToX(int time) const {

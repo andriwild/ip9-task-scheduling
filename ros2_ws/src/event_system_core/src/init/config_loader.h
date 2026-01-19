@@ -75,17 +75,17 @@ public:
         }
     }
 
-    static bool saveSimConfig(std::string filePath, const des::SimConfig& config) {
+    static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
         nlohmann::json j;
-        j["find_person_probability"]    = config.personFindProbability;
-        j["drive_std"]                  = config.driveStd;
-        j["robot_speed"]                = config.robotSpeed;
-        j["robot_accompany_speed"]         = config.robotAccompanySpeed;
-        j["conversation_found_std"]     = config.conversationFoundStd;
-        j["conversation_drop_off_std"]  = config.conversationDropOffStd;
-        j["missionOverhead"]            = config.missionOverhead;
-        j["timeBuffer"]                 = config.timeBuffer;
-        j["appointments_path"]          = config.appointmentsPath;
+        j["find_person_probability"]    = config->personFindProbability;
+        j["drive_std"]                  = config->driveStd;
+        j["robot_speed"]                = config->robotSpeed;
+        j["robot_accompany_speed"]      = config->robotAccompanySpeed;
+        j["conversation_found_std"]     = config->conversationFoundStd;
+        j["conversation_drop_off_std"]  = config->conversationDropOffStd;
+        j["missionOverhead"]            = config->missionOverhead;
+        j["timeBuffer"]                 = config->timeBuffer;
+        j["appointments_path"]          = config->appointmentsPath;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

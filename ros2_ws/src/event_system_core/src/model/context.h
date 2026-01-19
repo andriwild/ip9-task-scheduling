@@ -105,10 +105,10 @@ public:
         }
     }
 
-    void setConfig(des::SimConfig newConfig) {
-        simConfig = std::make_shared<des::SimConfig>(newConfig);
+    void setConfig(std::shared_ptr<des::SimConfig> newConfig) {
+        simConfig = newConfig;
         std::cout << "New config active" << std::endl;
-        std::cout << *simConfig << std::endl;
+        std::cout << simConfig.get() << std::endl;
     }
 
     double getPersonFindProbability() const { return simConfig->personFindProbability; };

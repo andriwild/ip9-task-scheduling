@@ -23,7 +23,7 @@ void DesTimelinePanel::onInitialize() {
     m_node = node_abstraction->get_raw_node();
 
     m_subscriber = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(
-        "/timeline_events", rclcpp::QoS(10),
+        "/timeline_events", rclcpp::QoS(100),
         [this](const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() {
                 this->onTimelineEvent(msg);
@@ -32,6 +32,7 @@ void DesTimelinePanel::onInitialize() {
 }
 
 void DesTimelinePanel::onTimelineEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
+    std::cout << "RVIZ: Meeting received" << std::endl;
     if (msg->type == event_system_msgs::msg::TimelineEvent::LOG) {
         m_timeline->handleLog(msg->time, QString::fromStdString(msg->label));
     } else if (msg->type == event_system_msgs::msg::TimelineEvent::MOVE) {

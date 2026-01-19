@@ -10,7 +10,7 @@ public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
         m_publisher = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>(
             "/timeline_events",
-            rclcpp::QoS(10)
+            rclcpp::QoS(100)
         );
     }
 
@@ -44,7 +44,7 @@ public:
 
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
         auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = startTime;  // Using startTime as the event time
+        msg.time = appt->appointmentTime;  // Using startTime as the event time
         msg.type = event_system_msgs::msg::TimelineEvent::MEETING;
         msg.duration = appt->appointmentTime - startTime;  // Assuming duration is diff
         msg.description = appt->description;

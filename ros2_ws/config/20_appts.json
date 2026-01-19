@@ -38,13 +38,13 @@
         },
         {
             "personName": "Luici",
-            "roomName": "Open Zone",
+            "roomName": "5.2B01",
             "appointmentTime": 11500,
             "description": "Brainstorming"
         },
         {
             "personName": "Ben",
-            "roomName": "5.2B16",
+            "roomName": "5.2B17",
             "appointmentTime": 12600,
             "description": "IT Support"
         },
@@ -74,7 +74,7 @@
         },
         {
             "personName": "Anna",
-            "roomName": "Open Zone",
+            "roomName": "5.2B_Toilet_W",
             "appointmentTime": 23600,
             "description": "Team Event"
         },

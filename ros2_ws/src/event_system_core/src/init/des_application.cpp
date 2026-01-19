@@ -15,9 +15,6 @@
 #include "config_loader.h"
 #include "event_system_msgs/srv/set_system_state.hpp"
 
-const std::string DEFAULT_SIM_CONFIG = "sim_config.json";
-const std::string DEFAULT_APPTS = "appointments.json";
-
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
@@ -69,12 +66,13 @@ bool DesApplication::initROS() {
 }
 
 bool DesApplication::loadAppointments() {
+    std::cout << "Load Appointments: " << config->appointmentsPath << std::endl;
     appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
     if (!appointments.has_value()) {
         return false;
     }
 
-    std::cout << "Successful loaded appointments!" << std::endl;
+    std::cout << "Successful loaded appointments! (" << appointments.value().size()<< ")" << std::endl;
     return true;
 }
 
@@ -95,16 +93,18 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
 
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
+    int pubCounter = 0;
     for (const auto& mission : missions) {
         double buffer = config->timeBuffer - config->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
         if (rosObserver) {
             rosObserver->publishMeeting(mission->appointment, mission->time);
+            pubCounter++;
         }
     }
 
-    std::cout << " - Done!" << std::endl;
+    std::cout << " - Done! ("<< pubCounter << ")" << std::endl;
 }
 
 void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
@@ -128,11 +128,12 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
     std::cout << "System Reset Complete. Waiting for Start..." << std::endl;
 }
 
-void DesApplication::updateConfig(des::SimConfig config) {
-    robot->setDefaultSpeed(config.robotSpeed);
-    robot->setAccompanytSpeed(config.robotAccompanySpeed);
+void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
+    config = newConfig;
+    robot->setDefaultSpeed(config->robotSpeed);
+    robot->setAccompanytSpeed(config->robotAccompanySpeed);
     ctx->setConfig(config);
-    std::cout << config << std::endl;
+    std::cout << *config.get() << std::endl;
 }
 
 int DesApplication::run() {
@@ -148,7 +149,7 @@ int DesApplication::run() {
         return 1;
     }
 
-    config = std::make_shared<des::SimConfig>(systemConfigNode->getConfig());
+    config = systemConfigNode->getConfig();
     robot  = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
 
     if (!loadAppointments()) {
@@ -171,14 +172,17 @@ int DesApplication::run() {
     setupQueue(config);
     ctx->behaviorTree = setupBehaviorTree(ctx);
 
-    auto applicationState = controllerNode->currentState.load();
-
     std::cout << "Start Simulation Thread" << std::endl;
     simThread = std::thread([&] {
         while (rclcpp::ok()) {
-            applicationState = controllerNode->currentState.load();
 
-            switch(applicationState) {
+
+            if(systemConfigNode->isConfigDirty()){
+                updateConfig(systemConfigNode->getConfig());
+                systemConfigNode->clearDirty();
+            }
+
+            switch(controllerNode->currentState.load()) {
                 case SystemState::Request::RESET:
                     reset(config);
                     controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);

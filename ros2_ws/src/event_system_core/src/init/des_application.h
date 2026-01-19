@@ -43,7 +43,7 @@ private:
     void reset(std::shared_ptr<des::SimConfig> config);
     void setupSimulation();
     void setupObservers();
-    void updateConfig(des::SimConfig config);
+    void updateConfig(std::shared_ptr<des::SimConfig> config);
     void setupQueue(std::shared_ptr<des::SimConfig> config);
 
     // Qt Application
