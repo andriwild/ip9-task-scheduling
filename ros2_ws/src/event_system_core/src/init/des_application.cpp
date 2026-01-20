@@ -18,6 +18,7 @@
 constexpr int HOUR = 3600;
 constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
+const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
 bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
     auto db = DBClient("wsr_user", "wsr_password");
@@ -43,10 +44,10 @@ bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
 
 bool DesApplication::initROS() {
     rclcpp::init(0, nullptr);
-    plannerNode = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode = std::make_shared<ControllerNode>();
+    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
+    controllerNode   = std::make_shared<ControllerNode>();
     systemConfigNode = std::make_shared<ConfigNode>();
-    metricsNode = std::make_shared<MetricsNode>();
+    metricsNode      = std::make_shared<MetricsNode>();
 
     if (!plannerNode->isReady()) {
         std::cerr << "Planner init failed!\n";
@@ -68,12 +69,24 @@ bool DesApplication::initROS() {
 
 bool DesApplication::loadAppointments() {
     std::cout << "Load Appointments: " << config->appointmentsPath << std::endl;
-    appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
+    appointments = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + config->appointmentsPath, SIM_START_TIME);
     if (!appointments.has_value()) {
         return false;
     }
 
     std::cout << "Successful loaded appointments! (" << appointments.value().size() << ")" << std::endl;
+    return true;
+}
+
+bool DesApplication::loadEmployeeLocations() {
+    std::cout << "Load Employee Locations..." << std::endl;
+    auto locs = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
+    if (!locs.has_value()) {
+        std::cout << "Failed to load employee locations!" << std::endl;
+        return false;
+    }
+    employeeLocations = locs.value();
+    std::cout << "Successful loaded employee locations! (" << employeeLocations.size() << ")" << std::endl;
     return true;
 }
 
@@ -83,7 +96,7 @@ void DesApplication::setupObservers() {
     ctx->addObserver(metricsNode);
     ctx->addObserver(rosObserver);
     ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
-    ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
+    // ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
@@ -112,7 +125,10 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
     rosObserver->publishReset();
     metricsNode->clear();
 
-    appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
+    if (!loadAppointments()) {
+        std::cerr << "Failed to load appointments!\n";
+        return;
+    }
 
     if (!appointments.has_value()) {
         std::cerr << "Failed to read config!\n";
@@ -133,7 +149,8 @@ void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
 }
 
 int DesApplication::run() {
-    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n" << "\033[0m";
+    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n"
+              << "\033[0m";
 
     if (!loadPointsOfInterest(true)) {
         std::cerr << "Failed to load points of interest!\n";
@@ -153,12 +170,18 @@ int DesApplication::run() {
         return 1;
     }
 
+    if (!loadEmployeeLocations()) {
+        std::cerr << "Failed to load employee locations!\n";
+        return 1;
+    }
+
     ctx = std::make_shared<SimulationContext>(
         robot,
         eventQueue,
         config,
         plannerNode,
-        employeeLocations);
+        employeeLocations
+    );
 
     systemConfigNode->setRobot(robot);
     systemConfigNode->setContext(ctx);

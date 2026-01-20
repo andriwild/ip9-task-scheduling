@@ -16,7 +16,7 @@
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
 
-const std::string SIM_CONFIG_FILE = "config/sim_config.json";
+const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
 class ConfigNode : public rclcpp::Node {
 public:
@@ -31,6 +31,7 @@ public:
         // Load initial config
         auto loadedConfig = ConfigLoader::loadSimConfig(SIM_CONFIG_FILE);
         if (loadedConfig.has_value()) {
+            std::cout << "Initial Simulation Config loaded!" << std::endl;
             m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());
         } else {
             std::cerr << "Failed to load sim_config.json, using defaults." << std::endl;
@@ -86,6 +87,7 @@ private:
 
     void publishConfig() {
         auto msg = event_system_msgs::msg::SystemConfig();
+        std::cout << "Publishing config ..." << std::endl;
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
             msg.find_person_probability = m_currentConfig->personFindProbability;
@@ -99,6 +101,7 @@ private:
             msg.appointments_path = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
+        std::cout << "Done!" << std::endl;
     }
 
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;
