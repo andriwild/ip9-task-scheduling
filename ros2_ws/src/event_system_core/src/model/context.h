@@ -22,21 +22,18 @@ class SimulationContext {
 
 public:
     std::shared_ptr<Robot> m_robot;
-    EventQueue& queue;
-    std::shared_ptr<PathPlannerNode> travelTime;
-    std::map<std::string, std::vector<std::string>> employeeLocations;
-    std::shared_ptr<BT::Tree> behaviorTree;
+    EventQueue& m_queue;
+    std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::shared_ptr<BT::Tree> m_behaviorTree;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<PathPlannerNode> travelTime,
-        std::map<std::string, std::vector<std::string>> employeeLocations
+        std::shared_ptr<PathPlannerNode> plannerNode
     ): 
         m_simConfig(simConfig),
-        queue(queue),
-        travelTime(travelTime),
-        employeeLocations(employeeLocations) 
+        m_queue(queue),
+        m_plannerNode(plannerNode)
     {
         m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed);
         std::cout << "Simulation Context created! (ctor)" << std::endl;
@@ -126,10 +123,10 @@ public:
         int arrivalTime = currentTime + 1;
 
         if (m_robot->getLocation() == target) {
-            this->queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
+            this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
             this->notifyLog("Already at " + target);
         } else {
-            std::optional<double> distance = this->travelTime->estimateDistance(this->m_robot->getLocation(), target);
+            std::optional<double> distance = this->m_plannerNode->estimateDistance(this->m_robot->getLocation(), target);
             assert(distance.has_value());
 
             double travelTime = distance.value() / this->m_robot->getSpeed();
@@ -138,12 +135,12 @@ public:
             double completeTravelTime = travelTime * noiseFactor;
             arrivalTime = currentTime + completeTravelTime;
 
-            this->queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
+            this->m_queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
             this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(completeTravelTime - travelTime) + ")");
         }
 
         if (isMissionComplete) {
-            this->queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
+            this->m_queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
         }
     }
 };

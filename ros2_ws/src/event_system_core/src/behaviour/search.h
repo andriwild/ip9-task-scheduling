@@ -58,7 +58,7 @@ public:
 
         // TODO: add time randomness
         auto target = ctx->getAppointment()->roomName;
-        ctx->queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(currentTime + 10));
+        ctx->m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(currentTime + 10));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }
@@ -85,7 +85,7 @@ public:
         if (ss->locations.empty()){
             ctx->notifyLog("Person not found at any place!");
             ctx->updateAppointmentState(des::MissionState::FAILED);
-            ctx->queue.push(std::make_shared<MissionCompleteEvent>(currentTime + 1));
+            ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(currentTime + 1));
             return BT::NodeStatus::FAILURE;
         }
         return BT::NodeStatus::SUCCESS;

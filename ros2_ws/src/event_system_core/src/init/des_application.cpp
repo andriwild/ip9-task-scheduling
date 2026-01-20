@@ -145,16 +145,11 @@ int DesApplication::run() {
         exit(EXIT_FAILURE);
     }
 
-    m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue,
-        m_config,
-        m_plannerNode,
-        m_employeeLocations
-    );
+    m_ctx = std::make_shared<SimulationContext>( m_eventQueue, m_config, m_plannerNode);
 
     setupObservers();
     setupQueue(m_config);
-    m_ctx->behaviorTree = setupBehaviorTree(m_ctx);
+    m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);
 
     m_simThread = std::thread([&] {
         std::cout << "Start Simulation Thread" << std::endl;

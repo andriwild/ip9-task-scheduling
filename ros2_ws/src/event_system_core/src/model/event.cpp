@@ -29,9 +29,9 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.notifyLog("Conversation failed.");
         ctx.updateAppointmentState(des::MissionState::FAILED);
         ctx.changeRobotState(std::make_unique<IdleState>());
-        ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
+        ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
     }
-    ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
+    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
@@ -44,18 +44,18 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.updateAppointmentState(des::MissionState::FAILED);
     }
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
-    ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
-    ctx.behaviorTree->tickOnce();
+    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
+    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
-    if (ctx.behaviorTree) {
-        ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
-        ctx.behaviorTree->rootBlackboard()->set("location", this->location);
+    if (ctx.m_behaviorTree) {
+        ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
+        ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
         
-        ctx.behaviorTree->tickOnce();
+        ctx.m_behaviorTree->tickOnce();
     } else {
         ctx.notifyLog("[FATAL] Behavior Tree not initialized in Context!");
     }

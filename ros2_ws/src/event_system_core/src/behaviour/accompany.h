@@ -52,7 +52,7 @@ public:
         int currentTime = config().blackboard.get()->get<int>("current_time");
         ctx->notifyLog("Start drop off conversation!");
 
-        ctx->queue.push(std::make_shared<DropOffConversationCompleteEvent>(currentTime + 10));
+        ctx->m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(currentTime + 10));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }
