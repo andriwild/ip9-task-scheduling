@@ -37,6 +37,26 @@ public:
         return "Metrics";
     }
 
+    void clear() {
+        searchTime = 0;
+        accompanyTime = 0;
+        idleTime = 0;
+        moveTime = 0;
+        talkTime = 0;
+        chargingTime = 0;
+
+        lastTimeStateChanged = 0;
+
+        accMissionToLateTime = 0;
+        accMissionToEarlyTime = 0;
+
+        nMissionCompleted = 0;
+        nMissionFailed = 0;
+        nMissionCompletedLate = 0;
+        nMissionCanceled = 0;
+        movedDistance = 0.0;
+    }
+
     void onStateChanged(int time, const RobotStateType& newState) override {
         int passedTime = time - lastTimeStateChanged;
 

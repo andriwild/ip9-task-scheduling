@@ -4,19 +4,6 @@
 #include "types.h"
 
 
-inline std::map<std::string, std::vector<std::string>> employeeLocations = {
-    {"Max", {"5.2B03","5.2B10" , "IMVS_Kitchen", "5.2B06"}},
-    {"Leo", {"5.2B15", "5.2B10", "5.2B33", "IMVS_Kitchen"}},
-    {"Fred", {"5.2B13", "IMVS_Kitchen"}},
-    {"Luici", {"5.2B18", "IMVS_Kitchen", "5.2B06", "5.2B33"}},
-    {"Anna",  {"5.2B01", "5.2B03", "IMVS_CoffeeMachine"}},
-    {"Tom",   {"5.2B03", "5.2B05", "IMVS_Printer"}},
-    {"Sarah", {"5.2B13", "5.2B15", "IMVS_Kitchen"}},
-    {"Ben",   {"5.2B01", "5.2B18", "5.2B33"}},
-    {"Lisa",  {"5.2B04", "5.2B18", "5.2B06"}},
-    {"Kevin", {"5.2B10", "IMVS_Printer", "IMVS_Kitchen"}},
-    {"Julia", {"5.2B01", "5.2B05", "5.2B31"}}
-};
 
 
 inline std::map<std::string, des::Point> locationMap = {

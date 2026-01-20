@@ -16,11 +16,15 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
     std::vector<std::shared_ptr<MissionDispatchEvent>> missions;
     for (auto& appt : appointments) {
         auto employeeLocation = locations[appt->personName].front();
+        
 
         auto startPos = ctx->robot->getIdleLocation();
         
         std::optional<double> travelTo   = ctx->travelTime->estimateDistance(startPos, employeeLocation);
         std::optional<double> accompany  = ctx->travelTime->estimateDistance(employeeLocation, appt.get()->roomName);
+
+        std::cout << startPos << "\t->\t" << employeeLocation << "\t" << travelTo.value() <<  std::endl;
+        std::cout << employeeLocation<< "\t->\t" << appt.get()->roomName << "\t" << accompany.value() << std::endl;
 
         assert(travelTo.has_value());
         assert(accompany.has_value());

@@ -94,14 +94,13 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
 
     for (const auto& mission : missions) {
-        double buffer = config->timeBuffer - config->missionOverhead;
+        double buffer = config->timeBuffer + config->missionOverhead;
         mission->time = mission->time - buffer;
         eventQueue.push(mission);
         if (rosObserver) {
             rosObserver->publishMeeting(mission->appointment, mission->time);
         }
     }
-
     std::cout << " - Done!" << std::endl;
 }
 
@@ -110,9 +109,8 @@ void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
         eventQueue.pop();
     }
 
-    if (rosObserver) {
-        rosObserver->publishReset();
-    }
+    rosObserver->publishReset();
+    metricsNode->clear();
 
     appointments = ConfigLoader::loadAppointmentConfig("config/" + config->appointmentsPath, SIM_START_TIME);
 
@@ -135,10 +133,9 @@ void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
 }
 
 int DesApplication::run() {
-    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n"
-              << "\033[0m";
+    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n" << "\033[0m";
 
-    if (!loadPointsOfInterest()) {
+    if (!loadPointsOfInterest(true)) {
         std::cerr << "Failed to load points of interest!\n";
         return 1;
     }

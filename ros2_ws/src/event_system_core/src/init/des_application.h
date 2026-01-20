@@ -38,6 +38,7 @@ public:
 private:
     bool loadAppointments();
     bool loadPointsOfInterest(bool printPOIS);
+    bool loadEmployeeLocations();
     bool initROS();
     void reset(std::shared_ptr<des::SimConfig> config);
     void setupSimulation();
@@ -57,16 +58,15 @@ private:
     EventQueue eventQueue;
     std::shared_ptr<Robot> robot;
     std::optional<std::vector<des::Location>> pointsOfInterest;
+    std::map<std::string, std::vector<std::string>> employeeLocations;
 
     // ROS
     std::shared_ptr<PathPlannerNode> plannerNode;
     std::shared_ptr<ControllerNode> controllerNode;
     std::shared_ptr<ConfigNode> systemConfigNode;
+    std::shared_ptr<MetricsNode> metricsNode;
     std::thread rosThread;
     std::thread simThread;
-
-    // Observers
-    std::shared_ptr<MetricsNode> metricsNode;
 
     // View
     std::shared_ptr<RosObserver> rosObserver;

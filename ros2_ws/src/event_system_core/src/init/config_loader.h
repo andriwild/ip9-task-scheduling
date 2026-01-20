@@ -45,6 +45,26 @@ public:
         return appointments;
     };
 
+    static std::optional<std::map<std::string, std::vector<std::string>>> loadEmployeeLocations(std::string filePath) {
+        auto json = getJson(filePath);
+        if (!json.has_value()) {
+            return std::nullopt;
+        }
+
+        std::map<std::string, std::vector<std::string>> employees;
+        try {
+            for (const auto& item : json.value()["employees"]) {
+                std::string name = item.at("name").get<std::string>();
+                std::vector<std::string> locations = item.at("locations").get<std::vector<std::string>>();
+                employees[name] = locations;
+            }
+        } catch (const nlohmann::json::type_error& e) {
+            std::cerr << "Failed to parse employee locations json: " << filePath << std::endl;
+            return std::nullopt;
+        }
+        return employees;
+    }
+
     static std::optional<des::SimConfig> loadSimConfig(std::string filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -54,14 +74,14 @@ public:
         try {
             auto j = json.value();
             des::SimConfig config;
-            config.personFindProbability    = j.at("find_person_probability").get<double>();
-            config.driveStd                 = j.at("drive_std").get<double>();
-            config.robotSpeed               = j.at("robot_speed").get<double>();
-            config.robotAccompanySpeed         = j.at("robot_accompany_speed").get<double>();
-            config.conversationFoundStd     = j.at("conversation_found_std").get<double>();
-            config.conversationDropOffStd   = j.at("conversation_drop_off_std").get<double>();
-            config.missionOverhead          = j.at("missionOverhead").get<double>();
-            config.timeBuffer               = j.at("timeBuffer").get<double>();
+            config.personFindProbability = j.at("find_person_probability").get<double>();
+            config.driveStd = j.at("drive_std").get<double>();
+            config.robotSpeed = j.at("robot_speed").get<double>();
+            config.robotAccompanySpeed = j.at("robot_accompany_speed").get<double>();
+            config.conversationFoundStd = j.at("conversation_found_std").get<double>();
+            config.conversationDropOffStd = j.at("conversation_drop_off_std").get<double>();
+            config.missionOverhead = j.at("missionOverhead").get<double>();
+            config.timeBuffer = j.at("timeBuffer").get<double>();
 
             if (j.contains("appointments_path")) {
                 config.appointmentsPath = j.at("appointments_path").get<std::string>();
@@ -77,15 +97,15 @@ public:
 
     static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
         nlohmann::json j;
-        j["find_person_probability"]    = config->personFindProbability;
-        j["drive_std"]                  = config->driveStd;
-        j["robot_speed"]                = config->robotSpeed;
-        j["robot_accompany_speed"]      = config->robotAccompanySpeed;
-        j["conversation_found_std"]     = config->conversationFoundStd;
-        j["conversation_drop_off_std"]  = config->conversationDropOffStd;
-        j["missionOverhead"]            = config->missionOverhead;
-        j["timeBuffer"]                 = config->timeBuffer;
-        j["appointments_path"]          = config->appointmentsPath;
+        j["find_person_probability"] = config->personFindProbability;
+        j["drive_std"] = config->driveStd;
+        j["robot_speed"] = config->robotSpeed;
+        j["robot_accompany_speed"] = config->robotAccompanySpeed;
+        j["conversation_found_std"] = config->conversationFoundStd;
+        j["conversation_drop_off_std"] = config->conversationDropOffStd;
+        j["missionOverhead"] = config->missionOverhead;
+        j["timeBuffer"] = config->timeBuffer;
+        j["appointments_path"] = config->appointmentsPath;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {
@@ -95,7 +115,6 @@ public:
         file << std::setw(4) << j << std::endl;
         return true;
     }
-
 
 private:
     static std::optional<nlohmann::json> getJson(std::string& filePath) {

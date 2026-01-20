@@ -14,7 +14,7 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_findPersonProb->setSingleStep(0.01);
 
     m_driveStd = new QDoubleSpinBox();
-    m_driveStd->setRange(0.0, 100.0);
+    m_driveStd->setRange(0.0, 10.0);
 
     m_robotSpeed = new QDoubleSpinBox();
     m_robotSpeed->setRange(0.0, 10.0);
@@ -23,16 +23,16 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_robotAccompanySpeed->setRange(0.0, 10.0);
 
     m_conversationFoundStd = new QDoubleSpinBox();
-    m_conversationFoundStd->setRange(0.0, 100.0);
+    m_conversationFoundStd->setRange(0.0, 10.0);
 
     m_conversationDropOffStd = new QDoubleSpinBox();
-    m_conversationDropOffStd->setRange(0.0, 100.0);
+    m_conversationDropOffStd->setRange(0.0, 10.0);
 
     m_missionOverhead = new QDoubleSpinBox();
-    m_missionOverhead->setRange(0.0, 100.0);
+    m_missionOverhead->setRange(0.0, 1000.0);
 
     m_timeBuffer = new QDoubleSpinBox();
-    m_timeBuffer->setRange(0.0, 100.0);
+    m_timeBuffer->setRange(0.0, 1000.0);
 
     m_enableLogging = new QCheckBox();
 

@@ -99,6 +99,11 @@ public:
         }
     }
 
+    void robotMoved(std::string location, double distance = 0) {
+        robot->setLocation(location);
+        notifyMoved(location, distance);
+    }
+
     void notifyMoved(std::string location, double distance) {
         for (auto obs : observers) {
             obs->onRobotMoved(currentTime, location, distance);

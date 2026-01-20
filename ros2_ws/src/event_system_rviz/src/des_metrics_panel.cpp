@@ -8,34 +8,30 @@
 
 namespace des_metrics_panel {
 
-DesMetricsPanel::DesMetricsPanel(QWidget * parent) : rviz_common::Panel(parent) {
+DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     auto mainLayout = new QVBoxLayout(this);
 
-    // 1. Mission Performance Chart (Donut)
-    m_missionSeries = new QPieSeries();
+    m_missionSeries = new QtCharts::QPieSeries();
     m_missionSeries->setHoleSize(0.35);
-    // Initialize with 0
     m_missionSeries->append("On Time", 1);
     m_missionSeries->append("Late", 1);
     m_missionSeries->append("Failed", 1);
 
-    // Set colors
     m_missionSeries->slices().at(0)->setColor(Qt::green);
     m_missionSeries->slices().at(0)->setLabelVisible(true);
-    m_missionSeries->slices().at(1)->setColor(QColor(255, 165, 0));  // Orange
+    m_missionSeries->slices().at(1)->setColor(QColor(255, 165, 0));
     m_missionSeries->slices().at(2)->setColor(Qt::red);
 
-    auto chart = new QChart();
+    auto chart = new QtCharts::QChart();
     chart->addSeries(m_missionSeries);
     chart->setTitle("Mission Performance");
     chart->legend()->setAlignment(Qt::AlignRight);
 
-    m_chartView = new QChartView(chart);
+    m_chartView = new QtCharts::QChartView(chart);
     m_chartView->setRenderHint(QPainter::Antialiasing);
     m_chartView->setMinimumHeight(250);
     mainLayout->addWidget(m_chartView);
 
-    // 2. Stats Grid
     auto statsGroup = new QGroupBox("Statistics");
     auto grid = new QGridLayout(statsGroup);
 
@@ -83,29 +79,16 @@ QString DesMetricsPanel::fmtTime(int s) {
 }
 
 void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsReport::SharedPtr msg) {
-    // Update Chart
-    // Clear and redo seems easiest to handle varying values, or update existing slices
-    // Note: QPieSeries takes ownership of slices, but updating values is safer via slices() list
     // Indices: 0=OnTime, 1=Late, 2=Failed
-
-    // Check if we have data to avoid empty chart logic or division by zero visual issues
-    // Just update values directly
     m_missionSeries->slices().at(0)->setValue(msg->missions_on_time);
     m_missionSeries->slices().at(0)->setLabel(QString("On Time: %1").arg(msg->missions_on_time));
 
     m_missionSeries->slices().at(1)->setValue(msg->missions_late);
     m_missionSeries->slices().at(1)->setLabel(QString("Late: %1").arg(msg->missions_late));
 
-    // Combine failed and cancelled for visual simplicity or add another slice?
-    // User asked for "one time, late, failed". I'll treat cancelled as failed or ignore?
-    // Let's add Cancelled for completeness or merge. User prompt: "Mission Performance (one time, late, failed) in einem donout chart"
-    // So I will stick to 3 or maybe 4 slices if I want to be precise.
-    // I put 3 in constructor. Let's merge Cancelled into Failed or just show Failed.
-    // Let's just show Failed as per request.
     m_missionSeries->slices().at(2)->setValue(msg->missions_failed + msg->missions_cancelled);  // Merging for "Not Success" logic
     m_missionSeries->slices().at(2)->setLabel(QString("Failed: %1").arg(msg->missions_failed + msg->missions_cancelled));
 
-    // Update Text Stats
     QString stateText = QString("Idle: %1\nMoving: %2\nSearching: %3\nAccompany: %4\nCharging: %5")
                             .arg(fmtTime(msg->idle_time))
                             .arg(fmtTime(msg->moving_time))

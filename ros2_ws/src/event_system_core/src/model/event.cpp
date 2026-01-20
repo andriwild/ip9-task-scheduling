@@ -10,9 +10,7 @@ void SimulationStartEvent::execute(SimulationContext& ctx) {
         ctx.changeRobotState(std::make_unique<IdleState>());
     }
     ctx.notifyLog("Simulation started");
-    
-    ctx.robot->setLocation(ctx.robot->getIdleLocation());
-    ctx.notifyMoved(ctx.robot->getIdleLocation(), 0);
+    ctx.robotMoved(ctx.robot->getIdleLocation());
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
@@ -52,9 +50,7 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {
-    ctx.robot->setLocation(this->location);
-    ctx.notifyMoved(ctx.robot->getLocation(), this->distance);
-
+    ctx.robotMoved(this->location, this->distance);
     if (ctx.behaviorTree) {
         ctx.behaviorTree->rootBlackboard()->set("current_time", this->time);
         ctx.behaviorTree->rootBlackboard()->set("location", this->location);

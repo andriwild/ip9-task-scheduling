@@ -57,8 +57,12 @@ install(DIRECTORY include/
 install(FILES rviz_common_plugins.xml
         DESTINATION share/${PROJECT_NAME}
 )
-install(FILES icons/classes/DesPanel.png
-        DESTINATION share/${PROJECT_NAME}/icons/classes
+install(FILES
+    icons/classes/DesPanel.png
+    icons/classes/DesTimelinePanel.png
+    icons/classes/DesMetricsPanel.png
+    icons/classes/DesSystemConfig.png
+    DESTINATION share/${PROJECT_NAME}/icons/classes
 )
 ament_export_include_directories(include)
 ament_export_targets(export_event_system_rviz)
