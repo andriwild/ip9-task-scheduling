@@ -49,7 +49,6 @@ private:
         break;
             case SystemState::Request::RESET:
         response->message = "Reset";
-        std::cout << "RESET" << std::endl;
         break;
       default:
         response->success = false;

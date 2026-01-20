@@ -29,11 +29,11 @@ public:
     std::string location = config().blackboard->get<std::string>("location");
     int currentTime = config().blackboard.get()->get<int>("current_time");
 
-    if (ctx->robot->getLocation() == ctx->robot->getIdleLocation()) {
+    if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
       return BT::NodeStatus::SUCCESS;
     } else {
       ctx->changeRobotState(std::make_unique<MoveState>());
-      ctx->scheduleArrival(currentTime, ctx->robot->getIdleLocation());
+      ctx->scheduleArrival(currentTime, ctx->m_robot->getIdleLocation());
     }
     return BT::NodeStatus::FAILURE;
   }
@@ -48,8 +48,8 @@ public:
 
   BT::NodeStatus tick() override {
     auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-    assert(ctx->robot->getLocation() == ctx->robot->getIdleLocation());
-    ctx->notifyLog("Robot is idle at " + ctx->robot->getLocation());
+    assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
+    ctx->notifyLog("Robot is idle at " + ctx->m_robot->getLocation());
     ctx->changeRobotState(std::make_unique<IdleState>());
     return BT::NodeStatus::SUCCESS;
   }

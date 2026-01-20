@@ -10,8 +10,6 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "../../init/config_loader.h"
-#include "../../model/context.h"
-#include "../../model/robot.h"
 #include "../../util/types.h"
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
@@ -36,7 +34,6 @@ public:
         } else {
             std::cerr << "Failed to load sim_config.json, using defaults." << std::endl;
         }
-        //m_currentConfig = std::make_shared<des::SimConfig>(des::SimConfig {});
         publishConfig();
     }
 
@@ -55,8 +52,6 @@ public:
         m_dirtyConfig = false;
     }
 
-    void setRobot(std::shared_ptr<Robot> robot) { m_robot = robot; }
-    void setContext(std::shared_ptr<SimulationContext> ctx) { m_ctx = ctx; }
 
 private:
     void topicCallback(
@@ -106,8 +101,6 @@ private:
 
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;
     rclcpp::Publisher<event_system_msgs::msg::SystemConfig>::SharedPtr m_publisher;
-    std::shared_ptr<Robot> m_robot;
-    std::shared_ptr<SimulationContext> m_ctx;
     std::mutex m_configMutex;
     bool m_dirtyConfig;
     std::shared_ptr<des::SimConfig> m_currentConfig;

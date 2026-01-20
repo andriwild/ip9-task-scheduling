@@ -18,7 +18,7 @@ public:
 
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        return ctx->robot->isAccompany() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        return ctx->m_robot->isAccompany() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
  

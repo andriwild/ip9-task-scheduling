@@ -18,7 +18,7 @@ public:
     
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        return ctx->robot->isSearching() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        return ctx->m_robot->isSearching() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
@@ -79,7 +79,7 @@ public:
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
-        auto currentState = ctx->robot->getState();
+        auto currentState = ctx->m_robot->getState();
         auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
@@ -106,7 +106,7 @@ public:
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
-        auto searchState = dynamic_cast<SearchState*>(ctx->robot->getState());
+        auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
 
         auto locations = searchState->locations;
         auto next = locations.front();

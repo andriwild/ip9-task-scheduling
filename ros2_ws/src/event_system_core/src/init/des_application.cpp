@@ -1,9 +1,11 @@
 #include "des_application.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <thread>
 
 #include "../behaviour/bt_setup.h"
@@ -20,188 +22,153 @@ constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
-bool DesApplication::loadPointsOfInterest(bool printPOIS = false) {
+void DesApplication::loadPointsOfInterest(bool printPOIS = false) {
     auto db = DBClient("wsr_user", "wsr_password");
-    if (db.init()) {
-        std::cout << "Successful connected to DB" << std::endl;
+    if (!db.init()) {
+        throw std::runtime_error("Could not connect DB!");
+    }
+    std::cout << "Successful connected to DB" << std::endl;
+
+    auto pois = db.waypoints();
+    if (!pois.has_value()) {
+        throw std::runtime_error("Could not laod points of interest from file!");
     }
 
-    pointsOfInterest = db.waypoints();
-    if (!pointsOfInterest.has_value()) {
-        std::cout << "No points of interest loaded!" << std::endl;
-        return false;
-    }
-
-    for (auto poi : pointsOfInterest.value()) {
-        locationMap[poi.m_name] = poi.m_p;
-        if (printPOIS) {
-            std::cout << poi << std::endl;
-        }
+    for (auto poi : pois.value()) {
+        m_locationMap[poi.m_name] = poi.m_p;
+        if (printPOIS) { std::cout << poi << std::endl; }
     }
     std::cout << "Successful loaded points of interest!" << std::endl;
-    return true;
 }
 
-bool DesApplication::initROS() {
+void DesApplication::initROS() {
     rclcpp::init(0, nullptr);
-    plannerNode      = std::make_shared<PathPlannerNode>(locationMap);
-    controllerNode   = std::make_shared<ControllerNode>();
-    systemConfigNode = std::make_shared<ConfigNode>();
-    metricsNode      = std::make_shared<MetricsNode>();
+    m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
+    m_controllerNode   = std::make_shared<ControllerNode>();
+    m_systemConfigNode = std::make_shared<ConfigNode>();
+    m_metricsNode      = std::make_shared<MetricsNode>();
 
-    if (!plannerNode->isReady()) {
-        std::cerr << "Planner init failed!\n";
-        return false;
+    if (!m_plannerNode->isReady()) {
+        throw std::runtime_error("Nav2 Planner initialization failed");
     }
     std::cout << "Planner ready!\n";
 
-    rosThread = std::thread([this] {
+    m_rosThread = std::thread([this] {
         rclcpp::executors::MultiThreadedExecutor executor;
-        executor.add_node(plannerNode);
-        executor.add_node(controllerNode);
-        executor.add_node(systemConfigNode);
-        executor.add_node(metricsNode);
+        executor.add_node(m_plannerNode);
+        executor.add_node(m_controllerNode);
+        executor.add_node(m_systemConfigNode);
+        executor.add_node(m_metricsNode);
         executor.spin();
     });
     std::cout << "Launched all ROS Nodes!" << std::endl;
-    return true;
 }
 
-bool DesApplication::loadAppointments() {
-    std::cout << "Load Appointments: " << config->appointmentsPath << std::endl;
-    appointments = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + config->appointmentsPath, SIM_START_TIME);
-    if (!appointments.has_value()) {
-        return false;
+void DesApplication::loadAppointments(std::string path) {
+    std::cout << "Load Appointments: " << m_config->appointmentsPath << std::endl;
+    auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path, SIM_START_TIME);
+    if (!appts.has_value()) {
+        throw std::runtime_error("Could not laod appointments from file!");
     }
-
-    std::cout << "Successful loaded appointments! (" << appointments.value().size() << ")" << std::endl;
-    return true;
+    m_appointments = appts.value();
+    std::cout << "Successful loaded " << m_appointments.size() << " appointments!" << std::endl;
 }
 
-bool DesApplication::loadEmployeeLocations() {
+void DesApplication::loadEmployeeLocations() {
     std::cout << "Load Employee Locations..." << std::endl;
-    auto locs = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
-    if (!locs.has_value()) {
-        std::cout << "Failed to load employee locations!" << std::endl;
-        return false;
+    auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
+    if (!locations.has_value()) {
+        throw std::runtime_error("Could not laod appointments from file!");
     }
-    employeeLocations = locs.value();
-    std::cout << "Successful loaded employee locations! (" << employeeLocations.size() << ")" << std::endl;
-    return true;
+    m_employeeLocations = locations.value();
+    std::cout << "Successful loaded employee locations! (" << m_employeeLocations.size() << ")" << std::endl;
 }
 
 void DesApplication::setupObservers() {
-    rosObserver = std::make_shared<RosObserver>(systemConfigNode);
+    m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
 
-    ctx->addObserver(metricsNode);
-    ctx->addObserver(rosObserver);
-    ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
-    // ctx->addObserver(std::make_shared<GazeboView>(GazeboView(locationMap)));
+    m_ctx->addObserver(m_metricsNode);
+    m_ctx->addObserver(m_rosObserver);
+    m_ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
+    // ctx->addObserver(std::make_shared<GazeboView>(GazeboView(m_locationMap)));
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     std::cout << "Start filling event queue...";
-    eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
+    m_eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
-    auto missions = scheduleAppointments(appointments.value(), employeeLocations, ctx);
+    auto missions = scheduleAppointments(m_appointments, m_employeeLocations, m_ctx);
 
     for (const auto& mission : missions) {
         double buffer = config->timeBuffer + config->missionOverhead;
         mission->time = mission->time - buffer;
-        eventQueue.push(mission);
-        if (rosObserver) {
-            rosObserver->publishMeeting(mission->appointment, mission->time);
+        m_eventQueue.push(mission);
+        if (m_rosObserver) {
+            m_rosObserver->publishMeeting(mission->appointment, mission->time);
         }
     }
     std::cout << " - Done!" << std::endl;
 }
 
-void DesApplication::reset(std::shared_ptr<des::SimConfig> config) {
-    while (!eventQueue.empty()) {
-        eventQueue.pop();
+void DesApplication::reset() {
+    while (!m_eventQueue.empty()) {
+        m_eventQueue.pop();
     }
 
-    rosObserver->publishReset();
-    metricsNode->clear();
+    m_rosObserver->publishReset();
+    m_metricsNode->clear();
+    
+    loadAppointments(m_config->appointmentsPath);
 
-    if (!loadAppointments()) {
-        std::cerr << "Failed to load appointments!\n";
-        return;
-    }
-
-    if (!appointments.has_value()) {
-        std::cerr << "Failed to read config!\n";
-        return;
-    }
-
-    setupQueue(config);
-    ctx->resetTime(SIM_START_TIME);
-    std::cout << "System Reset Complete. Waiting for Start..." << std::endl;
+    setupQueue(m_config);
+    m_ctx->resetTime(SIM_START_TIME);
+    std::cout << "System Reset Complete" << std::endl;
 }
 
 void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
-    config = newConfig;
-    robot->setSpeed(config->robotSpeed);
-    robot->setAccompanytSpeed(config->robotAccompanySpeed);
-    ctx->setConfig(config);
-    std::cout << *config.get() << std::endl;
+    m_config = newConfig;
+    m_ctx->setConfig(m_config);
+    std::cout << *m_config.get() << std::endl;
 }
 
 int DesApplication::run() {
-    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n"
-              << "\033[0m";
+    std::cout << "\033[1m" << "\n----- Descrete Event Sytem -----\n" << "\033[0m";
 
-    if (!loadPointsOfInterest(true)) {
-        std::cerr << "Failed to load points of interest!\n";
-        return 1;
+    try {
+        loadPointsOfInterest(true);
+        initROS();
+        m_config = m_systemConfigNode->getConfig();
+        loadAppointments(m_config->appointmentsPath);
+        loadEmployeeLocations();
+    } catch (const std::exception& e) {
+        exit(EXIT_FAILURE);
     }
 
-    if (!initROS()) {
-        std::cerr << "Failed to create ROS Nodes!\n";
-        return 1;
-    }
-
-    config = systemConfigNode->getConfig();
-    robot = std::make_shared<Robot>(config->robotSpeed, config->robotAccompanySpeed);
-
-    if (!loadAppointments()) {
-        std::cerr << "Failed to load appointments!\n";
-        return 1;
-    }
-
-    if (!loadEmployeeLocations()) {
-        std::cerr << "Failed to load employee locations!\n";
-        return 1;
-    }
-
-    ctx = std::make_shared<SimulationContext>(
-        robot,
-        eventQueue,
-        config,
-        plannerNode,
-        employeeLocations
+    m_ctx = std::make_shared<SimulationContext>(
+        m_eventQueue,
+        m_config,
+        m_plannerNode,
+        m_employeeLocations
     );
 
-    systemConfigNode->setRobot(robot);
-    systemConfigNode->setContext(ctx);
-
     setupObservers();
-    setupQueue(config);
-    ctx->behaviorTree = setupBehaviorTree(ctx);
+    setupQueue(m_config);
+    m_ctx->behaviorTree = setupBehaviorTree(m_ctx);
 
-    std::cout << "Start Simulation Thread" << std::endl;
-    simThread = std::thread([&] {
+    m_simThread = std::thread([&] {
+        std::cout << "Start Simulation Thread" << std::endl;
         while (rclcpp::ok()) {
-            if (systemConfigNode->isConfigDirty()) {
-                updateConfig(systemConfigNode->getConfig());
-                systemConfigNode->clearDirty();
+
+            if (m_systemConfigNode->isConfigDirty()) {
+                updateConfig(m_systemConfigNode->getConfig());
+                m_systemConfigNode->clearDirty();
             }
 
-            switch (controllerNode->currentState.load()) {
+            switch (m_controllerNode->currentState.load()) {
                 case SystemState::Request::RESET:
-                    reset(config);
-                    controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
+                    reset();
+                    m_controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
                     break;
 
                 case SystemState::Request::PAUSE:
@@ -209,11 +176,11 @@ int DesApplication::run() {
                     break;
 
                 case SystemState::Request::RUN:
-                    if (!eventQueue.empty()) {
-                        auto e = eventQueue.top();
-                        eventQueue.pop();
-                        ctx->setTime(e->time);
-                        e->execute(*ctx);
+                    if (!m_eventQueue.empty()) {
+                        auto e = m_eventQueue.top();
+                        m_eventQueue.pop();
+                        m_ctx->setTime(e->time);
+                        e->execute(*m_ctx);
                     }
                     break;
             }
@@ -221,10 +188,9 @@ int DesApplication::run() {
 
         std::cout << "\033[1m" << "\nSimulation complete!" << "\033[0m" << std::endl;
 
-        std::cin.get();
         QCoreApplication::quit();
         QApplication::quit();
     });
 
-    return app->exec();
+    return m_app->exec();
 }

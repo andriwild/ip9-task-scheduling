@@ -15,123 +15,124 @@
 #include "robot_state.h"
 
 class SimulationContext {
-    int currentTime = 0;
-    std::shared_ptr<des::SimConfig> simConfig;
-    std::vector<std::shared_ptr<IObserver>> observers;
-    std::shared_ptr<des::Appointment> currentAppointment = nullptr;
+    int m_currentTime = 0;
+    std::shared_ptr<des::SimConfig> m_simConfig;
+    std::vector<std::shared_ptr<IObserver>> m_observers;
+    std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
 
 public:
-    std::shared_ptr<Robot> robot;
+    std::shared_ptr<Robot> m_robot;
     EventQueue& queue;
     std::shared_ptr<PathPlannerNode> travelTime;
     std::map<std::string, std::vector<std::string>> employeeLocations;
     std::shared_ptr<BT::Tree> behaviorTree;
 
     explicit SimulationContext(
-        std::shared_ptr<Robot> robot,
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> travelTime,
         std::map<std::string, std::vector<std::string>> employeeLocations
     ): 
-        simConfig(simConfig),
-        robot(robot),
+        m_simConfig(simConfig),
         queue(queue),
         travelTime(travelTime),
         employeeLocations(employeeLocations) 
     {
+        m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed);
         std::cout << "Simulation Context created! (ctor)" << std::endl;
     }
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
-        currentAppointment = appt;
+        m_currentAppointment = appt;
     }
 
     void completeAppointment() {
-        assert(currentAppointment != nullptr);
-        int timeDiff = currentTime - currentAppointment->appointmentTime;
-        notifyMissionComplete(currentAppointment->state, timeDiff);
+        assert(m_currentAppointment != nullptr);
+        int timeDiff = m_currentTime - m_currentAppointment->appointmentTime;
+        notifyMissionComplete(m_currentAppointment->state, timeDiff);
     }
 
     const std::shared_ptr<des::Appointment> getAppointment() const {
-        return currentAppointment;
+        return m_currentAppointment;
     }
 
     void updateAppointmentState(const des::MissionState& newState) {
-        assert(currentAppointment != nullptr);
-        currentAppointment->state = newState;
+        assert(m_currentAppointment != nullptr);
+        m_currentAppointment->state = newState;
     }
 
     void resetTime(int newTime) {
-        currentTime = newTime;
+        m_currentTime = newTime;
     }
 
     void setTime(int newTime) {
-        assert(newTime >= currentTime);
-        currentTime = newTime;
+        assert(newTime >= m_currentTime);
+        m_currentTime = newTime;
     }
 
     void addObserver(std::shared_ptr<IObserver> observer) {
         std::cout << "Observer added: " << observer->getName() << std::endl;
-        observers.emplace_back(observer);
+        m_observers.emplace_back(observer);
     }
 
     void changeRobotState(std::unique_ptr<RobotState> newState) {
-        robot->changeState(std::move(newState));
-        notifyRobotStateChanged(robot->getState()->getType());
+        m_robot->changeState(std::move(newState));
+        notifyRobotStateChanged(m_robot->getState()->getType());
     }
 
     void notifyMissionComplete(des::MissionState state, int timeDiff) {
-        for (auto obs : observers) {
-            obs->onMissionComplete(currentTime, state, timeDiff);
+        for (auto obs : m_observers) {
+            obs->onMissionComplete(m_currentTime, state, timeDiff);
         }
     }
 
     void notifyRobotStateChanged(RobotStateType newState) {
-        for (auto obs : observers) {
-            obs->onStateChanged(currentTime, newState);
+        for (auto obs : m_observers) {
+            obs->onStateChanged(m_currentTime, newState);
         }
     }
 
     void notifyLog(const std::string& msg) {
-        for (auto obs : observers) {
-            obs->onLog(currentTime, msg);
+        for (auto obs : m_observers) {
+            obs->onLog(m_currentTime, msg);
         }
     }
 
     void robotMoved(std::string location, double distance = 0) {
-        robot->setLocation(location);
+        m_robot->setLocation(location);
         notifyMoved(location, distance);
     }
 
     void notifyMoved(std::string location, double distance) {
-        for (auto obs : observers) {
-            obs->onRobotMoved(currentTime, location, distance);
+        for (auto obs : m_observers) {
+            obs->onRobotMoved(m_currentTime, location, distance);
         }
     }
 
     void setConfig(std::shared_ptr<des::SimConfig> newConfig) {
-        simConfig = newConfig;
+        m_simConfig = newConfig;
+        m_robot->setSpeed(m_simConfig->robotSpeed);
+        m_robot->setAccompanytSpeed(m_simConfig->robotAccompanySpeed);
         std::cout << "New config active" << std::endl;
-        std::cout << simConfig.get() << std::endl;
+        std::cout << m_simConfig.get() << std::endl;
     }
 
-    double getPersonFindProbability() const { return simConfig->personFindProbability; };
-    double getConversationFoundStd() const { return simConfig->conversationFoundStd; };
-    double getConversationDropOffStd() const { return simConfig->conversationDropOffStd; };
-    double getdriveTimeVariance() const { return simConfig->driveStd; };
+    double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
+    double getConversationFoundStd() const { return m_simConfig->conversationFoundStd; };
+    double getConversationDropOffStd() const { return m_simConfig->conversationDropOffStd; };
+    double getdriveTimeVariance() const { return m_simConfig->driveStd; };
 
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
 
-        if (robot->getLocation() == target) {
+        if (m_robot->getLocation() == target) {
             this->queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
             this->notifyLog("Already at " + target);
         } else {
-            std::optional<double> distance = this->travelTime->estimateDistance(this->robot->getLocation(), target);
+            std::optional<double> distance = this->travelTime->estimateDistance(this->m_robot->getLocation(), target);
             assert(distance.has_value());
 
-            double travelTime = distance.value() / this->robot->getSpeed();
+            double travelTime = distance.value() / this->m_robot->getSpeed();
 
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
             double completeTravelTime = travelTime * noiseFactor;

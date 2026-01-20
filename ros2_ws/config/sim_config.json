@@ -1,11 +1,11 @@
 {
-    "appointments_path": "appointments.json",
-    "conversation_drop_off_std": 1.0,
-    "conversation_found_std": 1.0,
-    "drive_std": 4.0,
-    "find_person_probability": 0.009999999776482582,
-    "missionOverhead": 1.0,
-    "robot_accompany_speed": 2.0,
-    "robot_speed": 2.0,
-    "timeBuffer": 3.0
+    "appointments_path": "scenario_light_load.json",
+    "conversation_drop_off_std": 0.0,
+    "conversation_found_std": 0.0,
+    "drive_std": 0.20000000298023224,
+    "find_person_probability": 0.5,
+    "missionOverhead": 10.0,
+    "robot_accompany_speed": 0.4000000059604645,
+    "robot_speed": 0.5,
+    "timeBuffer": 10.0
 }

@@ -3,4 +3,7 @@ install
 build
 /log/
 ./config/sim_config.json
+.vscode
+.idea
+./ros2_ws/.vscode
 

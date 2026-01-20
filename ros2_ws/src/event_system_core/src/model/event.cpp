@@ -6,11 +6,11 @@
 
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
-    if (ctx.robot->isBusy()) { 
+    if (ctx.m_robot->isBusy()) { 
         ctx.changeRobotState(std::make_unique<IdleState>());
     }
     ctx.notifyLog("Simulation started");
-    ctx.robotMoved(ctx.robot->getIdleLocation());
+    ctx.robotMoved(ctx.m_robot->getIdleLocation());
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
@@ -62,7 +62,7 @@ void ArrivedEvent::execute(SimulationContext& ctx) {
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    if (ctx.robot->isBusy()) {
+    if (ctx.m_robot->isBusy()) {
         ctx.updateAppointmentState(des::MissionState::CANCELLED);
         this->appointment->state = des::MissionState::FAILED;
         ctx.notifyLog("[WARN] Robot busy, ignoring dispatch.");
