@@ -1,18 +1,14 @@
 #pragma once
 
 #include <iostream>
+#include <rclcpp/rclcpp.hpp>
 #include <string>
-#include <iostream>
 
-#include "../util/types.h"
 #include "../observer/observer.h"
+#include "../util/types.h"
 
 class TerminalView : public IObserver {
-    const std::string RESET   = "\033[0m";
-    const std::string RED     = "\033[31m";
-    const std::string GREEN   = "\033[32m";
-    const std::string YELLOW  = "\033[33m";
-    const std::string CYAN    = "\033[36m";
+    // Colors removed as they are not standard in RCLCPP logging
 
 public:
     std::string getName() override {
@@ -20,15 +16,10 @@ public:
     }
 
     void onLog(int time, const std::string& message) override {
-        std::cout << RED;
-        std::cout << "[" << des::toHumanReadableTime(time) << "] " << message;
-        std::cout << RESET << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %s", des::toHumanReadableTime(time).c_str(), message.c_str());
     }
 
-    void onRobotMoved(int time, const std::string& location, double distance) override {
-        std::cout << GREEN;
-        std::cout << "[" << des::toHumanReadableTime(time) << "] " << location;
-        std::cout << RESET << std::endl;
+    void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
+        RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %s", des::toHumanReadableTime(time).c_str(), location.c_str());
     };
-
 };

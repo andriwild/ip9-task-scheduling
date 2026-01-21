@@ -1,33 +1,34 @@
-#include <iostream>
+#include "robot_state.h"
+
+#include <rclcpp/rclcpp.hpp>
 
 #include "robot.h"
-#include "robot_state.h"
 
 bool IdleState::isBusy() const { return false; };
 
-void IdleState::enter(Robot& robot) { 
-    std::cout << "[State] enter idle " << std::endl;
+void IdleState::enter(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] enter idle ");
     robot.setSpeed(robot.getSpeed());
 }
 void IdleState::exit(Robot& robot) {
-    std::cout << "[State] exit idle " << std::endl;
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] exit idle ");
 }
-void IdleState::handleEvent(Robot& _) { 
-    std::cout << "[State] handle idle " << std::endl;
+void IdleState::handleEvent(Robot& _) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] handle idle ");
 }
 RobotStateType IdleState::getType() const {
     return RobotStateType::IDLE;
 }
 
-void AccompanyState::enter(Robot& robot) { 
-    std::cout << "[State] enter accompany " << std::endl;
+void AccompanyState::enter(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] enter accompany ");
     robot.setSpeed(robot.getAccompanySpeed());
 }
 void AccompanyState::exit(Robot& robot) {
-    std::cout << "[State] exit accompany " << std::endl;
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] exit accompany ");
 }
-void AccompanyState::handleEvent(Robot& robot) { 
-    std::cout << "[State] handle accompany " << std::endl;
+void AccompanyState::handleEvent(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] handle accompany ");
 }
 bool AccompanyState::isAccompany() const { return true; };
 
@@ -35,31 +36,29 @@ RobotStateType AccompanyState::getType() const {
     return RobotStateType::ACCOMPANY;
 }
 
-
-void MoveState::enter(Robot& robot) { 
-    std::cout << "[State] enter move " << std::endl;
+void MoveState::enter(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] enter move ");
     robot.setSpeed(robot.getSpeed());
 }
 void MoveState::exit(Robot& robot) {
-    std::cout << "[State] exit move " << std::endl;
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] exit move ");
 }
-void MoveState::handleEvent(Robot& robot) { 
-    std::cout << "[State] handle move " << std::endl;
+void MoveState::handleEvent(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] handle move ");
 }
 RobotStateType MoveState::getType() const {
     return RobotStateType::MOVING;
 }
 
-
-void SearchState::enter(Robot& robot) { 
-    std::cout << "[State] enter search " << std::endl;
+void SearchState::enter(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] enter search ");
     robot.setSpeed(robot.getSpeed());
 }
 void SearchState::exit(Robot& robot) {
-    std::cout << "[State] exit search " << std::endl;
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] exit search ");
 }
-void SearchState::handleEvent(Robot& robot) { 
-    std::cout << "[State] handle search " << std::endl;
+void SearchState::handleEvent(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] handle search ");
 }
 
 bool SearchState::isSearching() const { return true; };
@@ -67,16 +66,15 @@ RobotStateType SearchState::getType() const {
     return RobotStateType::SEARCHING;
 }
 
-
-void ConversateState::enter(Robot& robot) { 
-    std::cout << "[State] enter conversation" << std::endl;
+void ConversateState::enter(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] enter conversation");
     robot.setSpeed(robot.getSpeed());
 }
 void ConversateState::exit(Robot& robot) {
-    std::cout << "[State] exit conversation " << std::endl;
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] exit conversation ");
 }
-void ConversateState::handleEvent(Robot& robot) { 
-    std::cout << "[State] handle conversation" << std::endl;
+void ConversateState::handleEvent(Robot& robot) {
+    RCLCPP_DEBUG(rclcpp::get_logger("RobotState"), "[State] handle conversation");
 }
 
 bool ConversateState::isConversate() const { return true; };

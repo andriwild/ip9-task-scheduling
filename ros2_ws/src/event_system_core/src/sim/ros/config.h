@@ -29,10 +29,10 @@ public:
         // Load initial config
         auto loadedConfig = ConfigLoader::loadSimConfig(SIM_CONFIG_FILE);
         if (loadedConfig.has_value()) {
-            std::cout << "Initial Simulation Config loaded!" << std::endl;
+            RCLCPP_INFO(this->get_logger(), "Initial Simulation Config loaded!");
             m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());
         } else {
-            std::cerr << "Failed to load sim_config.json, using defaults." << std::endl;
+            RCLCPP_WARN(this->get_logger(), "Failed to load sim_config.json, using defaults.");
         }
         publishConfig();
     }
@@ -52,21 +52,20 @@ public:
         m_dirtyConfig = false;
     }
 
-
 private:
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
         std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
         auto config = des::SimConfig{
-                request->find_person_probability,
-                request->robot_speed,
-                request->robot_accompany_speed,
-                request->drive_std,
-                request->conversation_found_std,
-                request->conversation_drop_off_std,
-                request->mission_overhead,
-                request->time_buffer,
-                request->appointments_path};
+            request->find_person_probability,
+            request->robot_speed,
+            request->robot_accompany_speed,
+            request->drive_std,
+            request->conversation_found_std,
+            request->conversation_drop_off_std,
+            request->mission_overhead,
+            request->time_buffer,
+            request->appointments_path};
 
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
@@ -82,7 +81,7 @@ private:
 
     void publishConfig() {
         auto msg = event_system_msgs::msg::SystemConfig();
-        std::cout << "Publishing config ..." << std::endl;
+        RCLCPP_INFO(this->get_logger(), "Publishing config ...");
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
             msg.find_person_probability = m_currentConfig->personFindProbability;
@@ -96,7 +95,7 @@ private:
             msg.appointments_path = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
-        std::cout << "Done!" << std::endl;
+        RCLCPP_INFO(this->get_logger(), "Done!");
     }
 
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;

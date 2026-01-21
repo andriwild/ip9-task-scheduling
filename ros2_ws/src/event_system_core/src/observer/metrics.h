@@ -87,7 +87,7 @@ public:
         publishReport();
     }
 
-    void onMissionComplete(int time, des::MissionState& state, int timeDiff) override {
+    void onMissionComplete(int /*time*/, des::MissionState& state, int timeDiff) override {
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff > 0) {
@@ -110,7 +110,7 @@ public:
         publishReport();
     }
 
-    void onRobotMoved(int time, const std::string& location, double distance) override {
+    void onRobotMoved(int /*time*/, const std::string& /*location*/, double distance) override {
         movedDistance += distance;
         publishReport();
     }

@@ -10,15 +10,14 @@ public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
         m_publisher = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>(
             "/timeline_events",
-            rclcpp::QoS(100)
-        );
+            rclcpp::QoS(100));
     }
 
     std::string getName() override {
         return "ROS";
     }
 
-    void onLog(int time, const std::string& message) override {
+    void onLog(int /*time*/, const std::string& /*message*/) override {
         // auto msg = event_system_msgs::msg::TimelineEvent();
         // msg.time = time;
         // msg.type = event_system_msgs::msg::TimelineEvent::LOG;
@@ -26,7 +25,7 @@ public:
         // m_publisher->publish(msg);
     }
 
-    void onRobotMoved(int time, const std::string& location, double distance) override {
+    void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = event_system_msgs::msg::TimelineEvent::MOVE;
@@ -53,7 +52,7 @@ public:
         m_publisher->publish(msg);
     }
 
-    void publishReset(){
+    void publishReset() {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.type = event_system_msgs::msg::TimelineEvent::RESET;
         m_publisher->publish(msg);

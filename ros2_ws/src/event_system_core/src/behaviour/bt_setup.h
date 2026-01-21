@@ -3,15 +3,17 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include "../model/context.h"
-#include "search.h"
 #include "accompany.h"
 #include "idle.h"
+#include "search.h"
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
-    std::cout << "Build Behavior Tree ...";
+    RCLCPP_INFO(rclcpp::get_logger("BehaviorTree"), "Build Behavior Tree ...");
     BT::BehaviorTreeFactory factory;
-    
+
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
     factory.registerNodeType<ScanLocation>("ScanLocation");
@@ -30,7 +32,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<Docking>("Docking");
     factory.registerNodeType<EnterIdle>("EnterIdle");
 
-    static const char* xml_text = R"(
+    static const char * xml_text = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
             <Fallback name="Fallback_MainStrategy">
@@ -82,8 +84,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
     tree->rootBlackboard()->set("ctx", ctx);
 
-    //std::string xml_models = BT::writeTreeNodesModelXML(factory);
-    std::cout << " - Done!" << std::endl;
+    // std::string xml_models = BT::writeTreeNodesModelXML(factory);
+    RCLCPP_INFO(rclcpp::get_logger("BehaviorTree"), " - Done!");
     return tree;
 }
-

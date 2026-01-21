@@ -1,23 +1,23 @@
 #pragma once
 
-#include <memory>
 #include <iostream>
-#include <vector>
+#include <memory>
 #include <queue>
-#include "../util/types.h"
+#include <vector>
 
+#include "../util/types.h"
 
 class SimulationContext;
 
 class IEvent {
 public:
     int time;
-    IEvent(const int time): time(time) {}
+    IEvent(const int time) : time(time) {}
 
     virtual ~IEvent() = default;
 
-    virtual void execute(SimulationContext& ctx) = 0; 
-    virtual std::string getName() const = 0; 
+    virtual void execute(SimulationContext& ctx) = 0;
+    virtual std::string getName() const = 0;
 
     bool operator<(const IEvent& other) const {
         return time < other.time;
@@ -29,31 +29,30 @@ public:
     }
 };
 
-
 struct EventComparator {
     bool operator()(const std::shared_ptr<IEvent>& a, const std::shared_ptr<IEvent>& b) {
-        if(!a || !b) return false;
-        return a->time > b->time; 
+        if (!a || !b) {
+            return false;
+        }
+        return a->time > b->time;
     }
 };
 
-using EventQueue  = std::priority_queue<
+using EventQueue = std::priority_queue<
     std::shared_ptr<IEvent>,
     std::vector<std::shared_ptr<IEvent>>,
-    EventComparator
->;
+    EventComparator>;
 
 class SimulationStartEvent : public IEvent {
 public:
-    explicit SimulationStartEvent(int time): IEvent(time) {}
+    explicit SimulationStartEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "Sim start"; };
-
 };
 
 class SimulationEndEvent : public IEvent {
 public:
-    explicit SimulationEndEvent(int time): IEvent(time) {}
+    explicit SimulationEndEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "Sim end"; };
 };
@@ -62,11 +61,9 @@ class ArrivedEvent : public IEvent {
 public:
     double distance;
     std::string location;
-    explicit ArrivedEvent(int time, std::string location, double distance): 
-        IEvent(time),
-        location(location),
-        distance(distance)
-    {}
+    explicit ArrivedEvent(int time, std::string location, double distance) : IEvent(time),
+                                                                             distance(distance),
+                                                                             location(location) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "ArrivedEvent"; };
 };
@@ -74,32 +71,29 @@ public:
 class MissionDispatchEvent : public IEvent {
 public:
     std::shared_ptr<des::Appointment> appointment;
-    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt): 
-        IEvent(time),
-        appointment(appt)
-    {}
+    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt) : IEvent(time),
+                                                                                      appointment(appt) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "MissionDispatchEvent"; };
 };
 
 class MissionCompleteEvent : public IEvent {
 public:
-    explicit MissionCompleteEvent(int time): IEvent(time) {}
+    explicit MissionCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "MissionCompleteEvent"; };
 };
 
-
 class FoundPersonConversationCompleteEvent : public IEvent {
 public:
-    explicit FoundPersonConversationCompleteEvent(int time): IEvent(time) {}
+    explicit FoundPersonConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "FoundPersonConversationCompleteEvent"; };
 };
 
 class DropOffConversationCompleteEvent : public IEvent {
 public:
-    explicit DropOffConversationCompleteEvent(int time): IEvent(time) {}
+    explicit DropOffConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "DropOffConversationCompleteEvent"; };
 };

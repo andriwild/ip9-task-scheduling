@@ -19,8 +19,8 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
 
         auto startPos = ctx->m_robot->getIdleLocation();
         
-        std::optional<double> travelTo   = ctx->plannerNode->estimateDistance(startPos, employeeLocation);
-        std::optional<double> accompany  = ctx->plannerNode->estimateDistance(employeeLocation, appt.get()->roomName);
+        std::optional<double> travelTo   = ctx->m_plannerNode->estimateDistance(startPos, employeeLocation);
+        std::optional<double> accompany  = ctx->m_plannerNode->estimateDistance(employeeLocation, appt.get()->roomName);
 
         assert(travelTo.has_value());
         assert(accompany.has_value());

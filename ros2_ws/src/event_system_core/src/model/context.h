@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 #include <vector>
 
 #include "../observer/observer.h"
@@ -25,18 +26,21 @@ public:
     EventQueue& m_queue;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<BT::Tree> m_behaviorTree;
+    std::map<std::string, std::vector<std::string>> m_employeeLocations;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<PathPlannerNode> plannerNode
-    ): 
+        std::shared_ptr<PathPlannerNode> plannerNode,
+        std::map<std::string, std::vector<std::string>> employeeLocations 
+    ):
         m_simConfig(simConfig),
         m_queue(queue),
-        m_plannerNode(plannerNode)
+        m_plannerNode(plannerNode),
+        m_employeeLocations(employeeLocations)
     {
         m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed);
-        std::cout << "Simulation Context created! (ctor)" << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "Simulation Context created!");
     }
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
@@ -68,7 +72,7 @@ public:
     }
 
     void addObserver(std::shared_ptr<IObserver> observer) {
-        std::cout << "Observer added: " << observer->getName() << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "Observer added: %s", observer->getName().c_str());
         m_observers.emplace_back(observer);
     }
 
@@ -110,8 +114,8 @@ public:
         m_simConfig = newConfig;
         m_robot->setSpeed(m_simConfig->robotSpeed);
         m_robot->setAccompanytSpeed(m_simConfig->robotAccompanySpeed);
-        std::cout << "New config active" << std::endl;
-        std::cout << m_simConfig.get() << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "New config active");
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
     }
 
     double getPersonFindProbability() const { return m_simConfig->personFindProbability; };

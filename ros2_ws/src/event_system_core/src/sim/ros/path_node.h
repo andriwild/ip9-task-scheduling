@@ -1,18 +1,19 @@
 // How to write action clients: https://automaticaddison.com/how-to-create-an-action-ros-2-jazzy/
 #pragma once
 
-#include <chrono>
-#include <mutex>
-#include <cmath>
+#include <tf2/LinearMath/Quaternion.h>
 
+#include <chrono>
+#include <cmath>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <mutex>
+#include <nav2_msgs/action/compute_path_to_pose.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <nav2_msgs/action/compute_path_to_pose.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav_msgs/msg/path.hpp>
 #include <string>
-#include <tf2/LinearMath/Quaternion.h>
+
 #include "../../util/types.h"
 
 struct SimplePose {
@@ -29,10 +30,8 @@ public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode(std::map<std::string, des::Point> locationMap) :
-        Node("des_path_planner_node"),
-        m_locationMap(locationMap)
-    {
+    PathPlannerNode(std::map<std::string, des::Point> locationMap) : Node("des_path_planner_node"),
+                                                                     m_locationMap(locationMap) {
         m_client = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
 
         RCLCPP_INFO(this->get_logger(), "Waiting for planner server...");
@@ -55,7 +54,9 @@ public:
     PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {
         PathResult result{false, 0.0};
         m_resultReady = false;
-        if (!m_ready) return result;
+        if (!m_ready) {
+            return result;
+        }
 
         auto goal_msg = ComputePathToPose::Goal();
         goal_msg.start = toPose(start);
@@ -66,7 +67,7 @@ public:
         auto send_goal_options = rclcpp_action::Client<ComputePathToPose>::SendGoalOptions();
 
         send_goal_options.result_callback =
-            [this](const GoalHandle::WrappedResult & wrapped) {
+            [this](const GoalHandle::WrappedResult& wrapped) {
                 std::lock_guard lock(m_mutex);
                 if (wrapped.code == rclcpp_action::ResultCode::SUCCEEDED) {
                     m_currentResult.success = true;
@@ -79,7 +80,7 @@ public:
         m_client->async_send_goal(goal_msg, send_goal_options);
 
         std::unique_lock lock(m_mutex);
-        if (m_cv.wait_for(lock, std::chrono::seconds(15), [this]{ return m_resultReady; })) {
+        if (m_cv.wait_for(lock, std::chrono::seconds(15), [this] { return m_resultReady; })) {
             result = m_currentResult;
         }
 
@@ -88,25 +89,26 @@ public:
 
     bool isReady() const { return m_ready; }
 
-
     std::optional<double> estimateDistance(const std::string& from, const std::string& to) {
         auto fromIt = m_locationMap.find(from);
-        auto toIt   = m_locationMap.find(to);
+        auto toIt = m_locationMap.find(to);
 
-        if(fromIt == m_locationMap.end() || toIt == m_locationMap.end()){
-            std::cerr << "ERROR\t" <<  from << " or " << to << "  not found in map!" << std::endl;
-            for(auto [k,_]: m_locationMap) {
-                std::cout << k << std::endl;
+        if (fromIt == m_locationMap.end() || toIt == m_locationMap.end()) {
+            RCLCPP_ERROR(this->get_logger(), "ERROR\t%s or %s not found in map!", from.c_str(), to.c_str());
+            for (auto [k, _] : m_locationMap) {
+                RCLCPP_INFO(this->get_logger(), "%s", k.c_str());
             }
             return std::nullopt;
         }
 
-        SimplePose start { fromIt->second.m_x, fromIt->second.m_y, 0.0 };
-        SimplePose goal  { toIt->second.m_x, toIt->second.m_y, 0.0 };
-        
+        SimplePose start{fromIt->second.m_x, fromIt->second.m_y, 0.0};
+        SimplePose goal{toIt->second.m_x, toIt->second.m_y, 0.0};
+
         auto result = computeDistance(start, goal);
 
-        if (!result.success) return std::nullopt;
+        if (!result.success) {
+            return std::nullopt;
+        }
 
         return result.distance;
     }
@@ -134,11 +136,11 @@ private:
     double calcDistance(const nav_msgs::msg::Path& path) {
         double d = 0;
         for (size_t i = 1; i < path.poses.size(); ++i) {
-            auto& p1 = path.poses[i-1].pose.position;
+            auto& p1 = path.poses[i - 1].pose.position;
             auto& p2 = path.poses[i].pose.position;
             double dx = p2.x - p1.x;
             double dy = p2.y - p1.y;
-            d += std::sqrt(dx*dx + dy*dy);
+            d += std::sqrt(dx * dx + dy * dy);
         }
         return d;
     }

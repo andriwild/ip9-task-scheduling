@@ -73,12 +73,12 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
     ctx.updateAppointmentState(des::MissionState::IN_PROGRESS);
     std::string person = this->appointment->personName;
 
-    if (ctx.employeeLocations.find(person) == ctx.employeeLocations.end()) {
+    if (ctx.m_employeeLocations.find(person) == ctx.m_employeeLocations.end()) {
         ctx.notifyLog("[ERROR] Person '" + person + "' not found in database!");
         return;
     }
 
-    std::vector<std::string> locations = ctx.employeeLocations.at(person);
+    std::vector<std::string> locations = ctx.m_employeeLocations.at(person);
     
     if (locations.empty()) {
         ctx.notifyLog("[ERROR] No locations defined for '" + person + "'!");
