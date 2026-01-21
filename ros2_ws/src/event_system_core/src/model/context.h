@@ -27,20 +27,20 @@ public:
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<BT::Tree> m_behaviorTree;
     std::map<std::string, std::vector<std::string>> m_employeeLocations;
+    rclcpp::Logger m_logger;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> plannerNode,
-        std::map<std::string, std::vector<std::string>> employeeLocations 
-    ):
-        m_simConfig(simConfig),
-        m_queue(queue),
-        m_plannerNode(plannerNode),
-        m_employeeLocations(employeeLocations)
-    {
-        m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed);
-        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "Simulation Context created!");
+        std::map<std::string, std::vector<std::string>> employeeLocations,
+        rclcpp::Logger logger) : m_simConfig(simConfig),
+                                 m_queue(queue),
+                                 m_plannerNode(plannerNode),
+                                 m_employeeLocations(employeeLocations),
+                                 m_logger(logger) {
+        m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed, logger);
+        RCLCPP_INFO(m_logger, "Simulation Context created!");
     }
 
     void setAppointment(std::shared_ptr<des::Appointment> appt) {

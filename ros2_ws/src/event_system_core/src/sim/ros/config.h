@@ -81,7 +81,6 @@ private:
 
     void publishConfig() {
         auto msg = event_system_msgs::msg::SystemConfig();
-        RCLCPP_INFO(this->get_logger(), "Publishing config ...");
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
             msg.find_person_probability = m_currentConfig->personFindProbability;
@@ -95,7 +94,7 @@ private:
             msg.appointments_path = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
-        RCLCPP_INFO(this->get_logger(), "Done!");
+        RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");
     }
 
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;

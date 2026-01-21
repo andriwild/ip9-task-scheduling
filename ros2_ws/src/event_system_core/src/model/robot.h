@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 
 #include "robot_state.h"
 
@@ -11,13 +12,13 @@ class Robot {
     double m_accompanySpeed;
     double m_energy = 100.0;
     std::string m_currentLocation;
+    rclcpp::Logger m_logger;
 
 public:
-    Robot(const double speed, const double accompanySpeed):
-        m_state(std::make_unique<IdleState>()),
-        m_currentSpeed(speed),
-        m_accompanySpeed(accompanySpeed)
-    {}
+    Robot(const double speed, const double accompanySpeed, rclcpp::Logger logger) : m_state(std::make_unique<IdleState>()),
+                                                                                    m_currentSpeed(speed),
+                                                                                    m_accompanySpeed(accompanySpeed),
+                                                                                    m_logger(logger) {}
 
     void setAccompanytSpeed(double speed) { m_accompanySpeed = speed; }
 
@@ -25,7 +26,7 @@ public:
     void setLocation(std::string location);
 
     void changeState(std::unique_ptr<RobotState> newState);
-    RobotState* getState() { return m_state.get(); };
+    RobotState * getState() { return m_state.get(); };
 
     void setSpeed(double newSpeed);
     double getSpeed() const;
@@ -40,4 +41,6 @@ public:
     bool isSearching();
     bool isAccompany();
     bool isConversate();
+
+    rclcpp::Logger getLogger() const { return m_logger; }
 };

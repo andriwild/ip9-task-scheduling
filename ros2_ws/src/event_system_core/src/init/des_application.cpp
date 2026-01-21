@@ -22,7 +22,7 @@ constexpr int SIM_START_TIME = 8 * HOUR;
 constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
-void DesApplication::loadPointsOfInterest(bool printPOIS = false) {
+void DesApplication::loadPointsOfInterest() {
     auto db = DBClient("wsr_user", "wsr_password");
     if (!db.init()) {
         throw std::runtime_error("Could not connect DB!");
@@ -30,7 +30,7 @@ void DesApplication::loadPointsOfInterest(bool printPOIS = false) {
     std::cout << "Successful connected to DB" << std::endl;
     // Keeping std::cout for now if needed or replace?
     // Plan said replace ALL.
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Successful connected to DB");
+    RCLCPP_INFO(m_node->get_logger(), "Successful connected to DB");
 
     auto pois = db.waypoints();
     if (!pois.has_value()) {
@@ -39,15 +39,13 @@ void DesApplication::loadPointsOfInterest(bool printPOIS = false) {
 
     for (auto poi : pois.value()) {
         m_locationMap[poi.m_name] = poi.m_p;
-        if (printPOIS) {
-            RCLCPP_DEBUG_STREAM(rclcpp::get_logger("DesApplication"), poi);
-        }
+        RCLCPP_DEBUG_STREAM(m_node->get_logger(), poi);
     }
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Successful loaded points of interest!");
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu points of interest!", m_locationMap.size());
 }
 
 void DesApplication::initROS() {
-    rclcpp::init(0, nullptr);
+    // rclcpp::init(0, nullptr); // Moved to run()
     m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
     m_controllerNode = std::make_shared<ControllerNode>();
     m_systemConfigNode = std::make_shared<ConfigNode>();
@@ -56,7 +54,7 @@ void DesApplication::initROS() {
     if (!m_plannerNode->isReady()) {
         throw std::runtime_error("Nav2 Planner initialization failed");
     }
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Planner ready!");
+    RCLCPP_INFO(m_node->get_logger(), "Planner ready!");
 
     m_rosThread = std::thread([this] {
         rclcpp::executors::MultiThreadedExecutor executor;
@@ -66,40 +64,42 @@ void DesApplication::initROS() {
         executor.add_node(m_metricsNode);
         executor.spin();
     });
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Launched all ROS Nodes!");
+    RCLCPP_INFO(m_node->get_logger(), "Launched all ROS Nodes!");
 }
 
 void DesApplication::loadAppointments(std::string path) {
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Load Appointments: %s", m_config->appointmentsPath.c_str());
+    RCLCPP_INFO(m_node->get_logger(), "Load Appointments: %s", m_config->appointmentsPath.c_str());
     auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path, SIM_START_TIME);
     if (!appts.has_value()) {
         throw std::runtime_error("Could not laod appointments from file!");
     }
     m_appointments = appts.value();
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Successful loaded %zu appointments!", m_appointments.size());
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu appointments!", m_appointments.size());
 }
 
 void DesApplication::loadEmployeeLocations() {
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Load Employee Locations...");
+    RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations...");
     auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
     if (!locations.has_value()) {
         throw std::runtime_error("Could not laod appointments from file!");
     }
     m_employeeLocations = locations.value();
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Successful loaded employee locations! (%zu)", m_employeeLocations.size());
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded employee locations! (%zu)", m_employeeLocations.size());
 }
 
-void DesApplication::setupObservers() {
+void DesApplication::setupObservers(bool headless = true) {
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
 
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
     m_ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
-    // ctx->addObserver(std::make_shared<GazeboView>(GazeboView(m_locationMap)));
+    if(!headless) {
+        m_ctx->addObserver(std::make_shared<GazeboView>(GazeboView(m_locationMap)));
+    }
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Start filling event queue...");
+    RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue...");
     m_eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
     m_eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
 
@@ -113,7 +113,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
             m_rosObserver->publishMeeting(mission->appointment, mission->time);
         }
     }
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), " - Done!");
+    RCLCPP_INFO(m_node->get_logger(), "Event queue filled: (%zu)", m_eventQueue.size());
 }
 
 void DesApplication::reset() {
@@ -128,20 +128,23 @@ void DesApplication::reset() {
 
     setupQueue(m_config);
     m_ctx->resetTime(SIM_START_TIME);
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "System Reset Complete");
+    RCLCPP_INFO(m_node->get_logger(), "System Reset Complete");
 }
 
 void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
     m_config = newConfig;
     m_ctx->setConfig(m_config);
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("DesApplication"), *m_config.get());
+    RCLCPP_DEBUG_STREAM(m_node->get_logger(), *m_config.get());
 }
 
 int DesApplication::run() {
-    RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "\n----- Descrete Event Sytem -----");
+    rclcpp::init(0, nullptr);
+    m_node = std::make_shared<rclcpp::Node>("des_application");
+
+    RCLCPP_INFO(m_node->get_logger(), "\n----- Descrete Event Sytem -----");
 
     try {
-        loadPointsOfInterest(true);
+        loadPointsOfInterest();
         initROS();
         m_config = m_systemConfigNode->getConfig();
         loadAppointments(m_config->appointmentsPath);
@@ -150,14 +153,23 @@ int DesApplication::run() {
         exit(EXIT_FAILURE);
     }
 
-    m_ctx = std::make_shared<SimulationContext>(m_eventQueue, m_config, m_plannerNode, m_employeeLocations);
+    m_ctx = std::make_shared<SimulationContext>(
+        m_eventQueue,
+        m_config,
+        m_plannerNode,
+        m_employeeLocations,
+        m_node->get_logger()
+    );
 
     setupObservers();
     setupQueue(m_config);
+
+    RCLCPP_DEBUG(m_node->get_logger(), "Create Behaviour Tree");
     m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);
+    RCLCPP_INFO(m_node->get_logger(), "Behaviour Tree created!");
 
     m_simThread = std::thread([&] {
-        RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Start Simulation Thread");
+        RCLCPP_INFO(m_node->get_logger(), "Start Simulation Thread");
         while (rclcpp::ok()) {
             if (m_systemConfigNode->isConfigDirty()) {
                 updateConfig(m_systemConfigNode->getConfig());
@@ -185,7 +197,7 @@ int DesApplication::run() {
             }
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("DesApplication"), "Simulation complete!");
+        RCLCPP_INFO(m_node->get_logger(), "Simulation complete!");
 
         QCoreApplication::quit();
         QApplication::quit();

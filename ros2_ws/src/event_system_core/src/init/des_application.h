@@ -36,12 +36,12 @@ public:
 
 private:
     void loadAppointments(std::string path);
-    void loadPointsOfInterest(bool printPOIS);
+    void loadPointsOfInterest();
     void loadEmployeeLocations();
     void initROS();
     void reset();
     void setupSimulation();
-    void setupObservers();
+    void setupObservers(bool headless);
     void updateConfig(std::shared_ptr<des::SimConfig> config);
     void setupQueue(std::shared_ptr<des::SimConfig> config);
 
@@ -64,4 +64,5 @@ private:
     std::thread m_simThread;
 
     std::shared_ptr<RosObserver> m_rosObserver;
+    rclcpp::Node::SharedPtr m_node;
 };

@@ -11,7 +11,6 @@
 #include "search.h"
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
-    RCLCPP_INFO(rclcpp::get_logger("BehaviorTree"), "Build Behavior Tree ...");
     BT::BehaviorTreeFactory factory;
 
     // search
@@ -85,6 +84,5 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     tree->rootBlackboard()->set("ctx", ctx);
 
     // std::string xml_models = BT::writeTreeNodesModelXML(factory);
-    RCLCPP_INFO(rclcpp::get_logger("BehaviorTree"), " - Done!");
     return tree;
 }
