@@ -22,7 +22,7 @@ public:
 private:
     void onTimelineEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg);
 
-    Timeline * m_timeline;
+    Timeline* m_timeline;
     rclcpp::Node::SharedPtr m_node;
     rclcpp::Subscription<event_system_msgs::msg::TimelineEvent>::SharedPtr m_subscriber;
     int m_minStartTime;

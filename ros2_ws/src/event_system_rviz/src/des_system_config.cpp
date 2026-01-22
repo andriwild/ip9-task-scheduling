@@ -34,8 +34,6 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_timeBuffer = new QDoubleSpinBox();
     m_timeBuffer->setRange(0.0, 1000.0);
 
-    m_enableLogging = new QCheckBox();
-
     m_appointmentsPath = new QLineEdit();
     m_appointmentsPath->setText("appointments.json");
 
@@ -50,7 +48,6 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
     layout->addRow("Mission Overhead:", m_missionOverhead);
     layout->addRow("Time Buffer:", m_timeBuffer);
-    layout->addRow("Enable Logging:", m_enableLogging);
     layout->addRow("Appointments Path:", m_appointmentsPath);
     layout->addRow(m_btnSetConfig);
     layout->addRow(m_statusLabel);
@@ -60,9 +57,9 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
 
 
 void DesSystemConfig::onInitialize() {
-    m_nodePtr = getDisplayContext()->getRosNodeAbstraction().lock();
-    rclcpp::Node::SharedPtr node = m_nodePtr->get_raw_node();
-    m_client = node->create_client<event_system_msgs::srv::SetSystemConfig>("/set_des_config");
+    rclcpp::Node::SharedPtr node = getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
+
+    m_client     = node->create_client<event_system_msgs::srv::SetSystemConfig>("/set_des_config");
     m_subscriber = node->create_subscription<event_system_msgs::msg::SystemConfig>(
         "/system_config", rclcpp::QoS(1).transient_local(),
         [this](const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
@@ -73,16 +70,15 @@ void DesSystemConfig::onInitialize() {
 void DesSystemConfig::onSetConfig() {
     auto request = std::make_shared<event_system_msgs::srv::SetSystemConfig::Request>();
 
-    request->find_person_probability = m_findPersonProb->value();
-    request->drive_std = m_driveStd->value();
-    request->robot_speed = m_robotSpeed->value();
-    request->robot_accompany_speed = m_robotAccompanySpeed->value();
-    request->conversation_found_std = m_conversationFoundStd->value();
+    request->find_person_probability   = m_findPersonProb->value();
+    request->drive_std                 = m_driveStd->value();
+    request->robot_speed               = m_robotSpeed->value();
+    request->robot_accompany_speed     = m_robotAccompanySpeed->value();
+    request->conversation_found_std    = m_conversationFoundStd->value();
     request->conversation_drop_off_std = m_conversationDropOffStd->value();
-    request->mission_overhead = m_missionOverhead->value();
-    request->time_buffer = m_timeBuffer->value();
-    request->enable_logging = m_enableLogging->isChecked();
-    request->appointments_path = m_appointmentsPath->text().toStdString();
+    request->mission_overhead          = m_missionOverhead->value();
+    request->time_buffer               = m_timeBuffer->value();
+    request->appointments_path         = m_appointmentsPath->text().toStdString();
 
     m_statusLabel->setText("Sending...");
 
@@ -106,16 +102,15 @@ void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
 }
 
 void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
-    m_findPersonProb->setValue(msg->find_person_probability);
-    m_driveStd->setValue(msg->drive_std);
-    m_robotSpeed->setValue(msg->robot_speed);
-    m_robotAccompanySpeed->setValue(msg->robot_accompany_speed);
-    m_conversationFoundStd->setValue(msg->conversation_found_std);
+    m_findPersonProb        ->setValue(msg->find_person_probability);
+    m_driveStd              ->setValue(msg->drive_std);
+    m_robotSpeed            ->setValue(msg->robot_speed);
+    m_robotAccompanySpeed   ->setValue(msg->robot_accompany_speed);
+    m_conversationFoundStd  ->setValue(msg->conversation_found_std);
     m_conversationDropOffStd->setValue(msg->conversation_drop_off_std);
-    m_missionOverhead->setValue(msg->mission_overhead);
-    m_timeBuffer->setValue(msg->time_buffer);
-    m_enableLogging->setChecked(msg->enable_logging);
-    m_appointmentsPath->setText(QString::fromStdString(msg->appointments_path));
+    m_missionOverhead       ->setValue(msg->mission_overhead);
+    m_timeBuffer            ->setValue(msg->time_buffer);
+    m_appointmentsPath      ->setText(QString::fromStdString(msg->appointments_path));
 }
 
 }  // namespace des_system_config

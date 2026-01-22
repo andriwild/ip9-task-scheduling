@@ -77,8 +77,6 @@ void DesPanel::onServiceResponse(ServiceResponseFuture future) {
 
 }
 
-
-
 #include <pluginlib/class_list_macros.hpp>
 
 PLUGINLIB_EXPORT_CLASS(des_panel::DesPanel, rviz_common::Panel)

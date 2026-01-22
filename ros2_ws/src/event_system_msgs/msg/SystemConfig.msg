@@ -6,5 +6,4 @@ float32 conversation_found_std
 float32 conversation_drop_off_std
 float32 mission_overhead
 float32 time_buffer
-bool enable_logging
 string appointments_path

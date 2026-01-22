@@ -24,10 +24,10 @@ protected:
     rclcpp::Service<event_system_msgs::srv::SetSystemState>::SharedPtr m_service;
     rclcpp::Client<event_system_msgs::srv::SetSystemState>::SharedPtr m_client;
 
-    QLabel * m_stateLabel;
-    QPushButton * m_btnRun;
-    QPushButton * m_btnPause;
-    QPushButton * m_btnReset;
+    QLabel* m_stateLabel;
+    QPushButton* m_btnRun;
+    QPushButton* m_btnPause;
+    QPushButton* m_btnReset;
 
 private Q_SLOTS:
     void btnRunClick();
@@ -37,4 +37,3 @@ private Q_SLOTS:
 };
 
 } 
-

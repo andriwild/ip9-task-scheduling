@@ -117,7 +117,7 @@ private:
     geometry_msgs::msg::PoseStamped toPose(const SimplePose& p) {
         geometry_msgs::msg::PoseStamped msg;
         msg.header.frame_id = "map";
-        msg.header.stamp = this->now();
+        msg.header.stamp    = this->now();
         msg.pose.position.x = p.x;
         msg.pose.position.y = p.y;
         msg.pose.position.z = 0.0;

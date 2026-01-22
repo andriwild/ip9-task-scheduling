@@ -19,7 +19,7 @@ public:
 
     void onLog(int /*time*/, const std::string& /*message*/) override {
         // auto msg = event_system_msgs::msg::TimelineEvent();
-        // msg.time = time;
+        // msg.appointment_time = time;
         // msg.type = event_system_msgs::msg::TimelineEvent::LOG;
         // msg.label = message;
         // m_publisher->publish(msg);
@@ -27,28 +27,27 @@ public:
 
     void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = time;
-        msg.type = event_system_msgs::msg::TimelineEvent::MOVE;
-        msg.label = location;
+        msg.appointment_time = time;
+        msg.type             = event_system_msgs::msg::TimelineEvent::MOVE;
+        msg.label            = location;
         m_publisher->publish(msg);
     }
 
     void onStateChanged(int time, const RobotStateType& type) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = time;
-        msg.type = event_system_msgs::msg::TimelineEvent::STATE_CHANGE;
-        msg.state = static_cast<int>(type);
+        msg.appointment_time = time;
+        msg.type             = event_system_msgs::msg::TimelineEvent::STATE_CHANGE;
+        msg.state            = static_cast<int>(type);
         m_publisher->publish(msg);
     }
 
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
         auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.time = startTime;  // Using startTime as the event time
-        msg.type = event_system_msgs::msg::TimelineEvent::MEETING;
-        msg.duration = appt->appointmentTime - startTime;  // Assuming duration is diff
-        msg.description = appt->description;
-        msg.person_name = appt->personName;
-        msg.duration = appt->appointmentTime - startTime;
+        msg.appointment_time = appt->appointmentTime;
+        msg.type             = event_system_msgs::msg::TimelineEvent::MEETING;
+        msg.description      = appt->description;
+        msg.person_name      = appt->personName;
+        msg.robot_start_time = startTime;
         m_publisher->publish(msg);
     }
 

@@ -18,7 +18,7 @@ class DesSystemConfig : public rviz_common::Panel {
     Q_OBJECT
 
 public:
-    explicit DesSystemConfig(QWidget * parent = 0);
+    explicit DesSystemConfig(QWidget* parent = 0);
     ~DesSystemConfig() = default;
     void onInitialize() override;
 
@@ -35,7 +35,6 @@ protected:
     QDoubleSpinBox* m_conversationDropOffStd;
     QDoubleSpinBox* m_missionOverhead;
     QDoubleSpinBox* m_timeBuffer;
-    QCheckBox* m_enableLogging;
     QLineEdit* m_appointmentsPath;
 
     QPushButton* m_btnSetConfig;

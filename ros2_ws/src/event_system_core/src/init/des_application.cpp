@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <rclcpp/logger.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <stdexcept>
 #include <thread>
@@ -17,35 +18,32 @@
 #include "config_loader.h"
 #include "event_system_msgs/srv/set_system_state.hpp"
 
-constexpr int HOUR = 3600;
-constexpr int SIM_START_TIME = 8 * HOUR;
-constexpr int SIM_END_TIME = SIM_START_TIME + 12 * HOUR;
+
+const rclcpp::Logger::Level LOG_LEVEL = rclcpp::Logger::Level::Debug;
+
+constexpr int ONE_HOUR = 3600;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
 void DesApplication::loadPointsOfInterest() {
     auto db = DBClient("wsr_user", "wsr_password");
     if (!db.init()) {
-        throw std::runtime_error("Could not connect DB!");
+        throw std::runtime_error("Could not connect DB");
     }
-    std::cout << "Successful connected to DB" << std::endl;
-    // Keeping std::cout for now if needed or replace?
-    // Plan said replace ALL.
     RCLCPP_INFO(m_node->get_logger(), "Successful connected to DB");
 
     auto pois = db.waypoints();
     if (!pois.has_value()) {
-        throw std::runtime_error("Could not laod points of interest from file!");
+        throw std::runtime_error("Could not laod points of interest from file");
     }
 
     for (auto poi : pois.value()) {
         m_locationMap[poi.m_name] = poi.m_p;
         RCLCPP_DEBUG_STREAM(m_node->get_logger(), poi);
     }
-    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu points of interest!", m_locationMap.size());
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu points of interest", m_locationMap.size());
 }
 
 void DesApplication::initROS() {
-    // rclcpp::init(0, nullptr); // Moved to run()
     m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
     m_controllerNode = std::make_shared<ControllerNode>();
     m_systemConfigNode = std::make_shared<ConfigNode>();
@@ -54,7 +52,7 @@ void DesApplication::initROS() {
     if (!m_plannerNode->isReady()) {
         throw std::runtime_error("Nav2 Planner initialization failed");
     }
-    RCLCPP_INFO(m_node->get_logger(), "Planner ready!");
+    RCLCPP_INFO(m_node->get_logger(), "Planner ready");
 
     m_rosThread = std::thread([this] {
         rclcpp::executors::MultiThreadedExecutor executor;
@@ -64,27 +62,27 @@ void DesApplication::initROS() {
         executor.add_node(m_metricsNode);
         executor.spin();
     });
-    RCLCPP_INFO(m_node->get_logger(), "Launched all ROS Nodes!");
+    RCLCPP_INFO(m_node->get_logger(), "Launched all ROS Nodes");
 }
 
 void DesApplication::loadAppointments(std::string path) {
     RCLCPP_INFO(m_node->get_logger(), "Load Appointments: %s", m_config->appointmentsPath.c_str());
-    auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path, SIM_START_TIME);
+    auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path);
     if (!appts.has_value()) {
-        throw std::runtime_error("Could not laod appointments from file!");
+        throw std::runtime_error("Could not laod appointments from file");
     }
     m_appointments = appts.value();
-    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu appointments!", m_appointments.size());
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu appointments", m_appointments.size());
 }
 
 void DesApplication::loadEmployeeLocations() {
-    RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations...");
+    RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations");
     auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
     if (!locations.has_value()) {
-        throw std::runtime_error("Could not laod appointments from file!");
+        throw std::runtime_error("Could not laod appointments from file");
     }
     m_employeeLocations = locations.value();
-    RCLCPP_INFO(m_node->get_logger(), "Successful loaded employee locations! (%zu)", m_employeeLocations.size());
+    RCLCPP_INFO(m_node->get_logger(), "Successful loaded employee locations (%zu)", m_employeeLocations.size());
 }
 
 void DesApplication::setupObservers(bool headless = true) {
@@ -99,11 +97,17 @@ void DesApplication::setupObservers(bool headless = true) {
 }
 
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
-    RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue...");
-    m_eventQueue.push(std::make_shared<SimulationStartEvent>(SIM_START_TIME));
-    m_eventQueue.push(std::make_shared<SimulationEndEvent>(SIM_END_TIME));
+    RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue");
 
     auto missions = scheduleAppointments(m_appointments, m_employeeLocations, m_ctx);
+
+    int firstEventTime = missions.front()->time - ONE_HOUR;
+    int lastEventTime  = missions.back()->time - ONE_HOUR;
+
+    RCLCPP_DEBUG(m_node->get_logger(), "Event time range from %d to %d", firstEventTime, lastEventTime);
+
+    m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
 
     for (const auto& mission : missions) {
         double buffer = config->timeBuffer + config->missionOverhead;
@@ -113,7 +117,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
             m_rosObserver->publishMeeting(mission->appointment, mission->time);
         }
     }
-    RCLCPP_INFO(m_node->get_logger(), "Event queue filled: (%zu)", m_eventQueue.size());
+    RCLCPP_INFO(m_node->get_logger(), "Event queue: (%zu) events inserted", m_eventQueue.size());
 }
 
 void DesApplication::reset() {
@@ -125,9 +129,9 @@ void DesApplication::reset() {
     m_metricsNode->clear();
 
     loadAppointments(m_config->appointmentsPath);
-
     setupQueue(m_config);
-    m_ctx->resetTime(SIM_START_TIME);
+    m_ctx->resetTime(m_eventQueue.top()->time);
+
     RCLCPP_INFO(m_node->get_logger(), "System Reset Complete");
 }
 
@@ -140,6 +144,7 @@ void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
 int DesApplication::run() {
     rclcpp::init(0, nullptr);
     m_node = std::make_shared<rclcpp::Node>("des_application");
+    m_node->get_logger().set_level(LOG_LEVEL);
 
     RCLCPP_INFO(m_node->get_logger(), "\n----- Descrete Event Sytem -----");
 
@@ -163,10 +168,11 @@ int DesApplication::run() {
 
     setupObservers();
     setupQueue(m_config);
+    m_ctx->resetTime(m_eventQueue.top()->time);
 
     RCLCPP_DEBUG(m_node->get_logger(), "Create Behaviour Tree");
     m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);
-    RCLCPP_INFO(m_node->get_logger(), "Behaviour Tree created!");
+    RCLCPP_INFO(m_node->get_logger(), "Behaviour Tree created");
 
     m_simThread = std::thread([&] {
         RCLCPP_INFO(m_node->get_logger(), "Start Simulation Thread");
@@ -179,7 +185,9 @@ int DesApplication::run() {
             switch (m_controllerNode->currentState.load()) {
                 case SystemState::Request::RESET:
                     reset();
-                    m_controllerNode->currentState.store(event_system_msgs::srv::SetSystemState::Request::PAUSE);
+                    RCLCPP_DEBUG(m_node->get_logger(), "Simulation loop resetted");
+                    m_controllerNode->currentState.store(SystemState::Request::PAUSE);
+                    RCLCPP_DEBUG(m_node->get_logger(), "Simulation loop paused");
                     break;
 
                 case SystemState::Request::PAUSE:
@@ -192,12 +200,16 @@ int DesApplication::run() {
                         m_eventQueue.pop();
                         m_ctx->setTime(e->time);
                         e->execute(*m_ctx);
+                    } else {
+                        RCLCPP_DEBUG(m_node->get_logger(), "Simulation complete. Event Queue empty.");
+                        m_controllerNode->currentState.store(SystemState::Request::PAUSE);
+                        RCLCPP_DEBUG(m_node->get_logger(), "Simulation loop paused");
                     }
                     break;
             }
         }
 
-        RCLCPP_INFO(m_node->get_logger(), "Simulation complete!");
+        RCLCPP_INFO(m_node->get_logger(), "Simulation complete");
 
         QCoreApplication::quit();
         QApplication::quit();

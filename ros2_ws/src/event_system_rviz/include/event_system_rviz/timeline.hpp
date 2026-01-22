@@ -45,10 +45,10 @@ class Timeline final : public QGraphicsView {
     QPushButton * m_btnZoomOut;
 
 public:
-    explicit Timeline(int start, int end, double pixelsPerSecond = 0.025) : QGraphicsView(),
-                                                                            m_simStartTime(start),
-                                                                            m_simEndTime(end),
-                                                                            m_pixelsPerSecond(pixelsPerSecond) {
+    explicit Timeline(double pixelsPerSecond = 0.025):
+        QGraphicsView(),
+        m_pixelsPerSecond(pixelsPerSecond) 
+    {
         m_duration = m_simEndTime - m_simStartTime;
         m_scene = new QGraphicsScene(this);
         m_currentOpenState = {-1, -1, 0};

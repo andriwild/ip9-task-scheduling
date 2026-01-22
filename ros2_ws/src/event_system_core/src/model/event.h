@@ -61,9 +61,11 @@ class ArrivedEvent : public IEvent {
 public:
     double distance;
     std::string location;
-    explicit ArrivedEvent(int time, std::string location, double distance) : IEvent(time),
-                                                                             distance(distance),
-                                                                             location(location) {}
+    explicit ArrivedEvent(int time, std::string location, double distance):
+        IEvent(time),
+        distance(distance),
+        location(location) 
+    {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "ArrivedEvent"; };
 };
@@ -71,8 +73,10 @@ public:
 class MissionDispatchEvent : public IEvent {
 public:
     std::shared_ptr<des::Appointment> appointment;
-    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt) : IEvent(time),
-                                                                                      appointment(appt) {}
+    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt):
+        IEvent(time),
+        appointment(appt) 
+    {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "MissionDispatchEvent"; };
 };

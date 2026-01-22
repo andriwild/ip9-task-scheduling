@@ -1,5 +1,5 @@
 {
-    "appointments_path": "scenario_heavy_load.json",
+    "appointments_path": "20_appts.json",
     "conversation_drop_off_std": 0.0,
     "conversation_found_std": 0.0,
     "drive_std": 0.20000000298023224,

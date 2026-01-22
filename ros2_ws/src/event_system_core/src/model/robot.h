@@ -15,10 +15,12 @@ class Robot {
     rclcpp::Logger m_logger;
 
 public:
-    Robot(const double speed, const double accompanySpeed, rclcpp::Logger logger) : m_state(std::make_unique<IdleState>()),
-                                                                                    m_currentSpeed(speed),
-                                                                                    m_accompanySpeed(accompanySpeed),
-                                                                                    m_logger(logger) {}
+    Robot(const double speed, const double accompanySpeed, rclcpp::Logger logger) :
+        m_state(std::make_unique<IdleState>()),
+        m_currentSpeed(speed),
+        m_accompanySpeed(accompanySpeed),
+        m_logger(logger) 
+    {}
 
     void setAccompanytSpeed(double speed) { m_accompanySpeed = speed; }
 

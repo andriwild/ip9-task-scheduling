@@ -20,3 +20,9 @@ colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 ```sh
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map base_link
 ```
+
+## Environments Vars
+
+```sh
+export RCUTILS_COLORIZED_OUTPUT=1
+```

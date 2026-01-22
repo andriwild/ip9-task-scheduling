@@ -83,15 +83,15 @@ private:
         auto msg = event_system_msgs::msg::SystemConfig();
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
-            msg.find_person_probability = m_currentConfig->personFindProbability;
-            msg.drive_std = m_currentConfig->driveStd;
-            msg.robot_speed = m_currentConfig->robotSpeed;
-            msg.robot_accompany_speed = m_currentConfig->robotAccompanySpeed;
-            msg.conversation_found_std = m_currentConfig->conversationFoundStd;
+            msg.find_person_probability   = m_currentConfig->personFindProbability;
+            msg.drive_std                 = m_currentConfig->driveStd;
+            msg.robot_speed               = m_currentConfig->robotSpeed;
+            msg.robot_accompany_speed     = m_currentConfig->robotAccompanySpeed;
+            msg.conversation_found_std    = m_currentConfig->conversationFoundStd;
             msg.conversation_drop_off_std = m_currentConfig->conversationDropOffStd;
-            msg.mission_overhead = m_currentConfig->missionOverhead;
-            msg.time_buffer = m_currentConfig->timeBuffer;
-            msg.appointments_path = m_currentConfig->appointmentsPath;
+            msg.mission_overhead          = m_currentConfig->missionOverhead;
+            msg.time_buffer               = m_currentConfig->timeBuffer;
+            msg.appointments_path         = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

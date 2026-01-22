@@ -88,11 +88,11 @@ public:
 
         if (query.next()) {
             des::Person person;
-            person.id = query.value("id").toInt();
-            person.firstName = query.value("first_name").toString().toStdString();
-            person.lastName = query.value("last_name").toString().toStdString();
-            person.birthDate = query.value("birth_date").toString().toStdString();
-            person.sex = query.value("sex").toString().toStdString();
+            person.id             = query.value("id").toInt();
+            person.firstName      = query.value("first_name").toString().toStdString();
+            person.lastName       = query.value("last_name").toString().toStdString();
+            person.birthDate      = query.value("birth_date").toString().toStdString();
+            person.sex            = query.value("sex").toString().toStdString();
             person.assignedRoomId = query.value("assigned_room_id").toInt();
             return person;
         }
