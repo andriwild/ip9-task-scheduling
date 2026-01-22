@@ -13,17 +13,15 @@
 #include "timeline_types.hpp"
 
 constexpr int TIMELINE_HEIGHT = 350;
-constexpr int TIMELINE_SCENE_MARGIN = 50;
-
-constexpr int Y_LINE_POS = 200;
-constexpr int LABEL_OFFSET = 20;
-constexpr int X_LINE_OFFSET = TIMELINE_SCENE_MARGIN;
-constexpr int MARKER_HEIGHT = 20;
-
-constexpr int Z_TIMELINE = 100;
-constexpr int Z_STATE_LINE = 50;
-constexpr int Z_PLAN_LINE = 80;
-constexpr int Z_MARKER = 50;
+constexpr int SCENE_MARGIN    = 50;
+constexpr int Y_LINE_POS      = 200;
+constexpr int LABEL_OFFSET    = 20;
+constexpr int X_LINE_OFFSET   = SCENE_MARGIN;
+constexpr int MARKER_HEIGHT   = 20;
+constexpr int Z_TIMELINE      = 100;
+constexpr int Z_STATE_LINE    = 50;
+constexpr int Z_PLAN_LINE     = 80;
+constexpr int Z_MARKER        = 50;
 
 class Timeline final : public QGraphicsView {
     Q_OBJECT
@@ -41,8 +39,8 @@ class Timeline final : public QGraphicsView {
     std::vector<VisualStateBlock> m_states;
     VisualStateBlock m_currentOpenState;
 
-    QPushButton * m_btnZoomIn;
-    QPushButton * m_btnZoomOut;
+    QPushButton* m_btnZoomIn;
+    QPushButton* m_btnZoomOut;
 
 public:
     explicit Timeline(double pixelsPerSecond = 0.025):
@@ -67,8 +65,8 @@ public:
 
     void setRange(int start, int end) {
         m_simStartTime = start;
-        m_simEndTime = end;
-        m_duration = m_simEndTime - m_simStartTime;
+        m_simEndTime   = end;
+        m_duration     = m_simEndTime - m_simStartTime;
         updateScene();
     }
 
@@ -149,18 +147,18 @@ protected:
         // baseline
         QPen axisPen(Qt::black, 2);
         painter->setPen(axisPen);
-        double startX = std::max(rect.left(), timeToX(m_simStartTime));
-        double endX = std::min(rect.right(), timeToX(m_simEndTime));
+        double startX = std::max(rect.left() , timeToX(m_simStartTime));
+        double endX   = std::min(rect.right(), timeToX(m_simEndTime));
 
         if (startX < endX) {
             painter->drawLine(QLineF(startX, Y_LINE_POS, endX, Y_LINE_POS));
         }
 
         double tStart = xToTime(rect.left());
-        double tEnd = xToTime(rect.right());
+        double tEnd   = xToTime(rect.right());
 
         int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
-        int loopEnd = std::min(m_simEndTime, static_cast<int>(std::ceil(tEnd)));
+        int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
 
         const double MIN_TICK_PX = 10.0;
         const double MIN_LABEL_PX = 80.0;
@@ -294,9 +292,9 @@ private:
 
         double totalWidth = m_duration * m_pixelsPerSecond;
         m_scene->setSceneRect(
-            -TIMELINE_SCENE_MARGIN,
+            -SCENE_MARGIN,
             0,
-            totalWidth + (TIMELINE_SCENE_MARGIN * 2),
+            totalWidth + (SCENE_MARGIN * 2),
             TIMELINE_HEIGHT);
 
         for (const auto& item : m_appointments) {
@@ -343,8 +341,14 @@ private:
             durationWidth = 0;
         }
 
-        auto rect = m_scene->addRect(startX, Y_LINE_POS, durationWidth, -MARKER_HEIGHT, QPen(Qt::NoPen),
-                                     QBrush(QColor(100, 100, 100, 50)));
+        auto rect = m_scene->addRect(
+            startX, 
+            Y_LINE_POS, 
+            durationWidth, 
+            -MARKER_HEIGHT, 
+            QPen(Qt::NoPen),
+            QBrush(QColor(100, 100, 100, 50))
+        );
         rect->setZValue(Z_PLAN_LINE);
 
         QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");

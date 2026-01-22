@@ -2,6 +2,7 @@
 #include <limits>
 #include <memory>
 #include <rviz_common/display_context.hpp>
+#include "event_system_msgs/msg/timeline_event.hpp"
 
 
 constexpr int ONE_HOUR = 3600;
@@ -11,8 +12,8 @@ using TimelineEvent = event_system_msgs::msg::TimelineEvent;
 
 DesTimelinePanel::DesTimelinePanel(QWidget * parent) : Panel(parent) {
     auto layout = new QVBoxLayout(this);
+    m_timeline  = new Timeline();
 
-    m_timeline = new Timeline();
     layout->addWidget(m_timeline);
     m_minStartTime = std::numeric_limits<int>::max();
     m_maxEndTime   = std::numeric_limits<int>::min();
@@ -34,27 +35,41 @@ void DesTimelinePanel::onInitialize() {
 }
 
 void DesTimelinePanel::onTimelineEvent(const TimelineEvent::SharedPtr msg) {
-    if (msg->type == TimelineEvent::LOG) {
-        m_timeline->handleLog(msg->appointment_time, QString::fromStdString(msg->label));
-    } else if (msg->type == TimelineEvent::MOVE) {
-        m_timeline->handleMove(msg->appointment_time, QString::fromStdString(msg->label));
-    } else if (msg->type == TimelineEvent::STATE_CHANGE) {
-        m_timeline->handleStateChange(msg->appointment_time, msg->state);
-    } else if (msg->type == TimelineEvent::MEETING) {
-        auto appt = std::make_shared<des::Appointment>();
-        appt->appointmentTime = msg->appointment_time;
-        appt->description     = msg->description;
-        appt->personName      = msg->person_name;
+    switch(msg->type) {
+        case TimelineEvent::LOG:
+            m_timeline->handleLog(msg->appointment_time, QString::fromStdString(msg->label));
+            break;
 
-        m_minStartTime = std::min(m_minStartTime, msg->robot_start_time);
-        m_maxEndTime   = std::max(m_maxEndTime  , appt->appointmentTime);
+        case TimelineEvent::MOVE:
+            m_timeline->handleMove(msg->appointment_time, QString::fromStdString(msg->label));
+            break;
 
-        m_timeline->setRange(m_minStartTime - ONE_HOUR, m_maxEndTime + ONE_HOUR);
-        m_timeline->addMeetingPlan(appt, msg->robot_start_time);
-    } else if (msg->type == TimelineEvent::RESET) {
-        m_minStartTime = std::numeric_limits<int>::max();
-        m_maxEndTime = std::numeric_limits<int>::min();
-        m_timeline->handleReset();
+        case TimelineEvent::STATE_CHANGE:
+            m_timeline->handleStateChange(msg->appointment_time, msg->state);
+            break;
+
+        case TimelineEvent::MEETING: {
+            auto appt = std::make_shared<des::Appointment>();
+            appt->appointmentTime = msg->appointment_time;
+            appt->description     = msg->description;
+            appt->personName      = msg->person_name;
+
+            m_minStartTime = std::min(m_minStartTime, msg->robot_start_time);
+            m_maxEndTime   = std::max(m_maxEndTime  , appt->appointmentTime);
+
+            m_timeline->setRange(m_minStartTime - ONE_HOUR, m_maxEndTime + ONE_HOUR);
+            m_timeline->addMeetingPlan(appt, msg->robot_start_time);
+            break;
+        }
+
+        case TimelineEvent::RESET: {
+            m_minStartTime = std::numeric_limits<int>::max();
+            m_maxEndTime   = std::numeric_limits<int>::min();
+            m_timeline->handleReset();
+            break;
+        }
+        default: 
+            RCLCPP_WARN(m_node->get_logger(), "Timeline Event not handled");
     }
 }
 
