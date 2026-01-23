@@ -63,7 +63,6 @@ private:
             request->drive_std,
             request->conversation_found_std,
             request->conversation_drop_off_std,
-            request->mission_overhead,
             request->time_buffer,
             request->appointments_path};
 
@@ -89,7 +88,6 @@ private:
             msg.robot_accompany_speed     = m_currentConfig->robotAccompanySpeed;
             msg.conversation_found_std    = m_currentConfig->conversationFoundStd;
             msg.conversation_drop_off_std = m_currentConfig->conversationDropOffStd;
-            msg.mission_overhead          = m_currentConfig->missionOverhead;
             msg.time_buffer               = m_currentConfig->timeBuffer;
             msg.appointments_path         = m_currentConfig->appointmentsPath;
         }
