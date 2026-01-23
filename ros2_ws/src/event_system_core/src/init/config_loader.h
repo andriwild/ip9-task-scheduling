@@ -77,7 +77,6 @@ public:
             config.robotAccompanySpeed    = j.at("robot_accompany_speed").get<double>();
             config.conversationFoundStd   = j.at("conversation_found_std").get<double>();
             config.conversationDropOffStd = j.at("conversation_drop_off_std").get<double>();
-            config.missionOverhead        = j.at("missionOverhead").get<double>();
             config.timeBuffer             = j.at("timeBuffer").get<double>();
 
             if (j.contains("appointments_path")) {
@@ -100,7 +99,6 @@ public:
         j["robot_accompany_speed"]      = config->robotAccompanySpeed;
         j["conversation_found_std"]     = config->conversationFoundStd;
         j["conversation_drop_off_std"]  = config->conversationDropOffStd;
-        j["missionOverhead"]            = config->missionOverhead;
         j["timeBuffer"]                 = config->timeBuffer;
         j["appointments_path"]          = config->appointmentsPath;
 

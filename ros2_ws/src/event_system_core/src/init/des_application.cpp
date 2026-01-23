@@ -110,7 +110,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     m_eventQueue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
 
     for (const auto& mission : missions) {
-        double buffer = config->timeBuffer + config->missionOverhead;
+        double buffer = config->timeBuffer;
         mission->time = mission->time - buffer;
         m_eventQueue.push(mission);
         if (m_rosObserver) {

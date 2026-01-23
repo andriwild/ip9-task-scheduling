@@ -33,7 +33,6 @@ protected:
     QDoubleSpinBox* m_robotAccompanySpeed;
     QDoubleSpinBox* m_conversationFoundStd;
     QDoubleSpinBox* m_conversationDropOffStd;
-    QDoubleSpinBox* m_missionOverhead;
     QDoubleSpinBox* m_timeBuffer;
     QLineEdit* m_appointmentsPath;
 

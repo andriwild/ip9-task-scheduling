@@ -4,7 +4,6 @@
     "conversation_found_std": 0.0,
     "drive_std": 0.20000000298023224,
     "find_person_probability": 0.5,
-    "missionOverhead": 10.0,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
     "timeBuffer": 10.0

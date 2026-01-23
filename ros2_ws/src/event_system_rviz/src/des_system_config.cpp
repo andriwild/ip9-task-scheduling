@@ -28,9 +28,6 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_conversationDropOffStd = new QDoubleSpinBox();
     m_conversationDropOffStd->setRange(0.0, 10.0);
 
-    m_missionOverhead = new QDoubleSpinBox();
-    m_missionOverhead->setRange(0.0, 1000.0);
-
     m_timeBuffer = new QDoubleSpinBox();
     m_timeBuffer->setRange(0.0, 1000.0);
 
@@ -46,7 +43,6 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     layout->addRow("Accompany Speed:", m_robotAccompanySpeed);
     layout->addRow("Conv Found Std:", m_conversationFoundStd);
     layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
-    layout->addRow("Mission Overhead:", m_missionOverhead);
     layout->addRow("Time Buffer:", m_timeBuffer);
     layout->addRow("Appointments Path:", m_appointmentsPath);
     layout->addRow(m_btnSetConfig);
@@ -76,7 +72,6 @@ void DesSystemConfig::onSetConfig() {
     request->robot_accompany_speed     = m_robotAccompanySpeed->value();
     request->conversation_found_std    = m_conversationFoundStd->value();
     request->conversation_drop_off_std = m_conversationDropOffStd->value();
-    request->mission_overhead          = m_missionOverhead->value();
     request->time_buffer               = m_timeBuffer->value();
     request->appointments_path         = m_appointmentsPath->text().toStdString();
 
@@ -108,7 +103,6 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_robotAccompanySpeed   ->setValue(msg->robot_accompany_speed);
     m_conversationFoundStd  ->setValue(msg->conversation_found_std);
     m_conversationDropOffStd->setValue(msg->conversation_drop_off_std);
-    m_missionOverhead       ->setValue(msg->mission_overhead);
     m_timeBuffer            ->setValue(msg->time_buffer);
     m_appointmentsPath      ->setText(QString::fromStdString(msg->appointments_path));
 }

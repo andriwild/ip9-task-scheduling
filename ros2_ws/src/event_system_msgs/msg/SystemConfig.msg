@@ -4,6 +4,5 @@ float32 robot_speed
 float32 robot_accompany_speed
 float32 conversation_found_std
 float32 conversation_drop_off_std
-float32 mission_overhead
 float32 time_buffer
 string appointments_path

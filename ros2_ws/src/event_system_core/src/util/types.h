@@ -55,7 +55,6 @@ struct SimConfig {
     double driveStd;
     double conversationFoundStd;
     double conversationDropOffStd;
-    double missionOverhead;
     double timeBuffer;
     std::string appointmentsPath;
 
@@ -68,7 +67,6 @@ struct SimConfig {
         os << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
         os << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
         os << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;
-        os << std::left << std::setw(W) << "missionOverhead"          << ": " << config.missionOverhead          << std::endl;
         os << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer               << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath         << std::endl;
         os << "----------------------------\n" << std::endl;
