@@ -20,7 +20,7 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 }
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    bool successful = rnd::uni() > ctx.getConversationFoundStd();
+    bool successful = rnd::uni() < ctx.getConversationProbability();
     if(successful) {
         ctx.notifyLog("Conversation ended successful. Person for accompany convinced.");
         ctx.changeRobotState(std::make_unique<AccompanyState>());
@@ -35,7 +35,7 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    bool successful = rnd::uni() > ctx.getConversationDropOffStd();
+    bool successful = rnd::uni() < ctx.getConversationProbability();
     if(successful) {
         ctx.notifyLog("Conversation ended successful. Person dropped off.");
         ctx.updateAppointmentState(des::MissionState::COMPLETED);

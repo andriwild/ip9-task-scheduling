@@ -1,8 +1,9 @@
 #pragma once
 
 #include <random>
+#include <iostream>
 
-inline std::mt19937 rng(42); // Fixed seed for reproducibility
+inline std::mt19937 rng(42);
 
 namespace rnd {
     inline double getRandom(const double from, const double to) {
@@ -10,8 +11,8 @@ namespace rnd {
         return dist(rng);
     }
 
-    inline double getNormalDist(const double from, const double to) {
-        std::normal_distribution<double> dist(from, to);
+    inline double getNormalDist(const double mean, const double std) {
+        std::normal_distribution<double> dist(mean, std);
         return dist(rng);
     }
 
@@ -27,4 +28,3 @@ namespace rnd {
     	return -mean*log(uni());
     }
 }
-

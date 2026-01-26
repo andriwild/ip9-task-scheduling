@@ -44,10 +44,10 @@ void DesApplication::loadPointsOfInterest() {
 }
 
 void DesApplication::initROS() {
-    m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
-    m_controllerNode = std::make_shared<ControllerNode>();
+    m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
+    m_controllerNode   = std::make_shared<ControllerNode>();
     m_systemConfigNode = std::make_shared<ConfigNode>();
-    m_metricsNode = std::make_shared<MetricsNode>();
+    m_metricsNode      = std::make_shared<MetricsNode>();
 
     if (!m_plannerNode->isReady()) {
         throw std::runtime_error("Nav2 Planner initialization failed");

@@ -28,11 +28,11 @@ protected:
     rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subscriber;
 
     QDoubleSpinBox* m_findPersonProb;
-    QDoubleSpinBox* m_driveStd;
+    QDoubleSpinBox* m_driveTimeStd;
     QDoubleSpinBox* m_robotSpeed;
     QDoubleSpinBox* m_robotAccompanySpeed;
-    QDoubleSpinBox* m_conversationFoundStd;
-    QDoubleSpinBox* m_conversationDropOffStd;
+    QDoubleSpinBox* m_conversationProbability;
+    QDoubleSpinBox* m_conversationDurationStd;
     QDoubleSpinBox* m_timeBuffer;
     QLineEdit* m_appointmentsPath;
 

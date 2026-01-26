@@ -60,9 +60,9 @@ private:
             request->find_person_probability,
             request->robot_speed,
             request->robot_accompany_speed,
-            request->drive_std,
-            request->conversation_found_std,
-            request->conversation_drop_off_std,
+            request->drive_time_std,
+            request->conversation_probability,
+            request->conversation_duration_std,
             request->time_buffer,
             request->appointments_path};
 
@@ -83,11 +83,11 @@ private:
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
             msg.find_person_probability   = m_currentConfig->personFindProbability;
-            msg.drive_std                 = m_currentConfig->driveStd;
+            msg.drive_time_std            = m_currentConfig->driveTimeStd;
             msg.robot_speed               = m_currentConfig->robotSpeed;
             msg.robot_accompany_speed     = m_currentConfig->robotAccompanySpeed;
-            msg.conversation_found_std    = m_currentConfig->conversationFoundStd;
-            msg.conversation_drop_off_std = m_currentConfig->conversationDropOffStd;
+            msg.conversation_probability  = m_currentConfig->conversationProbability;
+            msg.conversation_duration_std = m_currentConfig->conversationDurationStd;
             msg.time_buffer               = m_currentConfig->timeBuffer;
             msg.appointments_path         = m_currentConfig->appointmentsPath;
         }

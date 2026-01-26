@@ -13,8 +13,8 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_findPersonProb->setRange(0.0, 1.0);
     m_findPersonProb->setSingleStep(0.01);
 
-    m_driveStd = new QDoubleSpinBox();
-    m_driveStd->setRange(0.0, 10.0);
+    m_driveTimeStd = new QDoubleSpinBox();
+    m_driveTimeStd->setRange(0.0, 10.0);
 
     m_robotSpeed = new QDoubleSpinBox();
     m_robotSpeed->setRange(0.0, 10.0);
@@ -22,11 +22,11 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_robotAccompanySpeed = new QDoubleSpinBox();
     m_robotAccompanySpeed->setRange(0.0, 10.0);
 
-    m_conversationFoundStd = new QDoubleSpinBox();
-    m_conversationFoundStd->setRange(0.0, 10.0);
+    m_conversationProbability = new QDoubleSpinBox();
+    m_conversationProbability->setRange(0.0, 1.0);
 
-    m_conversationDropOffStd = new QDoubleSpinBox();
-    m_conversationDropOffStd->setRange(0.0, 10.0);
+    m_conversationDurationStd= new QDoubleSpinBox();
+    m_conversationDurationStd->setRange(0.0, 1.0);
 
     m_timeBuffer = new QDoubleSpinBox();
     m_timeBuffer->setRange(0.0, 1000.0);
@@ -37,13 +37,13 @@ DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
     m_btnSetConfig = new QPushButton("Set Config");
     m_statusLabel = new QLabel("[status]");
 
-    layout->addRow("Find Person Prob:", m_findPersonProb);
-    layout->addRow("Drive time Std:", m_driveStd);
-    layout->addRow("Robot Speed:", m_robotSpeed);
-    layout->addRow("Accompany Speed:", m_robotAccompanySpeed);
-    layout->addRow("Conv Found Std:", m_conversationFoundStd);
-    layout->addRow("Conv DropOff Std:", m_conversationDropOffStd);
-    layout->addRow("Time Buffer:", m_timeBuffer);
+    layout->addRow("Find Person Prob:" , m_findPersonProb);
+    layout->addRow("Drive Time Std:"   , m_driveTimeStd);
+    layout->addRow("Robot Speed:"      , m_robotSpeed);
+    layout->addRow("Accompany Speed:"  , m_robotAccompanySpeed);
+    layout->addRow("Conv Prob:"        , m_conversationProbability);
+    layout->addRow("Conv Duration Std:" , m_conversationDurationStd);
+    layout->addRow("Time Buffer:"      , m_timeBuffer);
     layout->addRow("Appointments Path:", m_appointmentsPath);
     layout->addRow(m_btnSetConfig);
     layout->addRow(m_statusLabel);
@@ -67,11 +67,11 @@ void DesSystemConfig::onSetConfig() {
     auto request = std::make_shared<event_system_msgs::srv::SetSystemConfig::Request>();
 
     request->find_person_probability   = m_findPersonProb->value();
-    request->drive_std                 = m_driveStd->value();
+    request->drive_time_std            = m_driveTimeStd->value();
     request->robot_speed               = m_robotSpeed->value();
     request->robot_accompany_speed     = m_robotAccompanySpeed->value();
-    request->conversation_found_std    = m_conversationFoundStd->value();
-    request->conversation_drop_off_std = m_conversationDropOffStd->value();
+    request->conversation_probability  = m_conversationProbability->value();
+    request->conversation_duration_std = m_conversationDurationStd->value();
     request->time_buffer               = m_timeBuffer->value();
     request->appointments_path         = m_appointmentsPath->text().toStdString();
 
@@ -97,14 +97,14 @@ void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
 }
 
 void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
-    m_findPersonProb        ->setValue(msg->find_person_probability);
-    m_driveStd              ->setValue(msg->drive_std);
-    m_robotSpeed            ->setValue(msg->robot_speed);
-    m_robotAccompanySpeed   ->setValue(msg->robot_accompany_speed);
-    m_conversationFoundStd  ->setValue(msg->conversation_found_std);
-    m_conversationDropOffStd->setValue(msg->conversation_drop_off_std);
-    m_timeBuffer            ->setValue(msg->time_buffer);
-    m_appointmentsPath      ->setText(QString::fromStdString(msg->appointments_path));
+    m_findPersonProb          ->setValue(msg->find_person_probability);
+    m_driveTimeStd            ->setValue(msg->drive_time_std);
+    m_robotSpeed              ->setValue(msg->robot_speed);
+    m_robotAccompanySpeed     ->setValue(msg->robot_accompany_speed);
+    m_timeBuffer              ->setValue(msg->time_buffer);
+    m_conversationProbability ->setValue(msg->conversation_probability);
+    m_conversationDurationStd ->setValue(msg->conversation_duration_std);
+    m_appointmentsPath        ->setText(QString::fromStdString(msg->appointments_path));
 }
 
 }  // namespace des_system_config

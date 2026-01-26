@@ -1,10 +1,10 @@
 {
     "appointments_path": "20_appts.json",
-    "conversation_drop_off_std": 0.0,
-    "conversation_found_std": 0.0,
-    "drive_std": 0.20000000298023224,
-    "find_person_probability": 0.5,
+    "conversation_duration_std": 0.5,
+    "conversation_probability": 0.800000011920929,
+    "drive_time_std": 0.20000000298023224,
+    "find_person_probability": 0.30000001192092896,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
-    "timeBuffer": 10.0
+    "timeBuffer": 100.0
 }

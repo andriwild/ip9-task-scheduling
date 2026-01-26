@@ -15,6 +15,9 @@
 #include "robot.h"
 #include "robot_state.h"
 
+constexpr int DEFAULT_CONVERSATION_TIME = 30;
+
+
 class SimulationContext {
     int m_currentTime = 0;
     std::shared_ptr<des::SimConfig> m_simConfig;
@@ -34,11 +37,13 @@ public:
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> plannerNode,
         std::map<std::string, std::vector<std::string>> employeeLocations,
-        rclcpp::Logger logger) : m_simConfig(simConfig),
-                                 m_queue(queue),
-                                 m_plannerNode(plannerNode),
-                                 m_employeeLocations(employeeLocations),
-                                 m_logger(logger) {
+        rclcpp::Logger logger
+    ) : m_simConfig(simConfig),
+        m_queue(queue),
+        m_plannerNode(plannerNode),
+        m_employeeLocations(employeeLocations),
+        m_logger(logger) 
+    {
         m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed, logger);
         RCLCPP_INFO(m_logger, "Simulation Context created!");
     }
@@ -118,10 +123,18 @@ public:
         RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
     }
 
+    int getDefaultConversationTime() const { return DEFAULT_CONVERSATION_TIME; };
     double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
-    double getConversationFoundStd() const { return m_simConfig->conversationFoundStd; };
-    double getConversationDropOffStd() const { return m_simConfig->conversationDropOffStd; };
-    double getdriveTimeVariance() const { return m_simConfig->driveStd; };
+    double getConversationProbability() const { return m_simConfig->conversationProbability; };
+    double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
+    double getdriveTimeVariance() const { return m_simConfig->driveTimeStd; };
+
+    double getRndConversationTime() {
+        return rnd::getNormalDist(
+            getDefaultConversationTime(),
+            getConversationDurationStd()
+        );
+    };
 
     void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false) {
         int arrivalTime = currentTime + 1;
@@ -136,11 +149,11 @@ public:
             double travelTime = distance.value() / this->m_robot->getSpeed();
 
             double noiseFactor = rnd::getNormalDist(1.0, 0.1);
-            double completeTravelTime = travelTime * noiseFactor;
-            arrivalTime = currentTime + completeTravelTime;
+            double timeVariance = travelTime * noiseFactor;
+            arrivalTime = currentTime + timeVariance;
 
             this->m_queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
-            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(completeTravelTime - travelTime) + ")");
+            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(timeVariance - travelTime) + ")");
         }
 
         if (isMissionComplete) {

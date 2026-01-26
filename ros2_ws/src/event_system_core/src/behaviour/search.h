@@ -12,7 +12,9 @@
 
 class IsSearching : public BT::ConditionNode {
 public:
-    IsSearching(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
+    IsSearching(const std::string& name, const BT::NodeConfig& config):
+        BT::ConditionNode(name, config) 
+    {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
@@ -58,7 +60,9 @@ public:
 
         // TODO: add time randomness
         auto target = ctx->getAppointment()->roomName;
-        ctx->m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(currentTime + 10));
+
+        auto eventTime = currentTime + ctx->getRndConversationTime();
+        ctx->m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }
@@ -107,7 +111,6 @@ public:
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
         auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
-
         auto locations = searchState->locations;
         auto next = locations.front();
         searchState->locations.erase(searchState->locations.begin());

@@ -52,23 +52,23 @@ struct SimConfig {
     double personFindProbability;
     double robotSpeed;
     double robotAccompanySpeed;
-    double driveStd;
-    double conversationFoundStd;
-    double conversationDropOffStd;
+    double driveTimeStd;
+    double conversationProbability;
+    double conversationDurationStd;
     double timeBuffer;
     std::string appointmentsPath;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 25;
         os << "\n" << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
-        os << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability    << std::endl;
-        os << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed               << std::endl;
-        os << std::left << std::setw(W) << "robotAccompanySpeed"      << ": " << config.robotAccompanySpeed      << std::endl;
-        os << std::left << std::setw(W) << "driveStd"                 << ": " << config.driveStd                 << std::endl;
-        os << std::left << std::setw(W) << "conversationFoundStd"     << ": " << config.conversationFoundStd     << std::endl;
-        os << std::left << std::setw(W) << "conversationDropOffStd"   << ": " << config.conversationDropOffStd   << std::endl;
-        os << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer               << std::endl;
-        os << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath         << std::endl;
+        os << std::left << std::setw(W) << "personFindProbability"    << ": " << config.personFindProbability   << std::endl;
+        os << std::left << std::setw(W) << "robotSpeed"               << ": " << config.robotSpeed              << std::endl;
+        os << std::left << std::setw(W) << "robotAccompanySpeed"      << ": " << config.robotAccompanySpeed     << std::endl;
+        os << std::left << std::setw(W) << "driveTimeStd"             << ": " << config.driveTimeStd            << std::endl;
+        os << std::left << std::setw(W) << "conversationProbability"  << ": " << config.conversationProbability << std::endl;
+        os << std::left << std::setw(W) << "conversationDurationStd"  << ": " << config.conversationDurationStd << std::endl;
+        os << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer              << std::endl;
+        os << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath        << std::endl;
         os << "----------------------------\n" << std::endl;
         return os;
     }
