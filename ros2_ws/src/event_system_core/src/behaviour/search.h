@@ -37,7 +37,6 @@ public:
 
         bool personFound = rnd::uni() < ctx->getPersonFindProbability();
         if (personFound){
-            ctx->notifyEvent("Person found: " + ctx->getAppointment()->personName);
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -87,9 +86,7 @@ public:
         auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
-            ctx->notifyEvent("Person not found at any place!");
             ctx->updateAppointmentState(des::MissionState::FAILED);
-            ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(currentTime + 1));
             return BT::NodeStatus::FAILURE;
         }
         return BT::NodeStatus::SUCCESS;
@@ -131,11 +128,9 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-
-        ctx->notifyEvent("Aborting Search!");
-        ctx->updateAppointmentState(des::MissionState::FAILED);
-        ctx->changeRobotState(std::make_unique<IdleState>());
+        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        int currentTime = config().blackboard.get()->get<int>("current_time");
+        ctx->m_queue.push(std::make_shared<AbortSearchEvent>(currentTime + 1));
         return BT::NodeStatus::SUCCESS;
     }
 };

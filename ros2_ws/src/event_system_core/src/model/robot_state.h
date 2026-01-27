@@ -2,18 +2,9 @@
 
 #include <vector>
 #include <string>
+#include "../util/types.h"
 
 class Robot;
-
-enum class RobotStateType {
-    IDLE,
-    MOVING,
-    ACCOMPANY,
-    SEARCHING,
-    CHARGING,
-    CONVERSATE
-};
-
 
 class RobotState {
 public:
@@ -25,7 +16,7 @@ public:
     virtual void enter(Robot& robot) = 0;
     virtual void handleEvent(Robot& robot) = 0;
     virtual void exit(Robot& robot) = 0;
-    virtual RobotStateType getType() const = 0;
+    virtual des::RobotStateType getType() const = 0;
 };
 
 class IdleState : public  RobotState {
@@ -34,7 +25,7 @@ public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    RobotStateType getType() const override;
+    des::RobotStateType getType() const override;
 };
 
 class MoveState : public  RobotState {
@@ -42,7 +33,7 @@ public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    RobotStateType getType() const override;
+    des::RobotStateType getType() const override;
 };
 
 class AccompanyState : public  RobotState {
@@ -51,7 +42,7 @@ public:
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
     bool isAccompany() const override;
-    RobotStateType getType() const override;
+    des::RobotStateType getType() const override;
 };
 
 class SearchState : public  RobotState {
@@ -62,7 +53,7 @@ public:
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
     bool isSearching() const override;
-    RobotStateType getType() const override;
+    des::RobotStateType getType() const override;
 };
 
 class ConversateState : public  RobotState {
@@ -71,5 +62,5 @@ public:
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
     bool isConversate() const override;
-    RobotStateType getType() const override;
+    des::RobotStateType getType() const override;
 };

@@ -5,6 +5,7 @@
 #include <pluginlib/class_list_macros.hpp>
 #include <rviz_common/display_context.hpp>
 #include <sstream>
+#include "event_system_msgs/msg/metrics_report.hpp"
 
 namespace des_metrics_panel {
 
@@ -55,8 +56,6 @@ DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     mainLayout->addStretch();
 }
 
-DesMetricsPanel::~DesMetricsPanel() = default;
-
 void DesMetricsPanel::onInitialize() {
     auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
@@ -68,6 +67,12 @@ void DesMetricsPanel::onInitialize() {
                 this->onMetricsReport(msg);
             });
         });
+
+    m_subReset = m_node->create_subscription<event_system_msgs::msg::TimelineReset>(
+        "/timeline/reset", rclcpp::QoS(100),
+        [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
+            QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
+        });
 }
 
 QString DesMetricsPanel::fmtTime(int s) {
@@ -76,6 +81,11 @@ QString DesMetricsPanel::fmtTime(int s) {
     std::ostringstream oss;
     oss << m << "m " << std::setw(2) << std::setfill('0') << sec << "s";
     return QString::fromStdString(oss.str());
+}
+
+void DesMetricsPanel::onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
+    auto emptyReport = std::make_shared<event_system_msgs::msg::MetricsReport>();
+    onMetricsReport(emptyReport);
 }
 
 void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsReport::SharedPtr msg) {

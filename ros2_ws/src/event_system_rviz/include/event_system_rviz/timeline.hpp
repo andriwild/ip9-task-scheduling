@@ -10,11 +10,8 @@
 #include <cmath>
 #include <vector>
 
-#include "event_system_msgs/msg/timeline_event.hpp"
 #include "timeline_types.hpp"
 
-
-using TimelineEvent = event_system_msgs::msg::TimelineEvent;
 
 constexpr int TIMELINE_HEIGHT = 150;
 constexpr int SCENE_MARGIN    = 50;
@@ -91,9 +88,9 @@ public:
 
 public slots:
     void handleMove(int time, QString location) {
-        QString label = "Moved: " + location;
-        m_events.push_back({time, label, TimelineEvent::MOVE});
-        drawEventMarker({time, label, TimelineEvent::MOVE});
+        // QString label = "Moved: " + location;
+        // m_events.push_back({time, label, des::});
+        // drawEventMarker({time, label, TimelineEvent::MOVING});
     }
 
     void handleStateChange(int time, int newState) {
@@ -112,6 +109,11 @@ public slots:
 
     void handleReset() {
         clear();
+    }
+
+    void handleEvent(VisualEvent ve) {
+        m_events.push_back(ve);
+        drawEventMarker(ve);
     }
 
     void zoomIn() { applyZoom(1.5); }
@@ -311,28 +313,73 @@ private:
         return ((x - X_LINE_OFFSET) / m_pixelsPerSecond) + m_simStartTime;
     }
 
+
+    void drawMeetingMarker(int time, QString label) {
+        double x = timeToX(time);
+        QColor color = Qt::red;
+
+        int lineTop = Y_LINE_POS - MARKER_HEIGHT;
+
+        qreal size = MARKER_HEIGHT;
+        qreal halfW = size / 4.0; 
+        qreal halfH = size / 2.0;
+        QPolygonF diamondShape;
+        diamondShape << QPointF(x, Y_LINE_POS)
+            << QPointF(x + halfW, Y_LINE_POS - halfH)
+            << QPointF(x, Y_LINE_POS - size)
+            << QPointF(x - halfW, Y_LINE_POS - halfH);
+
+        auto diamondItem = m_scene->addPolygon(diamondShape, {color, 1}, {color});
+        diamondItem->setZValue(Z_MARKER);
+
+        QString eventLabel = label 
+            +  " - (" 
+            + QString::fromStdString(des::toHumanReadableTime(time, true)) 
+            + ")";
+
+        auto text = m_scene->addText(eventLabel);
+        QFont f = text->font();
+        f.setPointSize(8);
+        text->setFont(f);
+        text->setDefaultTextColor(color);
+        text->setRotation(-60);
+        text->setPos(x - 12, lineTop - 7);
+        text->setZValue(Z_MARKER);
+    }
+
+
     void drawEventMarker(const VisualEvent& evt, QColor color = Qt::darkGreen) {
         double x = timeToX(evt.time);
 
         int lineTop = Y_LINE_POS - MARKER_HEIGHT;
+        switch(evt.type) {
+            case des::EventType::SIMULATION_END:
+                color = Qt::blue;
+            break;
+            case des::EventType::SIMULATION_START:
+                color = Qt::blue;
+                break;
+            case des::EventType::ABORT_SEARCH:
+                color = Qt::magenta;
+                break;
+            case des::EventType::DROP_OFF_CONV_COMPLETE:
+                color = Qt::cyan;
+                break;
+            case des::EventType::FOUND_PERSON_CONV_COMPLETE:
+                color = Qt::darkCyan;
+                break;
+            case des::EventType::MISSION_COMPLETE:
+                color = Qt::darkYellow;
+                break;
+            case des::EventType::MISSION_DISPATCH:
+                color = Qt::yellow;
+                break;
+            break;
 
-        if(evt.type == TimelineEvent::MEETING) {
-            qreal size = MARKER_HEIGHT;
-            qreal halfW = size / 4.0; 
-            qreal halfH = size / 2.0;
-            QPolygonF diamondShape;
-            diamondShape << QPointF(x, Y_LINE_POS)
-             << QPointF(x + halfW, Y_LINE_POS - halfH)
-             << QPointF(x, Y_LINE_POS - size)
-             << QPointF(x - halfW, Y_LINE_POS - halfH);
-
-            auto diamondItem = m_scene->addPolygon(diamondShape, {color, 1}, {color});
-            diamondItem->setZValue(Z_MARKER);
-        } else {
-            auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
-            line->setZValue(Z_MARKER);
         }
 
+        auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
+        line->setZValue(Z_MARKER);
 
         QString eventLabel = evt.label 
             +  " - (" 
@@ -350,7 +397,7 @@ private:
     }
 
     void drawMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        double startX = timeToX(startTime);
+        double startX   = timeToX(startTime);
         double meetingX = timeToX(appt.get()->appointmentTime);
         double durationWidth = meetingX - startX;
 
@@ -369,6 +416,6 @@ private:
         rect->setZValue(Z_PLAN_LINE);
 
         QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
-        drawEventMarker({appt.get()->appointmentTime, labelText, TimelineEvent::MEETING}, Qt::red);
+        drawMeetingMarker(appt.get()->appointmentTime, labelText);
     }
 };

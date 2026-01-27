@@ -74,6 +74,26 @@ struct SimConfig {
     }
 };
 
+enum class RobotStateType {
+    IDLE,
+    MOVING,
+    ACCOMPANY,
+    SEARCHING,
+    CHARGING,
+    CONVERSATE
+};
+
+enum class EventType : int {
+    SIMULATION_START           = 0,
+    SIMULATION_END             = 1,
+    ARRIVED                    = 2,
+    MISSION_COMPLETE           = 3,
+    MISSION_DISPATCH           = 4,
+    DROP_OFF_CONV_COMPLETE     = 5,
+    FOUND_PERSON_CONV_COMPLETE = 6,
+    ABORT_SEARCH               = 7
+};
+
 struct Person {
     int id;
     std::string firstName;

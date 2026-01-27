@@ -16,8 +16,8 @@ void IdleState::exit(Robot& robot) {
 void IdleState::handleEvent(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[State] handle idle ");
 }
-RobotStateType IdleState::getType() const {
-    return RobotStateType::IDLE;
+des::RobotStateType IdleState::getType() const {
+    return des::RobotStateType::IDLE;
 }
 
 void AccompanyState::enter(Robot& robot) {
@@ -32,8 +32,8 @@ void AccompanyState::handleEvent(Robot& robot) {
 }
 bool AccompanyState::isAccompany() const { return true; };
 
-RobotStateType AccompanyState::getType() const {
-    return RobotStateType::ACCOMPANY;
+des::RobotStateType AccompanyState::getType() const {
+    return des::RobotStateType::ACCOMPANY;
 }
 
 void MoveState::enter(Robot& robot) {
@@ -46,8 +46,8 @@ void MoveState::exit(Robot& robot) {
 void MoveState::handleEvent(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[State] handle move ");
 }
-RobotStateType MoveState::getType() const {
-    return RobotStateType::MOVING;
+des::RobotStateType MoveState::getType() const {
+    return des::RobotStateType::MOVING;
 }
 
 void SearchState::enter(Robot& robot) {
@@ -62,8 +62,8 @@ void SearchState::handleEvent(Robot& robot) {
 }
 
 bool SearchState::isSearching() const { return true; };
-RobotStateType SearchState::getType() const {
-    return RobotStateType::SEARCHING;
+des::RobotStateType SearchState::getType() const {
+    return des::RobotStateType::SEARCHING;
 }
 
 void ConversateState::enter(Robot& robot) {
@@ -78,6 +78,6 @@ void ConversateState::handleEvent(Robot& robot) {
 }
 
 bool ConversateState::isConversate() const { return true; };
-RobotStateType ConversateState::getType() const {
-    return RobotStateType::CONVERSATE;
+des::RobotStateType ConversateState::getType() const {
+    return des::RobotStateType::CONVERSATE;
 }

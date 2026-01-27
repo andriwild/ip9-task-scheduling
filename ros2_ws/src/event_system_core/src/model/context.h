@@ -93,15 +93,15 @@ public:
         }
     }
 
-    void notifyRobotStateChanged(RobotStateType newState) {
+    void notifyRobotStateChanged(des::RobotStateType newState) {
         for (auto obs : m_observers) {
             obs->onStateChanged(m_currentTime, newState);
         }
     }
 
-    void notifyEvent(const std::string& msg) {
+    void notifyEvent(IEvent& event) {
         for (auto obs : m_observers) {
-            obs->onLog(m_currentTime, msg);
+            obs->onEvent(event.time, event.getType(), event.getName());
         }
     }
 
@@ -142,7 +142,7 @@ public:
 
         if (m_robot->getLocation() == target) {
             this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
-            this->notifyEvent("Already at " + target);
+            RCLCPP_INFO(m_logger, "Already at %s", target.c_str());
         } else {
             std::optional<double> distance = this->m_plannerNode->estimateDistance(this->m_robot->getLocation(), target);
             assert(distance.has_value());
@@ -154,7 +154,10 @@ public:
             arrivalTime = currentTime + timeVariance;
 
             this->m_queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
-            this->notifyEvent("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(timeVariance - travelTime) + ")");
+            RCLCPP_INFO(m_logger, "Moving to %s (%.1fs + %.1f)", 
+                        target.c_str(),
+                        travelTime, 
+                        timeVariance - travelTime);
         }
 
         if (isMissionComplete) {

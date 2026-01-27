@@ -13,9 +13,9 @@
 class Docking : public BT::SyncActionNode
 {
 public:
-  Docking(const std::string& name, const BT::NodeConfig& config) : BT::SyncActionNode(name, config)
-  {
-  }
+  Docking(const std::string& name, const BT::NodeConfig& config):
+        BT::SyncActionNode(name, config)
+  {}
 
   static BT::PortsList providedPorts()
   {
@@ -49,7 +49,6 @@ public:
   BT::NodeStatus tick() override {
     auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
     assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
-    ctx->notifyEvent("Robot is idle at " + ctx->m_robot->getLocation());
     ctx->changeRobotState(std::make_unique<IdleState>());
     return BT::NodeStatus::SUCCESS;
   }

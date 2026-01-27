@@ -20,7 +20,7 @@ class MetricsNode : public rclcpp::Node, public IObserver {
     int nMissionCompletedLate = 0;
     int nMissionCanceled      = 0;
     double movedDistance      = 0.0;
-    RobotStateType lastState;
+    des::RobotStateType lastState;
 
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
 
@@ -50,26 +50,26 @@ public:
         movedDistance         = 0.0;
     }
 
-    void onStateChanged(int time, const RobotStateType& newState) override {
+    void onStateChanged(int time, const des::RobotStateType& newState) override {
         int passedTime = time - lastTimeStateChanged;
 
         switch (lastState) {
-            case RobotStateType::CHARGING:
+            case des::RobotStateType::CHARGING:
                 chargingTime += passedTime;
                 break;
-            case RobotStateType::ACCOMPANY:
+            case des::RobotStateType::ACCOMPANY:
                 accompanyTime += passedTime;
                 break;
-            case RobotStateType::SEARCHING:
+            case des::RobotStateType::SEARCHING:
                 searchTime += passedTime;
                 break;
-            case RobotStateType::IDLE:
+            case des::RobotStateType::IDLE:
                 idleTime += passedTime;
                 break;
-            case RobotStateType::MOVING:
+            case des::RobotStateType::MOVING:
                 moveTime += passedTime;
                 break;
-            case RobotStateType::CONVERSATE:
+            case des::RobotStateType::CONVERSATE:
                 talkTime += passedTime;
                 break;
         }
@@ -83,7 +83,7 @@ public:
     void onMissionComplete(int /*time*/, des::MissionState& state, int timeDiff) override {
         switch (state) {
             case des::MissionState::COMPLETED:
-                if (timeDiff > 0) {
+                if (timeDiff >= 0) {
                     nMissionCompletedLate++;
                     accMissionToLateTime += timeDiff;
                 } else {

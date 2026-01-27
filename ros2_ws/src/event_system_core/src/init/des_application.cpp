@@ -102,7 +102,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     auto missions = scheduleAppointments(m_appointments, m_employeeLocations, m_ctx);
 
     int firstEventTime = missions.front()->time - ONE_HOUR;
-    int lastEventTime  = missions.back()->time - ONE_HOUR;
+    int lastEventTime  = missions.back()->time + ONE_HOUR;
 
     RCLCPP_DEBUG(m_node->get_logger(), "Event time range from %d to %d", firstEventTime, lastEventTime);
 

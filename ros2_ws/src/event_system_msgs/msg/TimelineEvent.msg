@@ -1,13 +1,13 @@
-int32 appointment_time
-uint8 LOG=0
-uint8 MOVE=1
-uint8 STATE_CHANGE=2
-uint8 MEETING=3
-uint8 RESET=4
+int32 time
+
+uint8 SIMULATION_START= 0
+uint8 SIMULATION_END = 1
+uint8 ARRIVED = 2
+uint8 MISSION_COMPLETE = 3
+uint8 MISSION_DISPATCH = 4
+uint8 DROP_OFF_CONV_COMPLETE = 5
+uint8 FOUND_PERSON_CONV_COMPLETE= 6
+uint8 ABORT_SEARCH = 7
 
 uint8 type
 string label
-int32 state
-int32 robot_start_time
-string description
-string person_name

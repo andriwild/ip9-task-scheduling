@@ -2,8 +2,11 @@
 #include <limits>
 #include <memory>
 #include <rviz_common/display_context.hpp>
+
 #include "event_system_msgs/msg/timeline_event.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
+#include "event_system_msgs/msg/timeline_reset.hpp"
+#include "event_system_msgs/msg/timeline_state_change.hpp"
 
 
 constexpr int ONE_HOUR = 3600;
@@ -25,6 +28,12 @@ DesTimelinePanel::~DesTimelinePanel() = default;
 void DesTimelinePanel::onInitialize() {
     auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
+
+    m_subEvent = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(
+        "/timeline/event", rclcpp::QoS(100),
+        [this](const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
+            QMetaObject::invokeMethod(this, [this, msg]() { this->onEvent(msg); });
+        });
 
     m_subMeeting = m_node->create_subscription<event_system_msgs::msg::TimelineMeeting>(
         "/timeline/meeting", rclcpp::QoS(100),
@@ -49,7 +58,6 @@ void DesTimelinePanel::onInitialize() {
         "/timeline/reset", rclcpp::QoS(100),
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
-
         });
 }
 
@@ -79,6 +87,10 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
     m_minStartTime = std::numeric_limits<int>::max();
     m_maxEndTime   = std::numeric_limits<int>::min();
     m_timeline->handleReset();
+}
+
+void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg){
+    m_timeline->handleEvent({msg->time, QString::fromStdString(msg->label), des::EventType(msg->type)});
 }
 
 }  // namespace des_timeline_panel

@@ -32,7 +32,6 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         bool successful = true;
-        ctx->notifyEvent("Arrived with person at meeting location.");
         return successful ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -50,7 +49,6 @@ public:
     BT::NodeStatus tick() override {
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
-        ctx->notifyEvent("Start drop off conversation!");
 
         double eventTime = currentTime + ctx->getRndConversationTime();
         ctx->m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
@@ -70,10 +68,8 @@ public:
     }
 
     BT::NodeStatus tick() override {
- 
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        ctx->notifyEvent("Aborting Accompany!");
         ctx->updateAppointmentState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;

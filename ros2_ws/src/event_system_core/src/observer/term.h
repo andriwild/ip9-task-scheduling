@@ -15,7 +15,7 @@ public:
         return "Terminal";
     }
 
-    void onLog(int time, const std::string& message) override {
+    void onEvent(int time, des::EventType type, const std::string& message) override {
         RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %s", des::toHumanReadableTime(time).c_str(), message.c_str());
     }
 
