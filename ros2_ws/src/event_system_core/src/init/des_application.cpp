@@ -130,7 +130,7 @@ void DesApplication::reset() {
 
     loadAppointments(m_config->appointmentsPath);
     setupQueue(m_config);
-    m_ctx->resetTime(m_eventQueue.top()->time);
+    m_ctx->resetContext(m_eventQueue.top()->time);
 
     RCLCPP_INFO(m_node->get_logger(), "System Reset Complete");
 }
@@ -168,7 +168,7 @@ int DesApplication::run() {
 
     setupObservers();
     setupQueue(m_config);
-    m_ctx->resetTime(m_eventQueue.top()->time);
+    m_ctx->resetContext(m_eventQueue.top()->time);
 
     RCLCPP_DEBUG(m_node->get_logger(), "Create Behaviour Tree");
     m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);

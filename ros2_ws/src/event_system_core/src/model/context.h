@@ -67,8 +67,9 @@ public:
         m_currentAppointment->state = newState;
     }
 
-    void resetTime(int newTime) {
+    void resetContext(int newTime) {
         m_currentTime = newTime;
+        m_robot->setLocation(m_robot->getIdleLocation());
     }
 
     void setTime(int newTime) {
@@ -98,7 +99,7 @@ public:
         }
     }
 
-    void notifyLog(const std::string& msg) {
+    void notifyEvent(const std::string& msg) {
         for (auto obs : m_observers) {
             obs->onLog(m_currentTime, msg);
         }
@@ -141,7 +142,7 @@ public:
 
         if (m_robot->getLocation() == target) {
             this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
-            this->notifyLog("Already at " + target);
+            this->notifyEvent("Already at " + target);
         } else {
             std::optional<double> distance = this->m_plannerNode->estimateDistance(this->m_robot->getLocation(), target);
             assert(distance.has_value());
@@ -153,7 +154,7 @@ public:
             arrivalTime = currentTime + timeVariance;
 
             this->m_queue.push(std::make_shared<ArrivedEvent>(arrivalTime, target, distance.value()));
-            this->notifyLog("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(timeVariance - travelTime) + ")");
+            this->notifyEvent("Moving to " + target + " (" + std::to_string(travelTime) + "s + " + std::to_string(timeVariance - travelTime) + ")");
         }
 
         if (isMissionComplete) {

@@ -49,7 +49,7 @@ public:
   BT::NodeStatus tick() override {
     auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
     assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
-    ctx->notifyLog("Robot is idle at " + ctx->m_robot->getLocation());
+    ctx->notifyEvent("Robot is idle at " + ctx->m_robot->getLocation());
     ctx->changeRobotState(std::make_unique<IdleState>());
     return BT::NodeStatus::SUCCESS;
   }
