@@ -90,11 +90,6 @@ public:
     }
 
 public slots:
-    void handleLog(int time, QString message) {
-        // m_events.push_back({time, message, "LOG"});
-        // drawEventMarker({time, message, "LOG"});
-    }
-
     void handleMove(int time, QString location) {
         QString label = "Moved: " + location;
         m_events.push_back({time, label, TimelineEvent::MOVE});
@@ -331,7 +326,7 @@ private:
              << QPointF(x, Y_LINE_POS - size)
              << QPointF(x - halfW, Y_LINE_POS - halfH);
 
-            auto diamondItem = m_scene->addPolygon(diamondShape, {color}, {color});
+            auto diamondItem = m_scene->addPolygon(diamondShape, {color, 1}, {color});
             diamondItem->setZValue(Z_MARKER);
         } else {
             auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});

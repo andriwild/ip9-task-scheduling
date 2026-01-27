@@ -5,7 +5,6 @@
 #include <QColor>
 #include "../../event_system_core/src/util/types.h"
 #include "../../event_system_core/src/model/robot_state.h"
-#include "event_system_msgs/msg/timeline_event.hpp"
 
 struct VisualEvent {
     int time;

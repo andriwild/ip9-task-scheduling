@@ -2,62 +2,62 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "event_system_msgs/msg/timeline_event.hpp"
 #include "observer.h"
+
+#include "event_system_msgs/msg/timeline_move.hpp"
+#include "event_system_msgs/msg/timeline_state_change.hpp"
+#include "event_system_msgs/msg/timeline_meeting.hpp"
+#include "event_system_msgs/msg/timeline_reset.hpp"
 
 class RosObserver : public IObserver {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
-        m_publisher = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>(
-            "/timeline_events",
-            rclcpp::QoS(100));
+        m_pubMove = m_node->create_publisher<event_system_msgs::msg::TimelineMove>("/timeline/move", rclcpp::QoS(100));
+        m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(100));
+        m_pubReset = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset", rclcpp::QoS(100));
+        m_pubMeeting = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting", rclcpp::QoS(100));
     }
 
     std::string getName() override {
         return "ROS";
     }
 
-    void onLog(int /*time*/, const std::string& /*message*/) override {
-        // auto msg = event_system_msgs::msg::TimelineEvent();
-        // msg.appointment_time = time;
-        // msg.type = event_system_msgs::msg::TimelineEvent::LOG;
-        // msg.label = message;
-        // m_publisher->publish(msg);
-    }
+    // void onLog(int /*time*/, const std::string& /*message*/) override { }
 
     void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
-        auto msg = event_system_msgs::msg::TimelineEvent();
+        auto msg = event_system_msgs::msg::TimelineMove();
         msg.appointment_time = time;
-        msg.type             = event_system_msgs::msg::TimelineEvent::MOVE;
         msg.label            = location;
-        m_publisher->publish(msg);
+        m_pubMove->publish(msg);
     }
 
     void onStateChanged(int time, const RobotStateType& type) override {
-        auto msg = event_system_msgs::msg::TimelineEvent();
+        auto msg = event_system_msgs::msg::TimelineStateChange();
         msg.appointment_time = time;
-        msg.type             = event_system_msgs::msg::TimelineEvent::STATE_CHANGE;
         msg.state            = static_cast<int>(type);
-        m_publisher->publish(msg);
+        m_pubStateChange->publish(msg);
     }
 
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
-        auto msg = event_system_msgs::msg::TimelineEvent();
+        auto msg = event_system_msgs::msg::TimelineMeeting();
+        msg.start_time       = startTime;
+        msg.id               = appt->id;
         msg.appointment_time = appt->appointmentTime;
-        msg.type             = event_system_msgs::msg::TimelineEvent::MEETING;
-        msg.description      = appt->description;
+        msg.mission_state    = appt->state;
         msg.person_name      = appt->personName;
-        msg.robot_start_time = startTime;
-        m_publisher->publish(msg);
+        msg.description      = appt->description;
+        m_pubMeeting->publish(msg);
     }
 
     void publishReset() {
-        auto msg = event_system_msgs::msg::TimelineEvent();
-        msg.type = event_system_msgs::msg::TimelineEvent::RESET;
-        m_publisher->publish(msg);
+        auto msg = event_system_msgs::msg::TimelineReset();
+        m_pubReset->publish(msg);
     }
 
 private:
     rclcpp::Node::SharedPtr m_node;
-    rclcpp::Publisher<event_system_msgs::msg::TimelineEvent>::SharedPtr m_publisher;
+    rclcpp::Publisher<event_system_msgs::msg::TimelineMove>::SharedPtr m_pubMove;
+    rclcpp::Publisher<event_system_msgs::msg::TimelineStateChange>::SharedPtr m_pubStateChange;
+    rclcpp::Publisher<event_system_msgs::msg::TimelineReset>::SharedPtr m_pubReset;
+    rclcpp::Publisher<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_pubMeeting;
 };
