@@ -1,5 +1,5 @@
 {
-    "appointments_path": "20_appts.json",
+    "appointments_path": "appointments.json",
     "conversation_duration_std": 0.5,
     "conversation_probability": 0.800000011920929,
     "drive_time_std": 0.20000000298023224,

@@ -10,11 +10,15 @@
 #include <cmath>
 #include <vector>
 
+#include "event_system_msgs/msg/timeline_event.hpp"
 #include "timeline_types.hpp"
 
-constexpr int TIMELINE_HEIGHT = 350;
+
+using TimelineEvent = event_system_msgs::msg::TimelineEvent;
+
+constexpr int TIMELINE_HEIGHT = 150;
 constexpr int SCENE_MARGIN    = 50;
-constexpr int Y_LINE_POS      = 200;
+constexpr int Y_LINE_POS      = 100;
 constexpr int LABEL_OFFSET    = 20;
 constexpr int X_LINE_OFFSET   = SCENE_MARGIN;
 constexpr int MARKER_HEIGHT   = 20;
@@ -93,8 +97,8 @@ public slots:
 
     void handleMove(int time, QString location) {
         QString label = "Moved: " + location;
-        m_events.push_back({time, label, "MOVE"});
-        drawEventMarker({time, label, "MOVE"});
+        m_events.push_back({time, label, TimelineEvent::MOVE});
+        drawEventMarker({time, label, TimelineEvent::MOVE});
     }
 
     void handleStateChange(int time, int newState) {
@@ -120,39 +124,14 @@ public slots:
 
 protected:
     void drawBackground(QPainter * painter, const QRectF& rect) override {
-        // state line
-        int barHeight = 10;
-        int barY = Y_LINE_POS;
-
-        for (const auto& block : m_states) {
-            if (timeToX(block.endTime) < rect.left()) {
-                continue;
-            }
-            if (timeToX(block.startTime) > rect.right()) {
-                continue;
-            }
-
-            double x1 = timeToX(block.startTime);
-            double x2 = timeToX(block.endTime);
-
-            painter->fillRect(QRectF(x1, barY + getYPos(block.type), x2 - x1, barHeight), getColor(block.type));
-        }
-
-        if (m_currentOpenState.endTime != -1 && m_currentOpenState.startTime != -1) {
-            double x1 = timeToX(m_currentOpenState.startTime);
-            double x2 = timeToX(m_simEndTime);
-            painter->fillRect(QRectF(x1, barY, x2 - x1, barHeight), getColor(m_currentOpenState.type));
-        }
-
+       
         // baseline
         QPen axisPen(Qt::black, 2);
         painter->setPen(axisPen);
         double startX = std::max(rect.left() , timeToX(m_simStartTime));
         double endX   = std::min(rect.right(), timeToX(m_simEndTime));
 
-        if (startX < endX) {
-            painter->drawLine(QLineF(startX, Y_LINE_POS, endX, Y_LINE_POS));
-        }
+        painter->drawLine(QLineF(startX, Y_LINE_POS, endX, Y_LINE_POS));
 
         double tStart = xToTime(rect.left());
         double tEnd   = xToTime(rect.right());
@@ -160,7 +139,7 @@ protected:
         int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
         int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
 
-        const double MIN_TICK_PX = 10.0;
+        const double MIN_TICK_PX  = 10.0;
         const double MIN_LABEL_PX = 80.0;
 
         const std::vector<int> intervals = {1, 2, 5, 10, 30, 60, 120, 300,
@@ -192,7 +171,9 @@ protected:
             firstTick += tickStep;
         }
 
+        // time labels
         QFont font = painter->font();
+        QFontMetrics fm(font);
         font.setPointSize(8);
         painter->setFont(font);
 
@@ -208,13 +189,34 @@ protected:
                 std::string timeStr = des::toHumanReadableTime(time, showSeconds);
                 QString qs = QString::fromStdString(timeStr);
 
-                QFontMetrics fm(font);
                 int w = fm.horizontalAdvance(qs);
                 painter->drawText(static_cast<int>(x) - w / 2, Y_LINE_POS + LABEL_OFFSET + 10, qs);
             } else {
                 painter->setPen(QPen(Qt::gray, 1));
                 painter->drawLine(QLineF(x, Y_LINE_POS + 3, x, Y_LINE_POS - 3));
             }
+        }
+
+        int barHeight = 20;
+        int blockTimelineCap = 40;
+        int barY = Y_LINE_POS + blockTimelineCap;
+
+
+        // draw state blocks
+        for (const auto& block : m_states) {
+            if (timeToX(block.endTime) < rect.left()  || timeToX(block.startTime) > rect.right()) {
+                continue;
+            }
+
+            double x1 = timeToX(block.startTime);
+            double x2 = timeToX(block.endTime);
+            double blockLength = x2 - x1;
+            QColor blockColor = getMeta(block.type).color;
+            auto re = QRectF(x1, barY, blockLength, barHeight);
+            painter->fillRect(re, blockColor);
+            painter->setPen(QPen(blockColor.darker(300), 1));
+            QString elidedLabel = fm.elidedText(QString::fromStdString(getMeta(block.type).label), Qt::TextElideMode::ElideRight, re.width());
+            painter->drawText(re, Qt::AlignCenter, elidedLabel);
         }
     }
 
@@ -319,16 +321,36 @@ private:
 
         int lineTop = Y_LINE_POS - MARKER_HEIGHT;
 
-        auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
-        line->setZValue(Z_MARKER);
+        if(evt.type == TimelineEvent::MEETING) {
+            qreal size = MARKER_HEIGHT;
+            qreal halfW = size / 4.0; 
+            qreal halfH = size / 2.0;
+            QPolygonF diamondShape;
+            diamondShape << QPointF(x, Y_LINE_POS)
+             << QPointF(x + halfW, Y_LINE_POS - halfH)
+             << QPointF(x, Y_LINE_POS - size)
+             << QPointF(x - halfW, Y_LINE_POS - halfH);
 
-        auto text = m_scene->addText(evt.label);
+            auto diamondItem = m_scene->addPolygon(diamondShape, {color}, {color});
+            diamondItem->setZValue(Z_MARKER);
+        } else {
+            auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
+            line->setZValue(Z_MARKER);
+        }
+
+
+        QString eventLabel = evt.label 
+            +  " - (" 
+            + QString::fromStdString(des::toHumanReadableTime(evt.time, true)) 
+            + ")";
+
+        auto text = m_scene->addText(eventLabel);
         QFont f = text->font();
         f.setPointSize(8);
         text->setFont(f);
         text->setDefaultTextColor(color);
         text->setRotation(-60);
-        text->setPos(x - 12, lineTop - 5);
+        text->setPos(x - 12, lineTop - 7);
         text->setZValue(Z_MARKER);
     }
 
@@ -345,13 +367,13 @@ private:
             startX, 
             Y_LINE_POS, 
             durationWidth, 
-            -MARKER_HEIGHT, 
+            static_cast<int>(-(MARKER_HEIGHT / 2)), 
             QPen(Qt::NoPen),
             QBrush(QColor(100, 100, 100, 50))
         );
         rect->setZValue(Z_PLAN_LINE);
 
         QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
-        drawEventMarker({appt.get()->appointmentTime, labelText, "MEETING"}, Qt::red);
+        drawEventMarker({appt.get()->appointmentTime, labelText, TimelineEvent::MEETING}, Qt::red);
     }
 };
