@@ -5,14 +5,13 @@ pre_window: source /opt/ros/jazzy/setup.zsh && source install/setup.zsh
 
 windows:
   - editor:
-      layout: main-vertical
+      layout: main-horizontal
       panes:
         - nvim . 
         - 
            - export RCUTILS_COLORIZED_OUTPUT=1
            - colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
            - source install/setup.zsh
-           - git status
   - nodes:
       layout: tiled
       panes:

@@ -1,9 +1,9 @@
 {
-    "appointments_path": "appointments.json",
-    "conversation_duration_std": 0.5,
-    "conversation_probability": 0.800000011920929,
+    "appointments_path": "scenario_heavy_load.json",
+    "conversation_duration_std": 1.0,
+    "conversation_probability": 1.0,
     "drive_time_std": 0.20000000298023224,
-    "find_person_probability": 0.30000001192092896,
+    "find_person_probability": 0.20000000298023224,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
     "timeBuffer": 100.0

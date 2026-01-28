@@ -15,6 +15,8 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
 ) {
     std::vector<std::shared_ptr<MissionDispatchEvent>> missions;
     for (auto& appt : appointments) {
+
+        assert(locations.find(appt->personName) != locations.end());
         auto employeeLocation = locations[appt->personName].front();
 
         auto startPos = ctx->m_robot->getIdleLocation();
