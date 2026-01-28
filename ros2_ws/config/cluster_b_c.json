@@ -1,0 +1,64 @@
+{
+    "appointments": [
+        {
+            "personName": "TeamB",
+            "roomName": "5.2B01",
+            "appointmentTime": 4000,
+            "description": "B Kickoff"
+        },
+        {
+            "personName": "TeamC",
+            "roomName": "5.2C01",
+            "appointmentTime": 6000,
+            "description": "C Kickoff"
+        },
+        {
+            "personName": "TeamB",
+            "roomName": "5.2B04",
+            "appointmentTime": 8000,
+            "description": "B Status"
+        },
+        {
+            "personName": "TeamC",
+            "roomName": "5.2C05",
+            "appointmentTime": 10000,
+            "description": "C Status"
+        },
+        {
+            "personName": "Joint",
+            "roomName": "5.2B_Elevator",
+            "appointmentTime": 12000,
+            "description": "Corridor Meet"
+        },
+        {
+            "personName": "TeamB",
+            "roomName": "5.2B51",
+            "appointmentTime": 14000,
+            "description": "B Review"
+        },
+        {
+            "personName": "TeamC",
+            "roomName": "5.2C56",
+            "appointmentTime": 16000,
+            "description": "C Review"
+        },
+        {
+            "personName": "Director",
+            "roomName": "5.2C_Working_Space",
+            "appointmentTime": 18000,
+            "description": "Leadership"
+        },
+        {
+            "personName": "TeamB",
+            "roomName": "5.2B_Toilet_M",
+            "appointmentTime": 20000,
+            "description": "Break"
+        },
+        {
+            "personName": "TeamC",
+            "roomName": "5.2C_Trash",
+            "appointmentTime": 22000,
+            "description": "Cleanup"
+        }
+    ]
+}
