@@ -20,12 +20,10 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     bool successful = rnd::uni() < ctx.getConversationProbability();
+    ctx.notifyEvent(*this);
     if(successful) {
-        ctx.notifyEvent(*this);
-        ctx.changeRobotState(std::make_unique<AccompanyState>());
-        ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
+        ctx.m_queue.push(std::make_shared<StartAccompanyEvent>(this->time + 1));
     } else {
-        ctx.notifyEvent(*this);
         ctx.updateAppointmentState(des::MissionState::FAILED);
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
@@ -94,8 +92,30 @@ void AbortSearchEvent::execute(SimulationContext& ctx) {
     ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.updateAppointmentState(des::MissionState::FAILED);
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.notifyEvent(*this);
     ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time + 1));
+    ctx.notifyEvent(*this);
+}
+
+void StartDropOffConversationeEvent::execute(SimulationContext& ctx) {
+    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
+    double eventTime = this->time + ctx.getRndConversationTime();
+    ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
+    ctx.notifyEvent(*this);
+}
+
+void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
+    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
+    auto eventTime = this->time + ctx.getRndConversationTime();
+    ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
+    ctx.changeRobotState(std::make_unique<ConversateState>());
+    ctx.notifyEvent(*this);
+}
+
+void StartAccompanyEvent::execute(SimulationContext& ctx) {
+    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
+    ctx.changeRobotState(std::make_unique<AccompanyState>());
+    ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
+    ctx.notifyEvent(*this);
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {

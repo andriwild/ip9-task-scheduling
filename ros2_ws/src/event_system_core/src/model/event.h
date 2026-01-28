@@ -48,7 +48,7 @@ class SimulationStartEvent : public IEvent {
 public:
     explicit SimulationStartEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Sim start"; };
+    std::string getName() const override { return "Simulation Start"; };
     des::EventType getType() const override { return des::EventType::SIMULATION_START; };
 };
 
@@ -56,7 +56,7 @@ class SimulationEndEvent : public IEvent {
 public:
     explicit SimulationEndEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Sim end"; };
+    std::string getName() const override { return "Simulation End"; };
     des::EventType getType() const override { return des::EventType::SIMULATION_END; };
 };
 
@@ -82,7 +82,7 @@ public:
         appointment(appt) 
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "MissionDispatchEvent"; };
+    std::string getName() const override { return "Mission Dispatch"; };
     des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; };
 };
 
@@ -90,7 +90,7 @@ class MissionCompleteEvent : public IEvent {
 public:
     explicit MissionCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "MissionCompleteEvent"; };
+    std::string getName() const override { return "Mission Complete"; };
     des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; };
 };
 
@@ -98,7 +98,7 @@ class FoundPersonConversationCompleteEvent : public IEvent {
 public:
     explicit FoundPersonConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "FoundPersonConversationCompleteEvent"; };
+    std::string getName() const override { return "Found Person Conversation Complete"; };
     des::EventType getType() const override { return des::EventType::FOUND_PERSON_CONV_COMPLETE; };
 };
 
@@ -106,7 +106,7 @@ class DropOffConversationCompleteEvent : public IEvent {
 public:
     explicit DropOffConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "DropOffConversationCompleteEvent"; };
+    std::string getName() const override { return "Drop Off Conversation Complete"; };
     des::EventType getType() const override { return des::EventType::DROP_OFF_CONV_COMPLETE; };
 };
 
@@ -119,4 +119,29 @@ public:
 };
 
 
+class StartDropOffConversationeEvent: public IEvent {
+public:
+    explicit StartDropOffConversationeEvent(int time) : IEvent(time) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Start Drop Off Conversation"; };
+    des::EventType getType() const override { return des::EventType::START_DROP_OFF_CONV; };
+};
+
+
+class StartFoundPersonConversationEvent: public IEvent {
+public:
+    explicit StartFoundPersonConversationEvent(int time) : IEvent(time) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Start Found Person Conversation"; };
+    des::EventType getType() const override { return des::EventType::START_FOUND_PERSON_CONV; };
+};
+
+
+class StartAccompanyEvent: public IEvent {
+public:
+    explicit StartAccompanyEvent(int time) : IEvent(time) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Start Accompany"; };
+    des::EventType getType() const override { return des::EventType::START_ACCOMPANY; };
+};
 

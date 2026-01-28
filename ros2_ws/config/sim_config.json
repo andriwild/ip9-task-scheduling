@@ -1,10 +1,10 @@
 {
-    "appointments_path": "scenario_heavy_load.json",
+    "appointments_path": "heavy_load.json",
     "conversation_duration_std": 1.0,
     "conversation_probability": 1.0,
-    "drive_time_std": 0.20000000298023224,
-    "find_person_probability": 0.20000000298023224,
+    "drive_time_std": 0.10000000149011612,
+    "find_person_probability": 0.10000000149011612,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
-    "timeBuffer": 100.0
+    "timeBuffer": 120.0
 }

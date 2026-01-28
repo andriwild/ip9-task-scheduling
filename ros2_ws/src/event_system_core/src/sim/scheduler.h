@@ -27,9 +27,9 @@ inline std::vector<std::shared_ptr<MissionDispatchEvent>> scheduleAppointments(
         assert(travelTo.has_value());
         assert(accompany.has_value());
         
-        const double accTravelDist =  travelTo.value() + accompany.value();
-        const double travelTime    = accTravelDist / ctx->m_robot->getSpeed();
-        const int startSeconds     = appt.get()->appointmentTime - travelTime;
+        const double travelTime    = travelTo.value() / ctx->m_robot->getSpeed();
+        const double accompanyTime = accompany.value() / ctx->m_robot->getAccompanySpeed();
+        const int startSeconds     = appt.get()->appointmentTime - (travelTime + accompanyTime);
         missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appt));
     }
     return missions;

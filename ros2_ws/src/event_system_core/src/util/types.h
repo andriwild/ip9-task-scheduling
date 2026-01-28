@@ -91,7 +91,10 @@ enum class EventType : int {
     MISSION_DISPATCH           = 4,
     DROP_OFF_CONV_COMPLETE     = 5,
     FOUND_PERSON_CONV_COMPLETE = 6,
-    ABORT_SEARCH               = 7
+    ABORT_SEARCH               = 7,
+    START_DROP_OFF_CONV        = 8,
+    START_FOUND_PERSON_CONV    = 9,
+    START_ACCOMPANY            = 10
 };
 
 struct Person {

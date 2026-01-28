@@ -50,8 +50,7 @@ public:
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
 
-        double eventTime = currentTime + ctx->getRndConversationTime();
-        ctx->m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
+        ctx->m_queue.push(std::make_shared<StartDropOffConversationeEvent>(currentTime + 1));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }

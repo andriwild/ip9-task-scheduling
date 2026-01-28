@@ -352,31 +352,7 @@ private:
         double x = timeToX(evt.time);
 
         int lineTop = Y_LINE_POS - MARKER_HEIGHT;
-        switch(evt.type) {
-            case des::EventType::SIMULATION_END:
-                color = Qt::blue;
-            break;
-            case des::EventType::SIMULATION_START:
-                color = Qt::blue;
-                break;
-            case des::EventType::ABORT_SEARCH:
-                color = Qt::magenta;
-                break;
-            case des::EventType::DROP_OFF_CONV_COMPLETE:
-                color = Qt::cyan;
-                break;
-            case des::EventType::FOUND_PERSON_CONV_COMPLETE:
-                color = Qt::darkCyan;
-                break;
-            case des::EventType::MISSION_COMPLETE:
-                color = Qt::darkYellow;
-                break;
-            case des::EventType::MISSION_DISPATCH:
-                color = Qt::yellow;
-                break;
-            break;
-
-        }
+        color = getEventColor(evt.type);
 
         auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
         line->setZValue(Z_MARKER);
