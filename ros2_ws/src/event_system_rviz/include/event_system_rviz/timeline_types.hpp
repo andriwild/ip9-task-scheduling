@@ -6,7 +6,6 @@
 #include "../../event_system_core/src/util/types.h"
 
 struct VisualEvent {
-    int time;
     QString label;
     des::EventType type;
 };

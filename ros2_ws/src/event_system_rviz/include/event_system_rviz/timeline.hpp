@@ -7,15 +7,17 @@
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QWheelEvent>
+#include <algorithm>
 #include <cmath>
 #include <vector>
+#include <set>
 
 #include "timeline_types.hpp"
 
 
 constexpr int TIMELINE_HEIGHT = 150;
 constexpr int SCENE_MARGIN    = 50;
-constexpr int Y_LINE_POS      = 100;
+constexpr int Y_LINE_POS      = 150;
 constexpr int LABEL_OFFSET    = 20;
 constexpr int X_LINE_OFFSET   = SCENE_MARGIN;
 constexpr int MARKER_HEIGHT   = 20;
@@ -35,7 +37,7 @@ class Timeline final : public QGraphicsView {
     double m_pixelsPerSecond;
 
     std::vector<VisualAppointment> m_appointments;
-    std::vector<VisualEvent> m_events;
+    QMultiMap<int, VisualEvent> m_events;
 
     std::vector<VisualStateBlock> m_states;
     VisualStateBlock m_currentOpenState;
@@ -111,9 +113,10 @@ public slots:
         clear();
     }
 
-    void handleEvent(VisualEvent ve) {
-        m_events.push_back(ve);
-        drawEventMarker(ve);
+    void handleEvent(int time, VisualEvent ve) {
+        int verticalOffset = m_events.values(time).count() * MARKER_HEIGHT;
+        m_events.insert(time, ve);
+        drawEventMarker(time, ve, verticalOffset);
     }
 
     void zoomIn() { applyZoom(1.5); }
@@ -299,8 +302,15 @@ private:
         for (const auto& item : m_appointments) {
             drawMeetingPlan(item.appt, item.startTime);
         }
-        for (const auto& evt : m_events) {
-            drawEventMarker(evt);
+        QList<int> eventTimes = m_events.uniqueKeys();
+
+        for (int t : eventTimes) {
+            QList<VisualEvent> eventsOfTime = m_events.values(t);
+            int counter = 0;
+            for(const auto& ev : eventsOfTime) {
+                drawEventMarker(t, ev, counter);
+                counter ++;
+            }
         }
         viewport()->update();
     }
@@ -348,18 +358,23 @@ private:
     }
 
 
-    void drawEventMarker(const VisualEvent& evt, QColor color = Qt::darkGreen) {
-        double x = timeToX(evt.time);
+    void drawEventMarker(const int time, const VisualEvent& evt, const int etage) {
+        double x = timeToX(time);
 
-        int lineTop = Y_LINE_POS - MARKER_HEIGHT;
-        color = getEventColor(evt.type);
+        double verticalGap = 20;
+        double verticalOffset = etage * MARKER_HEIGHT + etage * verticalGap; 
 
-        auto line = m_scene->addLine(x, Y_LINE_POS, x, lineTop, {color, 2});
+        int yLineTop    = Y_LINE_POS - MARKER_HEIGHT - verticalOffset;
+        int yLineBottom = Y_LINE_POS - verticalOffset;
+
+        QColor color = getEventColor(evt.type);
+
+        auto line = m_scene->addLine(x, yLineBottom, x, yLineTop, {color, 2});
         line->setZValue(Z_MARKER);
 
         QString eventLabel = evt.label 
             +  " - (" 
-            + QString::fromStdString(des::toHumanReadableTime(evt.time, true)) 
+            + QString::fromStdString(des::toHumanReadableTime(time, true)) 
             + ")";
 
         auto text = m_scene->addText(eventLabel);
@@ -368,7 +383,7 @@ private:
         text->setFont(f);
         text->setDefaultTextColor(color);
         text->setRotation(-60);
-        text->setPos(x - 12, lineTop - 7);
+        text->setPos(x - 12, yLineTop - 7);
         text->setZValue(Z_MARKER);
     }
 

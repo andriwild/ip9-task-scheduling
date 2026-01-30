@@ -141,7 +141,7 @@ public:
         int arrivalTime = currentTime + 1;
 
         if (m_robot->getLocation() == target) {
-            this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
+            this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime, target, 0));
             RCLCPP_INFO(m_logger, "Already at %s", target.c_str());
         } else {
             std::optional<double> distance = this->m_plannerNode->calcDistance(
@@ -166,7 +166,7 @@ public:
         }
 
         if (isMissionComplete) {
-            this->m_queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime + 1));
+            this->m_queue.push(std::make_shared<MissionCompleteEvent>(arrivalTime));
         }
     }
 };

@@ -90,7 +90,7 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
 }
 
 void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg){
-    m_timeline->handleEvent({msg->time, QString::fromStdString(msg->label), des::EventType(msg->type)});
+    m_timeline->handleEvent(msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)});
 }
 
 }  // namespace des_timeline_panel

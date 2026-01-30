@@ -59,7 +59,7 @@ public:
 
         auto target = ctx->getAppointment()->roomName;
 
-        ctx->m_queue.push(std::make_shared<StartFoundPersonConversationEvent>(currentTime + 1));
+        ctx->m_queue.push(std::make_shared<StartFoundPersonConversationEvent>(currentTime));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -126,7 +126,7 @@ public:
     BT::NodeStatus tick() override {
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         int currentTime = config().blackboard.get()->get<int>("current_time");
-        ctx->m_queue.push(std::make_shared<AbortSearchEvent>(currentTime + 1));
+        ctx->m_queue.push(std::make_shared<AbortSearchEvent>(currentTime));
         return BT::NodeStatus::SUCCESS;
     }
 };
