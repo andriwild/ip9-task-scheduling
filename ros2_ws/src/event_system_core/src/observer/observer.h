@@ -2,7 +2,6 @@
 
 #include <string>
 
-#include "../model/robot_state.h"
 #include "../util/types.h"
 
 class IObserver {

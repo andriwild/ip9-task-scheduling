@@ -25,13 +25,17 @@ struct PathResult {
     double distance;
 };
 
+using Cache = std::map<std::pair<std::string, std::string>, double>;
+
 class PathPlannerNode : public rclcpp::Node {
 public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode(std::map<std::string, des::Point> locationMap) : Node("des_path_planner_node"),
-                                                                     m_locationMap(locationMap) {
+    PathPlannerNode(std::map<std::string, des::Point> locationMap):
+        Node("event_system_planner_node"),
+        m_locationMap(std::move(locationMap)) 
+    {
         m_client = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
 
         RCLCPP_INFO(this->get_logger(), "Waiting for planner server...");
@@ -41,17 +45,15 @@ public:
         } else {
             RCLCPP_ERROR(this->get_logger(), "Planner server not available!");
         }
+        m_cache = {};
     }
 
-    PathResult computeDistance(const SimplePose& goal) {
-        return computeDistance(goal, {}, false);
+    void clearCache() {
+        m_cache.clear();
+        RCLCPP_INFO(this->get_logger(), "Cache cleared");
     }
 
-    PathResult computeDistance(const SimplePose& start, const SimplePose& goal) {
-        return computeDistance(goal, start, true);
-    }
-
-    PathResult computeDistance(const SimplePose& goal, const SimplePose& start, bool use_start) {
+    PathResult serviceRequest(const SimplePose& goal, const SimplePose& start) {
         PathResult result{false, 0.0};
         m_resultReady = false;
         if (!m_ready) {
@@ -62,7 +64,7 @@ public:
         goal_msg.start = toPose(start);
         goal_msg.goal = toPose(goal);
         goal_msg.planner_id = "GridBased";
-        goal_msg.use_start = use_start;
+        goal_msg.use_start = true;
 
         auto send_goal_options = rclcpp_action::Client<ComputePathToPose>::SendGoalOptions();
 
@@ -89,9 +91,17 @@ public:
 
     bool isReady() const { return m_ready; }
 
-    std::optional<double> estimateDistance(const std::string& from, const std::string& to) {
+    std::optional<double> calcDistance(const std::string& from, const std::string& to, bool useCache) {
+        if(useCache) {
+            auto it = m_cache.find({from, to});
+            if(it != m_cache.end()) {
+                RCLCPP_DEBUG(this->get_logger(), "Cache Hit");
+                return it->second;
+            }
+        }
+
         auto fromIt = m_locationMap.find(from);
-        auto toIt = m_locationMap.find(to);
+        auto toIt   = m_locationMap.find(to);
 
         if (fromIt == m_locationMap.end() || toIt == m_locationMap.end()) {
             RCLCPP_ERROR(this->get_logger(), "ERROR\t%s or %s not found in map!", from.c_str(), to.c_str());
@@ -104,12 +114,13 @@ public:
         SimplePose start{fromIt->second.m_x, fromIt->second.m_y, 0.0};
         SimplePose goal{toIt->second.m_x, toIt->second.m_y, 0.0};
 
-        auto result = computeDistance(start, goal);
+        auto result = serviceRequest(start, goal);
 
         if (!result.success) {
             return std::nullopt;
         }
 
+        m_cache[{from, to}] = result.distance;
         return result.distance;
     }
 
@@ -145,6 +156,7 @@ private:
         return d;
     }
 
+    Cache m_cache;
     rclcpp_action::Client<ComputePathToPose>::SharedPtr m_client;
     bool m_ready{false};
 

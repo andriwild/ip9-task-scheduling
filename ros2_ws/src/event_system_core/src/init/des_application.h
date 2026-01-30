@@ -13,6 +13,7 @@
 #include "../sim/ros/controller.h"
 #include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
+#include "../sim/scheduler.h"
 
 class DesApplication {
 public:
@@ -48,10 +49,11 @@ private:
     // Qt Application
     std::unique_ptr<QApplication> m_app;
 
+    EventQueue m_eventQueue;
+    std::unique_ptr<Scheduler> m_scheduler;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
     std::shared_ptr<SimulationContext> m_ctx;
     std::shared_ptr<des::SimConfig> m_config;
-    EventQueue m_eventQueue;
     std::map<std::string, des::Point> m_locationMap;
     std::map<std::string, std::vector<std::string>> m_employeeLocations;
 

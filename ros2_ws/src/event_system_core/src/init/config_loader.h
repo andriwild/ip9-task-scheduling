@@ -78,6 +78,7 @@ public:
             config.conversationProbability = j.at("conversation_probability").get<double>();
             config.conversationDurationStd = j.at("conversation_duration_std").get<double>();
             config.timeBuffer              = j.at("timeBuffer").get<double>();
+            config.cacheEnabled            = j.at("cacheEnabled").get<bool>();
 
             if (j.contains("appointments_path")) {
                 config.appointmentsPath = j.at("appointments_path").get<std::string>();
@@ -100,6 +101,7 @@ public:
         j["conversation_probability"]  = config->conversationProbability;
         j["conversation_duration_std"] = config->conversationDurationStd;
         j["timeBuffer"]                = config->timeBuffer;
+        j["cacheEnabled"]              = config->cacheEnabled;
         j["appointments_path"]         = config->appointmentsPath;
 
         std::ofstream file(filePath);

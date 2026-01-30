@@ -1,5 +1,6 @@
 #pragma once
 
+#include <qcheckbox.h>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -34,6 +35,7 @@ protected:
     QDoubleSpinBox* m_conversationProbability;
     QDoubleSpinBox* m_conversationDurationStd;
     QDoubleSpinBox* m_timeBuffer;
+    QCheckBox* m_cacheEnabled;
     QLineEdit* m_appointmentsPath;
 
     QPushButton* m_btnSetConfig;

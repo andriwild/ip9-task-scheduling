@@ -56,7 +56,7 @@ private:
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
         std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
-        auto config = des::SimConfig{
+        auto config = des::SimConfig {
             request->find_person_probability,
             request->robot_speed,
             request->robot_accompany_speed,
@@ -64,7 +64,9 @@ private:
             request->conversation_probability,
             request->conversation_duration_std,
             request->time_buffer,
-            request->appointments_path};
+            request->cache_enabled,
+            request->appointments_path
+        };
 
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
@@ -89,6 +91,7 @@ private:
             msg.conversation_probability  = m_currentConfig->conversationProbability;
             msg.conversation_duration_std = m_currentConfig->conversationDurationStd;
             msg.time_buffer               = m_currentConfig->timeBuffer;
+            msg.cache_enabled             = m_currentConfig->cacheEnabled;
             msg.appointments_path         = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);

@@ -56,6 +56,7 @@ struct SimConfig {
     double conversationProbability;
     double conversationDurationStd;
     double timeBuffer;
+    bool cacheEnabled;
     std::string appointmentsPath;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
@@ -68,6 +69,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "conversationProbability"  << ": " << config.conversationProbability << std::endl;
         os << std::left << std::setw(W) << "conversationDurationStd"  << ": " << config.conversationDurationStd << std::endl;
         os << std::left << std::setw(W) << "timeBuffer"               << ": " << config.timeBuffer              << std::endl;
+        os << std::left << std::setw(W) << "cache enabled"            << ": " << config.cacheEnabled            << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath"         << ": " << config.appointmentsPath        << std::endl;
         os << "----------------------------\n" << std::endl;
         return os;

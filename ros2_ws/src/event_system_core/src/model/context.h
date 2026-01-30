@@ -144,7 +144,12 @@ public:
             this->m_queue.push(std::make_shared<ArrivedEvent>(currentTime + 1, target, 0));
             RCLCPP_INFO(m_logger, "Already at %s", target.c_str());
         } else {
-            std::optional<double> distance = this->m_plannerNode->estimateDistance(this->m_robot->getLocation(), target);
+            std::optional<double> distance = this->m_plannerNode->calcDistance(
+                this->m_robot->getLocation(), 
+                target,
+                m_simConfig->cacheEnabled
+            );
+
             assert(distance.has_value());
 
             double travelTime = distance.value() / this->m_robot->getSpeed();

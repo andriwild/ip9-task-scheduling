@@ -1,5 +1,6 @@
 {
-    "appointments_path": "heavy_load.json",
+    "appointments_path": "20_appts.json",
+    "cacheEnabled": false,
     "conversation_duration_std": 1.0,
     "conversation_probability": 1.0,
     "drive_time_std": 0.10000000149011612,

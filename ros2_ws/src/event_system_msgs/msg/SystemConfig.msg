@@ -5,4 +5,5 @@ float32 robot_accompany_speed
 float32 conversation_probability
 float32 conversation_duration_std
 float32 time_buffer
+bool cache_enabled
 string appointments_path
