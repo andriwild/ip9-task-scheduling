@@ -40,6 +40,7 @@ std::string Robot::getLocation() const {
     return m_currentLocation;
 };
 
-void Robot::setLocation(std::string location) {
+void Robot::setLocation(std::string location, double distance) {
     m_currentLocation = location;
+    m_bat->discharge(m_currentSpeed, distance);
 };

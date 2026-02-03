@@ -4,6 +4,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "robot_state.h"
+#include "battery.h"
 
 class Robot {
     std::string m_idleLocation = "IMVS_Dock";
@@ -11,25 +12,31 @@ class Robot {
     double m_currentSpeed = 0;
     double m_accompanySpeed;
     std::string m_currentLocation;
+    std::unique_ptr<Battery> m_bat;
     rclcpp::Logger m_logger;
 
 public:
     Robot(
-        const double speed,
-        const double accompanySpeed,
-        //const std::string& idleLocation,
+        std::shared_ptr<des::SimConfig> config,
         rclcpp::Logger logger
     ) :
-        //m_idleLocation(idleLocation),
         m_state(std::make_unique<IdleState>()),
-        m_currentSpeed(speed),
-        m_accompanySpeed(accompanySpeed),
-        m_logger(logger) 
-    {}
+        m_logger(logger)
+    {
+        m_currentSpeed   = config->robotSpeed;
+        m_accompanySpeed = config->robotAccompanySpeed;
 
+        m_bat = std::make_unique<Battery>(
+            config->energyConsumptionBase,
+            config->energyConsumptionDrive,
+            config->batteryCapacity,
+            config->chargingRate,
+            config->lowBatteryThreshold
+        );
+    }
 
     std::string getLocation() const;
-    void setLocation(std::string location);
+    void setLocation(std::string location, double distance);
 
     void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() { return m_state.get(); };
@@ -42,6 +49,10 @@ public:
 
     double getAccompanySpeed() const { return m_accompanySpeed; }
     void setAccompanytSpeed(double speed) { m_accompanySpeed = speed; }
+
+    void dischargeBattery(int time) { m_bat->discharge(time); }
+
+    void resetBattery() { m_bat.reset(); };
 
     bool isBusy();
     bool isSearching();

@@ -44,7 +44,7 @@ public:
         m_employeeLocations(employeeLocations),
         m_logger(logger) 
     {
-        m_robot = std::make_unique<Robot>(simConfig->robotSpeed, simConfig->robotAccompanySpeed, logger);
+        m_robot = std::make_unique<Robot>(m_simConfig, logger);
         RCLCPP_INFO(m_logger, "Simulation Context created!");
     }
 
@@ -69,7 +69,8 @@ public:
 
     void resetContext(int newTime) {
         m_currentTime = newTime;
-        m_robot->setLocation(m_robot->getIdleLocation());
+        m_robot->setLocation(m_robot->getIdleLocation(), 0);
+        m_robot->resetBattery();
     }
 
     void setTime(int newTime) {
@@ -84,6 +85,7 @@ public:
 
     void changeRobotState(std::unique_ptr<RobotState> newState) {
         m_robot->changeState(std::move(newState));
+        m_robot->dischargeBattery(m_currentTime);
         notifyRobotStateChanged(m_robot->getState()->getType());
     }
 
@@ -106,7 +108,7 @@ public:
     }
 
     void robotMoved(std::string location, double distance = 0) {
-        m_robot->setLocation(location);
+        m_robot->setLocation(location, distance);
         notifyMoved(location, distance);
     }
 
