@@ -28,7 +28,6 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
     }
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
@@ -42,20 +41,17 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
     }
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.m_behaviorTree->tickOnce();
 }
 
 void ArrivedEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
     ctx.robotMoved(this->location, this->distance);
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
     ctx.m_behaviorTree->tickOnce();
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     if (ctx.m_robot->isBusy()) {
         ctx.updateAppointmentState(des::MissionState::CANCELLED);
         this->appointment->state = des::MissionState::FAILED;
@@ -89,7 +85,6 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 }
 
 void AbortSearchEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.updateAppointmentState(des::MissionState::FAILED);
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
@@ -97,14 +92,12 @@ void AbortSearchEvent::execute(SimulationContext& ctx) {
 }
 
 void StartDropOffConversationeEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     double eventTime = this->time + ctx.getRndConversationTime();
     ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
     ctx.notifyEvent(*this);
 }
 
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     auto eventTime = this->time + ctx.getRndConversationTime();
     ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
     ctx.changeRobotState(std::make_unique<ConversateState>());
@@ -112,14 +105,12 @@ void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
 }
 
 void StartAccompanyEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.changeRobotState(std::make_unique<AccompanyState>());
     ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
     ctx.notifyEvent(*this);
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.m_behaviorTree->rootBlackboard()->set("current_time", this->time);
     ctx.completeAppointment();
     ctx.notifyEvent(*this);
 }

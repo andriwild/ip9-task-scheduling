@@ -48,6 +48,8 @@ public:
         RCLCPP_INFO(m_logger, "Simulation Context created!");
     }
 
+    int getTime() const { return m_currentTime; };
+
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
         m_currentAppointment = appt;
     }

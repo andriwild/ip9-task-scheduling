@@ -50,16 +50,15 @@ public:
     {}
 
     static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") };
+        return { BT::InputPort<int>("ctx") };
     }
 
     BT::NodeStatus tick() override {
         auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        int currentTime = config().blackboard.get()->get<int>("current_time");
 
         auto target = ctx->getAppointment()->roomName;
 
-        ctx->m_queue.push(std::make_shared<StartFoundPersonConversationEvent>(currentTime));
+        ctx->m_queue.push(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -72,7 +71,7 @@ public:
     {}
 
     static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time"), };
+        return { BT::InputPort<int>("ctx") };
     }
     
     BT::NodeStatus tick() override {
@@ -96,19 +95,18 @@ public:
     {}
 
     static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") };
+        return { BT::InputPort<int>("ctx") };
     }
     
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        int currentTime = config().blackboard.get()->get<int>("current_time");
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
         auto locations = searchState->locations;
         auto next = locations.front();
         searchState->locations.erase(searchState->locations.begin());
         
-        ctx->scheduleArrival(currentTime, next);
+        ctx->scheduleArrival(ctx->getTime(), next);
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -124,9 +122,8 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        int currentTime = config().blackboard.get()->get<int>("current_time");
-        ctx->m_queue.push(std::make_shared<AbortSearchEvent>(currentTime));
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->m_queue.push(std::make_shared<AbortSearchEvent>(ctx->getTime()));
         return BT::NodeStatus::SUCCESS;
     }
 };
