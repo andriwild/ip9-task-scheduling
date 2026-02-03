@@ -33,6 +33,10 @@ public:
             m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());
         } else {
             RCLCPP_WARN(this->get_logger(), "Failed to load sim_config.json, using defaults.");
+            m_currentConfig = std::make_shared<des::SimConfig>();
+            m_currentConfig->robotSpeed = 1.0;
+            m_currentConfig->robotAccompanySpeed = 1.0;
+            m_currentConfig->appointmentsPath = "appointments.json";
         }
         publishConfig();
     }
@@ -56,17 +60,28 @@ private:
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
         std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
-        auto config = des::SimConfig {
+        std::vector<double> dockPose;
+        dockPose.push_back(request->dock_pose[0]);
+        dockPose.push_back(request->dock_pose[1]);
+        dockPose.push_back(request->dock_pose[2]);
+
+        auto config = des::SimConfig{
             request->find_person_probability,
             request->robot_speed,
             request->robot_accompany_speed,
             request->drive_time_std,
             request->conversation_probability,
             request->conversation_duration_std,
+            request->conversation_duration_mean,
             request->time_buffer,
+            request->energy_consumption_drive,
+            request->energy_consumption_base,
+            request->battery_capacity,
+            request->charging_rate,
+            request->low_battery_threshold,
+            dockPose,
             request->cache_enabled,
-            request->appointments_path
-        };
+            request->appointments_path};
 
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
@@ -84,15 +99,31 @@ private:
         auto msg = event_system_msgs::msg::SystemConfig();
         {
             std::lock_guard<std::mutex> lock(m_configMutex);
-            msg.find_person_probability   = m_currentConfig->personFindProbability;
-            msg.drive_time_std            = m_currentConfig->driveTimeStd;
-            msg.robot_speed               = m_currentConfig->robotSpeed;
-            msg.robot_accompany_speed     = m_currentConfig->robotAccompanySpeed;
-            msg.conversation_probability  = m_currentConfig->conversationProbability;
-            msg.conversation_duration_std = m_currentConfig->conversationDurationStd;
-            msg.time_buffer               = m_currentConfig->timeBuffer;
-            msg.cache_enabled             = m_currentConfig->cacheEnabled;
-            msg.appointments_path         = m_currentConfig->appointmentsPath;
+            msg.find_person_probability    = m_currentConfig->personFindProbability;
+            msg.drive_time_std             = m_currentConfig->driveTimeStd;
+            msg.robot_speed                = m_currentConfig->robotSpeed;
+            msg.robot_accompany_speed      = m_currentConfig->robotAccompanySpeed;
+            msg.conversation_probability   = m_currentConfig->conversationProbability;
+            msg.conversation_duration_std  = m_currentConfig->conversationDurationStd;
+            msg.conversation_duration_mean = m_currentConfig->conversationDurationMean;
+            msg.time_buffer                = m_currentConfig->timeBuffer;
+            msg.energy_consumption_drive   = m_currentConfig->energyConsumptionDrive;
+            msg.energy_consumption_base    = m_currentConfig->energyConsumptionBase;
+            msg.battery_capacity           = m_currentConfig->batteryCapacity;
+            msg.charging_rate              = m_currentConfig->chargingRate;
+            msg.low_battery_threshold      = m_currentConfig->lowBatteryThreshold;
+
+            if (m_currentConfig->dockPose.size() >= 3) {
+                msg.dock_pose = {
+                    (float)m_currentConfig->dockPose[0],
+                    (float)m_currentConfig->dockPose[1],
+                    (float)m_currentConfig->dockPose[2]};
+            } else {
+                msg.dock_pose = {0.0f, 0.0f, 0.0f};
+            }
+
+            msg.cache_enabled = m_currentConfig->cacheEnabled;
+            msg.appointments_path = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

@@ -8,14 +8,6 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
     m_state->enter(*this);
 }
 
-void Robot::setSpeed(double newSpeed) {
-    m_currentSpeed = newSpeed;
-}
-
-double Robot::getSpeed() const {
-    return m_currentSpeed;
-};
-
 bool Robot::isBusy() {
     if (!m_state) {
         return false;

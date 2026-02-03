@@ -1,6 +1,7 @@
 #pragma once
 
 #include <qcheckbox.h>
+
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -19,7 +20,7 @@ class DesSystemConfig : public rviz_common::Panel {
     Q_OBJECT
 
 public:
-    explicit DesSystemConfig(QWidget* parent = 0);
+    explicit DesSystemConfig(QWidget * parent = 0);
     ~DesSystemConfig() = default;
     void onInitialize() override;
 
@@ -28,18 +29,25 @@ protected:
     rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_client;
     rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subscriber;
 
-    QDoubleSpinBox* m_findPersonProb;
-    QDoubleSpinBox* m_driveTimeStd;
-    QDoubleSpinBox* m_robotSpeed;
-    QDoubleSpinBox* m_robotAccompanySpeed;
-    QDoubleSpinBox* m_conversationProbability;
-    QDoubleSpinBox* m_conversationDurationStd;
-    QDoubleSpinBox* m_timeBuffer;
-    QCheckBox* m_cacheEnabled;
-    QLineEdit* m_appointmentsPath;
+    QDoubleSpinBox * m_findPersonProb;
+    QDoubleSpinBox * m_driveTimeStd;
+    QDoubleSpinBox * m_robotSpeed;
+    QDoubleSpinBox * m_robotAccompanySpeed;
+    QDoubleSpinBox * m_conversationProbability;
+    QDoubleSpinBox * m_conversationDurationStd;
+    QDoubleSpinBox * m_conversationDurationMean;
+    QDoubleSpinBox * m_timeBuffer;
+    QDoubleSpinBox * m_energyConsumptionDrive;
+    QDoubleSpinBox * m_energyConsumptionBase;
+    QDoubleSpinBox * m_batteryCapacity;
+    QDoubleSpinBox * m_chargingRate;
+    QDoubleSpinBox * m_lowBatteryThreshold;
+    QDoubleSpinBox * m_dockPose[3];
+    QCheckBox * m_cacheEnabled;
+    QLineEdit * m_appointmentsPath;
 
-    QPushButton* m_btnSetConfig;
-    QLabel* m_statusLabel;
+    QPushButton * m_btnSetConfig;
+    QLabel * m_statusLabel;
 
 private Q_SLOTS:
     void onSetConfig();

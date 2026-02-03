@@ -4,7 +4,14 @@ float32 robot_speed
 float32 robot_accompany_speed
 float32 conversation_probability
 float32 conversation_duration_std
+float32 conversation_duration_mean
 float32 time_buffer
+float32 energy_consumption_drive
+float32 energy_consumption_base
+float32 battery_capacity
+float32 charging_rate
+float32 low_battery_threshold
+float32[3] dock_pose
 bool cache_enabled
 string appointments_path
 ---

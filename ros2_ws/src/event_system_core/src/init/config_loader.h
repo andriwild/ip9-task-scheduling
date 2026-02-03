@@ -26,10 +26,10 @@ public:
             int idCounter = 0;
             for (const auto& item : jAppts) {
                 des::Appointment appointment;
-                appointment.id              = idCounter++;
-                appointment.personName      = item.at("personName").get<std::string>();
-                appointment.description     = item.at("description").get<std::string>();
-                appointment.roomName        = item.at("roomName").get<std::string>();
+                appointment.id = idCounter++;
+                appointment.personName = item.at("personName").get<std::string>();
+                appointment.description = item.at("description").get<std::string>();
+                appointment.roomName = item.at("roomName").get<std::string>();
                 appointment.appointmentTime = item.at("appointmentTime").get<int>();
 
                 appointments.emplace_back(std::make_shared<des::Appointment>(appointment));
@@ -71,14 +71,21 @@ public:
         try {
             auto j = json.value();
             des::SimConfig config;
-            config.personFindProbability   = j.at("find_person_probability").get<double>();
-            config.driveTimeStd            = j.at("drive_time_std").get<double>();
-            config.robotSpeed              = j.at("robot_speed").get<double>();
-            config.robotAccompanySpeed     = j.at("robot_accompany_speed").get<double>();
+            config.personFindProbability = j.at("find_person_probability").get<double>();
+            config.driveTimeStd = j.at("drive_time_std").get<double>();
+            config.robotSpeed = j.at("robot_speed").get<double>();
+            config.robotAccompanySpeed = j.at("robot_accompany_speed").get<double>();
             config.conversationProbability = j.at("conversation_probability").get<double>();
             config.conversationDurationStd = j.at("conversation_duration_std").get<double>();
-            config.timeBuffer              = j.at("timeBuffer").get<double>();
-            config.cacheEnabled            = j.at("cacheEnabled").get<bool>();
+            config.conversationDurationMean = j.at("conversation_duration_mean").get<double>();
+            config.timeBuffer = j.at("timeBuffer").get<double>();
+            config.energyConsumptionDrive = j.at("energy_consumption_drive").get<double>();
+            config.energyConsumptionBase = j.at("energy_consumption_base").get<double>();
+            config.batteryCapacity = j.at("battery_capacity").get<double>();
+            config.chargingRate = j.at("charging_rate").get<double>();
+            config.lowBatteryThreshold = j.at("low_battery_threshold").get<double>();
+            config.dockPose = j.at("dock_pose").get<std::vector<double>>();
+            config.cacheEnabled = j.at("cacheEnabled").get<bool>();
 
             if (j.contains("appointments_path")) {
                 config.appointmentsPath = j.at("appointments_path").get<std::string>();
@@ -94,15 +101,22 @@ public:
 
     static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
         nlohmann::json j;
-        j["find_person_probability"]   = config->personFindProbability;
-        j["drive_time_std"]            = config->driveTimeStd;
-        j["robot_speed"]               = config->robotSpeed;
-        j["robot_accompany_speed"]     = config->robotAccompanySpeed;
-        j["conversation_probability"]  = config->conversationProbability;
+        j["find_person_probability"] = config->personFindProbability;
+        j["drive_time_std"] = config->driveTimeStd;
+        j["robot_speed"] = config->robotSpeed;
+        j["robot_accompany_speed"] = config->robotAccompanySpeed;
+        j["conversation_probability"] = config->conversationProbability;
         j["conversation_duration_std"] = config->conversationDurationStd;
-        j["timeBuffer"]                = config->timeBuffer;
-        j["cacheEnabled"]              = config->cacheEnabled;
-        j["appointments_path"]         = config->appointmentsPath;
+        j["conversation_duration_mean"] = config->conversationDurationMean;
+        j["timeBuffer"] = config->timeBuffer;
+        j["energy_consumption_drive"] = config->energyConsumptionDrive;
+        j["energy_consumption_base"] = config->energyConsumptionBase;
+        j["battery_capacity"] = config->batteryCapacity;
+        j["charging_rate"] = config->chargingRate;
+        j["low_battery_threshold"] = config->lowBatteryThreshold;
+        j["dock_pose"] = config->dockPose;
+        j["cacheEnabled"] = config->cacheEnabled;
+        j["appointments_path"] = config->appointmentsPath;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

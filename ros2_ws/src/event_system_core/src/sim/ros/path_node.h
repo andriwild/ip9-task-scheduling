@@ -36,6 +36,8 @@ public:
         Node("event_system_planner_node"),
         m_locationMap(std::move(locationMap)) 
     {
+
+        m_cache = {};
         m_client = rclcpp_action::create_client<ComputePathToPose>(this, "compute_path_to_pose");
 
         RCLCPP_INFO(this->get_logger(), "Waiting for planner server...");
@@ -45,7 +47,6 @@ public:
         } else {
             RCLCPP_ERROR(this->get_logger(), "Planner server not available!");
         }
-        m_cache = {};
     }
 
     void clearCache() {
@@ -61,10 +62,10 @@ public:
         }
 
         auto goal_msg = ComputePathToPose::Goal();
-        goal_msg.start = toPose(start);
-        goal_msg.goal = toPose(goal);
+        goal_msg.start      = toPose(start);
+        goal_msg.goal       = toPose(goal);
         goal_msg.planner_id = "GridBased";
-        goal_msg.use_start = true;
+        goal_msg.use_start  = true;
 
         auto send_goal_options = rclcpp_action::Client<ComputePathToPose>::SendGoalOptions();
 

@@ -160,6 +160,7 @@ int DesApplication::run() {
         loadAppointments(m_config->appointmentsPath);
         loadEmployeeLocations();
     } catch (const std::exception& e) {
+        RCLCPP_ERROR(m_node->get_logger(), "Exception: %s", e.what());
         exit(EXIT_FAILURE);
     }
 
