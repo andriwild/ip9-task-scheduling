@@ -3,6 +3,7 @@
 #include "robot_state.h"
 #include "event.h"
 #include "context.h"
+#include "../util/rnd.h"
 
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {

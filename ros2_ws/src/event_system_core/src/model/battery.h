@@ -17,7 +17,7 @@ public:
         m_lowBatteryThreshold(lowBatteryThreshold)
     {}
 
-    void updateBalance(int time, double energyConsumption) {
+    void updateBalance(int time, double energyConsumptionRate) {
         int timeDelta = time - lastTime;
         std::cout << "[BAT] Balance update for: " << timeDelta << std::endl;
         lastTime = time;
