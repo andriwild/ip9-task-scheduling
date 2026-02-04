@@ -27,19 +27,20 @@ public:
         m_accompanySpeed = config->robotAccompanySpeed;
 
         m_bat = std::make_unique<Battery>(
-            config->energyConsumptionBase,
-            config->energyConsumptionDrive,
             config->batteryCapacity,
             config->chargingRate,
             config->lowBatteryThreshold
         );
     }
+    bool isBusy() const;
 
     std::string getLocation() const;
     void setLocation(std::string location, double distance);
 
     void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() { return m_state.get(); };
+
+    des::RobotStateType getStateType() const { return m_state->getType(); };
 
     double getSpeed() const { return m_currentSpeed; };
     void setSpeed(double newSpeed) { m_currentSpeed = newSpeed; }
@@ -50,14 +51,11 @@ public:
     double getAccompanySpeed() const { return m_accompanySpeed; }
     void setAccompanytSpeed(double speed) { m_accompanySpeed = speed; }
 
-    void dischargeBattery(int time) { m_bat->discharge(time); }
+    void dischargeBattery(int time, double energyConsumption) const {
+        m_bat->updateBalance(time, energyConsumption);
+    }
 
-    void resetBattery() { m_bat.reset(); };
-
-    bool isBusy();
-    bool isSearching();
-    bool isAccompany();
-    bool isConversate();
+    void resetBattery() { m_bat->reset(); };
 
     rclcpp::Logger getLogger() const { return m_logger; }
 };

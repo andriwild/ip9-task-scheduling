@@ -77,7 +77,7 @@ void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::
     appt->personName      = msg->person_name;
 
     m_minStartTime = std::min(m_minStartTime, msg->start_time);
-    m_maxEndTime   = std::max(m_maxEndTime  , appt->appointmentTime);
+    m_maxEndTime   = std::max(m_maxEndTime  , msg->appointment_time);
 
     m_timeline->setRange(m_minStartTime - ONE_HOUR, m_maxEndTime + ONE_HOUR);
     m_timeline->addMeetingPlan(appt, msg->start_time);

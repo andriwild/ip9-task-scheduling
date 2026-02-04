@@ -20,7 +20,10 @@ public:
     
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        return ctx->m_robot->isSearching() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        if (ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING) {
+            return BT::NodeStatus::SUCCESS;
+        }
+        return BT::NodeStatus::FAILURE;
     }
 };
 

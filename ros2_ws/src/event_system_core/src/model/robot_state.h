@@ -5,27 +5,25 @@
 #include "../util/types.h"
 
 class Robot;
+class SimulationContext;
 
 class RobotState {
 public:
     virtual ~RobotState() = default;
-    virtual bool isBusy() const { return true; };
-    virtual bool isSearching() const { return false; };
-    virtual bool isAccompany() const { return false; };
-    virtual bool isConversate() const { return false; };
     virtual void enter(Robot& robot) = 0;
     virtual void handleEvent(Robot& robot) = 0;
     virtual void exit(Robot& robot) = 0;
     virtual des::RobotStateType getType() const = 0;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const = 0;
 };
 
 class IdleState : public  RobotState {
 public:
-    bool isBusy() const override;
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
     des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
 
 class MoveState : public  RobotState {
@@ -34,6 +32,7 @@ public:
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
     des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
 
 class AccompanyState : public  RobotState {
@@ -41,8 +40,8 @@ public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    bool isAccompany() const override;
     des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
 
 class SearchState : public  RobotState {
@@ -52,8 +51,8 @@ public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    bool isSearching() const override;
     des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
 
 class ConversateState : public  RobotState {
@@ -61,6 +60,6 @@ public:
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     void handleEvent(Robot& robot) override;
-    bool isConversate() const override;
     des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };

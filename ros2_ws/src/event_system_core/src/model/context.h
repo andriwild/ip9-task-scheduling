@@ -50,6 +50,8 @@ public:
 
     int getTime() const { return m_currentTime; };
 
+    const std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; };
+
     void setAppointment(std::shared_ptr<des::Appointment> appt) {
         m_currentAppointment = appt;
     }
@@ -86,8 +88,10 @@ public:
     }
 
     void changeRobotState(std::unique_ptr<RobotState> newState) {
+        // get the energy consumption of the previous state
+        double energyConsumption = m_robot->getState()->getEnergyConsumption(*this);
         m_robot->changeState(std::move(newState));
-        m_robot->dischargeBattery(m_currentTime);
+        m_robot->dischargeBattery(m_currentTime, energyConsumption);
         notifyRobotStateChanged(m_robot->getState()->getType());
     }
 
