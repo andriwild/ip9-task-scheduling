@@ -12,12 +12,12 @@ std::string Robot::getLocation() const {
     return m_currentLocation;
 };
 
-void Robot::setLocation(std::string location, double distance) {
+void Robot::setLocation(std::string location) {
     m_currentLocation = location;
-    m_bat->updateBalance(m_currentSpeed, distance);
 };
 
 bool Robot::isBusy() const {
-    return m_state->getType() == des::RobotStateType::IDLE 
-        || m_state->getType() == des::RobotStateType::MOVING;
+    return m_state->getType() == des::RobotStateType::SEARCHING
+        || m_state->getType() == des::RobotStateType::ACCOMPANY
+        || m_state->getType() == des::RobotStateType::CONVERSATE;
 };

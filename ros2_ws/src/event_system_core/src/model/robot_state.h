@@ -63,3 +63,12 @@ public:
     des::RobotStateType getType() const override;
     virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
+
+class ChargeState : public  RobotState {
+public:
+    void enter(Robot& robot) override;
+    void exit(Robot& robot) override;
+    void handleEvent(Robot& robot) override;
+    des::RobotStateType getType() const override;
+    virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
+};

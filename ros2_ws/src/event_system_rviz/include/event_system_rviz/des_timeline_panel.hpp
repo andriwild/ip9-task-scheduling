@@ -11,6 +11,7 @@
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
+#include "event_system_msgs/msg/timeline_battery.hpp"
 
 #include "timeline.hpp"
 
@@ -30,6 +31,7 @@ private:
     void onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg);
     void onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg);
     void onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg);
+    void onBattery(const event_system_msgs::msg::TimelineBattery::SharedPtr msg);
 
     Timeline* m_timeline;
     rclcpp::Node::SharedPtr m_node;
@@ -38,6 +40,7 @@ private:
     rclcpp::Subscription<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_subMeeting;
     rclcpp::Subscription<event_system_msgs::msg::TimelineReset>::SharedPtr m_subReset;
     rclcpp::Subscription<event_system_msgs::msg::TimelineEvent>::SharedPtr m_subEvent;
+    rclcpp::Subscription<event_system_msgs::msg::TimelineBattery>::SharedPtr m_subBattery;
 
 
     int m_minStartTime;

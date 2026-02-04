@@ -22,4 +22,8 @@ public:
     void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
         RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %s", des::toHumanReadableTime(time).c_str(), location.c_str());
     };
+
+    void onBatteryStateChanged(int time, double soc, double capacity) override {
+        RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %f / %f", des::toHumanReadableTime(time).c_str(), soc, capacity);
+    };
 };

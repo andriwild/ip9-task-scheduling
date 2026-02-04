@@ -14,6 +14,7 @@ float32 time_buffer
 float32 energy_consumption_drive
 float32 energy_consumption_base
 float32 battery_capacity
+float32 initial_battery_capacity
 float32 charging_rate
 float32 low_battery_threshold
 

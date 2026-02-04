@@ -82,6 +82,7 @@ public:
             config.energyConsumptionDrive = j.at("energy_consumption_drive").get<double>();
             config.energyConsumptionBase = j.at("energy_consumption_base").get<double>();
             config.batteryCapacity = j.at("battery_capacity").get<double>();
+            config.initialBatteryCapacity = j.at("initial_battery_capacity").get<double>();
             config.chargingRate = j.at("charging_rate").get<double>();
             config.lowBatteryThreshold = j.at("low_battery_threshold").get<double>();
             config.dockPose = j.at("dock_pose").get<std::vector<double>>();
@@ -112,6 +113,7 @@ public:
         j["energy_consumption_drive"] = config->energyConsumptionDrive;
         j["energy_consumption_base"] = config->energyConsumptionBase;
         j["battery_capacity"] = config->batteryCapacity;
+        j["initial_battery_capacity"] = config->initialBatteryCapacity;
         j["charging_rate"] = config->chargingRate;
         j["low_battery_threshold"] = config->lowBatteryThreshold;
         j["dock_pose"] = config->dockPose;

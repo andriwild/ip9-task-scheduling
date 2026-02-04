@@ -1,10 +1,22 @@
 {
     "appointments_path": "20_appts.json",
-    "cacheEnabled": false,
+    "battery_capacity": 44.0,
+    "cacheEnabled": true,
+    "charging_rate": 50.0,
+    "conversation_duration_mean": 60.0,
     "conversation_duration_std": 1.0,
     "conversation_probability": 1.0,
+    "dock_pose": [
+        20.0,
+        0.0,
+        0.0
+    ],
     "drive_time_std": 0.10000000149011612,
+    "energy_consumption_base": 35.0,
+    "energy_consumption_drive": 100.0,
     "find_person_probability": 0.10000000149011612,
+    "initial_battery_capacity": 44.0,
+    "low_battery_threshold": 10.0,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
     "timeBuffer": 120.0

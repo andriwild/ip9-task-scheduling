@@ -42,7 +42,7 @@ public:
             assert(searchDist.has_value());
             assert(accompanyDist.has_value());
 
-            const double travelTime    = searchDist.value() / m_ctx->m_robot->getSpeed();
+            const double travelTime    = searchDist.value() / m_ctx->m_robot->getDriveSpeed();
             const double accompanyTime = accompanyDist.value() / m_ctx->m_robot->getAccompanySpeed();
             const int startSeconds     = appt.get()->appointmentTime - (travelTime + accompanyTime);
             missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appt));

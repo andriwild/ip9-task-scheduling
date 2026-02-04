@@ -8,8 +8,8 @@ SimulationContext::SimulationContext(
     std::map<std::string, std::vector<std::string>> employeeLocations,
     rclcpp::Logger logger
 ) : m_simConfig(simConfig),
-    m_plannerNode(plannerNode),
     m_logger(logger),
+    m_plannerNode(plannerNode),
     m_queue(queue),
     m_employeeLocations(employeeLocations)
 {
@@ -31,8 +31,9 @@ void SimulationContext::scheduleArrival(int currentTime, const std::string targe
         );
 
         assert(distance.has_value());
+        assert(this->m_robot->getCurrentSpeed() > 0);
 
-        double travelTime = distance.value() / this->m_robot->getSpeed();
+        double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
 
         double noiseFactor = rnd::getNormalDist(1.0, 0.1);
         double timeVariance = travelTime * noiseFactor;
@@ -63,8 +64,8 @@ void SimulationContext::completeAppointment() {
 
 void SimulationContext::resetContext(int newTime) {
     m_currentTime = newTime;
-    m_robot->setLocation(m_robot->getIdleLocation(), 0);
-    m_robot->resetBattery();
+    m_robot->setLocation(m_robot->getIdleLocation());
+    m_robot->m_bat->reset(newTime);
 }
 
 double SimulationContext::getRndConversationTime() {
@@ -76,7 +77,7 @@ double SimulationContext::getRndConversationTime() {
 
 void SimulationContext::setConfig(std::shared_ptr<des::SimConfig> newConfig) {
     m_simConfig = newConfig;
-    m_robot->setSpeed(m_simConfig->robotSpeed);
+    m_robot->setDriveSpeed(m_simConfig->robotSpeed);
     m_robot->setAccompanytSpeed(m_simConfig->robotAccompanySpeed);
     RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "New config active");
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
@@ -84,8 +85,8 @@ void SimulationContext::setConfig(std::shared_ptr<des::SimConfig> newConfig) {
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) {
     // get the energy consumption of the previous state
-    double energyConsumption = m_robot->getState()->getEnergyConsumption(*this);
+    m_robot->m_bat->updateBalance(m_currentTime, m_robot->getState()->getEnergyConsumption(*this));
     m_robot->changeState(std::move(newState));
-    m_robot->dischargeBattery(m_currentTime, energyConsumption);
     notifyRobotStateChanged(m_robot->getState()->getType());
+    notifyBatteryState(m_currentTime, m_robot->m_bat->getStats().soc, m_robot->m_bat->getStats().capacity);
 }

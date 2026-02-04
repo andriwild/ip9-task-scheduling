@@ -2,90 +2,125 @@
 
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QTreeWidget>
 #include <event_system_rviz/des_system_config.hpp>
 #include <memory>
 #include <rviz_common/display_context.hpp>
 
 namespace des_system_config {
 
-DesSystemConfig::DesSystemConfig(QWidget * parent) : Panel(parent) {
-    const auto layout = new QFormLayout(this);
+QTreeWidgetItem* DesSystemConfig::addConfigItem(QTreeWidgetItem* parent, QString label, QWidget* widget) {
+    QTreeWidgetItem* item = new QTreeWidgetItem(parent);
+    item->setText(0, label);
+    m_treeWidget->setItemWidget(item, 1, widget);
+    return item;
+}
 
-    m_findPersonProb = new QDoubleSpinBox();
-    m_findPersonProb->setRange(0.0, 1.0);
-    m_findPersonProb->setSingleStep(0.01);
+DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
+    const auto mainLayout = new QVBoxLayout(this);
 
-    m_driveTimeStd = new QDoubleSpinBox();
-    m_driveTimeStd->setRange(0.0, 10.0);
+    m_treeWidget = new QTreeWidget();
+    m_treeWidget->setColumnCount(2);
+    m_treeWidget->setHeaderLabels({"Parameter", "Value"});
+    m_treeWidget->setIndentation(15);
+    m_treeWidget->setAlternatingRowColors(true);
 
-    m_robotSpeed = new QDoubleSpinBox();
-    m_robotSpeed->setRange(0.0, 10.0);
+    // Movement
+    QTreeWidgetItem* moveGroup = new QTreeWidgetItem(m_treeWidget);
+    moveGroup->setText(0, "Movement");
+    moveGroup->setExpanded(true);
 
-    m_robotAccompanySpeed = new QDoubleSpinBox();
-    m_robotAccompanySpeed->setRange(0.0, 10.0);
+    m_robotSpeed = new QDoubleSpinBox(); m_robotSpeed->setRange(0.0, 10.0);
+    m_robotSpeed->setSuffix(" m/s");
+    addConfigItem(moveGroup, "Robot Speed", m_robotSpeed);
 
-    m_conversationProbability = new QDoubleSpinBox();
-    m_conversationProbability->setRange(0.0, 1.0);
+    m_robotAccompanySpeed = new QDoubleSpinBox(); m_robotAccompanySpeed->setRange(0.0, 10.0);
+    m_robotAccompanySpeed->setSuffix(" m/s");
+    addConfigItem(moveGroup, "Accompany Speed", m_robotAccompanySpeed);
 
-    m_conversationDurationStd = new QDoubleSpinBox();
-    m_conversationDurationStd->setRange(0.0, 200.0);
+    m_driveTimeStd = new QDoubleSpinBox(); m_driveTimeStd->setRange(0.0, 10.0);
+    addConfigItem(moveGroup, "Drive Time Std", m_driveTimeStd);
 
-    m_conversationDurationMean = new QDoubleSpinBox();
-    m_conversationDurationMean->setRange(0.0, 200.0);
+    // Interaction
+    QTreeWidgetItem* interactionGroup = new QTreeWidgetItem(m_treeWidget);
+    interactionGroup->setText(0, "Interaction");
 
-    m_timeBuffer = new QDoubleSpinBox();
-    m_timeBuffer->setRange(0.0, 1000.0);
+    m_findPersonProb = new QDoubleSpinBox(); m_findPersonProb->setRange(0.0, 1.0); m_findPersonProb->setSingleStep(0.01);
+    addConfigItem(interactionGroup, "Find Person Prob", m_findPersonProb);
 
-    m_energyConsumptionDrive = new QDoubleSpinBox();
-    m_energyConsumptionDrive->setRange(0.0, 1000.0);
+    m_conversationProbability = new QDoubleSpinBox(); m_conversationProbability->setRange(0.0, 1.0);
+    addConfigItem(interactionGroup, "Conv Prob", m_conversationProbability);
 
-    m_energyConsumptionBase = new QDoubleSpinBox();
-    m_energyConsumptionBase->setRange(0.0, 1000.0);
+    m_conversationDurationMean = new QDoubleSpinBox(); m_conversationDurationMean->setRange(0.0, 200.0);
+    m_conversationDurationMean->setSuffix(" s");
+    addConfigItem(interactionGroup, "Conv Duration Mean", m_conversationDurationMean);
 
-    m_batteryCapacity = new QDoubleSpinBox();
-    m_batteryCapacity->setRange(0.0, 10000.0);
+    m_conversationDurationStd = new QDoubleSpinBox(); m_conversationDurationStd->setRange(0.0, 200.0);
+    addConfigItem(interactionGroup, "Conv Duration Std", m_conversationDurationStd);
 
-    m_chargingRate = new QDoubleSpinBox();
-    m_chargingRate->setRange(0.0, 1000.0);
+    // Energy & Docking
+    QTreeWidgetItem* energyGroup = new QTreeWidgetItem(m_treeWidget);
+    energyGroup->setText(0, "Energy & Battery");
 
-    m_lowBatteryThreshold = new QDoubleSpinBox();
-    m_lowBatteryThreshold->setRange(0.0, 1.0);
-    m_lowBatteryThreshold->setSingleStep(0.01);
+    m_batteryCapacity = new QDoubleSpinBox(); m_batteryCapacity->setRange(0.0, 100.0);
+    m_batteryCapacity->setSuffix(" Ah");
+    addConfigItem(energyGroup, "Battery Design Capacity", m_batteryCapacity);
 
-    auto dockLayout = new QHBoxLayout();
+    m_initialBatteryCapacity = new QDoubleSpinBox(); m_initialBatteryCapacity->setRange(0.0, m_batteryCapacity->maximum());
+    m_initialBatteryCapacity->setSuffix(" Ah");
+    addConfigItem(energyGroup, "Initial Battery Capacity", m_initialBatteryCapacity);
+
+    m_chargingRate = new QDoubleSpinBox(); m_chargingRate->setRange(0.0, 1000.0);
+    m_chargingRate->setSuffix(" W");
+    addConfigItem(energyGroup, "Charging Power", m_chargingRate);
+
+    m_lowBatteryThreshold = new QDoubleSpinBox(); m_lowBatteryThreshold->setRange(0.0, m_batteryCapacity->maximum());
+    m_initialBatteryCapacity->setSuffix(" Ah");
+    addConfigItem(energyGroup, "Low Battery Threshold", m_lowBatteryThreshold);
+
+    m_energyConsumptionDrive = new QDoubleSpinBox(); m_energyConsumptionDrive->setRange(0.0, 1000.0);
+    m_energyConsumptionDrive->setSuffix(" W");
+    addConfigItem(energyGroup, "Drive Power Load", m_energyConsumptionDrive);
+
+    m_energyConsumptionIdle = new QDoubleSpinBox(); m_energyConsumptionIdle->setRange(0.0, 1000.0);
+    m_energyConsumptionIdle->setSuffix(" W");
+    addConfigItem(energyGroup, "Standby Power Load", m_energyConsumptionIdle);
+
+    // Dock Pose (Spezialfall mit Layout)
+    auto dockWidget = new QWidget();
+    auto dockLayout = new QHBoxLayout(dockWidget);
+    dockLayout->setContentsMargins(0,0,0,0);
     for (int i = 0; i < 3; ++i) {
         m_dockPose[i] = new QDoubleSpinBox();
         m_dockPose[i]->setRange(-1000.0, 1000.0);
         dockLayout->addWidget(m_dockPose[i]);
     }
+    m_dockPose[0]->setPrefix("X: ");
+    m_dockPose[1]->setPrefix("Y: ");
+    m_dockPose[2]->setPrefix("Yaw: ");
+    addConfigItem(energyGroup, "Dock Pose", dockWidget);
+
+    // General
+    QTreeWidgetItem* generalGroup = new QTreeWidgetItem(m_treeWidget);
+    generalGroup->setText(0, "General Settings");
+
+    m_timeBuffer = new QDoubleSpinBox(); m_timeBuffer->setRange(0.0, 1000.0);
+    m_timeBuffer->setSuffix(" s");
+    addConfigItem(generalGroup, "Time Buffer", m_timeBuffer);
 
     m_cacheEnabled = new QCheckBox();
-    m_cacheEnabled->setEnabled(true);
+    addConfigItem(generalGroup, "Cache Enabled", m_cacheEnabled);
 
-    m_appointmentsPath = new QLineEdit();
-    m_appointmentsPath->setText("appointments.json");
+    m_appointmentsPath = new QLineEdit("appointments.json");
+    addConfigItem(generalGroup, "Appointments Path", m_appointmentsPath);
 
+    // Untere Controls
     m_btnSetConfig = new QPushButton("Set Config");
     m_statusLabel = new QLabel("[status]");
 
-    layout->addRow("Find Person Prob:", m_findPersonProb);
-    layout->addRow("Drive Time Std:", m_driveTimeStd);
-    layout->addRow("Robot Speed:", m_robotSpeed);
-    layout->addRow("Accompany Speed:", m_robotAccompanySpeed);
-    layout->addRow("Conv Prob:", m_conversationProbability);
-    layout->addRow("Conv Duration Std:", m_conversationDurationStd);
-    layout->addRow("Conv Duration Mean:", m_conversationDurationMean);
-    layout->addRow("Time Buffer:", m_timeBuffer);
-    layout->addRow("Energy Cons Drive:", m_energyConsumptionDrive);
-    layout->addRow("Energy Cons Base:", m_energyConsumptionBase);
-    layout->addRow("Battery Capacity:", m_batteryCapacity);
-    layout->addRow("Charging Rate:", m_chargingRate);
-    layout->addRow("Low Battery Thresh:", m_lowBatteryThreshold);
-    layout->addRow("Dock Pose (x,y,yaw):", dockLayout);
-    layout->addRow("Cache Enabled:", m_cacheEnabled);
-    layout->addRow("Appointments Path:", m_appointmentsPath);
-    layout->addRow(m_btnSetConfig);
-    layout->addRow(m_statusLabel);
+    mainLayout->addWidget(m_treeWidget);
+    mainLayout->addWidget(m_btnSetConfig);
+    mainLayout->addWidget(m_statusLabel);
 
     QObject::connect(m_btnSetConfig, &QPushButton::released, this, &DesSystemConfig::onSetConfig);
 }
@@ -113,8 +148,9 @@ void DesSystemConfig::onSetConfig() {
     request->conversation_duration_mean = m_conversationDurationMean->value();
     request->time_buffer = m_timeBuffer->value();
     request->energy_consumption_drive = m_energyConsumptionDrive->value();
-    request->energy_consumption_base = m_energyConsumptionBase->value();
+    request->energy_consumption_base = m_energyConsumptionIdle->value();
     request->battery_capacity = m_batteryCapacity->value();
+    request->initial_battery_capacity = m_initialBatteryCapacity->value();
     request->charging_rate = m_chargingRate->value();
     request->low_battery_threshold = m_lowBatteryThreshold->value();
     request->dock_pose = {
@@ -156,8 +192,9 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_conversationDurationMean->setValue(msg->conversation_duration_mean);
     m_timeBuffer->setValue(msg->time_buffer);
     m_energyConsumptionDrive->setValue(msg->energy_consumption_drive);
-    m_energyConsumptionBase->setValue(msg->energy_consumption_base);
+    m_energyConsumptionIdle->setValue(msg->energy_consumption_base);
     m_batteryCapacity->setValue(msg->battery_capacity);
+    m_initialBatteryCapacity->setValue(msg->initial_battery_capacity);
     m_chargingRate->setValue(msg->charging_rate);
     m_lowBatteryThreshold->setValue(msg->low_battery_threshold);
 

@@ -1,37 +1,45 @@
 #include <iostream>
 
+struct BatteryStats {
+    double capacity;
+    double soc;
+};
+
 class Battery {
-    double m_energy = 100.0;
-    double m_capacity;
-    double m_chargingRate;
+    int m_lastBalanceUpdate = 0;
+
+    double m_capacity; // Ah - battery design capacity
+    double m_currentCapacity; // Ah
+    double m_initialCapacity; // Ah - on simulation start
     double m_lowBatteryThreshold;
+    double m_voltage = 12.0; // Volt
 
 public:
     explicit Battery(
-        const double batteryCapacity,
-        const double chargingRate,
+        const double capacity,
+        const double initialCapacity,
         const double lowBatteryThreshold
-    ):
-        m_capacity(batteryCapacity),
-        m_chargingRate(chargingRate),
-        m_lowBatteryThreshold(lowBatteryThreshold)
-    {}
-
-    void updateBalance(int time, double energyConsumptionRate) {
-        int timeDelta = time - lastTime;
-        std::cout << "[BAT] Balance update for: " << timeDelta << std::endl;
-        lastTime = time;
+    )
+        : m_capacity(capacity)
+        , m_initialCapacity(initialCapacity)
+        , m_lowBatteryThreshold(lowBatteryThreshold)
+    {
+        m_currentCapacity = initialCapacity;
     }
 
-    void reset() {
-        std::cout << "[BAT] Reset"<< std::endl;
-        m_energy = 100.0;
+    void updateBalance(int time, double energyConsumption) {
+        // energy in Watt, time in seconds (+ discharge, - charge)
+        // Ah = (W * s) / (3600 * V)
+        int timeDelta = time - m_lastBalanceUpdate;
+        m_lastBalanceUpdate = time;
+        m_capacity -= energyConsumption * timeDelta / (3600 * m_voltage);
+    }
+
+    void reset(int startTime) {
+        m_lastBalanceUpdate = startTime;
+        m_currentCapacity = m_initialCapacity;
     };
 
-    double getCapacity() const { return m_capacity; };
-
-    bool isBatteryLow() const { return m_energy < m_lowBatteryThreshold; };
-
-private:
-    int lastTime = 0;
+    BatteryStats getStats() const { return {m_currentCapacity / m_capacity, m_capacity };};
+    bool isBatteryLow() const { return m_capacity < m_lowBatteryThreshold; };
 };

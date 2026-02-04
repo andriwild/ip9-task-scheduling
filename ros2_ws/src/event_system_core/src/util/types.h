@@ -58,6 +58,7 @@ struct SimConfig {
     double energyConsumptionDrive;
     double energyConsumptionBase;
     double batteryCapacity;
+    double initialBatteryCapacity;
     double chargingRate;
     double lowBatteryThreshold;
     std::vector<double> dockPose;
@@ -79,6 +80,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "energyConsumptionDrive" << ": " << config.energyConsumptionDrive << std::endl;
         os << std::left << std::setw(W) << "energyConsumptionBase" << ": " << config.energyConsumptionBase << std::endl;
         os << std::left << std::setw(W) << "batteryCapacity" << ": " << config.batteryCapacity << std::endl;
+        os << std::left << std::setw(W) << "initialBatteryCapacity" << ": " << config.initialBatteryCapacity << std::endl;
         os << std::left << std::setw(W) << "chargingRate" << ": " << config.chargingRate << std::endl;
         os << std::left << std::setw(W) << "lowBatteryThreshold" << ": " << config.lowBatteryThreshold << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": ["

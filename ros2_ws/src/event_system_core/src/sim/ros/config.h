@@ -77,6 +77,7 @@ private:
             request->energy_consumption_drive,
             request->energy_consumption_base,
             request->battery_capacity,
+            request->initial_battery_capacity,
             request->charging_rate,
             request->low_battery_threshold,
             dockPose,
@@ -110,6 +111,7 @@ private:
             msg.energy_consumption_drive   = m_currentConfig->energyConsumptionDrive;
             msg.energy_consumption_base    = m_currentConfig->energyConsumptionBase;
             msg.battery_capacity           = m_currentConfig->batteryCapacity;
+            msg.initial_battery_capacity   = m_currentConfig->initialBatteryCapacity;
             msg.charging_rate              = m_currentConfig->chargingRate;
             msg.low_battery_threshold      = m_currentConfig->lowBatteryThreshold;
 

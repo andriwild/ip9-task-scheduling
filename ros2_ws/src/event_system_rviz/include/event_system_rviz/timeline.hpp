@@ -11,6 +11,7 @@
 #include <cmath>
 #include <vector>
 #include <set>
+#include <iostream>
 
 #include "timeline_types.hpp"
 
@@ -117,6 +118,10 @@ public slots:
         int verticalOffset = m_events.values(time).count() * MARKER_HEIGHT;
         m_events.insert(time, ve);
         drawEventMarker(time, ve, verticalOffset);
+    }
+
+    void handleBattery(int time, double soc, double balance) {
+        std::cout << " ---> RVIZ: Received battery message" << std::endl;
     }
 
     void zoomIn() { applyZoom(1.5); }

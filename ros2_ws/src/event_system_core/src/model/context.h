@@ -16,14 +16,14 @@
 
 
 class SimulationContext {
-    int m_currentTime = 0;
+    int m_currentTime;
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::vector<std::shared_ptr<IObserver>> m_observers;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
-    std::shared_ptr<PathPlannerNode> m_plannerNode;
     rclcpp::Logger m_logger;
 
 public:
+    std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
@@ -87,7 +87,7 @@ public:
     }
 
     void robotMoved(std::string location, double distance = 0) {
-        m_robot->setLocation(location, distance);
+        m_robot->setLocation(location);
         notifyMoved(location, distance);
     }
 
@@ -96,6 +96,12 @@ public:
             obs->onRobotMoved(m_currentTime, location, distance);
         }
     }
+
+    void notifyBatteryState(int time, double soc, double capacity) {
+        for (auto obs : m_observers) {
+            obs->onBatteryStateChanged(time, soc, capacity);
+        }
+    };
 
     double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
     double getConversationProbability() const { return m_simConfig->conversationProbability; };
