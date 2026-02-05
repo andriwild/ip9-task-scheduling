@@ -63,7 +63,7 @@ void DesTimelinePanel::onInitialize() {
     m_subBattery = m_node->create_subscription<event_system_msgs::msg::TimelineBattery>(
         "/timeline/battery", rclcpp::QoS(100),
         [this](const event_system_msgs::msg::TimelineBattery::SharedPtr msg) {
-            QMetaObject::invokeMethod(this, [this, msg]() { this->onBattery(msg); });
+            QMetaObject::invokeMethod(this, [this, msg]() { this->onBatteryState(msg); });
         });
 }
 
@@ -99,8 +99,8 @@ void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::Shar
     m_timeline->handleEvent(msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)});
 }
 
-void DesTimelinePanel::onBattery(const event_system_msgs::msg::TimelineBattery::SharedPtr msg){
-    m_timeline->handleBattery(msg->time, msg->soc, msg->balance);
+void DesTimelinePanel::onBatteryState(const event_system_msgs::msg::TimelineBattery::SharedPtr msg){
+    m_timeline->handleBattery(msg->time, msg->soc, msg->capacity);
 }
 
 }  // namespace des_timeline_panel

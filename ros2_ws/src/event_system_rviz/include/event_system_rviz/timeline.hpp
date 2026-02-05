@@ -120,8 +120,7 @@ public slots:
         drawEventMarker(time, ve, verticalOffset);
     }
 
-    void handleBattery(int time, double soc, double balance) {
-        std::cout << " ---> RVIZ: Received battery message" << std::endl;
+    void handleBattery(int time, double soc, double cpacity) {
     }
 
     void zoomIn() { applyZoom(1.5); }

@@ -18,8 +18,8 @@ public:
         m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(100));
         m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(100));
         m_pubMeeting     = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting"         , rclcpp::QoS(100));
-        m_pubEvent       = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>("/timeline/event"               , rclcpp::QoS(100));
-        m_pubBattery     = m_node->create_publisher<event_system_msgs::msg::TimelineBattery>("/timeline/battery"             , rclcpp::QoS(100));
+        m_pubEvent       = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>("/timeline/event"             , rclcpp::QoS(100));
+        m_pubBattery     = m_node->create_publisher<event_system_msgs::msg::TimelineBattery>("/timeline/battery"         , rclcpp::QoS(100));
     }
 
     std::string getName() override {
@@ -48,6 +48,20 @@ public:
         m_pubStateChange->publish(msg);
     }
 
+
+    void publishReset() {
+        auto msg = event_system_msgs::msg::TimelineReset();
+        m_pubReset->publish(msg);
+    }
+
+    void onBatteryStateChanged(int time, double soc, double capacity) override {
+        auto msg = event_system_msgs::msg::TimelineBattery();
+        msg.time     = time;
+        msg.soc      = soc;
+        msg.capacity = capacity;
+        m_pubBattery->publish(msg);
+    }
+
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
         auto msg = event_system_msgs::msg::TimelineMeeting();
         msg.start_time       = startTime;
@@ -57,19 +71,6 @@ public:
         msg.person_name      = appt->personName;
         msg.description      = appt->description;
         m_pubMeeting->publish(msg);
-    }
-
-    void publishReset() {
-        auto msg = event_system_msgs::msg::TimelineReset();
-        m_pubReset->publish(msg);
-    }
-
-    void publishBatteryState(int time, double soc, double balance) {
-        auto msg = event_system_msgs::msg::TimelineBattery();
-        msg.time = time;
-        msg.soc = soc;
-        msg.balance = balance;
-        m_pubBattery->publish(msg);
     }
 
 private:

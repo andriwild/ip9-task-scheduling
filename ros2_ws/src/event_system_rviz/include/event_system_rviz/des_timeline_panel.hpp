@@ -31,7 +31,7 @@ private:
     void onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg);
     void onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg);
     void onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg);
-    void onBattery(const event_system_msgs::msg::TimelineBattery::SharedPtr msg);
+    void onBatteryState(const event_system_msgs::msg::TimelineBattery::SharedPtr msg);
 
     Timeline* m_timeline;
     rclcpp::Node::SharedPtr m_node;
