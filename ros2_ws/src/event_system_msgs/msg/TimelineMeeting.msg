@@ -4,6 +4,7 @@ uint8 COMPLETED = 1
 uint8 IN_PROGRESS = 2
 uint8 FAILED = 3
 uint8 CANCELLED = 4
+
 uint8 mission_state
 int32 appointment_time
 int32 start_time

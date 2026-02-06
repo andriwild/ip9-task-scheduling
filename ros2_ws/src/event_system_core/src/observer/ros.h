@@ -43,8 +43,8 @@ public:
 
     void onStateChanged(int time, const des::RobotStateType& type) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
-        msg.appointment_time = time;
-        msg.state            = static_cast<int>(type);
+        msg.time  = time;
+        msg.state = static_cast<int>(type);
         m_pubStateChange->publish(msg);
     }
 

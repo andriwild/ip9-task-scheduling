@@ -4,8 +4,11 @@
 #include "timeline_types.hpp"
 #include <vector>
 #include <QFontMetrics>
+#include <QGraphicsRectItem>
+#include <QGraphicsTextItem>
+#include <QPen>
 
-class StateTrack : public TimelineTrack {
+class StateTrack : public ITimelineTrack {
     std::vector<VisualStateBlock> m_states;
     VisualStateBlock m_currentOpenState;
     int m_height;
@@ -15,7 +18,7 @@ public:
         m_currentOpenState = {-1, -1, 0};
     }
 
-    void handleStateChange(int time, int newState, std::function<void()> updateCallback) {
+    void handleStateChange(int time, int newState) {
         // Only close the previous state if it was valid (startTime != -1)
         if (m_currentOpenState.startTime != -1) {
             m_currentOpenState.endTime = time;
@@ -25,42 +28,52 @@ public:
         m_currentOpenState.startTime = time;
         m_currentOpenState.endTime = -1;
         m_currentOpenState.type = newState;
-        
-        if(updateCallback) updateCallback();
     }
 
-    void draw(QPainter* painter, const QRectF& rect, double pixelsPerSecond, int simStartTime, double xOffset, double yBase) override {
-
-        // TODO: duplicate code
+    void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase) override {
+        // TODO: get rid of duplicate code
         auto timeToX = [&](int time) {
             return xOffset + (time - simStartTime) * pixelsPerSecond;
         };
 
-        QFont font = painter->font();
-        QFontMetrics fm(font);
-
         int barHeight = m_height;
-
-        double viewLeft = rect.left();
-        double viewRight = rect.right();
 
         for (const auto& block : m_states) {
             double x1 = timeToX(block.startTime);
             double x2 = timeToX(block.endTime);
-
-            // Check visibility
-            if (x2 < viewLeft || x1 > viewRight) {
-                continue;
-            }
-
             double blockLength = x2 - x1;
-            QColor blockColor = getMeta(block.type).color;
-            // Draw relative to yBase
-            auto re = QRectF(x1, yBase, blockLength, barHeight); 
-            painter->fillRect(re, blockColor);
-            painter->setPen(QPen(blockColor.darker(300), 1));
-            QString elidedLabel = fm.elidedText(QString::fromStdString(getMeta(block.type).label), Qt::TextElideMode::ElideRight, re.width());
-            painter->drawText(re, Qt::AlignCenter, elidedLabel);
+
+            if (blockLength <= 0) continue;
+
+            RobotStateMeta meta = getMeta(block.type);
+            QColor blockColor = meta.color;
+            QString labelStr = QString::fromStdString(meta.label);
+
+            QRectF rect(x1, yBase, blockLength, barHeight);
+            auto rectItem = scene->addRect(rect, QPen(Qt::NoPen), QBrush(blockColor));
+            
+            rectItem->setToolTip(labelStr + ": " + QString::fromStdString(des::toHumanReadableTime(block.startTime, true)) + " - " + QString::fromStdString(des::toHumanReadableTime(block.endTime, true)));
+            
+            QFont font;
+            font.setPointSize(8);
+            QFontMetrics fm(font);
+            
+            QString elidedText = fm.elidedText(labelStr, Qt::ElideRight, blockLength - 4); // -4 for padding
+            
+            if (!elidedText.isEmpty()) {
+                auto textItem = scene->addText(elidedText);
+                textItem->setFont(font);
+                textItem->setDefaultTextColor(blockColor.darker(300));
+                
+                QRectF textRect = textItem->boundingRect();
+                double textX = x1 + (blockLength - textRect.width()) / 2.0;
+                double textY = yBase + (barHeight - textRect.height()) / 2.0;
+                
+                if (textX < x1) { textX = x1; }
+                
+                textItem->setPos(textX, textY);
+                textItem->setZValue(rectItem->zValue() + 1);
+            }
         }
     }
 

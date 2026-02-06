@@ -10,22 +10,19 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
-#include <set>
-#include <iostream>
+#include <memory>
 
 #include "timeline_types.hpp"
+#include "timeline_track.hpp"
+#include "marker_track.hpp"
+#include "state_track.hpp"
 
-
-constexpr int TIMELINE_HEIGHT = 150;
-constexpr int SCENE_MARGIN    = 50;
-constexpr int Y_LINE_POS      = 150;
-constexpr int LABEL_OFFSET    = 20;
-constexpr int X_LINE_OFFSET   = SCENE_MARGIN;
-constexpr int MARKER_HEIGHT   = 20;
-constexpr int Z_TIMELINE      = 100;
-constexpr int Z_STATE_LINE    = 50;
-constexpr int Z_PLAN_LINE     = 80;
-constexpr int Z_MARKER        = 50;
+// Constants
+constexpr int SCENE_MARGIN  = 50;
+constexpr int LABEL_OFFSET  = 20;
+constexpr int MARKER_HEIGHT = 20;
+constexpr int TRACK_GAP     = 20;
+constexpr int X_LINE_OFFSET = SCENE_MARGIN;
 
 class Timeline final : public QGraphicsView {
     Q_OBJECT
@@ -37,11 +34,10 @@ class Timeline final : public QGraphicsView {
 
     double m_pixelsPerSecond;
 
-    std::vector<VisualAppointment> m_appointments;
-    QMultiMap<int, VisualEvent> m_events;
-
-    std::vector<VisualStateBlock> m_states;
-    VisualStateBlock m_currentOpenState;
+    // Tracks
+    std::shared_ptr<MarkerTrack> m_markerTrack;
+    std::shared_ptr<StateTrack> m_stateTrack;
+    std::vector<ITimelineTrack*> m_tracks;
 
     QPushButton* m_btnZoomIn;
     QPushButton* m_btnZoomOut;
@@ -53,7 +49,13 @@ public:
     {
         m_duration = m_simEndTime - m_simStartTime;
         m_scene = new QGraphicsScene(this);
-        m_currentOpenState = {-1, -1, 0};
+        
+        // Initialize tracks
+        m_markerTrack = std::make_shared<MarkerTrack>(150);
+        m_stateTrack = std::make_shared<StateTrack>(20);
+        
+        m_tracks.push_back(m_markerTrack.get());
+        m_tracks.push_back(m_stateTrack.get());
 
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
@@ -75,39 +77,28 @@ public:
     }
 
     void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        m_appointments.push_back({appt, startTime});
-        drawMeetingPlan(appt, startTime);
+        m_markerTrack->addMeetingPlan(appt, startTime);
+        // We probably don't need to full updateScene here if we just want to add, 
+        // but original called drawMeetingPlan.
+        // Let's call updateScene to be safe and consistent.
+        updateScene();
     }
 
     void clear() {
-        m_appointments.clear();
-        m_events.clear();
-        m_states.clear();
-        m_currentOpenState = VisualStateBlock();
-        m_currentOpenState.startTime = -1;  // Reset to invalid
-        m_currentOpenState.endTime = -1;
+        for(auto track : m_tracks) {
+            track->clear();
+        }
         updateScene();
     }
 
 public slots:
     void handleMove(int time, QString location) {
-        // QString label = "Moved: " + location;
-        // m_events.push_back({time, label, des::});
-        // drawEventMarker({time, label, TimelineEvent::MOVING});
+        // preserve commented out behavior or pass to track if implemented
     }
 
     void handleStateChange(int time, int newState) {
-        // Only close the previous state if it was valid (startTime != -1)
-        if (m_currentOpenState.startTime != -1) {
-            m_currentOpenState.endTime = time;
-            m_states.push_back(m_currentOpenState);
-        }
-
-        m_currentOpenState.startTime = time;
-        m_currentOpenState.endTime = -1;
-        m_currentOpenState.type = newState;
-
-        viewport()->update();
+        m_stateTrack->handleStateChange(time, newState);
+        updateScene();
     }
 
     void handleReset() {
@@ -115,113 +106,19 @@ public slots:
     }
 
     void handleEvent(int time, VisualEvent ve) {
-        int verticalOffset = m_events.values(time).count() * MARKER_HEIGHT;
-        m_events.insert(time, ve);
-        drawEventMarker(time, ve, verticalOffset);
+        m_markerTrack->handleEvent(time, ve);
+        updateScene(); // Events need scene update to draw items
     }
 
-    void handleBattery(int time, double soc, double cpacity) {
-    }
+    void handleBattery(int time, double soc, double capacity) {}
 
     void zoomIn() { applyZoom(1.5); }
     void zoomOut() { applyZoom(0.66); }
 
 protected:
     void drawBackground(QPainter * painter, const QRectF& rect) override {
-       
-        // baseline
-        QPen axisPen(Qt::black, 2);
-        painter->setPen(axisPen);
-        double startX = std::max(rect.left() , timeToX(m_simStartTime));
-        double endX   = std::min(rect.right(), timeToX(m_simEndTime));
-
-        painter->drawLine(QLineF(startX, Y_LINE_POS, endX, Y_LINE_POS));
-
-        double tStart = xToTime(rect.left());
-        double tEnd   = xToTime(rect.right());
-
-        int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
-        int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
-
-        const double MIN_TICK_PX  = 10.0;
-        const double MIN_LABEL_PX = 80.0;
-
-        const std::vector<int> intervals = {1, 2, 5, 10, 30, 60, 120, 300,
-                                            600, 1800, 3600, 7200, 14400, 21600, 43200};
-
-        int tickStep = 3600;
-        for (int interval : intervals) {
-            if (interval * m_pixelsPerSecond >= MIN_TICK_PX) {
-                tickStep = interval;
-                break;
-            }
-        }
-
-        int labelStep = tickStep;
-        for (int interval : intervals) {
-            if (interval < tickStep) {
-                continue;
-            }
-            if (interval * m_pixelsPerSecond >= MIN_LABEL_PX) {
-                labelStep = interval;
-                break;
-            }
-        }
-
-        bool showSeconds = (labelStep < 60);
-
-        int firstTick = loopStart - (loopStart % tickStep);
-        if (firstTick < loopStart) {
-            firstTick += tickStep;
-        }
-
-        // time labels
-        QFont font = painter->font();
-        QFontMetrics fm(font);
-        font.setPointSize(8);
-        painter->setFont(font);
-
-        for (int time = firstTick; time <= loopEnd; time += tickStep) {
-            double x = timeToX(time);
-
-            bool isLabel = (time % labelStep == 0);
-
-            if (isLabel) {
-                painter->setPen(QPen(Qt::black, 2));
-                painter->drawLine(QLineF(x, Y_LINE_POS + 5, x, Y_LINE_POS - 5));
-
-                std::string timeStr = des::toHumanReadableTime(time, showSeconds);
-                QString qs = QString::fromStdString(timeStr);
-
-                int w = fm.horizontalAdvance(qs);
-                painter->drawText(static_cast<int>(x) - w / 2, Y_LINE_POS + LABEL_OFFSET + 10, qs);
-            } else {
-                painter->setPen(QPen(Qt::gray, 1));
-                painter->drawLine(QLineF(x, Y_LINE_POS + 3, x, Y_LINE_POS - 3));
-            }
-        }
-
-        int barHeight = 20;
-        int blockTimelineCap = 40;
-        int barY = Y_LINE_POS + blockTimelineCap;
-
-
-        // draw state blocks
-        for (const auto& block : m_states) {
-            if (timeToX(block.endTime) < rect.left()  || timeToX(block.startTime) > rect.right()) {
-                continue;
-            }
-
-            double x1 = timeToX(block.startTime);
-            double x2 = timeToX(block.endTime);
-            double blockLength = x2 - x1;
-            QColor blockColor = getMeta(block.type).color;
-            auto re = QRectF(x1, barY, blockLength, barHeight);
-            painter->fillRect(re, blockColor);
-            painter->setPen(QPen(blockColor.darker(300), 1));
-            QString elidedLabel = fm.elidedText(QString::fromStdString(getMeta(block.type).label), Qt::TextElideMode::ElideRight, re.width());
-            painter->drawText(re, Qt::AlignCenter, elidedLabel);
-        }
+        double axisY = m_markerTrack->getHeight();
+        drawTimeAxis(painter, rect, axisY);
     }
 
     void resizeEvent(QResizeEvent * event) override {
@@ -229,7 +126,7 @@ protected:
         positionButtons();
     }
 
-    void wheelEvent(QWheelEvent * event) override {
+    void wheelEvent(QWheelEvent* event) override {
         if (event->modifiers() & Qt::ControlModifier) {
             const double factor = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
             applyZoom(factor);
@@ -297,24 +194,22 @@ private:
         m_scene->clear();
 
         double totalWidth = m_duration * m_pixelsPerSecond;
+        double totalHeight = 0;
+        for(auto track : m_tracks) {
+            totalHeight += track->getHeight();
+        }
+
         m_scene->setSceneRect(
             -SCENE_MARGIN,
             0,
             totalWidth + (SCENE_MARGIN * 2),
-            TIMELINE_HEIGHT);
+            totalHeight
+        );
 
-        for (const auto& item : m_appointments) {
-            drawMeetingPlan(item.appt, item.startTime);
-        }
-        QList<int> eventTimes = m_events.uniqueKeys();
-
-        for (int t : eventTimes) {
-            QList<VisualEvent> eventsOfTime = m_events.values(t);
-            int counter = 0;
-            for(const auto& ev : eventsOfTime) {
-                drawEventMarker(t, ev, counter);
-                counter ++;
-            }
+        double currentY = 0;
+        for(auto track : m_tracks) {
+            track->updateScene(m_scene, m_pixelsPerSecond, m_simStartTime, X_LINE_OFFSET, currentY);
+            currentY += track->getHeight() + TRACK_GAP;
         }
         viewport()->update();
     }
@@ -326,91 +221,77 @@ private:
     double xToTime(double x) const {
         return ((x - X_LINE_OFFSET) / m_pixelsPerSecond) + m_simStartTime;
     }
+    
+    void drawTimeAxis(QPainter* painter, const QRectF& rect, double yPos) {
+        QPen axisPen(Qt::black, 2);
+        painter->setPen(axisPen);
+        double startX = std::max(rect.left() , timeToX(m_simStartTime));
+        double endX   = std::min(rect.right(), timeToX(m_simEndTime));
 
+        painter->drawLine(QLineF(startX, yPos, endX, yPos));
 
-    void drawMeetingMarker(int time, QString label) {
-        double x = timeToX(time);
-        QColor color = Qt::red;
+        double tStart = xToTime(rect.left());
+        double tEnd   = xToTime(rect.right());
 
-        int lineTop = Y_LINE_POS - MARKER_HEIGHT;
+        int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
+        int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
 
-        qreal size = MARKER_HEIGHT;
-        qreal halfW = size / 4.0; 
-        qreal halfH = size / 2.0;
-        QPolygonF diamondShape;
-        diamondShape << QPointF(x, Y_LINE_POS)
-            << QPointF(x + halfW, Y_LINE_POS - halfH)
-            << QPointF(x, Y_LINE_POS - size)
-            << QPointF(x - halfW, Y_LINE_POS - halfH);
+        const double MIN_TICK_PX  = 10.0;
+        const double MIN_LABEL_PX = 80.0;
 
-        auto diamondItem = m_scene->addPolygon(diamondShape, {color, 1}, {color});
-        diamondItem->setZValue(Z_MARKER);
+        const std::vector<int> intervals = {1, 2, 5, 10, 30, 60, 120, 300,
+                                            600, 1800, 3600, 7200, 14400, 21600, 43200};
 
-        QString eventLabel = label 
-            +  " - (" 
-            + QString::fromStdString(des::toHumanReadableTime(time, true)) 
-            + ")";
-
-        auto text = m_scene->addText(eventLabel);
-        QFont f = text->font();
-        f.setPointSize(8);
-        text->setFont(f);
-        text->setDefaultTextColor(color);
-        text->setRotation(-60);
-        text->setPos(x - 12, lineTop - 7);
-        text->setZValue(Z_MARKER);
-    }
-
-
-    void drawEventMarker(const int time, const VisualEvent& evt, const int etage) {
-        double x = timeToX(time);
-
-        double verticalGap = 20;
-        double verticalOffset = etage * MARKER_HEIGHT + etage * verticalGap; 
-
-        int yLineTop    = Y_LINE_POS - MARKER_HEIGHT - verticalOffset;
-        int yLineBottom = Y_LINE_POS - verticalOffset;
-
-        QColor color = getEventColor(evt.type);
-
-        auto line = m_scene->addLine(x, yLineBottom, x, yLineTop, {color, 2});
-        line->setZValue(Z_MARKER);
-
-        QString eventLabel = evt.label 
-            +  " - (" 
-            + QString::fromStdString(des::toHumanReadableTime(time, true)) 
-            + ")";
-
-        auto text = m_scene->addText(eventLabel);
-        QFont f = text->font();
-        f.setPointSize(8);
-        text->setFont(f);
-        text->setDefaultTextColor(color);
-        text->setRotation(-60);
-        text->setPos(x - 12, yLineTop - 7);
-        text->setZValue(Z_MARKER);
-    }
-
-    void drawMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        double startX   = timeToX(startTime);
-        double meetingX = timeToX(appt.get()->appointmentTime);
-        double durationWidth = meetingX - startX;
-
-        if (durationWidth < 0) {
-            durationWidth = 0;
+        int tickStep = 3600;
+        for (int interval : intervals) {
+            if (interval * m_pixelsPerSecond >= MIN_TICK_PX) {
+                tickStep = interval;
+                break;
+            }
         }
 
-        auto rect = m_scene->addRect(
-            startX, 
-            Y_LINE_POS, 
-            durationWidth, 
-            static_cast<int>(-(MARKER_HEIGHT / 2)), 
-            QPen(Qt::NoPen),
-            QBrush(QColor(100, 100, 100, 50))
-        );
-        rect->setZValue(Z_PLAN_LINE);
+        int labelStep = tickStep;
+        for (int interval : intervals) {
+            if (interval < tickStep) {
+                continue;
+            }
+            if (interval * m_pixelsPerSecond >= MIN_LABEL_PX) {
+                labelStep = interval;
+                break;
+            }
+        }
 
-        QString labelText = QString::fromStdString(appt.get()->description + " (" + appt.get()->personName + ")");
-        drawMeetingMarker(appt.get()->appointmentTime, labelText);
+        bool showSeconds = (labelStep < 60);
+
+        int firstTick = loopStart - (loopStart % tickStep);
+        if (firstTick < loopStart) {
+            firstTick += tickStep;
+        }
+
+        // time labels
+        QFont font = painter->font();
+        QFontMetrics fm(font);
+        font.setPointSize(8);
+        painter->setFont(font);
+
+        for (int time = firstTick; time <= loopEnd; time += tickStep) {
+            double x = timeToX(time);
+
+            bool isLabel = (time % labelStep == 0);
+
+            if (isLabel) {
+                painter->setPen(QPen(Qt::black, 2));
+                painter->drawLine(QLineF(x, yPos + 5, x, yPos - 5));
+
+                std::string timeStr = des::toHumanReadableTime(time, showSeconds);
+                QString qs = QString::fromStdString(timeStr);
+
+                int w = fm.horizontalAdvance(qs);
+                painter->drawText(static_cast<int>(x) - w / 2, yPos + LABEL_OFFSET + 10, qs);
+            } else {
+                painter->setPen(QPen(Qt::gray, 1));
+                painter->drawLine(QLineF(x, yPos + 3, x, yPos - 3));
+            }
+        }
     }
 };

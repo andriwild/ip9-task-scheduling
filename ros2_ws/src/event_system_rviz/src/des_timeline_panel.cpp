@@ -72,7 +72,7 @@ void DesTimelinePanel::onMove(const event_system_msgs::msg::TimelineMove::Shared
 }
 
 void DesTimelinePanel::onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg){
-    m_timeline->handleStateChange(msg->appointment_time, msg->state);
+    m_timeline->handleStateChange(msg->time, msg->state);
 }
 
 void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg){
