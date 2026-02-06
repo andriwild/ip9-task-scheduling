@@ -12,11 +12,11 @@
         0.0
     ],
     "drive_time_std": 0.10000000149011612,
-    "energy_consumption_base": 35.0,
-    "energy_consumption_drive": 100.0,
+    "energy_consumption_base": 1.0,
+    "energy_consumption_drive": 500.0,
     "find_person_probability": 0.10000000149011612,
-    "initial_battery_capacity": 44.0,
-    "low_battery_threshold": 10.0,
+    "initial_battery_capacity": 9.0,
+    "low_battery_threshold": 24.0,
     "robot_accompany_speed": 0.4000000059604645,
     "robot_speed": 0.5,
     "timeBuffer": 120.0

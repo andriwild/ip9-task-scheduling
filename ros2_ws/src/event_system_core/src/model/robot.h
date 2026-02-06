@@ -32,7 +32,8 @@ public:
         m_bat = std::make_unique<Battery>(
             config->batteryCapacity,
             config->initialBatteryCapacity, // TODO: not really worth to store in battery class
-            config->lowBatteryThreshold
+            config->lowBatteryThreshold,
+            logger
         );
     }
 

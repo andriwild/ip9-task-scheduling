@@ -1,4 +1,5 @@
 #include "../util/types.h"
+#include <rclcpp/rclcpp.hpp>
 
 class Battery {
     int m_lastBalanceUpdate = 0;
@@ -8,16 +9,19 @@ class Battery {
     double m_initialCapacity; // Ah - on simulation start
     double m_lowBatteryThreshold;
     double m_voltage = 12.0; // Volt
+    rclcpp::Logger m_logger;
 
 public:
     explicit Battery(
         const double capacity,
         const double initialCapacity,
-        const double lowBatteryThreshold
+        const double lowBatteryThreshold,
+        rclcpp::Logger logger
     )
         : m_designCapactiy(capacity)
         , m_initialCapacity(initialCapacity)
         , m_lowBatteryThreshold(lowBatteryThreshold)
+        , m_logger(logger)
     {
         m_currentCapacity = initialCapacity;
     }
@@ -26,6 +30,7 @@ public:
         m_designCapactiy      = designCapacity; 
         m_initialCapacity     = initialCapacity;
         m_lowBatteryThreshold = threshold;
+        RCLCPP_INFO(rclcpp::get_logger("Battery"), "Config updated");
     }
 
     void updateBalance(int time, double energyConsumption) {
@@ -34,11 +39,21 @@ public:
         int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
         m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
+
+        if (m_currentCapacity < m_lowBatteryThreshold) {
+            RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapactiy);
+        }
+
+        if (m_currentCapacity < 0) {
+            m_currentCapacity = 0;
+            RCLCPP_ERROR(rclcpp::get_logger("Battery"), "Battery discharged - no energy left");
+        }
     }
 
     void reset(int startTime) {
         m_lastBalanceUpdate = startTime;
         m_currentCapacity = m_initialCapacity;
+        RCLCPP_INFO(rclcpp::get_logger("Battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
     }
 
     des::BatteryProps getStats() const { 
