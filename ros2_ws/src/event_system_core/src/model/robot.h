@@ -37,6 +37,7 @@ public:
     }
 
     bool isBusy() const;
+    void updateConfig(des::SimConfig& config);
 
     std::string getLocation() const;
     void setLocation(std::string location);

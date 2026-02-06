@@ -135,6 +135,13 @@ enum MissionState {
     CANCELLED
 };
 
+
+struct BatteryProps {
+    double soc;
+    double capacity;
+    double lowThreshold;
+};
+
 struct Appointment {
     int id;
     std::string personName;

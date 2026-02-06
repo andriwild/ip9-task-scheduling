@@ -16,6 +16,7 @@
 #include "timeline_track.hpp"
 #include "marker_track.hpp"
 #include "state_track.hpp"
+#include "battery_track.hpp"
 
 // Constants
 constexpr int SCENE_MARGIN  = 50;
@@ -37,6 +38,7 @@ class Timeline final : public QGraphicsView {
     // Tracks
     std::shared_ptr<MarkerTrack> m_markerTrack;
     std::shared_ptr<StateTrack> m_stateTrack;
+    std::shared_ptr<BatteryTrack> m_batteryTrack;
     std::vector<ITimelineTrack*> m_tracks;
 
     QPushButton* m_btnZoomIn;
@@ -51,11 +53,13 @@ public:
         m_scene = new QGraphicsScene(this);
         
         // Initialize tracks
-        m_markerTrack = std::make_shared<MarkerTrack>(150);
-        m_stateTrack = std::make_shared<StateTrack>(20);
+        m_markerTrack  = std::make_shared<MarkerTrack>(150);
+        m_stateTrack   = std::make_shared<StateTrack>(20);
+        m_batteryTrack = std::make_shared<BatteryTrack>(100);
         
         m_tracks.push_back(m_markerTrack.get());
         m_tracks.push_back(m_stateTrack.get());
+        m_tracks.push_back(m_batteryTrack.get());
 
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
@@ -78,9 +82,6 @@ public:
 
     void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
         m_markerTrack->addMeetingPlan(appt, startTime);
-        // We probably don't need to full updateScene here if we just want to add, 
-        // but original called drawMeetingPlan.
-        // Let's call updateScene to be safe and consistent.
         updateScene();
     }
 
@@ -93,11 +94,12 @@ public:
 
 public slots:
     void handleMove(int time, QString location) {
-        // preserve commented out behavior or pass to track if implemented
+        // currently not used
     }
 
-    void handleStateChange(int time, int newState) {
+    void handleStateChange(int time, int newState, des::BatteryProps batStats) {
         m_stateTrack->handleStateChange(time, newState);
+        m_batteryTrack->handleStateChange(time, batStats);
         updateScene();
     }
 

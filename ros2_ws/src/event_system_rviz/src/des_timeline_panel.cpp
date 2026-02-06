@@ -59,12 +59,6 @@ void DesTimelinePanel::onInitialize() {
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });
-
-    m_subBattery = m_node->create_subscription<event_system_msgs::msg::TimelineBattery>(
-        "/timeline/battery", rclcpp::QoS(100),
-        [this](const event_system_msgs::msg::TimelineBattery::SharedPtr msg) {
-            QMetaObject::invokeMethod(this, [this, msg]() { this->onBatteryState(msg); });
-        });
 }
 
 void DesTimelinePanel::onMove(const event_system_msgs::msg::TimelineMove::SharedPtr msg){
@@ -72,7 +66,7 @@ void DesTimelinePanel::onMove(const event_system_msgs::msg::TimelineMove::Shared
 }
 
 void DesTimelinePanel::onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg){
-    m_timeline->handleStateChange(msg->time, msg->state);
+    m_timeline->handleStateChange(msg->time, msg->state, {msg->soc, msg->capacity, msg->low_threshold});
 }
 
 void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg){
@@ -97,10 +91,6 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
 
 void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg){
     m_timeline->handleEvent(msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)});
-}
-
-void DesTimelinePanel::onBatteryState(const event_system_msgs::msg::TimelineBattery::SharedPtr msg){
-    m_timeline->handleBattery(msg->time, msg->soc, msg->capacity);
 }
 
 }  // namespace des_timeline_panel

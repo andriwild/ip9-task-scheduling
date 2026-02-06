@@ -77,8 +77,7 @@ double SimulationContext::getRndConversationTime() {
 
 void SimulationContext::setConfig(std::shared_ptr<des::SimConfig> newConfig) {
     m_simConfig = newConfig;
-    m_robot->setDriveSpeed(m_simConfig->robotSpeed);
-    m_robot->setAccompanytSpeed(m_simConfig->robotAccompanySpeed);
+    m_robot->updateConfig(*newConfig);
     RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "New config active");
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
 }
@@ -88,5 +87,4 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) {
     m_robot->m_bat->updateBalance(m_currentTime, m_robot->getState()->getEnergyConsumption(*this));
     m_robot->changeState(std::move(newState));
     notifyRobotStateChanged(m_robot->getState()->getType());
-    notifyBatteryState(m_currentTime, m_robot->m_bat->getStats().soc, m_robot->m_bat->getStats().capacity);
 }

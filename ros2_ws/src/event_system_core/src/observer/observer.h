@@ -10,7 +10,6 @@ public:
     virtual std::string getName() = 0;
     virtual void onEvent(int /*time*/, des::EventType /*type*/, const std::string& /*message*/) {};
     virtual void onRobotMoved(int /*time*/, const std::string& /*location*/, double /*distance*/) {};
-    virtual void onStateChanged(int /*time*/, const des::RobotStateType& /*type*/) {};
+    virtual void onStateChanged(int /*time*/, const des::RobotStateType& /*type*/, des::BatteryProps batStats) {};
     virtual void onMissionComplete(int /*time*/, des::MissionState&, int /*timeDiff*/) {};
-    virtual void onBatteryStateChanged(int /*time*/, double soc, double capacity) {};
 };

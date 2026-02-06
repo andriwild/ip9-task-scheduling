@@ -18,7 +18,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/TimelineStateChange.msg"
     "msg/TimelineReset.msg"
     "msg/TimelineMeeting.msg"
-    "msg/TimelineBattery.msg"
     "msg/MetricsReport.msg"
 )
 

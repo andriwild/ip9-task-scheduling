@@ -21,3 +21,13 @@ bool Robot::isBusy() const {
         || m_state->getType() == des::RobotStateType::ACCOMPANY
         || m_state->getType() == des::RobotStateType::CONVERSATE;
 };
+
+void Robot::updateConfig(des::SimConfig& config) {
+    setDriveSpeed(config.robotSpeed);
+    setAccompanytSpeed(config.robotAccompanySpeed);
+    m_bat->updateConfig(
+        config.batteryCapacity,
+        config.initialBatteryCapacity,
+        config.lowBatteryThreshold
+    );
+};

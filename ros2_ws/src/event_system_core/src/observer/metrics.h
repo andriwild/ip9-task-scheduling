@@ -50,7 +50,7 @@ public:
         movedDistance         = 0.0;
     }
 
-    void onStateChanged(int time, const des::RobotStateType& newState) override {
+    void onStateChanged(int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
         int passedTime = time - lastTimeStateChanged;
 
         switch (lastState) {

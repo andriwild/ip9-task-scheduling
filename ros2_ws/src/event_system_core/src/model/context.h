@@ -76,7 +76,7 @@ public:
 
     void notifyRobotStateChanged(des::RobotStateType newState) {
         for (auto obs : m_observers) {
-            obs->onStateChanged(m_currentTime, newState);
+            obs->onStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
         }
     }
 
@@ -96,12 +96,6 @@ public:
             obs->onRobotMoved(m_currentTime, location, distance);
         }
     }
-
-    void notifyBatteryState(int time, double soc, double capacity) {
-        for (auto obs : m_observers) {
-            obs->onBatteryStateChanged(time, soc, capacity);
-        }
-    };
 
     double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
     double getConversationProbability() const { return m_simConfig->conversationProbability; };

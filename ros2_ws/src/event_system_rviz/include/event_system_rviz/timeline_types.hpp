@@ -21,6 +21,21 @@ struct VisualAppointment {
     int startTime;
 };
 
+
+struct TimelineTransformer {
+    double pixelsPerSecond;
+    int simStartTime;
+    double xOffset;
+
+    double toX(int time) const {
+        return xOffset + (time - simStartTime) * pixelsPerSecond;
+    }
+
+    double toWidth(int duration) const {
+        return duration * pixelsPerSecond;
+    }
+};
+
 struct RobotStateMeta {
     int index;
     QColor color;

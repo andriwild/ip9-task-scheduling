@@ -9,7 +9,6 @@
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
-#include "event_system_msgs/msg/timeline_battery.hpp"
 
 class RosObserver : public IObserver {
 public:
@@ -19,7 +18,6 @@ public:
         m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(100));
         m_pubMeeting     = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting"         , rclcpp::QoS(100));
         m_pubEvent       = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>("/timeline/event"             , rclcpp::QoS(100));
-        m_pubBattery     = m_node->create_publisher<event_system_msgs::msg::TimelineBattery>("/timeline/battery"         , rclcpp::QoS(100));
     }
 
     std::string getName() override {
@@ -41,10 +39,13 @@ public:
         m_pubMove->publish(msg);
     }
 
-    void onStateChanged(int time, const des::RobotStateType& type) override {
+    void onStateChanged(int time, const des::RobotStateType& type,  des::BatteryProps batStats) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
-        msg.time  = time;
-        msg.state = static_cast<int>(type);
+        msg.time          = time;
+        msg.state         = static_cast<int>(type);
+        msg.soc           = batStats.soc;
+        msg.capacity      = batStats.capacity;
+        msg.low_threshold = batStats.lowThreshold;
         m_pubStateChange->publish(msg);
     }
 
@@ -52,14 +53,6 @@ public:
     void publishReset() {
         auto msg = event_system_msgs::msg::TimelineReset();
         m_pubReset->publish(msg);
-    }
-
-    void onBatteryStateChanged(int time, double soc, double capacity) override {
-        auto msg = event_system_msgs::msg::TimelineBattery();
-        msg.time     = time;
-        msg.soc      = soc;
-        msg.capacity = capacity;
-        m_pubBattery->publish(msg);
     }
 
     void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
@@ -80,5 +73,4 @@ private:
     rclcpp::Publisher<event_system_msgs::msg::TimelineReset>::SharedPtr m_pubReset;
     rclcpp::Publisher<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_pubMeeting;
     rclcpp::Publisher<event_system_msgs::msg::TimelineEvent>::SharedPtr m_pubEvent;
-    rclcpp::Publisher<event_system_msgs::msg::TimelineBattery>::SharedPtr m_pubBattery;
 };
