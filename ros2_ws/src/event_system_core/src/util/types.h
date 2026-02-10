@@ -97,17 +97,21 @@ struct SimConfig {
 
 enum class RobotStateType {
     IDLE,
-    MOVING,
     ACCOMPANY,
     SEARCHING,
     CHARGING,
     CONVERSATE
 };
 
+enum class RobotSubState {
+    STANDING,
+    DRIVING
+};
+
 enum class EventType : int {
     SIMULATION_START = 0,
     SIMULATION_END = 1,
-    ARRIVED = 2,
+    STOP_DRIVE = 2,
     MISSION_COMPLETE = 3,
     MISSION_DISPATCH = 4,
     DROP_OFF_CONV_COMPLETE = 5,
@@ -115,7 +119,8 @@ enum class EventType : int {
     ABORT_SEARCH = 7,
     START_DROP_OFF_CONV = 8,
     START_FOUND_PERSON_CONV = 9,
-    START_ACCOMPANY = 10
+    START_ACCOMPANY = 10,
+    START_DRIVE = 11,
 };
 
 struct Person {

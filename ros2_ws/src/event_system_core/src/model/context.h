@@ -15,6 +15,12 @@
 #include "robot_state.h"
 
 
+struct Journey {
+    double duration;
+    double distance;
+};
+
+
 class SimulationContext {
     int m_currentTime;
     std::shared_ptr<des::SimConfig> m_simConfig;
@@ -37,7 +43,7 @@ public:
         rclcpp::Logger logger
     );
 
-    void scheduleArrival(int currentTime, const std::string target, bool isMissionComplete = false);
+    Journey scheduleArrival(const std::string target);
     void changeRobotState(std::unique_ptr<RobotState> newState);
     double getRndConversationTime();
     void setConfig(std::shared_ptr<des::SimConfig> newConfig);

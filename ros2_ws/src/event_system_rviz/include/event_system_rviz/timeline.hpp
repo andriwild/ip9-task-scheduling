@@ -93,10 +93,6 @@ public:
     }
 
 public slots:
-    void handleMove(int time, QString location) {
-        // currently not used
-    }
-
     void handleStateChange(int time, int newState, des::BatteryProps batStats) {
         m_stateTrack->handleStateChange(time, newState);
         m_batteryTrack->handleStateChange(time, batStats);

@@ -57,10 +57,8 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         auto target = ctx->getAppointment()->roomName;
-
         ctx->m_queue.push(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
         return BT::NodeStatus::SUCCESS;
     }
@@ -103,13 +101,11 @@ public:
     
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-
         auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
         auto locations = searchState->locations;
-        auto next = locations.front();
+        std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
-        
-        ctx->scheduleArrival(ctx->getTime(), next);
+        ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), nextLocation));
         return BT::NodeStatus::SUCCESS;
     }
 };

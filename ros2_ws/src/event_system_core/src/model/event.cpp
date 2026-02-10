@@ -10,18 +10,17 @@ void SimulationStartEvent::execute(SimulationContext& ctx) {
     if (ctx.m_robot->isBusy()) { 
         ctx.changeRobotState(std::make_unique<IdleState>());
     }
-    ctx.notifyEvent(*this);
     ctx.changeRobotState(std::make_unique<IdleState>());
+    ctx.notifyEvent(*this);
 }
 
 void SimulationEndEvent::execute(SimulationContext& ctx) {
-    ctx.notifyEvent(*this);
     ctx.changeRobotState(std::make_unique<IdleState>());
+    ctx.notifyEvent(*this);
 }
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     bool successful = rnd::uni() < ctx.getConversationProbability();
-    ctx.notifyEvent(*this);
     if(successful) {
         ctx.m_queue.push(std::make_shared<StartAccompanyEvent>(this->time));
     } else {
@@ -29,25 +28,35 @@ void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
     }
+    ctx.notifyEvent(*this);
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    bool successful = rnd::uni() < ctx.getConversationProbability();
-    if(successful) {
-        ctx.notifyEvent(*this);
+
+    if(rnd::uni() < ctx.getConversationProbability()) {
         ctx.updateAppointmentState(des::MissionState::COMPLETED);
     } else {
-        ctx.notifyEvent(*this);
         ctx.updateAppointmentState(des::MissionState::FAILED);
     }
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
-    ctx.m_behaviorTree->tickOnce();
+    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(time));
+    ctx.notifyEvent(*this);
 }
 
-void ArrivedEvent::execute(SimulationContext& ctx) {
+void StartDriveEvent::execute(SimulationContext& ctx) {
+    if (ctx.m_robot->getLocation() == location) {
+        ctx.m_queue.push(std::make_shared<StopDriveEvent>(time, location, 0));
+    }
+    Journey jrny = ctx.scheduleArrival(location);
+    ctx.m_queue.push(std::make_shared<StopDriveEvent>(static_cast<int>(time + jrny.duration), location, jrny.distance));
+    ctx.m_robot->setDriving(true);
+    ctx.notifyEvent(*this);
+}
+
+void StopDriveEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
     ctx.robotMoved(this->location, this->distance);
+    ctx.m_robot->setDriving(false);
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
     ctx.m_behaviorTree->tickOnce();
 }
@@ -64,25 +73,15 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
     ctx.updateAppointmentState(des::MissionState::IN_PROGRESS);
     std::string person = this->appointment->personName;
 
-    if (ctx.m_employeeLocations.find(person) == ctx.m_employeeLocations.end()) {
-        ctx.notifyEvent(*this);
-        return;
-    }
-
+    assert(ctx.m_employeeLocations.find(person) != ctx.m_employeeLocations.end());
     std::vector<std::string> locations = ctx.m_employeeLocations.at(person);
-    
-    if (locations.empty()) {
-        ctx.notifyEvent(*this);
-        return;
-    }
-
-    std::string firstGoal = locations.front();
+    assert(!locations.empty());
+    std::string firstLocation = locations.front();
     locations.erase(locations.begin());
 
-    ctx.notifyEvent(*this);
-    
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
-    ctx.scheduleArrival(this->time, firstGoal);
+    ctx.m_queue.push(std::make_shared<StartDriveEvent>(time, firstLocation));
+    ctx.notifyEvent(*this);
 }
 
 void AbortSearchEvent::execute(SimulationContext& ctx) {
@@ -99,6 +98,7 @@ void StartDropOffConversationeEvent::execute(SimulationContext& ctx) {
 }
 
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
+    ctx.m_robot->setDriving(false);
     auto eventTime = this->time + ctx.getRndConversationTime();
     ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
     ctx.changeRobotState(std::make_unique<ConversateState>());
@@ -107,11 +107,12 @@ void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
 
 void StartAccompanyEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(std::make_unique<AccompanyState>());
-    ctx.scheduleArrival(this->time, ctx.getAppointment()->roomName);
+    ctx.m_queue.push(std::make_shared<StartDriveEvent>(time, ctx.getAppointment()->roomName));
     ctx.notifyEvent(*this);
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.completeAppointment();
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }

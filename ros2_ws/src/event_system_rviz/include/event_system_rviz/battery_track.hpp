@@ -65,7 +65,8 @@ public:
             QPen(Qt::NoPen),
             QBrush(softGray)
         );
-
+        
+        // threshold range
         scene->addRect(
             xStart,
             yBottom - (m_height * threshold),
@@ -73,15 +74,6 @@ public:
             (m_height * threshold),
             QPen(Qt::NoPen),
             QBrush(softRed)
-        );
-
-        // threshold line
-        scene->addLine(
-            xStart, 
-            yBottom - (m_height * threshold), 
-            xEnd, 
-            yBottom - (m_height * threshold),
-            {softThreasholdRed}
         );
 
         // draw charge / discharge line
@@ -96,7 +88,7 @@ public:
                     yPrev,
                     x,
                     yBottom - m_height * state.props.soc, 
-                    {Qt::black, 1}
+                    { Qt::black, 1 }
                 );
             }
             auto line = scene->addLine(x, yBottom, x, yBottom - m_height * state.props.soc, {Qt::gray, 2});

@@ -16,15 +16,14 @@ class Robot {
     double m_accompanySpeed;
     double m_currentSpeed = 0;
 
+    bool m_isDriving = false;
+
 public:
     std::unique_ptr<Battery> m_bat;
 
-    Robot(
-        std::shared_ptr<des::SimConfig> config,
-        rclcpp::Logger logger
-    ) :
-        m_state(std::make_unique<IdleState>()),
-        m_logger(logger)
+    Robot(std::shared_ptr<des::SimConfig> config, rclcpp::Logger logger)
+        : m_state(std::make_unique<IdleState>())
+        , m_logger(logger)
     {
         m_driveSpeed = config->robotSpeed;
         m_accompanySpeed = config->robotAccompanySpeed;
@@ -44,11 +43,14 @@ public:
     void setLocation(std::string location);
 
     void changeState(std::unique_ptr<RobotState> newState);
-    RobotState* getState() { return m_state.get(); };
+    RobotState* getState() { return m_state.get(); }
 
-    des::RobotStateType getStateType() const { return m_state->getType(); };
+    bool isDriving() const { return m_isDriving; }
+    void setDriving(bool isDriving) { m_isDriving = isDriving; } 
 
-    double getCurrentSpeed() const { return m_currentSpeed; };
+    des::RobotStateType getStateType() const { return m_state->getType(); }
+
+    double getCurrentSpeed() const { return m_currentSpeed; }
     void setSpeed(double newSpeed) { m_currentSpeed = newSpeed; }
 
     double getAccompanySpeed() const { return m_accompanySpeed; }

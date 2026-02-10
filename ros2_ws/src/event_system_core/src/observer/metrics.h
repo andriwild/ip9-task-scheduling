@@ -66,9 +66,9 @@ public:
             case des::RobotStateType::IDLE:
                 idleTime += passedTime;
                 break;
-            case des::RobotStateType::MOVING:
-                moveTime += passedTime;
-                break;
+            // case des::RobotStateType::MOVING:
+            //     moveTime += passedTime;
+            //     break;
             case des::RobotStateType::CONVERSATE:
                 talkTime += passedTime;
                 break;

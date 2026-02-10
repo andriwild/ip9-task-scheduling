@@ -7,18 +7,13 @@
 
 void IdleState::enter(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[IDLE] Enter");
-    robot.setSpeed(0);
 }
 void IdleState::exit(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[IDLE] Exit");
 }
-void IdleState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[IDLE] Handle Event");
-}
 des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
-
 double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionBase;
 };
@@ -31,35 +26,28 @@ void AccompanyState::enter(Robot& robot) {
 void AccompanyState::exit(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[ACCOMPANY] Exit");
 }
-void AccompanyState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[ACCOMPANY] Hanle Event");
-}
 des::RobotStateType AccompanyState::getType() const {
     return des::RobotStateType::ACCOMPANY;
 }
-
 double AccompanyState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionDrive;
 };
 
 
-void MoveState::enter(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Enter");
-    robot.setSpeed(robot.getDriveSpeed());
-}
-void MoveState::exit(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Exit");
-}
-void MoveState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Handle Event");
-}
-des::RobotStateType MoveState::getType() const {
-    return des::RobotStateType::MOVING;
-}
+// void MoveState::enter(Robot& robot) {
+//     RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Enter");
+//     robot.setSpeed(robot.getDriveSpeed());
+// }
+// void MoveState::exit(Robot& robot) {
+//     RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Exit");
+// }
+// des::RobotStateType MoveState::getType() const {
+//     return des::RobotStateType::MOVING;
+// }
 
-double MoveState::getEnergyConsumption(const SimulationContext& ctx) const {
-    return ctx.getConfig()->energyConsumptionDrive;
-};
+// double MoveState::getEnergyConsumption(const SimulationContext& ctx) const {
+//     return ctx.getConfig()->energyConsumptionDrive;
+// };
 
 
 void SearchState::enter(Robot& robot) {
@@ -68,9 +56,6 @@ void SearchState::enter(Robot& robot) {
 }
 void SearchState::exit(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[SEARCH] Exit");
-}
-void SearchState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[SEARCH] Handle Event");
 }
 
 des::RobotStateType SearchState::getType() const {
@@ -84,15 +69,10 @@ double SearchState::getEnergyConsumption(const SimulationContext& ctx) const {
 
 void ConversateState::enter(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[CONVERSATE] Enter");
-    robot.setSpeed(0);
 }
 void ConversateState::exit(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[CONVERSATE] Exit");
 }
-void ConversateState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[CONVERSATE] Handle Event");
-}
-
 des::RobotStateType ConversateState::getType() const {
     return des::RobotStateType::CONVERSATE;
 }
@@ -104,15 +84,10 @@ double ConversateState::getEnergyConsumption(const SimulationContext& ctx) const
 
 void ChargeState::enter(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[CHARGE] Enter");
-    robot.setSpeed(0);
 }
 void ChargeState::exit(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[CHARGE] Exit");
 }
-void ChargeState::handleEvent(Robot& robot) {
-    RCLCPP_DEBUG(robot.getLogger(), "[CHARGE] Handle Event");
-}
-
 des::RobotStateType ChargeState::getType() const {
     return des::RobotStateType::CHARGING;
 }

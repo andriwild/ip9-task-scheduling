@@ -6,7 +6,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/panel.hpp>
 
-#include "event_system_msgs/msg/timeline_move.hpp"
 #include "event_system_msgs/msg/timeline_event.hpp"
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
@@ -25,7 +24,6 @@ public:
     void onInitialize() override;
 
 private:
-    void onMove(const event_system_msgs::msg::TimelineMove::SharedPtr msg);
     void onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg);
     void onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg);
     void onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg);
@@ -33,7 +31,6 @@ private:
 
     Timeline* m_timeline;
     rclcpp::Node::SharedPtr m_node;
-    rclcpp::Subscription<event_system_msgs::msg::TimelineMove>::SharedPtr m_subMove;
     rclcpp::Subscription<event_system_msgs::msg::TimelineStateChange>::SharedPtr m_subStateChange;
     rclcpp::Subscription<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_subMeeting;
     rclcpp::Subscription<event_system_msgs::msg::TimelineReset>::SharedPtr m_subReset;

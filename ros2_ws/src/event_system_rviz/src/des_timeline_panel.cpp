@@ -41,13 +41,6 @@ void DesTimelinePanel::onInitialize() {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onMeeting(msg); });
         });
 
-    m_subMove = m_node->create_subscription<event_system_msgs::msg::TimelineMove>(
-        "/timeline/move", rclcpp::QoS(100),
-        [this](const event_system_msgs::msg::TimelineMove::SharedPtr msg) {
-            QMetaObject::invokeMethod(this, [this, msg]() { this->onMove(msg); });
-
-        });
-
     m_subStateChange = m_node->create_subscription<event_system_msgs::msg::TimelineStateChange>(
         "/timeline/state_change", rclcpp::QoS(100),
         [this](const event_system_msgs::msg::TimelineStateChange::SharedPtr msg) {
@@ -59,10 +52,6 @@ void DesTimelinePanel::onInitialize() {
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });
-}
-
-void DesTimelinePanel::onMove(const event_system_msgs::msg::TimelineMove::SharedPtr msg){
-    m_timeline->handleMove(msg->appointment_time, QString::fromStdString(msg->label));
 }
 
 void DesTimelinePanel::onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg){

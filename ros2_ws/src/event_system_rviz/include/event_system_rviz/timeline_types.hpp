@@ -21,7 +21,6 @@ struct VisualAppointment {
     int startTime;
 };
 
-
 struct TimelineTransformer {
     double pixelsPerSecond;
     int simStartTime;
@@ -57,7 +56,7 @@ inline QColor getEventColor(des::EventType type) {
         case des::EventType::START_ACCOMPANY:
             return QColor(0, 100, 255);
 
-        case des::EventType::ARRIVED:
+        case des::EventType::STOP_DRIVE:
         case des::EventType::MISSION_COMPLETE:
             return QColor(0, 150, 50);
 
@@ -76,8 +75,8 @@ inline RobotStateMeta getMeta(int type) {
             return {5, QColor(180, 130, 220), "Conversation"};
         case des::RobotStateType::ACCOMPANY:
             return {2, QColor(100, 180, 255), "Accompany"};
-        case des::RobotStateType::MOVING:
-            return {1, QColor(80, 200, 120), "Moving"};
+        // case des::RobotStateType::MOVING:
+        //     return {1, QColor(80, 200, 120), "Moving"};
         case des::RobotStateType::CHARGING:
             return {3, QColor(255, 210, 50), "Charging"};
         default: return {-1, Qt::gray, "Unknown"};

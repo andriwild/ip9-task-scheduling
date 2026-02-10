@@ -204,6 +204,7 @@ int DesApplication::run() {
                     if (!m_eventQueue.empty()) {
                         auto e = m_eventQueue.top();
                         m_eventQueue.pop();
+                        RCLCPP_DEBUG(m_node->get_logger(), "Queue Event: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                         m_ctx->setTime(e->time);
                         e->execute(*m_ctx);
                     } else {

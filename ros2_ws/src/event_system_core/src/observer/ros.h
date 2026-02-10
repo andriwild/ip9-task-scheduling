@@ -5,7 +5,6 @@
 #include "observer.h"
 
 #include "event_system_msgs/msg/timeline_event.hpp"
-#include "event_system_msgs/msg/timeline_move.hpp"
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
@@ -13,7 +12,6 @@
 class RosObserver : public IObserver {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
-        m_pubMove        = m_node->create_publisher<event_system_msgs::msg::TimelineMove>("/timeline/move"               , rclcpp::QoS(100));
         m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(100));
         m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(100));
         m_pubMeeting     = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting"         , rclcpp::QoS(100));
@@ -32,13 +30,6 @@ public:
         m_pubEvent->publish(msg);
     };
 
-    void onRobotMoved(int time, const std::string& location, double /*distance*/) override {
-        auto msg = event_system_msgs::msg::TimelineMove();
-        msg.appointment_time = time;
-        msg.label            = location;
-        m_pubMove->publish(msg);
-    }
-
     void onStateChanged(int time, const des::RobotStateType& type,  des::BatteryProps batStats) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
         msg.time          = time;
@@ -48,7 +39,6 @@ public:
         msg.low_threshold = batStats.lowThreshold;
         m_pubStateChange->publish(msg);
     }
-
 
     void publishReset() {
         auto msg = event_system_msgs::msg::TimelineReset();
@@ -68,7 +58,6 @@ public:
 
 private:
     rclcpp::Node::SharedPtr m_node;
-    rclcpp::Publisher<event_system_msgs::msg::TimelineMove>::SharedPtr m_pubMove;
     rclcpp::Publisher<event_system_msgs::msg::TimelineStateChange>::SharedPtr m_pubStateChange;
     rclcpp::Publisher<event_system_msgs::msg::TimelineReset>::SharedPtr m_pubReset;
     rclcpp::Publisher<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_pubMeeting;

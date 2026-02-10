@@ -60,18 +60,31 @@ public:
     des::EventType getType() const override { return des::EventType::SIMULATION_END; };
 };
 
-class ArrivedEvent : public IEvent {
+class StartDriveEvent: public IEvent {
+    std::string location;
+public:
+    explicit StartDriveEvent(int time, std::string location)
+        : IEvent(time)
+        , location(location)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Start Drive Event"; };
+    des::EventType getType() const override { return des::EventType::START_DRIVE; };
+};
+
+class StopDriveEvent : public IEvent {
 public:
     double distance;
     std::string location;
-    explicit ArrivedEvent(int time, std::string location, double distance):
-        IEvent(time),
-        distance(distance),
-        location(location) 
+
+    explicit StopDriveEvent(int time, std::string location, double distance)
+        : IEvent(time)
+        , distance(distance)
+        , location(location) 
     {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "ArrivedEvent"; };
-    des::EventType getType() const override { return des::EventType::ARRIVED; };
+    des::EventType getType() const override { return des::EventType::STOP_DRIVE; };
 };
 
 class MissionDispatchEvent : public IEvent {

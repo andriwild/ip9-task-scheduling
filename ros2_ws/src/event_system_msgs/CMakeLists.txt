@@ -14,7 +14,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "srv/SetSystemConfig.srv"
     "msg/SystemConfig.msg"
     "msg/TimelineEvent.msg"
-    "msg/TimelineMove.msg"
     "msg/TimelineStateChange.msg"
     "msg/TimelineReset.msg"
     "msg/TimelineMeeting.msg"

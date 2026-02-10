@@ -1,5 +1,4 @@
 #include "robot.h"
-
 #include "robot_state.h"
 
 void Robot::changeState(std::unique_ptr<RobotState> newState) {
