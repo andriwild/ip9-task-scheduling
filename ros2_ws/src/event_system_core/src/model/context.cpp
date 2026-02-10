@@ -29,7 +29,6 @@ Journey SimulationContext::scheduleArrival(const std::string target) {
 
     double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
     double noiseFactor = rnd::getNormalDist(1.0, 0.1);
-
     return { travelTime * noiseFactor, distance.value() };
 }
 

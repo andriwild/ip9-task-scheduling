@@ -30,7 +30,7 @@ void DesTimelinePanel::onInitialize() {
     m_node = node_abstraction->get_raw_node();
 
     m_subEvent = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(
-        "/timeline/event", rclcpp::QoS(100),
+        "/timeline/event", rclcpp::QoS(500),
         [this](const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onEvent(msg); });
         });
@@ -42,13 +42,13 @@ void DesTimelinePanel::onInitialize() {
         });
 
     m_subStateChange = m_node->create_subscription<event_system_msgs::msg::TimelineStateChange>(
-        "/timeline/state_change", rclcpp::QoS(100),
+        "/timeline/state_change", rclcpp::QoS(500),
         [this](const event_system_msgs::msg::TimelineStateChange::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onStateChange(msg); });
         });
 
     m_subReset = m_node->create_subscription<event_system_msgs::msg::TimelineReset>(
-        "/timeline/reset", rclcpp::QoS(100),
+        "/timeline/reset", rclcpp::QoS(10),
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });
@@ -79,7 +79,7 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
 }
 
 void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg){
-    m_timeline->handleEvent(msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)});
+    m_timeline->handleEvent( msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)}, msg->is_driving);
 }
 
 }  // namespace des_timeline_panel

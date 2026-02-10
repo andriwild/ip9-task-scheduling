@@ -54,11 +54,11 @@ void StartDriveEvent::execute(SimulationContext& ctx) {
 }
 
 void StopDriveEvent::execute(SimulationContext& ctx) {
-    ctx.notifyEvent(*this);
     ctx.robotMoved(this->location, this->distance);
     ctx.m_robot->setDriving(false);
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
     ctx.m_behaviorTree->tickOnce();
+    ctx.notifyEvent(*this);
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {

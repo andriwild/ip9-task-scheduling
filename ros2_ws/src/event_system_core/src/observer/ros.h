@@ -12,21 +12,22 @@
 class RosObserver : public IObserver {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
-        m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(100));
-        m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(100));
+        m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(500));
+        m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(10));
         m_pubMeeting     = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting"         , rclcpp::QoS(100));
-        m_pubEvent       = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>("/timeline/event"             , rclcpp::QoS(100));
+        m_pubEvent       = m_node->create_publisher<event_system_msgs::msg::TimelineEvent>("/timeline/event"             , rclcpp::QoS(500));
     }
 
     std::string getName() override {
         return "ROS";
     }
 
-    void onEvent(int time, des::EventType type, const std::string& message) override { 
+    void onEvent(int time, des::EventType type, const std::string& message, bool isDriving) override { 
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
         msg.label = message;
+        msg.is_driving = isDriving;
         m_pubEvent->publish(msg);
     };
 

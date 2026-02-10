@@ -9,6 +9,7 @@ uint8 DROP_OFF_CONV_COMPLETE = 5
 uint8 FOUND_PERSON_CONV_COMPLETE= 6
 uint8 ABORT_SEARCH = 7
 uint8 START_DRIVE = 8
-
 uint8 type
+
+bool is_driving
 string label

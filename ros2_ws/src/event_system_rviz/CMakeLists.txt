@@ -20,7 +20,7 @@ qt5_wrap_cpp(MOC_FILES
   include/event_system_rviz/des_system_config.hpp
   include/event_system_rviz/des_timeline_panel.hpp
   include/event_system_rviz/des_metrics_panel.hpp
-  include/event_system_rviz/timeline.hpp
+  include/event_system_rviz/timeline/timeline.hpp
 )
 
 add_library(event_system_rviz

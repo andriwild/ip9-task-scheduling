@@ -12,8 +12,8 @@
 
 class IsSearching : public BT::ConditionNode {
 public:
-    IsSearching(const std::string& name, const BT::NodeConfig& config):
-        BT::ConditionNode(name, config) 
+    IsSearching(const std::string& name, const BT::NodeConfig& config)
+        : BT::ConditionNode(name, config) 
     {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
@@ -29,8 +29,8 @@ public:
 
 class ScanLocation : public BT::SyncActionNode {
 public:
-    ScanLocation(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
+    ScanLocation(const std::string& name, const BT::NodeConfig& config)
+        : BT::SyncActionNode(name, config) 
     {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
@@ -48,13 +48,10 @@ public:
 
 class StartAccompanyConversation: public BT::SyncActionNode {
 public:
-    StartAccompanyConversation(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
-    {}
+    StartAccompanyConversation(const std::string& name, const BT::NodeConfig& config)
+        : BT::SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
@@ -67,13 +64,11 @@ public:
 
 class HasNextLocation: public BT::ConditionNode {
 public:
-    HasNextLocation(const std::string& name, const BT::NodeConfig& config):
-        BT::ConditionNode(name, config) 
+    HasNextLocation(const std::string& name, const BT::NodeConfig& config)
+        : BT::ConditionNode(name, config) 
     {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
@@ -91,8 +86,8 @@ public:
 
 class MoveToNextLocation: public BT::SyncActionNode {
 public:
-    MoveToNextLocation(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
+    MoveToNextLocation(const std::string& name, const BT::NodeConfig& config)
+        : BT::SyncActionNode(name, config) 
     {}
 
     static BT::PortsList providedPorts() {

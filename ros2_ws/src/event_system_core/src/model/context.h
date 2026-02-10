@@ -88,7 +88,7 @@ public:
 
     void notifyEvent(IEvent& event) {
         for (auto obs : m_observers) {
-            obs->onEvent(event.time, event.getType(), event.getName());
+            obs->onEvent(event.time, event.getType(), event.getName(), m_robot->isDriving());
         }
     }
 

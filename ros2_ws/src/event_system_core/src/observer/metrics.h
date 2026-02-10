@@ -13,6 +13,7 @@ class MetricsNode : public rclcpp::Node, public IObserver {
     int talkTime              = 0;
     int chargingTime          = 0;
     int lastTimeStateChanged  = 0;
+    int lastTimeMoved         = 0;
     int accMissionToLateTime  = 0;
     int accMissionToEarlyTime = 0;
     int nMissionCompleted     = 0;
@@ -20,6 +21,7 @@ class MetricsNode : public rclcpp::Node, public IObserver {
     int nMissionCompletedLate = 0;
     int nMissionCanceled      = 0;
     double movedDistance      = 0.0;
+    bool wasDriving           = false;
     des::RobotStateType lastState;
 
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
@@ -41,6 +43,7 @@ public:
         talkTime              = 0;
         chargingTime          = 0;
         lastTimeStateChanged  = 0;
+        lastTimeMoved         = 0;
         accMissionToLateTime  = 0;
         accMissionToEarlyTime = 0;
         nMissionCompleted     = 0;
@@ -48,7 +51,23 @@ public:
         nMissionCompletedLate = 0;
         nMissionCanceled      = 0;
         movedDistance         = 0.0;
+        wasDriving            = false;
     }
+
+
+    void onEvent(int time, des::EventType type, const std::string& message, bool isDriving) {
+        if(isDriving && !wasDriving) {
+            wasDriving = true;
+            lastTimeMoved = time;
+        } else if(!isDriving && wasDriving){
+           moveTime += time - lastTimeMoved;
+            wasDriving = false;
+        }
+
+        if(type == des::EventType::SIMULATION_END){
+            publishReport();
+        }
+    };
 
     void onStateChanged(int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
         int passedTime = time - lastTimeStateChanged;
@@ -73,11 +92,8 @@ public:
                 talkTime += passedTime;
                 break;
         }
-
         lastState = newState;
         lastTimeStateChanged = time;
-
-        publishReport();
     }
 
     void onMissionComplete(int /*time*/, des::MissionState& state, int timeDiff) override {
@@ -100,12 +116,10 @@ public:
             default:
                 break;
         }
-        publishReport();
     }
 
     void onRobotMoved(int /*time*/, const std::string& /*location*/, double distance) override {
         movedDistance += distance;
-        publishReport();
     }
 
 private:

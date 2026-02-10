@@ -11,7 +11,7 @@
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
 
-#include "timeline.hpp"
+#include "event_system_rviz/timeline/timeline.hpp"
 
 namespace des_timeline_panel {
 
