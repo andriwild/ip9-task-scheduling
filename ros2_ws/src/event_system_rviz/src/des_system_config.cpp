@@ -74,8 +74,8 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_chargingRate->setSuffix(" W");
     addConfigItem(energyGroup, "Charging Power", m_chargingRate);
 
-    m_lowBatteryThreshold = new QDoubleSpinBox(); m_lowBatteryThreshold->setRange(0.0, m_batteryCapacity->maximum());
-    m_initialBatteryCapacity->setSuffix(" Ah");
+    m_lowBatteryThreshold = new QDoubleSpinBox(); m_lowBatteryThreshold->setRange(0.0, 100);
+    m_lowBatteryThreshold->setSuffix(" %");
     addConfigItem(energyGroup, "Low Battery Threshold", m_lowBatteryThreshold);
 
     m_energyConsumptionDrive = new QDoubleSpinBox(); m_energyConsumptionDrive->setRange(0.0, 1000.0);

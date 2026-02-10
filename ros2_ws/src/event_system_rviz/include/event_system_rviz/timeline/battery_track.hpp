@@ -63,9 +63,9 @@ public:
         // threshold range
         scene->addRect(
             xStart,
-            yBottom - (m_height * threshold),
+            yBottom,
             width,
-            (m_height * threshold),
+            -(m_height * threshold),
             QPen(Qt::NoPen),
             QBrush(softRed)
         );

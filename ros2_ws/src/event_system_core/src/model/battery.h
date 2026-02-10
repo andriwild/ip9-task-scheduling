@@ -7,7 +7,7 @@ class Battery {
     double m_designCapactiy; // Ah - battery design capacity
     double m_currentCapacity; // Ah
     double m_initialCapacity; // Ah - on simulation start
-    double m_lowBatteryThreshold;
+    double m_lowBatteryThreshold; // %
     double m_voltage = 12.0; // Volt
     rclcpp::Logger m_logger;
 
@@ -40,7 +40,7 @@ public:
         m_lastBalanceUpdate = time;
         m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
 
-        if (m_currentCapacity < m_lowBatteryThreshold) {
+        if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapactiy) {
             RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapactiy);
         }
 
@@ -60,5 +60,5 @@ public:
         return { m_currentCapacity / m_designCapactiy, m_designCapactiy, m_lowBatteryThreshold };
     }
 
-    bool isBatteryLow() const { return m_designCapactiy < m_lowBatteryThreshold; };
+    bool isBatteryLow() const { return m_designCapactiy < m_lowBatteryThreshold / 100 * m_designCapactiy; };
 };
