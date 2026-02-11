@@ -8,13 +8,17 @@ class Robot;
 class SimulationContext;
 
 class RobotState {
+    des::Result m_result;
 
 public:
     virtual ~RobotState() = default;
-    virtual void enter(Robot& robot) = 0;
-    virtual void exit(Robot& robot) = 0;
+    virtual void enter(Robot& robot) { m_result = des::Result::RUNNING; };
+    virtual void exit(Robot& robot) { m_result = des::Result::SUCCESS; } ;
     virtual des::RobotStateType getType() const = 0;
     virtual double getEnergyConsumption(const SimulationContext& ctx) const = 0;
+
+    des::Result getResult() const { return m_result; };
+    void setResult(des::Result result) { m_result = result; };
 };
 
 class IdleState : public  RobotState {
@@ -52,7 +56,6 @@ public:
     };
 
     const Type conversationType;
-    bool m_successful = false;
 
     ConversateState(Type type = Type::FOUND_PERSON) : conversationType(type) {}
     
@@ -60,8 +63,6 @@ public:
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
-    void complete(bool successful) { m_successful = successful; } 
-    bool isSuccessful() const { return m_successful; }
 };
 
 class ChargeState : public  RobotState {

@@ -108,6 +108,12 @@ enum class RobotSubState {
     DRIVING
 };
 
+enum class Result {
+    FAILURE,
+    RUNNING,
+    SUCCESS
+};
+
 enum class EventType : int {
     SIMULATION_START = 0,
     SIMULATION_END = 1,

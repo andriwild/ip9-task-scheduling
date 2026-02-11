@@ -6,9 +6,11 @@
 #include "robot.h"
 
 void IdleState::enter(Robot& robot) {
+    RobotState::enter(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[IDLE] Enter");
 }
 void IdleState::exit(Robot& robot) {
+    RobotState::exit(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[IDLE] Exit");
 }
 des::RobotStateType IdleState::getType() const {
@@ -20,10 +22,12 @@ double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
 
 
 void AccompanyState::enter(Robot& robot) {
+    RobotState::enter(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[ACCOMPANY] Enter");
     robot.setSpeed(robot.getAccompanySpeed());
 }
 void AccompanyState::exit(Robot& robot) {
+    RobotState::exit(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[ACCOMPANY] Exit");
 }
 des::RobotStateType AccompanyState::getType() const {
@@ -35,26 +39,28 @@ double AccompanyState::getEnergyConsumption(const SimulationContext& ctx) const 
 
 
 void SearchState::enter(Robot& robot) {
+    RobotState::enter(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[SEARCH] Enter");
     robot.setSpeed(robot.getDriveSpeed());
 }
 void SearchState::exit(Robot& robot) {
+    RobotState::exit(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[SEARCH] Exit");
 }
-
 des::RobotStateType SearchState::getType() const {
     return des::RobotStateType::SEARCHING;
 }
-
 double SearchState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionDrive;
 };
 
 
 void ConversateState::enter(Robot& robot) {
+    RobotState::enter(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[CONVERSATE] Enter");
 }
 void ConversateState::exit(Robot& robot) {
+    RobotState::exit(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[CONVERSATE] Exit");
 }
 des::RobotStateType ConversateState::getType() const {
@@ -67,9 +73,11 @@ double ConversateState::getEnergyConsumption(const SimulationContext& ctx) const
 
 
 void ChargeState::enter(Robot& robot) {
+    RobotState::enter(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[CHARGE] Enter");
 }
 void ChargeState::exit(Robot& robot) {
+    RobotState::exit(robot);
     RCLCPP_DEBUG(robot.getLogger(), "[CHARGE] Exit");
 }
 des::RobotStateType ChargeState::getType() const {

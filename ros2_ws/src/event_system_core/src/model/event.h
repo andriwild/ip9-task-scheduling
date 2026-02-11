@@ -117,30 +117,18 @@ public:
 };
 
 class FoundPersonConversationCompleteEvent : public IEvent {
-    bool m_successful;
 public:
-    explicit FoundPersonConversationCompleteEvent(int time, bool successful)
-    : IEvent(time)
-    , m_successful(successful)
-    {}
+    explicit FoundPersonConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override {
-        return m_successful ?  "Conversation successful" :  "Conversation failed";
-    };
+    std::string getName() const override { return "Conversation complete"; };
     des::EventType getType() const override { return des::EventType::FOUND_PERSON_CONV_COMPLETE; };
 };
 
 class DropOffConversationCompleteEvent : public IEvent {
-    bool m_successful;
 public:
-    explicit DropOffConversationCompleteEvent(int time, bool successful)
-    : IEvent(time)
-    , m_successful(successful)
-    {}
+    explicit DropOffConversationCompleteEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { 
-        return m_successful ?  "Conversation successful" :  "Conversation failed";
-    };
+    std::string getName() const override { return "Conversation complete"; };
     des::EventType getType() const override { return des::EventType::DROP_OFF_CONV_COMPLETE; };
 };
 

@@ -4,6 +4,7 @@
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/action_node.h>
+#include <qstringalgorithms.h>
 #include <memory>
 
 #include "../model/context.h"
@@ -38,9 +39,8 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto currentState = ctx->m_robot->getState();
-        auto convState = dynamic_cast<ConversateState*>(currentState);
-        if (convState->isSuccessful()) {
+        auto convResult = ctx->m_robot->getState()->getResult();
+        if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -58,9 +58,8 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto currentState = ctx->m_robot->getState();
-        auto convState = dynamic_cast<ConversateState*>(currentState);
-        if (convState->isSuccessful()) {
+        auto convResult = ctx->m_robot->getState()->getResult();
+        if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -133,10 +132,8 @@ public:
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto currentState = ctx->m_robot->getState();
-        auto convState = dynamic_cast<ConversateState*>(currentState);
-        
-        if (convState->isSuccessful()) {
+        auto convResult = ctx->m_robot->getState()->getResult();
+        if (convResult == des::Result::SUCCESS) {
             ctx->updateAppointmentState(des::MissionState::COMPLETED);
         } else {
             ctx->updateAppointmentState(des::MissionState::FAILED);
