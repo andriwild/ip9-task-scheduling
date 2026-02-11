@@ -26,6 +26,7 @@ class SimulationContext {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::vector<std::shared_ptr<IObserver>> m_observers;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
+    std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
     rclcpp::Logger m_logger;
 
 public:
@@ -59,6 +60,23 @@ public:
         m_currentAppointment = appt;
     }
 
+    void addPendingMission(std::shared_ptr<des::Appointment> appt) {
+        m_pendingMissions.push(appt);
+    }
+    
+    bool hasPendingMission() const {
+        return !m_pendingMissions.empty();
+    }
+    
+    std::shared_ptr<des::Appointment> popPendingMission() {
+        if (m_pendingMissions.empty()) {
+            return nullptr;
+        }
+        auto appt = m_pendingMissions.front();
+        m_pendingMissions.pop();
+        return appt;
+    }
+
     const std::shared_ptr<des::Appointment> getAppointment() const {
         return m_currentAppointment;
     }
@@ -74,7 +92,7 @@ public:
         m_observers.emplace_back(observer);
     }
 
-    void notifyMissionComplete(des::MissionState state, int timeDiff) {
+    void notifyMissionComplete(des::MissionState& state, int timeDiff) {
         for (auto obs : m_observers) {
             obs->onMissionComplete(m_currentTime, state, timeDiff);
         }

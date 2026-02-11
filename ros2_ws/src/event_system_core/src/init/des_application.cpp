@@ -1,4 +1,5 @@
 #include "des_application.h"
+#include <unistd.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -133,6 +134,9 @@ void DesApplication::reset() {
     m_rosObserver->publishReset();
     m_metricsNode->clear();
 
+    // wait until reset message is properly sendet until distribute new meetings data
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     loadAppointments(m_config->appointmentsPath);
     setupQueue(m_config);
     m_ctx->resetContext(m_eventQueue.top()->time);
@@ -150,8 +154,8 @@ int DesApplication::run() {
     rclcpp::init(0, nullptr);
     m_node = std::make_shared<rclcpp::Node>("des_application");
     m_node->get_logger().set_level(LOG_LEVEL);
-
     RCLCPP_INFO(m_node->get_logger(), "\n----- Descrete Event Sytem -----");
+    RCLCPP_INFO(m_node->get_logger(), "C++ Version: %ld", __cplusplus);
 
     try {
         loadPointsOfInterest();

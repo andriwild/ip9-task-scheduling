@@ -1,59 +1,3 @@
-#pragma once
-#include <fstream>
-#include <iostream>
-
-#include <behaviortree_cpp/bt_factory.h>
-#include <behaviortree_cpp/xml_parsing.h>
-
-#include <rclcpp/rclcpp.hpp>
-
-#include "../model/context.h"
-#include "accompany.h"
-#include "idle.h"
-#include "search.h"
-#include "conversation.h"
-#include "mission_control.h"
-
-constexpr bool W_OUT_TREE = false;
-const std::string TREE_FILE = "behavior_tree.xml";
-
-inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
-    BT::BehaviorTreeFactory factory;
-
-    // search
-    factory.registerNodeType<IsSearching>("IsSearching");
-    factory.registerNodeType<ScanLocation>("ScanLocation");
-    factory.registerNodeType<HasNextLocation>("HasNextLocation");
-    factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
-    factory.registerNodeType<StartAccompanyConversation>("StartAccompanyConversation");
-    factory.registerNodeType<AbortSearch>("AbortSearch");
-
-    // accompany
-    factory.registerNodeType<IsAccompany>("IsAccompany");
-    factory.registerNodeType<ArrivedWithPerson>("ArrivedWithPerson");
-    factory.registerNodeType<StartDropoffConversation>("StartDropoffConversation");
-    factory.registerNodeType<AbortAccompany>("AbortAccompany");
-
-    // idle
-    factory.registerNodeType<Docking>("Docking");
-    factory.registerNodeType<EnterIdle>("EnterIdle");
-
-    // conversation
-    factory.registerNodeType<IsConversating>("IsConversating");
-    factory.registerNodeType<ConversationFinished>("ConversationFinished");
-    factory.registerNodeType<WasConversationSuccessful>("WasConversationSuccessful");
-    factory.registerNodeType<IsFoundPersonConversation>("IsFoundPersonConversation");
-    factory.registerNodeType<IsDropOffConversation>("IsDropOffConversation");
-    factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
-    factory.registerNodeType<CompleteMissionAction>("CompleteMissionAction");
-
-    // mission control
-    factory.registerNodeType<HasPendingMission>("HasPendingMission");
-    factory.registerNodeType<IsRobotBusy>("IsRobotBusy");
-    factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
-    factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
-
-    static const char * xml_text = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
             <Sequence name="Seq_MainLoop">
@@ -149,24 +93,78 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                 <EnterIdle/>
             </Sequence>
         </BehaviorTree>
-     </root>
-    )";
 
-    auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
-    tree->rootBlackboard()->set("ctx", ctx);
-
-    if(W_OUT_TREE) {
-        std::string xml_models = BT::writeTreeNodesModelXML(factory);
-        std::ofstream file(TREE_FILE);
-
-        if (file.is_open()) {
-            file << xml_models;
-            file.close();
-            std::cout << "BehaviorTree XML saved!" << std::endl;
-        } else {
-            std::cerr << "BehaviorTree could not be saved." << std::endl;
-        }
-    }
-
-    return tree;
-}
+    <TreeNodesModel>
+        <Action ID="AbortAccompany">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="AbortSearch">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="AcceptMissionAction">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Condition ID="ArrivedWithPerson">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Action ID="CompleteMissionAction">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Condition ID="ConversationFinished">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Action ID="Docking">
+            <input_port name="location" type="int"/>
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Condition ID="EnterIdle">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="HasNextLocation">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="HasPendingMission">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsAccompany">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsConversating">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsDropOffConversation">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsFoundPersonConversation">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsRobotBusy">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Condition ID="IsSearching">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+        <Action ID="MoveToNextLocation">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="RejectMissionAction">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="ScanLocation">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="StartAccompanyAction">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="StartAccompanyConversation">
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Action ID="StartDropoffConversation">
+            <input_port name="current_time" type="int"/>
+            <input_port name="ctx" type="int"/>
+        </Action>
+        <Condition ID="WasConversationSuccessful">
+            <input_port name="ctx" type="int"/>
+        </Condition>
+    </TreeNodesModel>
+</root>

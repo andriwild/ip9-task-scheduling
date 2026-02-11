@@ -4,6 +4,7 @@
 #include <memory>
 #include <queue>
 #include <vector>
+#include <format>
 
 #include "../util/types.h"
 
@@ -68,7 +69,7 @@ public:
         , location(location)
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Start Drive Event"; };
+    std::string getName() const override { return "Start Drive"; };
     des::EventType getType() const override { return des::EventType::START_DRIVE; };
 };
 
@@ -83,43 +84,63 @@ public:
         , location(location) 
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "ArrivedEvent"; };
+    std::string getName() const override { return "Stop Drive: " + location; };
     des::EventType getType() const override { return des::EventType::STOP_DRIVE; };
 };
 
 class MissionDispatchEvent : public IEvent {
 public:
     std::shared_ptr<des::Appointment> appointment;
-    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt):
-        IEvent(time),
-        appointment(appt) 
+    explicit MissionDispatchEvent(int time, std::shared_ptr<des::Appointment> appt)
+        : IEvent(time)
+        , appointment(appt) 
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Mission Dispatch"; };
+    std::string getName() const override { 
+        return "Mission Dispatch";
+    };
     des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; };
 };
 
 class MissionCompleteEvent : public IEvent {
+    std::shared_ptr<des::Appointment> appointment;
 public:
-    explicit MissionCompleteEvent(int time) : IEvent(time) {}
+    explicit MissionCompleteEvent(int time, std::shared_ptr<des::Appointment> appt)
+        : IEvent(time)
+        , appointment(appt)
+    {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Mission Complete"; };
+    std::string getName() const override { 
+        return std::format("Mission {} Complete: {}", appointment->id, des::missionStateStr(appointment->state));
+    };
     des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; };
 };
 
 class FoundPersonConversationCompleteEvent : public IEvent {
+    bool m_successful;
 public:
-    explicit FoundPersonConversationCompleteEvent(int time) : IEvent(time) {}
+    explicit FoundPersonConversationCompleteEvent(int time, bool successful)
+    : IEvent(time)
+    , m_successful(successful)
+    {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Found Person Conversation Complete"; };
+    std::string getName() const override {
+        return m_successful ?  "Conversation successful" :  "Conversation failed";
+    };
     des::EventType getType() const override { return des::EventType::FOUND_PERSON_CONV_COMPLETE; };
 };
 
 class DropOffConversationCompleteEvent : public IEvent {
+    bool m_successful;
 public:
-    explicit DropOffConversationCompleteEvent(int time) : IEvent(time) {}
+    explicit DropOffConversationCompleteEvent(int time, bool successful)
+    : IEvent(time)
+    , m_successful(successful)
+    {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Drop Off Conversation Complete"; };
+    std::string getName() const override { 
+        return m_successful ?  "Conversation successful" :  "Conversation failed";
+    };
     des::EventType getType() const override { return des::EventType::DROP_OFF_CONV_COMPLETE; };
 };
 
@@ -145,7 +166,7 @@ class StartFoundPersonConversationEvent: public IEvent {
 public:
     explicit StartFoundPersonConversationEvent(int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Start Found Person Conversation"; };
+    std::string getName() const override { return "Found Person Conversation"; };
     des::EventType getType() const override { return des::EventType::START_FOUND_PERSON_CONV; };
 };
 

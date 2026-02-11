@@ -34,22 +34,6 @@ double AccompanyState::getEnergyConsumption(const SimulationContext& ctx) const 
 };
 
 
-// void MoveState::enter(Robot& robot) {
-//     RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Enter");
-//     robot.setSpeed(robot.getDriveSpeed());
-// }
-// void MoveState::exit(Robot& robot) {
-//     RCLCPP_DEBUG(robot.getLogger(), "[MOVE] Exit");
-// }
-// des::RobotStateType MoveState::getType() const {
-//     return des::RobotStateType::MOVING;
-// }
-
-// double MoveState::getEnergyConsumption(const SimulationContext& ctx) const {
-//     return ctx.getConfig()->energyConsumptionDrive;
-// };
-
-
 void SearchState::enter(Robot& robot) {
     RCLCPP_DEBUG(robot.getLogger(), "[SEARCH] Enter");
     robot.setSpeed(robot.getDriveSpeed());

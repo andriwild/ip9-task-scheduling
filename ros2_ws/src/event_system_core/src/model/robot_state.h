@@ -26,14 +26,6 @@ public:
 
 };
 
-// class MoveState : public  RobotState {
-// public:
-//     void enter(Robot& robot) override;
-//     void exit(Robot& robot) override;
-//     des::RobotStateType getType() const override;
-//     virtual double getEnergyConsumption(const SimulationContext& ctx) const override;
-// };
-
 class AccompanyState : public  RobotState {
 public:
     void enter(Robot& robot) override;
@@ -54,10 +46,22 @@ public:
 
 class ConversateState : public  RobotState {
 public:
+    enum class Type {
+        FOUND_PERSON,
+        DROP_OFF
+    };
+
+    const Type conversationType;
+    bool m_successful = false;
+
+    ConversateState(Type type = Type::FOUND_PERSON) : conversationType(type) {}
+    
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
+    void complete(bool successful) { m_successful = successful; } 
+    bool isSuccessful() const { return m_successful; }
 };
 
 class ChargeState : public  RobotState {

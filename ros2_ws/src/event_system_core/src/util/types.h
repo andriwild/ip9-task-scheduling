@@ -140,6 +140,16 @@ enum MissionState {
     CANCELLED
 };
 
+inline std::string_view missionStateStr(MissionState state) {
+    switch(state) {
+        case PENDING: return "PEND";
+        case COMPLETED: return "COMPL";
+        case IN_PROGRESS: return "IN_P";
+        case FAILED: return "FAIL";
+        case CANCELLED: return "CNLD";
+        default: return "UNK";
+    };
+};
 
 struct BatteryProps {
     double soc;

@@ -1,5 +1,5 @@
 {
-    "appointments_path": "20_appts.json",
+    "appointments_path": "appointments.json",
     "battery_capacity": 44.0,
     "cacheEnabled": true,
     "charging_rate": 50.0,
@@ -14,7 +14,7 @@
     "drive_time_std": 0.10000000149011612,
     "energy_consumption_base": 1.0,
     "energy_consumption_drive": 500.0,
-    "find_person_probability": 0.6000000238418579,
+    "find_person_probability": 0.5299999713897705,
     "initial_battery_capacity": 44.0,
     "low_battery_threshold": 10.0,
     "robot_accompany_speed": 0.4000000059604645,

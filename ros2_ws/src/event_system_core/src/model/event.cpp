@@ -7,9 +7,6 @@
 
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
-    if (ctx.m_robot->isBusy()) { 
-        ctx.changeRobotState(std::make_unique<IdleState>());
-    }
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.notifyEvent(*this);
 }
@@ -20,26 +17,16 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 }
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    bool successful = rnd::uni() < ctx.getConversationProbability();
-    if(successful) {
-        ctx.m_queue.push(std::make_shared<StartAccompanyEvent>(this->time));
-    } else {
-        ctx.updateAppointmentState(des::MissionState::FAILED);
-        ctx.changeRobotState(std::make_unique<IdleState>());
-        ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
-    }
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-
-    if(rnd::uni() < ctx.getConversationProbability()) {
-        ctx.updateAppointmentState(des::MissionState::COMPLETED);
-    } else {
-        ctx.updateAppointmentState(des::MissionState::FAILED);
-    }
-    ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(time));
+    bool successful = rnd::uni() < ctx.getConversationProbability();
+    auto currentState = ctx.m_robot->getState();
+    auto convState = dynamic_cast<ConversateState*>(currentState);
+    convState->complete(successful);
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 
@@ -62,46 +49,33 @@ void StopDriveEvent::execute(SimulationContext& ctx) {
 }
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    if (ctx.m_robot->isBusy()) {
-        ctx.updateAppointmentState(des::MissionState::CANCELLED);
-        this->appointment->state = des::MissionState::FAILED;
-        ctx.notifyEvent(*this);
-        return; 
-    }
-
-    ctx.setAppointment(this->appointment);
-    ctx.updateAppointmentState(des::MissionState::IN_PROGRESS);
-    std::string person = this->appointment->personName;
-
-    assert(ctx.m_employeeLocations.find(person) != ctx.m_employeeLocations.end());
-    std::vector<std::string> locations = ctx.m_employeeLocations.at(person);
-    assert(!locations.empty());
-    std::string firstLocation = locations.front();
-    locations.erase(locations.begin());
-
-    ctx.changeRobotState(std::make_unique<SearchState>(locations));
-    ctx.m_queue.push(std::make_shared<StartDriveEvent>(time, firstLocation));
+    // Just add to queue, decisions are made in Behavior Tree
+    ctx.addPendingMission(this->appointment);
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 
 void AbortSearchEvent::execute(SimulationContext& ctx) {
     ctx.updateAppointmentState(des::MissionState::FAILED);
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time));
+    ctx.m_queue.push(std::make_shared<MissionCompleteEvent>(this->time, ctx.getAppointment()));
     ctx.notifyEvent(*this);
 }
 
 void StartDropOffConversationeEvent::execute(SimulationContext& ctx) {
     double eventTime = this->time + ctx.getRndConversationTime();
-    ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
+    bool successful = rnd::uni() < ctx.getConversationProbability();
+    ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime, successful));
+    ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
     ctx.notifyEvent(*this);
 }
 
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->setDriving(false);
     auto eventTime = this->time + ctx.getRndConversationTime();
-    ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
-    ctx.changeRobotState(std::make_unique<ConversateState>());
+    bool successful = rnd::uni() < ctx.getConversationProbability();
+    ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime, successful));
+    ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
     ctx.notifyEvent(*this);
 }
 

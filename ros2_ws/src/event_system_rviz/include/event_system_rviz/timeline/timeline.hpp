@@ -174,11 +174,10 @@ private:
     void applyZoom(double factor) {
         viewport()->setUpdatesEnabled(false);
 
-        QPointF viewCenter = viewport()->rect().center();
+        QPointF viewCenter  = viewport()->rect().center();
         QPointF sceneCenter = mapToScene(viewCenter.toPoint());
 
         double timeFromStart = (sceneCenter.x() - X_LINE_OFFSET) / m_pixelsPerSecond;
-
         double newScale = m_pixelsPerSecond * factor;
 
         if (newScale >= 0.01 && newScale <= 2000.0) {
