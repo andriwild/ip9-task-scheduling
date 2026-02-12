@@ -15,7 +15,7 @@
 #include "mission_control.h"
 
 constexpr bool W_OUT_TREE = true;
-const std::string TREE_FILE = "tree_nodes_model.xml";
+const std::string TREE_FILE = "bt_config.xml";
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
     BT::BehaviorTreeFactory factory;
