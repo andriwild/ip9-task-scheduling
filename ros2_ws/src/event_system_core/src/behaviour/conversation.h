@@ -40,10 +40,10 @@ public:
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         auto convResult = ctx->m_robot->getState()->getResult();
-        if (convResult == des::Result::SUCCESS) {
-            return BT::NodeStatus::SUCCESS;
+        if (convResult == des::Result::RUNNING) {
+            return BT::NodeStatus::FAILURE;
         }
-        return BT::NodeStatus::FAILURE;
+        return BT::NodeStatus::SUCCESS;
     }
 };
 

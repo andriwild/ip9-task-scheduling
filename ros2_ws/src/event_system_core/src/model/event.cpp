@@ -31,12 +31,15 @@ void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
 }
 
 void StartDriveEvent::execute(SimulationContext& ctx) {
+    assert(!ctx.m_robot->isDriving());
+
     if (ctx.m_robot->getLocation() == location) {
         ctx.m_queue.push(std::make_shared<StopDriveEvent>(time, location, 0));
     }
     Journey jrny = ctx.scheduleArrival(location);
     ctx.m_queue.push(std::make_shared<StopDriveEvent>(static_cast<int>(time + jrny.duration), location, jrny.distance));
     ctx.m_robot->setDriving(true);
+    ctx.m_robot->setTargetLocation(location);
     ctx.notifyEvent(*this);
 }
 
@@ -44,13 +47,6 @@ void StopDriveEvent::execute(SimulationContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
     ctx.m_robot->setDriving(false);
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
-    ctx.m_behaviorTree->tickOnce();
-    ctx.notifyEvent(*this);
-}
-
-void MissionDispatchEvent::execute(SimulationContext& ctx) {
-    // Just add to queue, decisions are made in Behavior Tree
-    ctx.addPendingMission(this->appointment);
     ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
@@ -80,6 +76,12 @@ void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
 void StartAccompanyEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(std::make_unique<AccompanyState>());
     ctx.m_queue.push(std::make_shared<StartDriveEvent>(time, ctx.getAppointment()->roomName));
+    ctx.notifyEvent(*this);
+}
+
+void MissionDispatchEvent::execute(SimulationContext& ctx) {
+    ctx.addPendingMission(this->appointment);
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 

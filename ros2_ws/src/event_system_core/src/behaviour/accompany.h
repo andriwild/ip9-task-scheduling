@@ -18,7 +18,9 @@ public:
 
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY) {
+
+        bool isArrived = ctx->m_robot->getLocation() == ctx->m_robot->getTargetLocation();
+        if (ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY && isArrived) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;

@@ -95,8 +95,8 @@ public:
     std::optional<double> calcDistance(const std::string& from, const std::string& to, bool useCache) {
         if(useCache) {
             auto it = m_cache.find({from, to});
+            // Cache hit
             if(it != m_cache.end()) {
-                RCLCPP_DEBUG(this->get_logger(), "Cache Hit");
                 return it->second;
             }
         }

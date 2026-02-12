@@ -23,8 +23,6 @@ public:
 
 class IdleState : public  RobotState {
 public:
-    void enter(Robot& robot) override;
-    void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
 
@@ -59,16 +57,12 @@ public:
 
     ConversateState(Type type = Type::FOUND_PERSON) : conversationType(type) {}
     
-    void enter(Robot& robot) override;
-    void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
 };
 
 class ChargeState : public  RobotState {
 public:
-    void enter(Robot& robot) override;
-    void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
 };

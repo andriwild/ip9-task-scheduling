@@ -12,6 +12,7 @@
 #include "../util/types.h"
 #include "event.h"
 #include "robot.h"
+#include "../sim/scheduler.h"
 #include "robot_state.h"
 
 
@@ -27,6 +28,7 @@ class SimulationContext {
     std::vector<std::shared_ptr<IObserver>> m_observers;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
     std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
+    Scheduler& m_scheduler;
     rclcpp::Logger m_logger;
 
 public:
@@ -41,6 +43,7 @@ public:
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> plannerNode,
         std::map<std::string, std::vector<std::string>> employeeLocations,
+        Scheduler& scheduler,
         rclcpp::Logger logger
     );
 
@@ -62,10 +65,18 @@ public:
 
     void addPendingMission(std::shared_ptr<des::Appointment> appt) {
         m_pendingMissions.push(appt);
+        RCLCPP_DEBUG(m_logger, "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
     }
     
     bool hasPendingMission() const {
         return !m_pendingMissions.empty();
+    }
+
+    std::shared_ptr<des::Appointment> nextPendingMission() {
+        if (m_pendingMissions.empty()) {
+            return nullptr;
+        }
+        return m_pendingMissions.front();
     }
     
     std::shared_ptr<des::Appointment> popPendingMission() {
@@ -74,6 +85,7 @@ public:
         }
         auto appt = m_pendingMissions.front();
         m_pendingMissions.pop();
+        RCLCPP_DEBUG(m_logger, "Mission removed from pending list - %zu remaining", m_pendingMissions.size());
         return appt;
     }
 
@@ -120,6 +132,16 @@ public:
             obs->onRobotMoved(m_currentTime, location, distance);
         }
     }
+
+    bool isMissionFeasible(des::Appointment& appt, std::string startPos) {
+        int startTime = m_scheduler.calcStartTime(appt, startPos);
+        if (startTime + m_simConfig->timeBuffer >= getTime()) {
+            RCLCPP_DEBUG(m_logger, "Mission %u is feasable", appt.id);
+            return true;
+        }
+        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasable", appt.id);
+        return false;
+    };
 
     double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
     double getConversationProbability() const { return m_simConfig->conversationProbability; };

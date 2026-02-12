@@ -1,11 +1,11 @@
 #pragma once
+
 #include <fstream>
 #include <iostream>
+#include <rclcpp/rclcpp.hpp>
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
-
-#include <rclcpp/rclcpp.hpp>
 
 #include "../model/context.h"
 #include "accompany.h"
@@ -14,8 +14,8 @@
 #include "conversation.h"
 #include "mission_control.h"
 
-constexpr bool W_OUT_TREE = false;
-const std::string TREE_FILE = "behavior_tree.xml";
+constexpr bool W_OUT_TREE = true;
+const std::string TREE_FILE = "tree_nodes_model.xml";
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
     BT::BehaviorTreeFactory factory;
@@ -35,6 +35,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<AbortAccompany>("AbortAccompany");
 
     // idle
+    factory.registerNodeType<IsIdle>("IsIdle");
     factory.registerNodeType<Docking>("Docking");
     factory.registerNodeType<EnterIdle>("EnterIdle");
 
@@ -52,6 +53,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<IsRobotBusy>("IsRobotBusy");
     factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
+    factory.registerNodeType<MissionFeasablityCheck>("MissionFeasablityCheck");
 
     static const char * xml_text = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
@@ -72,12 +74,11 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
         <BehaviorTree ID="MissionControlRoutine">
              <Fallback>
                  <Sequence name="Seq_HandleMissions">
+                    <IsIdle/>
                     <HasPendingMission/>
                     <Fallback name="Fallback_MissionDecision">
                         <Sequence name="Seq_TryAccept">
-                            <Inverter>
-                                 <IsRobotBusy/>
-                            </Inverter>
+                            <MissionFeasablityCheck/>
                             <AcceptMissionAction/>
                         </Sequence>
                          <RejectMissionAction/> 
@@ -145,6 +146,10 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
 
         <BehaviorTree ID="IdleRoutine">
             <Sequence name="Seq_IdleMain">
+                <IsIdle/>
+                <Inverter>
+                    <HasPendingMission/>
+                </Inverter>
                 <Docking/>
                 <EnterIdle/>
             </Sequence>
@@ -155,16 +160,15 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
     tree->rootBlackboard()->set("ctx", ctx);
 
-    if(W_OUT_TREE) {
+    if (W_OUT_TREE) {
         std::string xml_models = BT::writeTreeNodesModelXML(factory);
+        std::string xml_full_tree = BT::WriteTreeToXML(*tree, true, true);
+    
         std::ofstream file(TREE_FILE);
-
         if (file.is_open()) {
-            file << xml_models;
+            file << xml_full_tree; 
             file.close();
-            std::cout << "BehaviorTree XML saved!" << std::endl;
-        } else {
-            std::cerr << "BehaviorTree could not be saved." << std::endl;
+            std::cout << "BehaviorTree and model written to file: " << TREE_FILE << std::endl;
         }
     }
 

@@ -20,9 +20,7 @@ public:
     
     BT::NodeStatus tick() override {
         auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (ctx->hasPendingMission()) {
-            return BT::NodeStatus::SUCCESS;
-        }
+        if (ctx->hasPendingMission()) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -93,3 +91,24 @@ public:
         return BT::NodeStatus::SUCCESS;
     }
 };
+
+class MissionFeasablityCheck : public BT::SyncActionNode {
+public:
+    MissionFeasablityCheck(const std::string& name, const BT::NodeConfig& config)
+        : BT::SyncActionNode(name, config) 
+    {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        
+        auto appointment = ctx->nextPendingMission();
+        if (ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation())){
+            return BT::NodeStatus::SUCCESS;
+        };
+        return BT::NodeStatus::FAILURE;
+        
+    }
+};
+

@@ -10,6 +10,7 @@ class Robot {
     std::string m_idleLocation = "IMVS_Dock";
     std::unique_ptr<RobotState> m_state;
     std::string m_currentLocation;
+    std::string m_targetLocation;
     rclcpp::Logger m_logger;
 
     double m_driveSpeed;
@@ -39,8 +40,12 @@ public:
     bool isBusy() const;
     void updateConfig(des::SimConfig& config);
 
-    std::string getLocation() const;
-    void setLocation(std::string location);
+
+    std::string getLocation() const { return m_currentLocation; };
+    void setLocation(std::string location) { m_currentLocation = location; };
+
+    std::string getTargetLocation() const { return m_targetLocation; };
+    void setTargetLocation(std::string location) { m_targetLocation = location; }
 
     void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() { return m_state.get(); }

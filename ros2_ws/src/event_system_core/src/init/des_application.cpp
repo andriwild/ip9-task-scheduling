@@ -44,10 +44,10 @@ void DesApplication::loadPointsOfInterest() {
 }
 
 void DesApplication::initROS() {
-    m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
-    m_controllerNode = std::make_shared<ControllerNode>();
+    m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
+    m_controllerNode   = std::make_shared<ControllerNode>();
     m_systemConfigNode = std::make_shared<ConfigNode>();
-    m_metricsNode = std::make_shared<MetricsNode>();
+    m_metricsNode      = std::make_shared<MetricsNode>();
 
     m_plannerNode->get_logger().set_level(LOG_LEVEL);
     rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);
@@ -96,7 +96,7 @@ void DesApplication::setupObservers(bool headless = true) {
 
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
-    m_ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
+    //m_ctx->addObserver(std::make_shared<TerminalView>(TerminalView()));
     if (!headless) {
         m_ctx->addObserver(std::make_shared<GazeboView>(GazeboView(m_locationMap)));
     }
@@ -105,7 +105,7 @@ void DesApplication::setupObservers(bool headless = true) {
 void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue");
 
-    auto missions = m_scheduler->simplePlan(m_appointments, config->cacheEnabled);
+    auto missions = m_scheduler->simplePlan(m_appointments, m_ctx->m_robot->getIdleLocation());
 
     int firstEventTime = missions.front()->time - ONE_HOUR;
     int lastEventTime = missions.back()->time + ONE_HOUR;
@@ -168,14 +168,16 @@ int DesApplication::run() {
         exit(EXIT_FAILURE);
     }
 
+    m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations, m_node->get_logger());
+
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_plannerNode,
         m_employeeLocations,
-        m_node->get_logger());
-
-    m_scheduler = std::make_unique<Scheduler>(m_ctx, m_employeeLocations, m_node->get_logger());
+        *m_scheduler.get(),
+        m_node->get_logger()
+    );
     setupObservers();
     setupQueue(m_config);
     m_ctx->resetContext(m_eventQueue.top()->time);

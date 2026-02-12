@@ -7,9 +7,11 @@ SimulationContext::SimulationContext(
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<PathPlannerNode> plannerNode,
     std::map<std::string, std::vector<std::string>> employeeLocations,
+    Scheduler& scheduler,
     rclcpp::Logger logger
 )
     : m_simConfig(simConfig)
+    , m_scheduler(scheduler)
     , m_logger(logger)
     , m_plannerNode(plannerNode)
     , m_queue(queue)

@@ -1,5 +1,5 @@
 {
-    "appointments_path": "appointments.json",
+    "appointments_path": "appts_collision.json",
     "battery_capacity": 44.0,
     "cacheEnabled": true,
     "charging_rate": 50.0,

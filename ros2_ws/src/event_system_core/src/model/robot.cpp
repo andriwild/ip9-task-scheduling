@@ -7,13 +7,6 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
     m_state->enter(*this);
 }
 
-std::string Robot::getLocation() const {
-    return m_currentLocation;
-};
-
-void Robot::setLocation(std::string location) {
-    m_currentLocation = location;
-};
 
 bool Robot::isBusy() const {
     return m_state->getType() == des::RobotStateType::SEARCHING
