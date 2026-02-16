@@ -8,33 +8,27 @@
 
 #include "../model/context.h"
 #include "../model/robot_state.h"
-#include "../model/event.h"
 
-class HasPendingMission : public BT::ConditionNode {
+class HasPendingMission final : public BT::ConditionNode {
 public:
-    HasPendingMission(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    HasPendingMission(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (ctx->hasPendingMission()) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
 };
 
-class IsRobotBusy : public BT::ConditionNode {
+class IsRobotBusy final : public BT::ConditionNode {
 public:
-    IsRobotBusy(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
-
+    IsRobotBusy(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (ctx->m_robot->isBusy()) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -42,26 +36,24 @@ public:
     }
 };
 
-class AcceptMissionAction : public BT::SyncActionNode {
+class AcceptMissionAction final : public BT::SyncActionNode {
 public:
-    AcceptMissionAction(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    AcceptMissionAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (!ctx->hasPendingMission()) {
              return BT::NodeStatus::FAILURE;
         }
 
-        auto appointment = ctx->popPendingMission();
+        const auto appointment = ctx->popPendingMission();
         ctx->setAppointment(appointment);
         ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);
         const std::string person = appointment->personName;
 
-        assert(ctx->m_employeeLocations.find(person) != ctx->m_employeeLocations.end());
+        assert(ctx->m_employeeLocations.contains(person));
         std::vector<std::string> locations = ctx->m_employeeLocations.at(person);
         assert(!locations.empty());
 
@@ -70,45 +62,40 @@ public:
     }
 };
 
-class RejectMissionAction : public BT::SyncActionNode {
+class RejectMissionAction final : public BT::SyncActionNode {
 public:
-    RejectMissionAction(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    RejectMissionAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         if (!ctx->hasPendingMission()) {
              return BT::NodeStatus::FAILURE;
         }
         
-        auto appointment = ctx->popPendingMission();
+        const auto appointment = ctx->popPendingMission();
         appointment->state = des::MissionState::FAILED;
         
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class MissionFeasablityCheck : public BT::SyncActionNode {
+class MissionFeasibilityCheck final : public BT::SyncActionNode {
 public:
-    MissionFeasablityCheck(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    MissionFeasibilityCheck(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         
-        auto appointment = ctx->nextPendingMission();
+        const auto appointment = ctx->nextPendingMission();
         if (ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation())){
             return BT::NodeStatus::SUCCESS;
-        };
+        }
         return BT::NodeStatus::FAILURE;
-        
     }
 };
 

@@ -13,7 +13,7 @@ class SimulationContext;
 class IEvent {
 public:
     int time;
-    IEvent(const int time) : time(time) {}
+    explicit IEvent(const int time) : time(time) {}
 
     virtual ~IEvent() = default;
 
@@ -32,7 +32,7 @@ public:
 };
 
 struct EventComparator {
-    bool operator()(const std::shared_ptr<IEvent>& a, const std::shared_ptr<IEvent>& b) {
+    bool operator()(const std::shared_ptr<IEvent>& a, const std::shared_ptr<IEvent>& b) const {
         if (!a || !b) {
             return false;
         }

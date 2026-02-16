@@ -18,14 +18,11 @@ class DBClient {
     const int m_port = 5432;
 
 public:
-    explicit DBClient(std::string user, std::string pw) : m_user(std::move(user)),
-                                                          m_pw(std::move(pw)) {
+    explicit DBClient(std::string user, std::string pw) : m_user(std::move(user)), m_pw(std::move(pw)) {
         init();
     }
 
-    ~DBClient() {
-        m_db.close();
-    }
+    ~DBClient() { m_db.close(); }
 
     void setCredentials(const std::string& user, const std::string& pw) {
         m_user = user;

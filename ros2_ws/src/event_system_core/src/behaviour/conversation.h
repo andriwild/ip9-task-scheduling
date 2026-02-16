@@ -4,23 +4,20 @@
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/action_node.h>
-#include <qstringalgorithms.h>
 #include <memory>
 
 #include "../model/context.h"
 #include "../model/robot_state.h"
 #include "../model/event.h"
 
-class IsConversating : public BT::ConditionNode {
+class IsConversating final : public BT::ConditionNode {
 public:
-    IsConversating(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    IsConversating(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (ctx->m_robot->getStateType() == des::RobotStateType::CONVERSATE) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -28,11 +25,9 @@ public:
     }
 };
 
-class ConversationFinished : public BT::ConditionNode {
+class ConversationFinished final : public BT::ConditionNode {
 public:
-    ConversationFinished(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    ConversationFinished(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
@@ -49,16 +44,14 @@ public:
 
 class WasConversationSuccessful : public BT::ConditionNode {
 public:
-    WasConversationSuccessful(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    WasConversationSuccessful(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto convResult = ctx->m_robot->getState()->getResult();
+        const auto convResult = ctx->m_robot->getState()->getResult();
         if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -66,33 +59,29 @@ public:
     }
 };
 
-class StartAccompanyAction: public BT::SyncActionNode {
+class StartAccompanyAction final : public BT::SyncActionNode {
 public:
-    StartAccompanyAction(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    StartAccompanyAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         ctx->m_queue.push(std::make_shared<StartAccompanyEvent>(ctx->getTime()));
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class IsFoundPersonConversation : public BT::ConditionNode {
+class IsFoundPersonConversation final : public BT::ConditionNode {
 public:
-    IsFoundPersonConversation(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    IsFoundPersonConversation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        auto currentState = ctx->m_robot->getState();
-        auto convState = dynamic_cast<ConversateState*>(currentState);
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto currentState = ctx->m_robot->getState();
+        const auto convState = dynamic_cast<ConversateState*>(currentState);
         
         if (convState && convState->conversationType == ConversateState::Type::FOUND_PERSON) {
             return BT::NodeStatus::SUCCESS;
@@ -101,18 +90,16 @@ public:
     }
 };
 
-class IsDropOffConversation : public BT::ConditionNode {
+class IsDropOffConversation final : public BT::ConditionNode {
 public:
-    IsDropOffConversation(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    IsDropOffConversation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        auto currentState = ctx->m_robot->getState();
-        auto convState = dynamic_cast<ConversateState*>(currentState);
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto currentState = ctx->m_robot->getState();
+        const auto convState = dynamic_cast<ConversateState*>(currentState);
 
         if (convState && convState->conversationType == ConversateState::Type::DROP_OFF) {
             return BT::NodeStatus::SUCCESS;
@@ -121,18 +108,16 @@ public:
     }
 };
 
-class CompleteMissionAction : public BT::SyncActionNode {
+class CompleteMissionAction final : public BT::SyncActionNode {
 public:
-    CompleteMissionAction(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    CompleteMissionAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto convResult = ctx->m_robot->getState()->getResult();
+        const auto convResult = ctx->m_robot->getState()->getResult();
         if (convResult == des::Result::SUCCESS) {
             ctx->updateAppointmentState(des::MissionState::COMPLETED);
         } else {

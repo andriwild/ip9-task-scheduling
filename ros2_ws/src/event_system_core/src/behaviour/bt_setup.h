@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <rclcpp/rclcpp.hpp>
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
@@ -31,7 +30,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     // accompany
     factory.registerNodeType<IsAccompany>("IsAccompany");
     factory.registerNodeType<ArrivedWithPerson>("ArrivedWithPerson");
-    factory.registerNodeType<StartDropoffConversation>("StartDropoffConversation");
+    factory.registerNodeType<StartDropOffConversation>("StartDropOffConversation");
     factory.registerNodeType<AbortAccompany>("AbortAccompany");
 
     // idle
@@ -53,7 +52,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<IsRobotBusy>("IsRobotBusy");
     factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
-    factory.registerNodeType<MissionFeasablityCheck>("MissionFeasablityCheck");
+    factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
 
     static const char * xml_text = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
@@ -78,7 +77,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                     <HasPendingMission/>
                     <Fallback name="Fallback_MissionDecision">
                         <Sequence name="Seq_TryAccept">
-                            <MissionFeasablityCheck/>
+                            <MissionFeasibilityCheck/>
                             <AcceptMissionAction/>
                         </Sequence>
                          <RejectMissionAction/> 
@@ -135,9 +134,9 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
             <Sequence name="Seq_AccompanyMain">
                 <IsAccompany/>
                 <Fallback name="Fallback_AccompanyActions">
-                    <Sequence name="Seq_ArrivalAndDropoff">
+                    <Sequence name="Seq_ArrivalAndDropOff">
                         <ArrivedWithPerson/>
-                        <StartDropoffConversation/>
+                        <StartDropOffConversation/>
                     </Sequence>
                     <AbortAccompany/>
                 </Fallback>
@@ -163,7 +162,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     if (W_OUT_TREE) {
         std::string xml_models = BT::writeTreeNodesModelXML(factory);
         std::string xml_full_tree = BT::WriteTreeToXML(*tree, true, true);
-    
+
         std::ofstream file(TREE_FILE);
         if (file.is_open()) {
             file << xml_full_tree; 

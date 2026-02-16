@@ -51,8 +51,8 @@ public:
         std::map<std::string, std::vector<std::string>> employees;
         try {
             for (const auto& item : json.value()["employees"]) {
-                std::string name = item.at("name").get<std::string>();
-                std::vector<std::string> locations = item.at("locations").get<std::vector<std::string>>();
+                auto name = item.at("name").get<std::string>();
+                auto locations = item.at("locations").get<std::vector<std::string>>();
                 employees[name] = locations;
             }
         } catch (const nlohmann::json::type_error& e) {
@@ -63,7 +63,7 @@ public:
     }
 
     static std::optional<des::SimConfig> loadSimConfig(std::string filePath) {
-        auto json = getJson(filePath);
+        const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
         }
@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    static std::optional<nlohmann::json> getJson(std::string& filePath) {
+    static std::optional<nlohmann::json> getJson(const std::string& filePath) {
         // open file
         std::ifstream file(filePath);
         if (!file.is_open()) {

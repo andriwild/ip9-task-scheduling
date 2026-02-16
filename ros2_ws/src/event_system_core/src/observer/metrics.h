@@ -5,7 +5,7 @@
 #include "../observer/observer.h"
 #include "event_system_msgs/msg/metrics_report.hpp"
 
-class MetricsNode : public rclcpp::Node, public IObserver {
+class MetricsNode final : public rclcpp::Node, public IObserver {
     int searchTime            = 0;
     int accompanyTime         = 0;
     int idleTime              = 0;
@@ -55,7 +55,7 @@ public:
     }
 
 
-    void onEvent(int time, des::EventType type, const std::string& message, bool isDriving) {
+    void onEvent(const int time, const des::EventType type, const std::string& message, const bool isDriving) override {
         if(isDriving && !wasDriving) {
             wasDriving = true;
             lastTimeMoved = time;
@@ -69,8 +69,8 @@ public:
         }
     };
 
-    void onStateChanged(int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
-        int passedTime = time - lastTimeStateChanged;
+    void onStateChanged(const int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
+        const int passedTime = time - lastTimeStateChanged;
 
         switch (lastState) {
             case des::RobotStateType::CHARGING:
@@ -123,7 +123,7 @@ public:
     }
 
 private:
-    void publishReport() {
+    void publishReport() const {
         auto msg = event_system_msgs::msg::MetricsReport();
 
         msg.idle_time          = idleTime;
@@ -140,12 +140,12 @@ private:
         msg.avg_early_arrival = (nMissionCompleted > 0) ? (float)accMissionToEarlyTime / nMissionCompleted : 0.0f;
         msg.avg_lateness = (nMissionCompletedLate > 0) ? (float)accMissionToLateTime / nMissionCompletedLate : 0.0f;
 
-        msg.total_distance = (float)movedDistance;
+        msg.total_distance = static_cast<float>(movedDistance);
 
-        int totalDriveTime = accompanyTime + searchTime + moveTime;
-        double totalTime = static_cast<double>(chargingTime + idleTime + totalDriveTime);
+        const int totalDriveTime = accompanyTime + searchTime + moveTime;
+        const auto totalTime = static_cast<double>(chargingTime + idleTime + totalDriveTime);
         if (totalTime > 0) {
-            msg.utilization = (float)((searchTime + accompanyTime) / totalTime * 100.0);
+            msg.utilization = static_cast<float>((searchTime + accompanyTime) / totalTime * 100.0);
         } else {
             msg.utilization = 0.0f;
         }

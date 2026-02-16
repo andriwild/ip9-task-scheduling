@@ -11,11 +11,10 @@
 #include "../observer/ros.h"
 #include "../sim/ros/config.h"
 #include "../sim/ros/controller.h"
-#include "../sim/ros/marker.h"
 #include "../sim/ros/path_node.h"
 #include "../sim/scheduler.h"
 
-const rclcpp::Logger::Level LOG_LEVEL = rclcpp::Logger::Level::Debug;
+constexpr rclcpp::Logger::Level LOG_LEVEL = rclcpp::Logger::Level::Debug;
 
 class DesApplication {
 public:
@@ -41,20 +40,18 @@ public:
         }
     }
 
-    int run();
     void loadAppointments(std::string path);
     void loadPointsOfInterest();
     void loadEmployeeLocations();
     void initROS();
     void reset();
-    void setupSimulation();
     void setupObservers(bool headless, bool verbose);
     void updateConfig(std::shared_ptr<des::SimConfig> config);
-    void setupQueue(std::shared_ptr<des::SimConfig> config);
+    void setupQueue(const std::shared_ptr<des::SimConfig> &config);
     void setupApplication();
-    int loadAppState();
+    int loadAppState() const;
     void updateConfig();
-    void enterPause();
+    void enterPause() const;
 
 
     EventQueue m_eventQueue;

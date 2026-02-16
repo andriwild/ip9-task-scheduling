@@ -10,16 +10,16 @@
 #include "../model/robot_state.h"
 
 
-class IsAccompany : public BT::ConditionNode {
+class IsAccompany final : public BT::ConditionNode {
 public:
-    IsAccompany(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
+    IsAccompany(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        bool isArrived = ctx->m_robot->getLocation() == ctx->m_robot->getTargetLocation();
+        const bool isArrived = ctx->m_robot->getLocation() == ctx->m_robot->getTargetLocation();
         if (ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY && isArrived) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -27,32 +27,28 @@ public:
     }
 };
  
-class ArrivedWithPerson: public BT::ConditionNode {
+class ArrivedWithPerson final : public BT::ConditionNode {
 public:
-    ArrivedWithPerson(const std::string& name, const BT::NodeConfig& config):
-    BT::ConditionNode(name, config) {}
+    ArrivedWithPerson(const std::string& name, const BT::NodeConfig& config): ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        bool successful = true;
-        return successful ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        return ctx->m_robot->getState()->getResult() == des::Result::SUCCESS
+                   ? BT::NodeStatus::SUCCESS
+                   : BT::NodeStatus::FAILURE;
     }
 };
 
-class StartDropoffConversation: public BT::SyncActionNode {
+class StartDropOffConversation final : public BT::SyncActionNode {
 public:
-    StartDropoffConversation(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
-    {}
+    StartDropOffConversation(const std::string& name, const BT::NodeConfig& config): SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         ctx->m_queue.push(std::make_shared<StartDropOffConversationeEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>());
@@ -60,18 +56,14 @@ public:
     }
 };
 
-class AbortAccompany: public BT::SyncActionNode {
+class AbortAccompany final : public BT::SyncActionNode {
 public:
-    AbortAccompany(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
-    {}
+    AbortAccompany(const std::string& name, const BT::NodeConfig& config): SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         ctx->updateAppointmentState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());

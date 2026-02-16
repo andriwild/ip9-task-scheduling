@@ -14,9 +14,9 @@ bool Robot::isBusy() const {
         || m_state->getType() == des::RobotStateType::CONVERSATE;
 };
 
-void Robot::updateConfig(des::SimConfig& config) {
+void Robot::updateConfig(const des::SimConfig& config) {
     setDriveSpeed(config.robotSpeed);
-    setAccompanytSpeed(config.robotAccompanySpeed);
+    setAccompanySpeed(config.robotAccompanySpeed);
     m_bat->updateConfig(
         config.batteryCapacity,
         config.initialBatteryCapacity,

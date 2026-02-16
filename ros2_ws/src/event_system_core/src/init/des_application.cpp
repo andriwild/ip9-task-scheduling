@@ -30,9 +30,9 @@ void DesApplication::loadPointsOfInterest() {
     }
     RCLCPP_INFO(m_node->get_logger(), "Successful connected to DB");
 
-    auto pois = db.waypoints();
+    const auto pois = db.waypoints();
     if (!pois.has_value()) {
-        throw std::runtime_error("Could not laod points of interest from file");
+        throw std::runtime_error("Could not load points of interest from file");
     }
 
     for (auto poi : pois.value()) {
@@ -74,7 +74,7 @@ void DesApplication::loadAppointments(std::string path) {
     RCLCPP_INFO(m_node->get_logger(), "Load Appointments: %s", m_config->appointmentsPath.c_str());
     auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path);
     if (!appts.has_value()) {
-        throw std::runtime_error("Could not laod appointments from file");
+        throw std::runtime_error("Could not load appointments from file");
     }
     m_appointments = appts.value();
     RCLCPP_INFO(m_node->get_logger(), "Successful loaded %zu appointments", m_appointments.size());
@@ -84,13 +84,13 @@ void DesApplication::loadEmployeeLocations() {
     RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations");
     auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
     if (!locations.has_value()) {
-        throw std::runtime_error("Could not laod appointments from file");
+        throw std::runtime_error("Could not load appointments from file");
     }
     m_employeeLocations = locations.value();
     RCLCPP_INFO(m_node->get_logger(), "Successful loaded employee locations (%zu)", m_employeeLocations.size());
 }
 
-void DesApplication::setupObservers(bool headless = true, bool verbose = false) {
+void DesApplication::setupObservers(const bool headless = true, const bool verbose = false) {
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
 
     m_ctx->addObserver(m_metricsNode);
@@ -99,7 +99,7 @@ void DesApplication::setupObservers(bool headless = true, bool verbose = false) 
     if (!headless) { m_ctx->addObserver(std::make_shared<GazeboView>(GazeboView(m_locationMap))); }
 }
 
-void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
+void DesApplication::setupQueue(const std::shared_ptr<des::SimConfig> &config) {
     RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue");
 
     auto missions = m_scheduler->simplePlan(m_appointments, m_ctx->m_robot->getIdleLocation());
@@ -113,7 +113,7 @@ void DesApplication::setupQueue(std::shared_ptr<des::SimConfig> config) {
     m_eventQueue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
 
     for (const auto& mission : missions) {
-        double buffer = config->timeBuffer;
+        const double buffer = config->timeBuffer;
         mission->time = mission->time - buffer;
         m_eventQueue.push(mission);
         if (m_rosObserver) {
@@ -186,11 +186,11 @@ void DesApplication::updateConfig() {
     }
 }
 
-void DesApplication::enterPause() {
+void DesApplication::enterPause() const {
     m_controllerNode->currentState.store(SystemState::Request::PAUSE);
     RCLCPP_DEBUG(m_node->get_logger(), "Simulation loop paused");
 }
 
-int DesApplication::loadAppState() {
+int DesApplication::loadAppState() const {
     return m_controllerNode->currentState.load();
 }

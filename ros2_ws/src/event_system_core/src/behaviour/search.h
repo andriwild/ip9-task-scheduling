@@ -10,16 +10,14 @@
 #include "../model/robot_state.h"
 #include "../util/rnd.h"
 
-class IsSearching : public BT::ConditionNode {
+class IsSearching final : public BT::ConditionNode {
 public:
-    IsSearching(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    IsSearching(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -27,18 +25,16 @@ public:
     }
 };
 
-class ScanLocation : public BT::SyncActionNode {
+class ScanLocation final : public BT::SyncActionNode {
 public:
-    ScanLocation(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    ScanLocation(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        bool personFound = rnd::uni() < ctx->getPersonFindProbability();
+        const bool personFound = rnd::uni() < ctx->getPersonFindProbability();
         if (personFound){
             return BT::NodeStatus::SUCCESS;
         }
@@ -62,19 +58,17 @@ public:
 };
 
 
-class HasNextLocation: public BT::ConditionNode {
+class HasNextLocation final : public BT::ConditionNode {
 public:
-    HasNextLocation(const std::string& name, const BT::NodeConfig& config)
-        : BT::ConditionNode(name, config) 
-    {}
+    HasNextLocation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto currentState = ctx->m_robot->getState();
-        auto ss = dynamic_cast<SearchState*>(currentState);
+        const auto currentState = ctx->m_robot->getState();
+        const auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
             ctx->updateAppointmentState(des::MissionState::FAILED);
@@ -84,20 +78,16 @@ public:
     }
 };
 
-class MoveToNextLocation: public BT::SyncActionNode {
+class MoveToNextLocation final : public BT::SyncActionNode {
 public:
-    MoveToNextLocation(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config) 
-    {}
+    MoveToNextLocation(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
-        auto locations = searchState->locations;
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
+        const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
         ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), nextLocation));
@@ -105,18 +95,14 @@ public:
     }
 };
 
-class AbortSearch: public BT::SyncActionNode {
+class AbortSearch final: public BT::SyncActionNode {
 public:
-    AbortSearch(const std::string& name, const BT::NodeConfig& config):
-        BT::SyncActionNode(name, config) 
-    {}
+    AbortSearch(const std::string& name, const BT::NodeConfig& config): SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         ctx->m_queue.push(std::make_shared<AbortSearchEvent>(ctx->getTime()));
         return BT::NodeStatus::SUCCESS;
     }

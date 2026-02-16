@@ -10,14 +10,14 @@
 #include "../model/context.h"
 #include "../model/robot_state.h"
 
-class IsIdle: public BT::ConditionNode {
+class IsIdle final : public BT::ConditionNode {
 public:
     IsIdle(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         if (ctx->m_robot->getStateType() == des::RobotStateType::IDLE) {
             return BT::NodeStatus::SUCCESS;
@@ -27,19 +27,14 @@ public:
 };
 
 
-
-class Docking : public BT::SyncActionNode {
+class Docking final : public BT::SyncActionNode {
 public:
-    Docking(const std::string& name, const BT::NodeConfig& config)
-        : BT::SyncActionNode(name, config)
-    {}
+    Docking(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
 
-    static BT::PortsList providedPorts() {
-        return { BT::InputPort<int>("ctx") };
-    }
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
@@ -49,14 +44,14 @@ public:
     }
 };
 
-class EnterIdle : public BT::ConditionNode {
+class EnterIdle final : public BT::ConditionNode {
 public:
-    EnterIdle(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) { }
+    EnterIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) { }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
         ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;

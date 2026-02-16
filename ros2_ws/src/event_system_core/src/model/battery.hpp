@@ -1,5 +1,6 @@
 #include "../util/types.h"
 #include <rclcpp/rclcpp.hpp>
+#include <utility>
 
 class Battery {
     int m_lastBalanceUpdate = 0;
@@ -16,12 +17,12 @@ public:
         const double capacity,
         const double initialCapacity,
         const double lowBatteryThreshold,
-        rclcpp::Logger logger
+        rclcpp::Logger  logger
     )
         : m_designCapactiy(capacity)
         , m_initialCapacity(initialCapacity)
         , m_lowBatteryThreshold(lowBatteryThreshold)
-        , m_logger(logger)
+        , m_logger(std::move(logger))
     {
         m_currentCapacity = initialCapacity;
     }
@@ -33,10 +34,10 @@ public:
         RCLCPP_INFO(rclcpp::get_logger("Battery"), "Config updated");
     }
 
-    void updateBalance(int time, double energyConsumption) {
+    void updateBalance(const int time, const double energyConsumption) {
         // energy in Watt, time in seconds (+ discharge, - charge)
         // Ah = (W * s) / (3600 * V)
-        int timeDelta = time - m_lastBalanceUpdate;
+        const int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
         m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
 
@@ -56,7 +57,7 @@ public:
         RCLCPP_INFO(rclcpp::get_logger("Battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
     }
 
-    des::BatteryProps getStats() const { 
+    des::BatteryProps getStats() const {
         return { m_currentCapacity / m_designCapactiy, m_designCapactiy, m_lowBatteryThreshold };
     }
 

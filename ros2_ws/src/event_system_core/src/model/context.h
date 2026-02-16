@@ -23,7 +23,7 @@ struct Journey {
 
 
 class SimulationContext {
-    int m_currentTime;
+    int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::vector<std::shared_ptr<IObserver>> m_observers;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
@@ -44,10 +44,10 @@ public:
         std::shared_ptr<PathPlannerNode> plannerNode,
         std::map<std::string, std::vector<std::string>> employeeLocations,
         Scheduler& scheduler,
-        rclcpp::Logger logger
+        const rclcpp::Logger& logger
     );
 
-    Journey scheduleArrival(const std::string target);
+    Journey scheduleArrival(const std::string& target) const;
     void changeRobotState(std::unique_ptr<RobotState> newState);
     double getRndConversationTime();
     void setConfig(std::shared_ptr<des::SimConfig> newConfig);
@@ -59,11 +59,11 @@ public:
 
     const std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; };
 
-    void setAppointment(std::shared_ptr<des::Appointment> appt) {
+    void setAppointment(const std::shared_ptr<des::Appointment> &appt) {
         m_currentAppointment = appt;
     }
 
-    void addPendingMission(std::shared_ptr<des::Appointment> appt) {
+    void addPendingMission(const std::shared_ptr<des::Appointment>& appt) {
         m_pendingMissions.push(appt);
         RCLCPP_DEBUG(m_logger, "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
     }
@@ -93,53 +93,53 @@ public:
         return m_currentAppointment;
     }
 
-    void setTime(int newTime) {
+    void setTime(const int newTime) {
         assert(newTime >= m_currentTime);
         m_currentTime = newTime;
     }
 
     // Observer functions
-    void addObserver(std::shared_ptr<IObserver> observer) {
+    void addObserver(const std::shared_ptr<IObserver>& observer) {
         RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "Observer added: %s", observer->getName().c_str());
         m_observers.emplace_back(observer);
     }
 
-    void notifyMissionComplete(des::MissionState& state, int timeDiff) {
-        for (auto obs : m_observers) {
+    void notifyMissionComplete(des::MissionState& state, int timeDiff) const {
+        for (const auto& obs : m_observers) {
             obs->onMissionComplete(m_currentTime, state, timeDiff);
         }
     }
 
-    void notifyRobotStateChanged(des::RobotStateType newState) {
-        for (auto obs : m_observers) {
+    void notifyRobotStateChanged(const des::RobotStateType newState) const {
+        for (const auto& obs : m_observers) {
             obs->onStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
         }
     }
 
-    void notifyEvent(IEvent& event) {
-        for (auto obs : m_observers) {
+    void notifyEvent(const IEvent& event) const {
+        for (const auto& obs : m_observers) {
             obs->onEvent(event.time, event.getType(), event.getName(), m_robot->isDriving());
         }
     }
 
-    void robotMoved(std::string location, double distance = 0) {
+    void robotMoved(const std::string& location, double distance = 0) const {
         m_robot->setLocation(location);
         notifyMoved(location, distance);
     }
 
-    void notifyMoved(std::string location, double distance) {
-        for (auto obs : m_observers) {
+    void notifyMoved(const std::string& location, const double distance) const {
+        for (const auto& obs : m_observers) {
             obs->onRobotMoved(m_currentTime, location, distance);
         }
     }
 
     bool isMissionFeasible(des::Appointment& appt, std::string startPos) {
-        int startTime = m_scheduler.calcStartTime(appt, startPos);
+        const int startTime = m_scheduler.calcStartTime(appt, startPos);
         if (startTime + m_simConfig->timeBuffer >= getTime()) {
-            RCLCPP_DEBUG(m_logger, "Mission %u is feasable", appt.id);
+            RCLCPP_DEBUG(m_logger, "Mission %u is feasible", appt.id);
             return true;
         }
-        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasable", appt.id);
+        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasible", appt.id);
         return false;
     };
 
@@ -147,5 +147,5 @@ public:
     double getConversationProbability() const { return m_simConfig->conversationProbability; };
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
     double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
-    double getdriveTimeVariance() const { return m_simConfig->driveTimeStd; };
+    double getDriveTimeVariance() const { return m_simConfig->driveTimeStd; };
 };

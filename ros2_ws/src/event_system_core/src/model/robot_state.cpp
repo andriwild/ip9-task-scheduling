@@ -5,10 +5,18 @@
 #include "context.h"
 #include "robot.h"
 
+void IdleState::enter(Robot& robot) {
+    RobotState::enter(robot);
+}
+void IdleState::exit(Robot& robot) {
+    RobotState::exit(robot);
+}
+
 des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
 double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
+
     return ctx.getConfig()->energyConsumptionBase;
 };
 

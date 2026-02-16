@@ -1,4 +1,6 @@
 #include "context.h"
+
+#include <utility>
 #include "../util/rnd.h"
 #include "event.h"
 
@@ -8,29 +10,29 @@ SimulationContext::SimulationContext(
     std::shared_ptr<PathPlannerNode> plannerNode,
     std::map<std::string, std::vector<std::string>> employeeLocations,
     Scheduler& scheduler,
-    rclcpp::Logger logger
+    const rclcpp::Logger& logger
 )
-    : m_simConfig(simConfig)
+    : m_simConfig(std::move(simConfig))
     , m_scheduler(scheduler)
     , m_logger(logger)
-    , m_plannerNode(plannerNode)
+    , m_plannerNode(std::move(plannerNode))
     , m_queue(queue)
-    , m_employeeLocations(employeeLocations)
+    , m_employeeLocations(std::move(employeeLocations))
 {
     m_robot = std::make_unique<Robot>(m_simConfig, logger);
     RCLCPP_INFO(m_logger, "Simulation Context created!");
 }
 
-Journey SimulationContext::scheduleArrival(const std::string target) {
-    std::optional<double> distance = this->m_plannerNode->calcDistance(
+Journey SimulationContext::scheduleArrival(const std::string& target) const {
+    const std::optional<double> distance = this->m_plannerNode->calcDistance(
         this->m_robot->getLocation(), 
         target,
         m_simConfig->cacheEnabled
     );
     assert(distance.has_value());
 
-    double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
-    double noiseFactor = rnd::getNormalDist(1.0, 0.1);
+    const double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
+    const double noiseFactor = rnd::getNormalDist(1.0, 0.1);
     return { travelTime * noiseFactor, distance.value() };
 }
 
@@ -70,3 +72,6 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) {
     m_robot->changeState(std::move(newState));
     notifyRobotStateChanged(m_robot->getState()->getType());
 }
+
+
+

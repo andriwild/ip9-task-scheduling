@@ -1,7 +1,6 @@
 #pragma once
 
 #include <random>
-#include <iostream>
 
 inline std::mt19937 rng(42);
 

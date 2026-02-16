@@ -17,14 +17,14 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 }
 
 void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
+    const auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
     ctx.m_robot->getState()->setResult(result);
     ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 
 void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
+    const auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
     ctx.m_robot->getState()->setResult(result);
     ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
