@@ -7,9 +7,13 @@
 
 void IdleState::enter(Robot& robot) {
     RobotState::enter(robot);
+    if (robot.getLocation() == robot.getIdleLocation()) {
+        robot.setCharging(true);
+    }
 }
 void IdleState::exit(Robot& robot) {
     RobotState::exit(robot);
+    robot.setCharging(false);
 }
 
 des::RobotStateType IdleState::getType() const {

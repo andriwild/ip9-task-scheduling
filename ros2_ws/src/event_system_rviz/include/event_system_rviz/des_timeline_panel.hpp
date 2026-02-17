@@ -27,7 +27,7 @@ private:
     void onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg);
     void onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg);
     void onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg);
-    void onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg);
+    void onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) const;
 
     Timeline* m_timeline;
     rclcpp::Node::SharedPtr m_node;

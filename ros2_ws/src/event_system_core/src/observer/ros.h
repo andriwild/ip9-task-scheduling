@@ -23,12 +23,13 @@ public:
         return "ROS";
     }
 
-    void onEvent(const int time, des::EventType type, const std::string& message, bool isDriving) override {
+    void onEvent(const int time, des::EventType type, const std::string& message, const bool isDriving, const bool isCharging) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
         msg.label = message;
         msg.is_driving = isDriving;
+        msg.is_charging = isCharging;
         m_pubEvent->publish(msg);
     };
 

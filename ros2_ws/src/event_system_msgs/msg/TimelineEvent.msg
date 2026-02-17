@@ -12,4 +12,5 @@ uint8 START_DRIVE = 8
 uint8 type
 
 bool is_driving
+bool is_charging
 string label

@@ -21,7 +21,6 @@ struct Journey {
     double distance;
 };
 
-
 class SimulationContext {
     int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;
@@ -114,7 +113,7 @@ public:
 
     void notifyEvent(const IEvent& event) const {
         for (const auto& obs : m_observers) {
-            obs->onEvent(event.time, event.getType(), event.getName(), m_robot->isDriving());
+            obs->onEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
         }
     }
 

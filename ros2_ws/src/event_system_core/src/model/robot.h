@@ -17,7 +17,8 @@ class Robot {
     double m_accompanySpeed;
     double m_currentSpeed = 0;
 
-    bool m_isDriving = false;
+    bool m_isDriving  = false;
+    bool m_isCharging = false;
 
 public:
     std::unique_ptr<Battery> m_bat;
@@ -26,7 +27,7 @@ public:
         : m_state(std::make_unique<IdleState>())
         , m_logger(logger)
     {
-        m_driveSpeed = config->robotSpeed;
+        m_driveSpeed     = config->robotSpeed;
         m_accompanySpeed = config->robotAccompanySpeed;
 
         m_bat = std::make_unique<Battery>(
@@ -41,9 +42,9 @@ public:
     void updateConfig(const des::SimConfig& config);
 
     std::string getLocation() const { return m_currentLocation; };
-    void setLocation(const std::string &location) { m_currentLocation = location; };
+    void setLocation(const std::string &location) { m_currentLocation = location; }
 
-    std::string getTargetLocation() const { return m_targetLocation; };
+    std::string getTargetLocation() const { return m_targetLocation; }
     void setTargetLocation(const std::string &location) { m_targetLocation = location; }
 
     void changeState(std::unique_ptr<RobotState> newState);
@@ -51,6 +52,9 @@ public:
 
     bool isDriving() const { return m_isDriving; }
     void setDriving(const bool isDriving) { m_isDriving = isDriving; }
+
+    bool isCharging() const { return m_isCharging; }
+    void setCharging(const bool isCharging) { m_isCharging= isCharging; }
 
     des::RobotStateType getStateType() const { return m_state->getType(); }
 
@@ -64,7 +68,7 @@ public:
     void setDriveSpeed(const double speed) { m_driveSpeed = speed; }
 
     std::string getIdleLocation() const { return m_dockLocation; }
-    void setIdleLocation(const std::string& location) { m_dockLocation = location; }
+    void setIdleLocation(const std::string &location) { m_dockLocation = location; }
 
     rclcpp::Logger getLogger() const { return m_logger; }
 };

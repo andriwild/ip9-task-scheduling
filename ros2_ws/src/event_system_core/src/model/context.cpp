@@ -58,7 +58,7 @@ double SimulationContext::getRndConversationTime() const {
         getDefaultConversationTime(),
         getConversationDurationStd()
     );
-};
+}
 
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
@@ -72,6 +72,3 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
     m_robot->changeState(std::move(newState));
     notifyRobotStateChanged(m_robot->getState()->getType());
 }
-
-
-

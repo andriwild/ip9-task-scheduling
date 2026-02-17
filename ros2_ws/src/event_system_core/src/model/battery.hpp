@@ -1,6 +1,5 @@
 #include "../util/types.h"
 #include <rclcpp/rclcpp.hpp>
-#include <utility>
 
 class Battery {
     int m_lastBalanceUpdate = 0;
@@ -17,12 +16,12 @@ public:
         const double capacity,
         const double initialCapacity,
         const double lowBatteryThreshold,
-        rclcpp::Logger  logger
+        const rclcpp::Logger &logger
     )
         : m_designCapacity(capacity)
         , m_initialCapacity(initialCapacity)
         , m_lowBatteryThreshold(lowBatteryThreshold)
-        , m_logger(std::move(logger))
+        , m_logger(logger)
     {
         m_currentCapacity = initialCapacity;
     }
@@ -40,6 +39,7 @@ public:
         const int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
         m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
+        std::cout << "Battery update: " <<  energyConsumption << std::endl;
 
         if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
             RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapacity);

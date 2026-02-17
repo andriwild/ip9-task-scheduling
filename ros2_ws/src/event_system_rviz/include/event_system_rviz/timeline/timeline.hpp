@@ -104,9 +104,9 @@ public slots:
 
     void handleReset() const { clear(); }
 
-    void handleEvent(const int time, const VisualEvent &ve, const bool isDriving) const {
+    void handleEvent(const int time, const VisualEvent &ve, const bool isDriving, const bool isCharging) const {
         m_markerTrack->handleEvent(time, ve);
-        m_driveTrack->handleStateChange(time, isDriving);
+        m_driveTrack->handleStateChange(time, isDriving, isCharging);
         updateScene(); // Events need scene update to draw items
     }
 

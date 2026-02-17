@@ -10,7 +10,7 @@ class TerminalView final : public IObserver {
 public:
     std::string getName() override { return "Terminal"; }
 
-    void onEvent(const int time, des::EventType /*type*/, const std::string& message, const bool /*isDriving*/) override {
+    void onEvent(const int time, des::EventType /*type*/, const std::string& message, const bool /*isDriving*/, const bool /*isCharging*/) override {
         RCLCPP_INFO(rclcpp::get_logger("TerminalView"), "[%s] %s", des::toHumanReadableTime(time).c_str(), message.c_str());
     }
 

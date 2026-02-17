@@ -78,8 +78,13 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
     m_timeline->handleReset();
 }
 
-void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg){
-    m_timeline->handleEvent( msg->time, {QString::fromStdString(msg->label), des::EventType(msg->type)}, msg->is_driving);
+void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) const {
+    m_timeline->handleEvent(
+        msg->time,
+        {QString::fromStdString(msg->label), des::EventType(msg->type)},
+        msg->is_driving,
+        msg->is_charging
+    );
 }
 
 }  // namespace des_timeline_panel
