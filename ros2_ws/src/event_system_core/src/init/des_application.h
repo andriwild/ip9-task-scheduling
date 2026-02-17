@@ -40,7 +40,7 @@ public:
         }
     }
 
-    void loadAppointments(std::string path);
+    void loadAppointments(const std::string& path);
     void loadPointsOfInterest();
     void loadEmployeeLocations();
     void initROS();

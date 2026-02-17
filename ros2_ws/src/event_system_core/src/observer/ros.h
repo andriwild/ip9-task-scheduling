@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <utility>
 
 #include "observer.h"
 
@@ -9,9 +10,9 @@
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
 
-class RosObserver : public IObserver {
+class RosObserver final : public IObserver {
 public:
-    explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(node) {
+    explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(std::move(node)) {
         m_pubStateChange = m_node->create_publisher<event_system_msgs::msg::TimelineStateChange>("/timeline/state_change", rclcpp::QoS(500));
         m_pubReset       = m_node->create_publisher<event_system_msgs::msg::TimelineReset>("/timeline/reset"             , rclcpp::QoS(10));
         m_pubMeeting     = m_node->create_publisher<event_system_msgs::msg::TimelineMeeting>("/timeline/meeting"         , rclcpp::QoS(100));
@@ -22,7 +23,7 @@ public:
         return "ROS";
     }
 
-    void onEvent(int time, des::EventType type, const std::string& message, bool isDriving) override { 
+    void onEvent(const int time, des::EventType type, const std::string& message, bool isDriving) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
@@ -31,7 +32,7 @@ public:
         m_pubEvent->publish(msg);
     };
 
-    void onStateChanged(int time, const des::RobotStateType& type,  des::BatteryProps batStats) override {
+    void onStateChanged(const int time, const des::RobotStateType& type, const des::BatteryProps batStats) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
         msg.time          = time;
         msg.state         = static_cast<int>(type);
@@ -41,12 +42,12 @@ public:
         m_pubStateChange->publish(msg);
     }
 
-    void publishReset() {
-        auto msg = event_system_msgs::msg::TimelineReset();
+    void publishReset() const {
+        const auto msg = event_system_msgs::msg::TimelineReset();
         m_pubReset->publish(msg);
     }
 
-    void publishMeeting(std::shared_ptr<des::Appointment> appt, int startTime) {
+    void publishMeeting(const std::shared_ptr<des::Appointment>& appt, const int startTime) {
         auto msg = event_system_msgs::msg::TimelineMeeting();
         msg.start_time       = startTime;
         msg.id               = appt->id;

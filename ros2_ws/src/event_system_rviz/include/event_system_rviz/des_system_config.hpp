@@ -17,12 +17,12 @@
 using ServiceResponseFuture = rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedFuture;
 namespace des_system_config {
 
-class DesSystemConfig : public rviz_common::Panel {
+class DesSystemConfig final : public rviz_common::Panel {
     Q_OBJECT
 
 public:
-    explicit DesSystemConfig(QWidget * parent = 0);
-    ~DesSystemConfig() = default;
+    explicit DesSystemConfig(QWidget * parent = nullptr);
+    ~DesSystemConfig() override = default;
     void onInitialize() override;
 
 protected:

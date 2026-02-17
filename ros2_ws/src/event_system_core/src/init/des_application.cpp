@@ -70,9 +70,9 @@ void DesApplication::initROS() {
     RCLCPP_INFO(m_node->get_logger(), "Launched all ROS Nodes");
 }
 
-void DesApplication::loadAppointments(std::string path) {
+void DesApplication::loadAppointments(const std::string& path) {
     RCLCPP_INFO(m_node->get_logger(), "Load Appointments: %s", m_config->appointmentsPath.c_str());
-    auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path);
+    const auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path);
     if (!appts.has_value()) {
         throw std::runtime_error("Could not load appointments from file");
     }
@@ -82,7 +82,7 @@ void DesApplication::loadAppointments(std::string path) {
 
 void DesApplication::loadEmployeeLocations() {
     RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations");
-    auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
+    const auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
     if (!locations.has_value()) {
         throw std::runtime_error("Could not load appointments from file");
     }
@@ -102,7 +102,7 @@ void DesApplication::setupObservers(const bool headless = true, const bool verbo
 void DesApplication::setupQueue(const std::shared_ptr<des::SimConfig> &config) {
     RCLCPP_DEBUG(m_node->get_logger(), "Start filling event queue");
 
-    auto missions = m_scheduler->simplePlan(m_appointments, m_ctx->m_robot->getIdleLocation());
+    const auto missions = m_scheduler->simplePlan(m_appointments, m_ctx->m_robot->getIdleLocation());
 
     int firstEventTime = missions.front()->time - ONE_HOUR;
     int lastEventTime = missions.back()->time + ONE_HOUR;

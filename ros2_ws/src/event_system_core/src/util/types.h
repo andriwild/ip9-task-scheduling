@@ -147,7 +147,7 @@ enum MissionState {
     CANCELLED
 };
 
-inline std::string_view missionStateStr(MissionState state) {
+inline std::string missionStateStr(const MissionState state) {
     switch(state) {
         case PENDING: return "PEND";
         case COMPLETED: return "COMPL";

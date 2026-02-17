@@ -16,8 +16,11 @@ des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
 double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
-
-    return ctx.getConfig()->energyConsumptionBase;
+    auto energyConsumption = ctx.getConfig()->energyConsumptionBase;
+    if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
+        energyConsumption -= ctx.getConfig()->chargingRate;
+    }
+    return energyConsumption;
 };
 
 

@@ -2,35 +2,32 @@
 
 #include <qnamespace.h>
 #include <vector>
-#include <QFontMetrics>
-#include <QGraphicsRectItem>
-#include <QGraphicsTextItem>
 #include <QPen>
 
 #include "event_system_rviz/timeline/timeline_types.hpp"
 #include "event_system_rviz/timeline/timeline_track.hpp"
 
-class DriveTrack : public ITimelineTrack {
+class DriveTrack final : public ITimelineTrack {
     int m_height;
     std::vector<std::pair<int,bool>> m_states;
 
 public:
-    DriveTrack(int height = 20) : m_height(height) {}
+    explicit DriveTrack(const int height = 20) : m_height(height) {}
 
     std::string getName() const override { return "Drive"; }
 
     void handleStateChange(int time, bool isDriving) {
-        m_states.push_back({time, isDriving});
+        m_states.emplace_back(time, isDriving);
     }
 
-    void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase) override {
-        if (m_states.empty()) return;
-        TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
+    void updateScene(QGraphicsScene* scene, const double pixelsPerSecond, const int simStartTime, const double xOffset, const double yBase) override {
+        if (m_states.empty()) { return; }
+        const TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
 
-        double xStart = tf.toX(m_states.front().first);
-        double xEnd   = tf.toX(m_states.back().first);
-        double width  = xEnd - xStart;
-        QColor softGray(200, 200, 200, 40);
+        const double xStart = tf.toX(m_states.front().first);
+        const double xEnd   = tf.toX(m_states.back().first);
+        const double width  = xEnd - xStart;
+        constexpr QColor softGray(200, 200, 200, 40);
 
         scene->addRect(
             xStart,
@@ -47,16 +44,16 @@ public:
         
             if (isDriving) {
                 auto nextIt = std::next(it);
-                double nextTime = (nextIt != m_states.end()) ? nextIt->first : time + 1.0;
+                const double nextTime = (nextIt != m_states.end()) ? nextIt->first : time + 1.0;
         
-                double xStart = tf.toX(time);
-                double xEnd   = tf.toX(nextTime);
-                double width  = xEnd - xStart;
+                const double xStartPixel = tf.toX(time);
+                const double xEndPixel   = tf.toX(nextTime);
+                const double widthPixel  = xEndPixel - xStartPixel;
         
                 scene->addRect(
-                    xStart,
+                    xStartPixel,
                     yBase, 
-                    width,
+                    widthPixel,
                     m_height,
                     QPen(Qt::NoPen),
                     QBrush(QColor(80, 200, 120))

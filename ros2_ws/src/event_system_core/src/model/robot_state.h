@@ -41,7 +41,7 @@ public:
 class SearchState final : public  RobotState {
 public:
     std::vector<std::string> locations;
-    SearchState(const std::vector<std::string> &locations): locations(locations) {}
+    explicit SearchState(const std::vector<std::string> &locations): locations(locations) {}
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;

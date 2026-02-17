@@ -1,8 +1,8 @@
 {
-    "appointments_path": "20_appts.json",
-    "battery_capacity": 44.0,
+    "appointments_path": "appointments.json",
+    "battery_capacity": 16.0,
     "cacheEnabled": true,
-    "charging_rate": 50.0,
+    "charging_rate": 300.0,
     "conversation_duration_mean": 30.0,
     "conversation_duration_std": 10.0,
     "conversation_probability": 0.800000011920929,
@@ -12,12 +12,12 @@
         0.0
     ],
     "drive_time_std": 0.10000000149011612,
-    "energy_consumption_base": 1.0,
-    "energy_consumption_drive": 500.0,
+    "energy_consumption_base": 200.0,
+    "energy_consumption_drive": 355.0,
     "find_person_probability": 0.5299999713897705,
-    "initial_battery_capacity": 44.0,
-    "low_battery_threshold": 10.0,
-    "robot_accompany_speed": 0.4000000059604645,
-    "robot_speed": 0.5,
+    "initial_battery_capacity": 9.0,
+    "low_battery_threshold": 20.0,
+    "robot_accompany_speed": 0.20000000298023224,
+    "robot_speed": 0.30000001192092896,
     "timeBuffer": 120.0
 }

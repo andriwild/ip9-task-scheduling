@@ -145,7 +145,7 @@ private:
         return msg;
     }
 
-    double calcDistance(const nav_msgs::msg::Path& path) {
+    double calcDistance(const nav_msgs::msg::Path& path) const {
         double d = 0;
         for (size_t i = 1; i < path.poses.size(); ++i) {
             auto& p1 = path.poses[i - 1].pose.position;

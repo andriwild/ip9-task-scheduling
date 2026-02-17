@@ -26,11 +26,11 @@ struct TimelineTransformer {
     int simStartTime;
     double xOffset;
 
-    double toX(int time) const {
+    double toX(const int time) const {
         return xOffset + (time - simStartTime) * pixelsPerSecond;
     }
 
-    double toWidth(int duration) const {
+    double toWidth(const int duration) const {
         return duration * pixelsPerSecond;
     }
 };

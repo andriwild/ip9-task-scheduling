@@ -5,7 +5,6 @@
 
 #include <QGraphicsView>
 #include <QPushButton>
-#include <QResizeEvent>
 #include <QWheelEvent>
 #include <algorithm>
 #include <cmath>
@@ -47,7 +46,7 @@ class Timeline final : public QGraphicsView {
     QPushButton* m_btnZoomOut;
 
 public:
-    explicit Timeline(double pixelsPerSecond = 0.025):
+    explicit Timeline(const double pixelsPerSecond = 0.025):
         QGraphicsView(),
         m_pixelsPerSecond(pixelsPerSecond) 
     {
@@ -68,7 +67,7 @@ public:
         setDragMode(ScrollHandDrag);
         setRenderHint(QPainter::Antialiasing);
 
-        setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+        setViewportUpdateMode(SmartViewportUpdate);
 
         setScene(m_scene);
         centerOn(0, 0);
@@ -77,50 +76,48 @@ public:
         updateScene();
     }
 
-    void setRange(int start, int end) {
+    void setRange(const int start, const int end) {
         m_simStartTime = start;
         m_simEndTime   = end;
         m_duration     = m_simEndTime - m_simStartTime;
         updateScene();
     }
 
-    void addMeetingPlan(std::shared_ptr<des::Appointment> appt, int startTime) {
-        m_markerTrack->addMeetingPlan(appt, startTime);
+    void addMeetingPlan(const std::shared_ptr<des::Appointment> &appointment, const int startTime) const {
+        m_markerTrack->addMeetingPlan(appointment, startTime);
         updateScene();
     }
 
-    void clear() {
-        for(auto track : m_tracks) {
+    void clear() const {
+        for(const auto track : m_tracks) {
             track->clear();
         }
         updateScene();
     }
 
 public slots:
-    void handleStateChange(int time, int newState, des::BatteryProps batStats) {
+    void handleStateChange(const int time, const int newState, const des::BatteryProps &batStats) const {
         m_stateTrack->handleStateChange(time, newState);
         m_batteryTrack->handleStateChange(time, batStats);
         updateScene();
     }
 
-    void handleReset() {
-        clear();
-    }
+    void handleReset() const { clear(); }
 
-    void handleEvent(int time, VisualEvent ve, bool isDriving) {
+    void handleEvent(const int time, const VisualEvent &ve, const bool isDriving) const {
         m_markerTrack->handleEvent(time, ve);
         m_driveTrack->handleStateChange(time, isDriving);
         updateScene(); // Events need scene update to draw items
     }
 
-    void handleBattery(int time, double soc, double capacity) {}
+    void handleBattery(const int time, const double soc, const double capacity) const {}
 
     void zoomIn() { applyZoom(1.5); }
     void zoomOut() { applyZoom(0.66); }
 
 protected:
-    void drawBackground(QPainter * painter, const QRectF& rect) override {
-        double axisY = m_markerTrack->getHeight();
+    void drawBackground(QPainter* painter, const QRectF& rect) override {
+        const double axisY = m_markerTrack->getHeight();
         drawTimeAxis(painter, rect, axisY);
     }
 
@@ -163,41 +160,38 @@ private:
         m_btnZoomOut->resize(30, 30);
     }
 
-    void positionButtons() {
-        int margin = 20;
-        int x = width() - margin - m_btnZoomIn->width();
-        int y = margin;
+    void positionButtons() const {
+        constexpr int margin = 20;
+        const int x = width() - margin - m_btnZoomIn->width();
+        const int y = margin;
         m_btnZoomIn->move(x, y);
         m_btnZoomOut->move(x, y + m_btnZoomIn->height() + 5);
     }
 
-    void applyZoom(double factor) {
+    void applyZoom(const double factor) {
         viewport()->setUpdatesEnabled(false);
 
-        QPointF viewCenter  = viewport()->rect().center();
-        QPointF sceneCenter = mapToScene(viewCenter.toPoint());
+        const QPointF viewCenter  = viewport()->rect().center();
+        const QPointF sceneCenter = mapToScene(viewCenter.toPoint());
 
-        double timeFromStart = (sceneCenter.x() - X_LINE_OFFSET) / m_pixelsPerSecond;
-        double newScale = m_pixelsPerSecond * factor;
+        const double timeFromStart = (sceneCenter.x() - X_LINE_OFFSET) / m_pixelsPerSecond;
+        const double newScale = m_pixelsPerSecond * factor;
 
         if (newScale >= 0.01 && newScale <= 2000.0) {
             m_pixelsPerSecond = newScale;
-
             updateScene();
-
-            double newCenterX = X_LINE_OFFSET + (timeFromStart * m_pixelsPerSecond);
+            const double newCenterX = X_LINE_OFFSET + (timeFromStart * m_pixelsPerSecond);
             centerOn(newCenterX, sceneCenter.y());
         }
-
         viewport()->setUpdatesEnabled(true);
     }
 
-    void updateScene() {
+    void updateScene() const {
         m_scene->clear();
 
-        double totalWidth = m_duration * m_pixelsPerSecond;
+        const double totalWidth = m_duration * m_pixelsPerSecond;
         double totalHeight = 0;
-        for(auto track : m_tracks) {
+        for(const auto& track : m_tracks) {
             totalHeight += track->getHeight();
         }
 
@@ -208,8 +202,12 @@ private:
             totalHeight
         );
 
-        double currentY = 0;
-        for(auto track : m_tracks) {
+        double currentY = 0.0;
+        int index = 0;
+        std::vector gaps(m_tracks.size(), TRACK_GAP);
+        gaps[0] = 2 * TRACK_GAP;
+
+        for (const auto& track : m_tracks) {
             track->updateScene(m_scene, m_pixelsPerSecond, m_simStartTime, X_LINE_OFFSET, currentY);
 
             // track label on the left side
@@ -217,56 +215,56 @@ private:
             QFont font;
             font.setPointSize(10);
             QFontMetrics fm(font);
-            int textWidth = fm.horizontalAdvance(name);
-            int padding = 5;
-            
-            double leftBoundary = -SCENE_MARGIN;
-            double rightBoundary = X_LINE_OFFSET - padding;
+            const int textWidth = fm.horizontalAdvance(name);
+            constexpr int padding = 5;
+
+            constexpr double leftBoundary = -SCENE_MARGIN;
+            constexpr double rightBoundary = X_LINE_OFFSET - padding;
             
             if (rightBoundary - textWidth >= leftBoundary) {
-                auto textItem = m_scene->addText(name, font);
+                const auto textItem = m_scene->addText(name, font);
                 textItem->setDefaultTextColor(Qt::black);
                 
-                double textX = rightBoundary - textItem->boundingRect().width();
-                double textY = currentY + (track->getHeight() / 2.0) - (textItem->boundingRect().height() / 2.0);
+                const double textX = rightBoundary - textItem->boundingRect().width();
+                const double textY = currentY + (track->getHeight() / 2.0) - (textItem->boundingRect().height() / 2.0);
                 textItem->setPos(textX, textY);
             }
-
-            currentY += track->getHeight() + TRACK_GAP;
+            currentY += track->getHeight() + gaps[index++];
         }
         viewport()->update();
     }
 
-    double timeToX(int time) const {
+    [[nodiscard]] double timeToX(const int time) const {
         return X_LINE_OFFSET + (time - m_simStartTime) * m_pixelsPerSecond;
     }
 
-    double xToTime(double x) const {
+    [[nodiscard]] double xToTime(const double x) const {
         return ((x - X_LINE_OFFSET) / m_pixelsPerSecond) + m_simStartTime;
     }
     
-    void drawTimeAxis(QPainter* painter, const QRectF& rect, double yPos) {
-        QPen axisPen(Qt::black, 2);
+    void drawTimeAxis(QPainter* painter, const QRectF& rect, const double yPos) const {
+        const QPen axisPen(Qt::black, 2);
         painter->setPen(axisPen);
-        double startX = std::max(rect.left() , timeToX(m_simStartTime));
-        double endX   = std::min(rect.right(), timeToX(m_simEndTime));
+        const double startX = std::max(rect.left() , timeToX(m_simStartTime));
+        const double endX   = std::min(rect.right(), timeToX(m_simEndTime));
 
         painter->drawLine(QLineF(startX, yPos, endX, yPos));
 
-        double tStart = xToTime(rect.left());
-        double tEnd   = xToTime(rect.right());
+        const double tStart = xToTime(rect.left());
+        const double tEnd   = xToTime(rect.right());
 
-        int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
-        int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
+        const int loopStart = std::max(m_simStartTime, static_cast<int>(std::floor(tStart)));
+        const int loopEnd   = std::min(m_simEndTime  , static_cast<int>(std::ceil(tEnd)));
 
-        const double MIN_TICK_PX  = 10.0;
-        const double MIN_LABEL_PX = 80.0;
+        constexpr double MIN_TICK_PX  = 10.0;
+        constexpr double MIN_LABEL_PX = 80.0;
 
-        const std::vector<int> intervals = {1, 2, 5, 10, 30, 60, 120, 300,
-                                            600, 1800, 3600, 7200, 14400, 21600, 43200};
+        const std::vector intervals = {
+            1, 2, 5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200, 14400, 21600, 43200
+        };
 
         int tickStep = 3600;
-        for (int interval : intervals) {
+        for (const int interval : intervals) {
             if (interval * m_pixelsPerSecond >= MIN_TICK_PX) {
                 tickStep = interval;
                 break;
@@ -274,7 +272,7 @@ private:
         }
 
         int labelStep = tickStep;
-        for (int interval : intervals) {
+        for (const int interval : intervals) {
             if (interval < tickStep) {
                 continue;
             }
@@ -284,7 +282,7 @@ private:
             }
         }
 
-        bool showSeconds = (labelStep < 60);
+        const bool showSeconds = (labelStep < 60);
 
         int firstTick = loopStart - (loopStart % tickStep);
         if (firstTick < loopStart) {
@@ -293,14 +291,14 @@ private:
 
         // time labels
         QFont font = painter->font();
-        QFontMetrics fm(font);
+        const QFontMetrics fm(font);
         font.setPointSize(8);
         painter->setFont(font);
 
         for (int time = firstTick; time <= loopEnd; time += tickStep) {
-            double x = timeToX(time);
+            const double x = timeToX(time);
 
-            bool isLabel = (time % labelStep == 0);
+            const bool isLabel = time % labelStep == 0;
 
             if (isLabel) {
                 painter->setPen(QPen(Qt::black, 2));

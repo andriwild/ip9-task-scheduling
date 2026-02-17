@@ -36,8 +36,8 @@ void StartDriveEvent::execute(SimulationContext& ctx) {
     if (ctx.m_robot->getLocation() == location) {
         ctx.m_queue.push(std::make_shared<StopDriveEvent>(time, location, 0));
     }
-    Journey jrny = ctx.scheduleArrival(location);
-    ctx.m_queue.push(std::make_shared<StopDriveEvent>(static_cast<int>(time + jrny.duration), location, jrny.distance));
+    auto [duration, distance] = ctx.scheduleArrival(location);
+    ctx.m_queue.push(std::make_shared<StopDriveEvent>(static_cast<int>(time + duration), location, distance));
     ctx.m_robot->setDriving(true);
     ctx.m_robot->setTargetLocation(location);
     ctx.notifyEvent(*this);
@@ -58,7 +58,7 @@ void AbortSearchEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
 }
 
-void StartDropOffConversationeEvent::execute(SimulationContext& ctx) {
+void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
     double eventTime = this->time + ctx.getRndConversationTime();
     ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
     ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));

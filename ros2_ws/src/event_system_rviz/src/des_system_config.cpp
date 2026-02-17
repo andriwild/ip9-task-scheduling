@@ -70,7 +70,7 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_initialBatteryCapacity->setSuffix(" Ah");
     addConfigItem(energyGroup, "Initial Battery Capacity", m_initialBatteryCapacity);
 
-    m_chargingRate = new QDoubleSpinBox(); m_chargingRate->setRange(0.0, 1000.0);
+    m_chargingRate = new QDoubleSpinBox(); m_chargingRate->setRange(0.0, 5000.0);
     m_chargingRate->setSuffix(" W");
     addConfigItem(energyGroup, "Charging Power", m_chargingRate);
 

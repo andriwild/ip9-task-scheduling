@@ -35,7 +35,8 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        return ctx->m_robot->getState()->getResult() == des::Result::SUCCESS
+        // TODO: add randomness
+        return true
                    ? BT::NodeStatus::SUCCESS
                    : BT::NodeStatus::FAILURE;
     }
@@ -50,7 +51,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        ctx->m_queue.push(std::make_shared<StartDropOffConversationeEvent>(ctx->getTime()));
+        ctx->m_queue.push(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         return BT::NodeStatus::SUCCESS;
     }

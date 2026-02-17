@@ -48,23 +48,23 @@ public:
     );
 
     Journey scheduleArrival(const std::string& target) const;
-    void changeRobotState(std::unique_ptr<RobotState> newState);
-    double getRndConversationTime();
-    void setConfig(std::shared_ptr<des::SimConfig> newConfig);
-    void updateAppointmentState(const des::MissionState& newState);
+    void changeRobotState(std::unique_ptr<RobotState> newState) const;
+    double getRndConversationTime() const;
+    void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
+    void updateAppointmentState(const des::MissionState& newState) const;
     void resetContext(int newTime);
-    void completeAppointment();
+    void completeAppointment() const;
 
     int getTime() const { return m_currentTime; };
 
-    const std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; };
+    std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; };
 
-    void setAppointment(const std::shared_ptr<des::Appointment> &appt) {
-        m_currentAppointment = appt;
+    void setAppointment(const std::shared_ptr<des::Appointment> &appointment) {
+        m_currentAppointment = appointment;
     }
 
-    void addPendingMission(const std::shared_ptr<des::Appointment>& appt) {
-        m_pendingMissions.push(appt);
+    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) {
+        m_pendingMissions.push(appointment);
         RCLCPP_DEBUG(m_logger, "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
     }
     
@@ -73,23 +73,19 @@ public:
     }
 
     std::shared_ptr<des::Appointment> nextPendingMission() {
-        if (m_pendingMissions.empty()) {
-            return nullptr;
-        }
+        if (m_pendingMissions.empty()) { return nullptr; }
         return m_pendingMissions.front();
     }
     
     std::shared_ptr<des::Appointment> popPendingMission() {
-        if (m_pendingMissions.empty()) {
-            return nullptr;
-        }
-        auto appt = m_pendingMissions.front();
+        if (m_pendingMissions.empty()) { return nullptr; }
+        auto appointment = m_pendingMissions.front();
         m_pendingMissions.pop();
         RCLCPP_DEBUG(m_logger, "Mission removed from pending list - %zu remaining", m_pendingMissions.size());
-        return appt;
+        return appointment;
     }
 
-    const std::shared_ptr<des::Appointment> getAppointment() const {
+    std::shared_ptr<des::Appointment> getAppointment() const {
         return m_currentAppointment;
     }
 
@@ -104,7 +100,7 @@ public:
         m_observers.emplace_back(observer);
     }
 
-    void notifyMissionComplete(des::MissionState& state, int timeDiff) const {
+    void notifyMissionComplete(des::MissionState& state, const int timeDiff) const {
         for (const auto& obs : m_observers) {
             obs->onMissionComplete(m_currentTime, state, timeDiff);
         }
@@ -122,7 +118,7 @@ public:
         }
     }
 
-    void robotMoved(const std::string& location, double distance = 0) const {
+    void robotMoved(const std::string& location, const double distance = 0) const {
         m_robot->setLocation(location);
         notifyMoved(location, distance);
     }
@@ -133,13 +129,13 @@ public:
         }
     }
 
-    bool isMissionFeasible(des::Appointment& appt, std::string startPos) {
-        const int startTime = m_scheduler.calcStartTime(appt, startPos);
-        if (startTime + m_simConfig->timeBuffer >= getTime()) {
-            RCLCPP_DEBUG(m_logger, "Mission %u is feasible", appt.id);
+    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) {
+        const double missionDuration = m_scheduler.optimisticMeeting(appointment.personName, startPos, appointment.roomName);
+        if (appointment.appointmentTime - missionDuration  >= getTime()) {
+            RCLCPP_DEBUG(m_logger, "Mission %u is feasible", appointment.id);
             return true;
         }
-        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasible", appt.id);
+        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasible", appointment.id);
         return false;
     };
 

@@ -7,7 +7,6 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
     m_state->enter(*this);
 }
 
-
 bool Robot::isBusy() const {
     return m_state->getType() == des::RobotStateType::SEARCHING
         || m_state->getType() == des::RobotStateType::ACCOMPANY

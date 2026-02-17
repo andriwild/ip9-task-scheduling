@@ -36,37 +36,37 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     return { travelTime * noiseFactor, distance.value() };
 }
 
-void SimulationContext::updateAppointmentState(const des::MissionState& newState) {
+void SimulationContext::updateAppointmentState(const des::MissionState& newState) const {
     assert(m_currentAppointment != nullptr);
     m_currentAppointment->state = newState;
 }
 
-void SimulationContext::completeAppointment() {
+void SimulationContext::completeAppointment() const {
     assert(m_currentAppointment != nullptr);
-    int timeDiff = m_currentTime - m_currentAppointment->appointmentTime;
+    const int timeDiff = m_currentTime - m_currentAppointment->appointmentTime;
     notifyMissionComplete(m_currentAppointment->state, timeDiff);
 }
 
-void SimulationContext::resetContext(int newTime) {
+void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
     m_robot->setLocation(m_robot->getIdleLocation());
     m_robot->m_bat->reset(newTime);
 }
 
-double SimulationContext::getRndConversationTime() {
+double SimulationContext::getRndConversationTime() const {
     return rnd::getNormalDist(
         getDefaultConversationTime(),
         getConversationDurationStd()
     );
 };
 
-void SimulationContext::setConfig(std::shared_ptr<des::SimConfig> newConfig) {
+void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
 }
 
-void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) {
+void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
     // get the energy consumption of the previous state
     m_robot->m_bat->updateBalance(m_currentTime, m_robot->getState()->getEnergyConsumption(*this));
     m_robot->changeState(std::move(newState));
