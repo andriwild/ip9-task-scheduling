@@ -124,6 +124,7 @@ enum class EventType : int {
     START_ACCOMPANY = 10,
     ARRIVED_ACCOMPANY = 11,
     START_DRIVE = 12,
+    BATTERY_FULL = 13,
 };
 
 struct Person {

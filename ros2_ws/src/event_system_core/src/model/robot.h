@@ -17,8 +17,9 @@ class Robot {
     double m_accompanySpeed;
     double m_currentSpeed = 0;
 
-    bool m_isDriving  = false;
-    bool m_isCharging = false;
+    bool m_isDriving        = false;
+    bool m_isCharging       = false;
+    bool m_chargingRequired = false;
 
 public:
     std::unique_ptr<Battery> m_bat;
@@ -56,6 +57,9 @@ public:
 
     bool isCharging() const { return m_isCharging; }
     void setCharging(const bool isCharging) { m_isCharging= isCharging; }
+
+    bool isChargingRequired() const { return m_chargingRequired; }
+    void setChargingRequired(const bool isChargingRequired) { m_chargingRequired = isChargingRequired; }
 
     des::RobotStateType getStateType() const { return m_state->getType(); }
 

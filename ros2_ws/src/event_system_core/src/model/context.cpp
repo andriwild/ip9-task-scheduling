@@ -69,6 +69,9 @@ void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConf
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
     // get the energy consumption of the previous state
     m_robot->m_bat->updateBalance(m_currentTime, m_robot->getState()->getEnergyConsumption(*this));
+    if (m_robot->m_bat->isBatteryLow()) {
+        m_robot->setChargingRequired(true);
+    }
     m_robot->changeState(std::move(newState));
     notifyRobotStateChanged(m_robot->getState()->getType());
 }

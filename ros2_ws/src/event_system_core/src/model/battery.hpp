@@ -71,6 +71,18 @@ public:
 
     bool isBatteryFull() const { return m_designCapacity < m_fullBatteryThreshold / 100 * m_designCapacity; }
 
+
+    double timeToFull(const double chargingPowerWatts) const {
+        if (chargingPowerWatts <= 0) return -1.0;
+
+        const double fullCapacity = m_fullBatteryThreshold / 100.0 * m_designCapacity;
+        if (m_currentCapacity >= fullCapacity) return 0.0;
+
+        const double capacityDiff = fullCapacity - m_currentCapacity; // Ah
+        // Ah = (W * s) / (3600 * V) => s = (Ah * 3600 * V) / W
+        return (capacityDiff * 3600.0 * m_voltage) / chargingPowerWatts;
+    }
+
 private:
     template<typename T>
     T clip(const T &n, const T &lower, const T &upper) {

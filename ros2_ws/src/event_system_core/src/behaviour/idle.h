@@ -12,7 +12,7 @@
 
 class IsIdle final : public BT::ConditionNode {
 public:
-    IsIdle(const std::string& name, const BT::NodeConfig& config) : BT::ConditionNode(name, config) {}
+    IsIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 

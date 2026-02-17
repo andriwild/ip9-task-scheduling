@@ -11,6 +11,7 @@
 #include "idle.h"
 #include "search.h"
 #include "conversation.h"
+#include "charge.h"
 #include "mission_control.h"
 
 constexpr bool W_OUT_TREE = true;
@@ -18,6 +19,10 @@ const std::string TREE_FILE = "bt_config.xml";
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
     BT::BehaviorTreeFactory factory;
+
+    // charge
+    factory.registerNodeType<IsBatteryLow>("IsBatteryLow");
+    factory.registerNodeType<Charge>("Charge");
 
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
@@ -58,7 +63,8 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
             <Sequence name="Seq_MainLoop">
-                <!-- Check for new missions first -->
+
+                <SubTree ID="ChargeRoutine" _autoremap="true"/>
                 <SubTree ID="MissionControlRoutine" _autoremap="true"/>
 
                 <Fallback name="Fallback_MainStrategy">
@@ -69,6 +75,15 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                 </Fallback>
             </Sequence>
          </BehaviorTree>
+
+
+        <BehaviorTree ID="ChargeRoutine">
+                 <Sequence name="Seq_DockAndCharge">
+                    <IsBatteryLow/>
+                    <Docking/>
+                    <Charge/>
+                </Sequence>
+        </BehaviorTree>
 
         <BehaviorTree ID="MissionControlRoutine">
              <Fallback>
