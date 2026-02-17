@@ -9,6 +9,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <stdexcept>
 #include <thread>
+#include <utility>
 
 #include "../behaviour/bt_setup.h"
 #include "../observer/gz.h"
@@ -141,8 +142,8 @@ void DesApplication::reset() {
     RCLCPP_INFO(m_node->get_logger(), "System Reset Complete");
 }
 
-void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> newConfig) {
-    m_config = newConfig;
+void DesApplication::updateConfig(std::shared_ptr<des::SimConfig> config) {
+    m_config = std::move(config);
     m_ctx->setConfig(m_config);
     RCLCPP_DEBUG_STREAM(m_node->get_logger(), *m_config.get());
 }
@@ -166,7 +167,7 @@ void DesApplication::setupApplication() {
         m_config,
         m_plannerNode,
         m_employeeLocations,
-        *m_scheduler.get(),
+        *m_scheduler,
         m_node->get_logger()
     );
 

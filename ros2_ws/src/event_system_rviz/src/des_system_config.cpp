@@ -86,23 +86,13 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_energyConsumptionIdle->setSuffix(" W");
     addConfigItem(energyGroup, "Standby Power Load", m_energyConsumptionIdle);
 
-    // Dock Pose (Spezialfall mit Layout)
-    auto dockWidget = new QWidget();
-    auto dockLayout = new QHBoxLayout(dockWidget);
-    dockLayout->setContentsMargins(0,0,0,0);
-    for (int i = 0; i < 3; ++i) {
-        m_dockPose[i] = new QDoubleSpinBox();
-        m_dockPose[i]->setRange(-1000.0, 1000.0);
-        dockLayout->addWidget(m_dockPose[i]);
-    }
-    m_dockPose[0]->setPrefix("X: ");
-    m_dockPose[1]->setPrefix("Y: ");
-    m_dockPose[2]->setPrefix("Yaw: ");
-    addConfigItem(energyGroup, "Dock Pose", dockWidget);
 
     // General
     QTreeWidgetItem* generalGroup = new QTreeWidgetItem(m_treeWidget);
     generalGroup->setText(0, "General Settings");
+
+    m_dockLocation= new QLineEdit("IMVS_Dock");
+    addConfigItem(generalGroup, "Dock", m_dockLocation);
 
     m_timeBuffer = new QDoubleSpinBox(); m_timeBuffer->setRange(0.0, 1000.0);
     m_timeBuffer->setSuffix(" s");
@@ -153,11 +143,7 @@ void DesSystemConfig::onSetConfig() {
     request->initial_battery_capacity = m_initialBatteryCapacity->value();
     request->charging_rate = m_chargingRate->value();
     request->low_battery_threshold = m_lowBatteryThreshold->value();
-    request->dock_pose = {
-        (float)m_dockPose[0]->value(),
-        (float)m_dockPose[1]->value(),
-        (float)m_dockPose[2]->value()};
-
+    request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_appointmentsPath->text().toStdString();
 
@@ -197,13 +183,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_initialBatteryCapacity->setValue(msg->initial_battery_capacity);
     m_chargingRate->setValue(msg->charging_rate);
     m_lowBatteryThreshold->setValue(msg->low_battery_threshold);
-
-    if (msg->dock_pose.size() >= 3) {
-        m_dockPose[0]->setValue(msg->dock_pose[0]);
-        m_dockPose[1]->setValue(msg->dock_pose[1]);
-        m_dockPose[2]->setValue(msg->dock_pose[2]);
-    }
-
+    m_dockLocation->setText(QString::fromStdString(msg->dock_location));
     m_cacheEnabled->setChecked(msg->cache_enabled);
     m_appointmentsPath->setText(QString::fromStdString(msg->appointments_path));
 }

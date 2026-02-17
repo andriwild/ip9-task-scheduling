@@ -2,7 +2,6 @@
 
 #include <qcheckbox.h>
 
-#include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -45,7 +44,7 @@ protected:
     QDoubleSpinBox* m_initialBatteryCapacity;
     QDoubleSpinBox* m_chargingRate;
     QDoubleSpinBox* m_lowBatteryThreshold;
-    QDoubleSpinBox* m_dockPose[3];
+    QLineEdit* m_dockLocation;
     QCheckBox* m_cacheEnabled;
     QLineEdit* m_appointmentsPath;
     QPushButton* m_btnSetConfig;
@@ -54,7 +53,7 @@ protected:
 private Q_SLOTS:
     void onSetConfig();
     void onServiceResponse(ServiceResponseFuture future);
-    void onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg);
+    void onSystemConfig(event_system_msgs::msg::SystemConfig::SharedPtr msg);
     QTreeWidgetItem* addConfigItem(QTreeWidgetItem* parent, QString label, QWidget* widget);
 };
 

@@ -1,15 +1,12 @@
 #pragma once
 
 #include <iomanip>
-#include <iostream>
 #include <string>
-#include <vector>
 
 namespace des {
 
 struct Point {
     double m_x, m_y, m_yaw;
-
     Point() = default;
 
     Point(const double pnt, const double pnt1, const double yaw) : m_x(pnt), m_y(pnt1), m_yaw(yaw) {}
@@ -61,7 +58,7 @@ struct SimConfig {
     double initialBatteryCapacity;
     double chargingRate;
     double lowBatteryThreshold;
-    std::vector<double> dockPose;
+    std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
 
@@ -83,10 +80,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "initialBatteryCapacity" << ": " << config.initialBatteryCapacity << std::endl;
         os << std::left << std::setw(W) << "chargingRate" << ": " << config.chargingRate << std::endl;
         os << std::left << std::setw(W) << "lowBatteryThreshold" << ": " << config.lowBatteryThreshold << std::endl;
-        os << std::left << std::setw(W) << "dockPose" << ": ["
-           << (config.dockPose.size() > 0 ? config.dockPose[0] : 0) << ", "
-           << (config.dockPose.size() > 1 ? config.dockPose[1] : 0) << ", "
-           << (config.dockPose.size() > 2 ? config.dockPose[2] : 0) << "]" << std::endl;
+        os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << "----------------------------\n"
@@ -173,9 +167,8 @@ struct Appointment {
     MissionState state = PENDING;
 
     friend std::ostream& operator<<(std::ostream& os, const Appointment& appt) {
-        const int W = 25;
-        os << "\n"
-           << "\033[1m" << "--- Appointment ---" << "\033[0m" << std::endl;
+        constexpr int W = 25;
+        os << "\n" << "\033[1m" << "--- Appointment ---" << "\033[0m" << std::endl;
         os << std::left << std::setw(W) << "id" << ": " << appt.id << std::endl;
         os << std::left << std::setw(W) << "state" << ": " << appt.state << std::endl;
         os << std::left << std::setw(W) << "description" << ": " << appt.description << std::endl;
@@ -186,10 +179,10 @@ struct Appointment {
     }
 };
 
-inline std::string toHumanReadableTime(const int sec, bool includeSeconds = true) {
-    int hours = static_cast<int>(sec / 3600.0);
-    int minutes = static_cast<int>((sec - hours * 3600.0) / 60.0);
-    int seconds = static_cast<int>(sec) % 60;
+inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
+    const int hours   = static_cast<int>(sec / 3600.0);
+    const int minutes = static_cast<int>((sec - hours * 3600.0) / 60.0);
+    const int seconds = static_cast<int>(sec) % 60;
 
     std::ostringstream oss;
     oss << std::setw(2) << std::setfill('0') << hours << ":" << std::setw(2) << std::setfill('0')

@@ -3,7 +3,7 @@ float32 drive_time_std
 float32 robot_speed
 float32 robot_accompany_speed
 
-# meeting
+# Meeting
 float32 find_person_probability
 float32 conversation_probability
 float32 conversation_duration_std
@@ -19,6 +19,6 @@ float32 charging_rate
 float32 low_battery_threshold
 
 # General
-float32[3] dock_pose
+string dock_location
 string appointments_path
 bool cache_enabled

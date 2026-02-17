@@ -7,7 +7,7 @@
 #include "battery.hpp"
 
 class Robot {
-    std::string m_idleLocation = "IMVS_Dock";
+    std::string m_dockLocation = "IMVS_Dock";
     std::unique_ptr<RobotState> m_state;
     std::string m_currentLocation;
     std::string m_targetLocation;
@@ -22,7 +22,7 @@ class Robot {
 public:
     std::unique_ptr<Battery> m_bat;
 
-    Robot(const std::shared_ptr<des::SimConfig> &config, rclcpp::Logger logger)
+    Robot(const std::shared_ptr<des::SimConfig> &config, const rclcpp::Logger& logger)
         : m_state(std::make_unique<IdleState>())
         , m_logger(logger)
     {
@@ -63,8 +63,8 @@ public:
     double getDriveSpeed() const { return m_driveSpeed; }
     void setDriveSpeed(const double speed) { m_driveSpeed = speed; }
 
-    std::string getIdleLocation() const { return m_idleLocation; }
-    void setIdleLocation(const std::string& location) { m_idleLocation = location; }
+    std::string getIdleLocation() const { return m_dockLocation; }
+    void setIdleLocation(const std::string& location) { m_dockLocation = location; }
 
     rclcpp::Logger getLogger() const { return m_logger; }
 };

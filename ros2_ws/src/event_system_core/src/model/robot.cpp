@@ -16,6 +16,7 @@ bool Robot::isBusy() const {
 void Robot::updateConfig(const des::SimConfig& config) {
     setDriveSpeed(config.robotSpeed);
     setAccompanySpeed(config.robotAccompanySpeed);
+    m_dockLocation = config.dockLocation;
     m_bat->updateConfig(
         config.batteryCapacity,
         config.initialBatteryCapacity,

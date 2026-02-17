@@ -195,12 +195,7 @@ private:
             totalHeight += track->getHeight();
         }
 
-        m_scene->setSceneRect(
-            -SCENE_MARGIN,
-            0,
-            totalWidth + (SCENE_MARGIN * 2),
-            totalHeight
-        );
+        m_scene->setSceneRect( -SCENE_MARGIN, 0, totalWidth + (SCENE_MARGIN * 2), totalHeight );
 
         double currentY = 0.0;
         int index = 0;

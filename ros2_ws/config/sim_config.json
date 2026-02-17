@@ -6,11 +6,7 @@
     "conversation_duration_mean": 30.0,
     "conversation_duration_std": 10.0,
     "conversation_probability": 0.800000011920929,
-    "dock_pose": [
-        20.0,
-        0.0,
-        0.0
-    ],
+    "dock_location": "IMVS_Dock",
     "drive_time_std": 0.10000000149011612,
     "energy_consumption_base": 200.0,
     "energy_consumption_drive": 355.0,

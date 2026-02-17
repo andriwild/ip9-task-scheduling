@@ -85,7 +85,7 @@ public:
             config.initialBatteryCapacity = j.at("initial_battery_capacity").get<double>();
             config.chargingRate = j.at("charging_rate").get<double>();
             config.lowBatteryThreshold = j.at("low_battery_threshold").get<double>();
-            config.dockPose = j.at("dock_pose").get<std::vector<double>>();
+            config.dockLocation= j.at("dock_location").get<std::string>();
             config.cacheEnabled = j.at("cacheEnabled").get<bool>();
 
             if (j.contains("appointments_path")) {
@@ -116,7 +116,7 @@ public:
         j["initial_battery_capacity"] = config->initialBatteryCapacity;
         j["charging_rate"] = config->chargingRate;
         j["low_battery_threshold"] = config->lowBatteryThreshold;
-        j["dock_pose"] = config->dockPose;
+        j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;
 

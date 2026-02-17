@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tf2/LinearMath/Quaternion.h>
-
 #include <cmath>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
@@ -16,7 +14,7 @@
 
 const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
-class ConfigNode : public rclcpp::Node {
+class ConfigNode final : public rclcpp::Node {
 public:
     ConfigNode() : Node("des_config_node") {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(
@@ -27,7 +25,7 @@ public:
             "/system_config", rclcpp::QoS(1).transient_local());
 
         // Load initial config
-        auto loadedConfig = ConfigLoader::loadSimConfig(SIM_CONFIG_FILE);
+        const auto loadedConfig = ConfigLoader::loadSimConfig(SIM_CONFIG_FILE);
         if (loadedConfig.has_value()) {
             RCLCPP_INFO(this->get_logger(), "Initial Simulation Config loaded!");
             m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());
@@ -42,50 +40,45 @@ public:
     }
 
     std::shared_ptr<des::SimConfig> getConfig() {
-        std::lock_guard<std::mutex> lock(m_configMutex);
+        std::lock_guard lock(m_configMutex);
         return m_currentConfig;
     }
 
     bool isConfigDirty() {
-        std::lock_guard<std::mutex> lock(m_configMutex);
+        std::lock_guard lock(m_configMutex);
         return m_dirtyConfig;
     }
 
     void clearDirty() {
-        std::lock_guard<std::mutex> lock(m_configMutex);
+        std::lock_guard lock(m_configMutex);
         m_dirtyConfig = false;
     }
 
 private:
     void topicCallback(
-        const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> request,
-        std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> response) {
-        std::vector<double> dockPose;
-        dockPose.push_back(request->dock_pose[0]);
-        dockPose.push_back(request->dock_pose[1]);
-        dockPose.push_back(request->dock_pose[2]);
-
-        auto config = des::SimConfig{
-            request->find_person_probability,
-            request->robot_speed,
-            request->robot_accompany_speed,
-            request->drive_time_std,
-            request->conversation_probability,
-            request->conversation_duration_std,
-            request->conversation_duration_mean,
-            request->time_buffer,
-            request->energy_consumption_drive,
-            request->energy_consumption_base,
-            request->battery_capacity,
-            request->initial_battery_capacity,
-            request->charging_rate,
-            request->low_battery_threshold,
-            dockPose,
-            request->cache_enabled,
-            request->appointments_path};
-
-        {
-            std::lock_guard<std::mutex> lock(m_configMutex);
+        const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> &request,
+        const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> &response
+    ) { {
+            auto config = des::SimConfig{
+                request->find_person_probability,
+                request->robot_speed,
+                request->robot_accompany_speed,
+                request->drive_time_std,
+                request->conversation_probability,
+                request->conversation_duration_std,
+                request->conversation_duration_mean,
+                request->time_buffer,
+                request->energy_consumption_drive,
+                request->energy_consumption_base,
+                request->battery_capacity,
+                request->initial_battery_capacity,
+                request->charging_rate,
+                request->low_battery_threshold,
+                request->dock_location,
+                request->cache_enabled,
+                request->appointments_path
+            };
+            std::lock_guard lock(m_configMutex);
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }
@@ -99,7 +92,7 @@ private:
     void publishConfig() {
         auto msg = event_system_msgs::msg::SystemConfig();
         {
-            std::lock_guard<std::mutex> lock(m_configMutex);
+            std::lock_guard lock(m_configMutex);
             msg.find_person_probability    = m_currentConfig->personFindProbability;
             msg.drive_time_std             = m_currentConfig->driveTimeStd;
             msg.robot_speed                = m_currentConfig->robotSpeed;
@@ -114,18 +107,9 @@ private:
             msg.initial_battery_capacity   = m_currentConfig->initialBatteryCapacity;
             msg.charging_rate              = m_currentConfig->chargingRate;
             msg.low_battery_threshold      = m_currentConfig->lowBatteryThreshold;
-
-            if (m_currentConfig->dockPose.size() >= 3) {
-                msg.dock_pose = {
-                    (float)m_currentConfig->dockPose[0],
-                    (float)m_currentConfig->dockPose[1],
-                    (float)m_currentConfig->dockPose[2]};
-            } else {
-                msg.dock_pose = {0.0f, 0.0f, 0.0f};
-            }
-
-            msg.cache_enabled = m_currentConfig->cacheEnabled;
-            msg.appointments_path = m_currentConfig->appointmentsPath;
+            msg.dock_location              = m_currentConfig->dockLocation;
+            msg.cache_enabled              = m_currentConfig->cacheEnabled;
+            msg.appointments_path          = m_currentConfig->appointmentsPath;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");
@@ -134,6 +118,6 @@ private:
     rclcpp::Service<event_system_msgs::srv::SetSystemConfig>::SharedPtr m_subscription;
     rclcpp::Publisher<event_system_msgs::msg::SystemConfig>::SharedPtr m_publisher;
     std::mutex m_configMutex;
-    bool m_dirtyConfig;
+    bool m_dirtyConfig{};
     std::shared_ptr<des::SimConfig> m_currentConfig;
 };
