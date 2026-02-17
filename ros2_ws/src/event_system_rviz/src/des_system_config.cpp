@@ -78,6 +78,10 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_lowBatteryThreshold->setSuffix(" %");
     addConfigItem(energyGroup, "Low Battery Threshold", m_lowBatteryThreshold);
 
+    m_fullBatteryThreshold = new QDoubleSpinBox(); m_fullBatteryThreshold->setRange(0.0, 100);
+    m_fullBatteryThreshold->setSuffix(" %");
+    addConfigItem(energyGroup, "Full Battery Threshold", m_fullBatteryThreshold);
+
     m_energyConsumptionDrive = new QDoubleSpinBox(); m_energyConsumptionDrive->setRange(0.0, 1000.0);
     m_energyConsumptionDrive->setSuffix(" W");
     addConfigItem(energyGroup, "Drive Power Load", m_energyConsumptionDrive);
@@ -143,6 +147,7 @@ void DesSystemConfig::onSetConfig() {
     request->initial_battery_capacity = m_initialBatteryCapacity->value();
     request->charging_rate = m_chargingRate->value();
     request->low_battery_threshold = m_lowBatteryThreshold->value();
+    request->full_battery_threshold = m_fullBatteryThreshold->value();
     request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_appointmentsPath->text().toStdString();
@@ -183,6 +188,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_initialBatteryCapacity->setValue(msg->initial_battery_capacity);
     m_chargingRate->setValue(msg->charging_rate);
     m_lowBatteryThreshold->setValue(msg->low_battery_threshold);
+    m_fullBatteryThreshold->setValue(msg->full_battery_threshold);
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
     m_cacheEnabled->setChecked(msg->cache_enabled);
     m_appointmentsPath->setText(QString::fromStdString(msg->appointments_path));

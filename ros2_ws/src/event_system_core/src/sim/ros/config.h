@@ -74,6 +74,7 @@ private:
                 request->initial_battery_capacity,
                 request->charging_rate,
                 request->low_battery_threshold,
+                request->full_battery_threshold,
                 request->dock_location,
                 request->cache_enabled,
                 request->appointments_path
@@ -107,6 +108,7 @@ private:
             msg.initial_battery_capacity   = m_currentConfig->initialBatteryCapacity;
             msg.charging_rate              = m_currentConfig->chargingRate;
             msg.low_battery_threshold      = m_currentConfig->lowBatteryThreshold;
+            msg.full_battery_threshold     = m_currentConfig->fullBatteryThreshold;
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;

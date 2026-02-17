@@ -17,6 +17,7 @@ float32 battery_capacity
 float32 initial_battery_capacity
 float32 charging_rate
 float32 low_battery_threshold
+float32 full_battery_threshold
 
 # General
 string dock_location

@@ -58,6 +58,7 @@ struct SimConfig {
     double initialBatteryCapacity;
     double chargingRate;
     double lowBatteryThreshold;
+    double fullBatteryThreshold;
     std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
@@ -80,6 +81,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "initialBatteryCapacity" << ": " << config.initialBatteryCapacity << std::endl;
         os << std::left << std::setw(W) << "chargingRate" << ": " << config.chargingRate << std::endl;
         os << std::left << std::setw(W) << "lowBatteryThreshold" << ": " << config.lowBatteryThreshold << std::endl;
+        os << std::left << std::setw(W) << "fullBatteryThreshold" << ": " << config.fullBatteryThreshold << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;

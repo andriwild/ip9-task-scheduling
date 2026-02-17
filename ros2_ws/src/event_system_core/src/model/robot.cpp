@@ -20,6 +20,7 @@ void Robot::updateConfig(const des::SimConfig& config) {
     m_bat->updateConfig(
         config.batteryCapacity,
         config.initialBatteryCapacity,
-        config.lowBatteryThreshold
+        config.lowBatteryThreshold,
+        config.fullBatteryThreshold
     );
 };

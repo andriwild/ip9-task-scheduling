@@ -44,6 +44,7 @@ protected:
     QDoubleSpinBox* m_initialBatteryCapacity;
     QDoubleSpinBox* m_chargingRate;
     QDoubleSpinBox* m_lowBatteryThreshold;
+    QDoubleSpinBox* m_fullBatteryThreshold;
     QLineEdit* m_dockLocation;
     QCheckBox* m_cacheEnabled;
     QLineEdit* m_appointmentsPath;

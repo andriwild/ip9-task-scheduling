@@ -170,6 +170,5 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
             std::cout << "BehaviorTree and model written to file: " << TREE_FILE << std::endl;
         }
     }
-
     return tree;
 }

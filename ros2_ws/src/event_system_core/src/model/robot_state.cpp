@@ -25,7 +25,7 @@ double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
         energyConsumption -= ctx.getConfig()->chargingRate;
     }
     return energyConsumption;
-};
+}
 
 
 void AccompanyState::enter(Robot& robot) {
@@ -40,7 +40,7 @@ des::RobotStateType AccompanyState::getType() const {
 }
 double AccompanyState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionDrive;
-};
+}
 
 
 void SearchState::enter(Robot& robot) {
@@ -55,7 +55,7 @@ des::RobotStateType SearchState::getType() const {
 }
 double SearchState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionDrive;
-};
+}
 
 
 des::RobotStateType ConversateState::getType() const {
@@ -63,7 +63,7 @@ des::RobotStateType ConversateState::getType() const {
 }
 double ConversateState::getEnergyConsumption(const SimulationContext& ctx) const {
     return ctx.getConfig()->energyConsumptionBase;
-};
+}
 
 
 des::RobotStateType ChargeState::getType() const {
@@ -72,5 +72,5 @@ des::RobotStateType ChargeState::getType() const {
 double ChargeState::getEnergyConsumption(const SimulationContext& ctx) const {
     // Robot is running while charging
     return ctx.getConfig()->chargingRate + ctx.getConfig()->energyConsumptionBase;
-};
+}
 

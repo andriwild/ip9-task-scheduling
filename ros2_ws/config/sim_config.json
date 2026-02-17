@@ -13,6 +13,7 @@
     "find_person_probability": 0.5299999713897705,
     "initial_battery_capacity": 9.0,
     "low_battery_threshold": 20.0,
+    "full_battery_threshold": 80.0,
     "robot_accompany_speed": 0.20000000298023224,
     "robot_speed": 0.30000001192092896,
     "timeBuffer": 120.0
