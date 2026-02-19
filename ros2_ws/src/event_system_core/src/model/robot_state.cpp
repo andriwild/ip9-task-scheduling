@@ -66,11 +66,20 @@ double ConversateState::getEnergyConsumption(const SimulationContext& ctx) const
 }
 
 
+void ChargeState::enter(Robot& robot) {
+    RobotState::enter(robot);
+    if (robot.getLocation() == robot.getIdleLocation()) {
+        robot.setCharging(true);
+    }
+}
+void ChargeState::exit(Robot& robot) {
+    RobotState::exit(robot);
+}
+
 des::RobotStateType ChargeState::getType() const {
     return des::RobotStateType::CHARGING;
 }
 double ChargeState::getEnergyConsumption(const SimulationContext& ctx) const {
-    // Robot is running while charging
-    return ctx.getConfig()->chargingRate + ctx.getConfig()->energyConsumptionBase;
+    return ctx.getConfig()->energyConsumptionBase - ctx.getConfig()->chargingRate;
 }
 

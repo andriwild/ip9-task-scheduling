@@ -16,7 +16,7 @@ const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_
 
 class ConfigNode final : public rclcpp::Node {
 public:
-    ConfigNode() : Node("des_config_node") {
+    explicit ConfigNode() : Node("des_config_node") {
         m_subscription = this->create_service<event_system_msgs::srv::SetSystemConfig>(
             "/set_des_config",
             std::bind(&ConfigNode::topicCallback, this, std::placeholders::_1, std::placeholders::_2));

@@ -10,12 +10,16 @@
 
 using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
 
+const std::string DEFAULT_APPOINTMENT_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
+
 class ConfigLoader {
 public:
-    static std::optional<AppointmentList> loadAppointmentConfig(std::string filePath) {
+    static std::optional<AppointmentList> loadAppointmentConfig(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            return std::nullopt;
+            std::cout << "Use default appointment config file: " << DEFAULT_APPOINTMENT_FILE << std::endl;
+            json = getJson(DEFAULT_APPOINTMENT_FILE);
+            assert(json.has_value());
         }
 
         AppointmentList appointments;
@@ -42,7 +46,7 @@ public:
         return appointments;
     };
 
-    static std::optional<std::map<std::string, std::vector<std::string>>> loadEmployeeLocations(std::string filePath) {
+    static std::optional<std::map<std::string, std::vector<std::string>>> loadEmployeeLocations(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -51,8 +55,8 @@ public:
         std::map<std::string, std::vector<std::string>> employees;
         try {
             for (const auto& item : json.value()["employees"]) {
-                auto name = item.at("name").get<std::string>();
-                auto locations = item.at("locations").get<std::vector<std::string>>();
+                const auto name = item.at("name").get<std::string>();
+                const auto locations = item.at("locations").get<std::vector<std::string>>();
                 employees[name] = locations;
             }
         } catch (const nlohmann::json::type_error& e) {
@@ -62,7 +66,7 @@ public:
         return employees;
     }
 
-    static std::optional<des::SimConfig> loadSimConfig(std::string filePath) {
+    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;

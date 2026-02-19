@@ -105,18 +105,33 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_cacheEnabled = new QCheckBox();
     addConfigItem(generalGroup, "Cache Enabled", m_cacheEnabled);
 
-    m_appointmentsPath = new QLineEdit("appointments.json");
-    addConfigItem(generalGroup, "Appointments Path", m_appointmentsPath);
+    QWidget *container = new QWidget(this);
+    QHBoxLayout *hLayout = new QHBoxLayout(container);
+    hLayout->setContentsMargins(0,0,0,0);
 
-    // Untere Controls
-    m_btnSetConfig = new QPushButton("Set Config");
-    m_statusLabel = new QLabel("[status]");
+    m_btnFileDialog     = new QPushButton("Edit");
+    m_btnFileDialog->setFixedWidth(50);
+    m_appointmentsPath  = new QLabel("appointments.json");
+    hLayout->addWidget(m_appointmentsPath);
+    hLayout->addWidget(m_btnFileDialog);
+    addConfigItem(generalGroup, "Appointments Config", container);
+
+    m_btnSetConfig  = new QPushButton("Set Config");
+    m_statusLabel   = new QLabel("[status]");
 
     mainLayout->addWidget(m_treeWidget);
     mainLayout->addWidget(m_btnSetConfig);
     mainLayout->addWidget(m_statusLabel);
 
-    QObject::connect(m_btnSetConfig, &QPushButton::released, this, &DesSystemConfig::onSetConfig);
+    connect(m_btnSetConfig, &QPushButton::released, this, &DesSystemConfig::onSetConfig);
+    connect(m_btnFileDialog, &QPushButton::released, this, [this] {
+        const auto path = QFileDialog::getOpenFileName(this, "Datei öffnen", DEFAULT_CONFIG_FILE_LOCATION, "*.json");
+        if (!path.isEmpty()) {
+            const QFileInfo info(path);
+            m_appointmentsPath->setText(info.fileName());
+            m_configFile = path;
+        }
+    });
 }
 
 void DesSystemConfig::onInitialize() {
@@ -126,7 +141,7 @@ void DesSystemConfig::onInitialize() {
     m_subscriber = node->create_subscription<event_system_msgs::msg::SystemConfig>(
         "/system_config", rclcpp::QoS(1).transient_local(),
         [this](const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
-            QMetaObject::invokeMethod(this, [this, msg]() { this->onSystemConfig(msg); });
+            QMetaObject::invokeMethod(this, [this, msg] { this->onSystemConfig(msg); });
         });
 }
 
@@ -150,7 +165,7 @@ void DesSystemConfig::onSetConfig() {
     request->full_battery_threshold = m_fullBatteryThreshold->value();
     request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
-    request->appointments_path = m_appointmentsPath->text().toStdString();
+    request->appointments_path = m_configFile.toStdString();
 
     m_statusLabel->setText("Sending...");
 
@@ -191,7 +206,11 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_fullBatteryThreshold->setValue(msg->full_battery_threshold);
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
     m_cacheEnabled->setChecked(msg->cache_enabled);
-    m_appointmentsPath->setText(QString::fromStdString(msg->appointments_path));
+
+    const auto appointmentConfigPath = QString::fromStdString(msg->appointments_path);
+    const QFileInfo info(appointmentConfigPath);
+    m_appointmentsPath->setText(info.fileName());
+    m_configFile = appointmentConfigPath;
 }
 
 }  // namespace des_system_config

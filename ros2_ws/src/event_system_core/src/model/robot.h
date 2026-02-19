@@ -58,7 +58,13 @@ public:
     bool isCharging() const { return m_isCharging; }
     void setCharging(const bool isCharging) { m_isCharging= isCharging; }
 
-    bool isChargingRequired() const { return m_chargingRequired; }
+    bool updateAndGetChargingRequired() {
+        m_chargingRequired = false;
+        if (m_bat->isBatteryLow()) {
+            m_chargingRequired = true;
+        }
+        return m_chargingRequired;
+    }
     void setChargingRequired(const bool isChargingRequired) { m_chargingRequired = isChargingRequired; }
 
     des::RobotStateType getStateType() const { return m_state->getType(); }

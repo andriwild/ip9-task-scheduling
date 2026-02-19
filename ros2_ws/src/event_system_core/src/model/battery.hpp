@@ -45,7 +45,7 @@ public:
         const int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
         m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
-        std::cout << "Battery update: " <<  energyConsumption << std::endl;
+        std::cout << "BATTERY update:" << energyConsumption << " -> " << m_currentCapacity << std::endl;
 
         if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
             RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
@@ -67,10 +67,9 @@ public:
         return { m_currentCapacity / m_designCapacity, m_designCapacity, m_lowBatteryThreshold };
     }
 
-    bool isBatteryLow() const { return m_designCapacity < m_lowBatteryThreshold / 100 * m_designCapacity; }
+    bool isBatteryLow() const { return m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity; }
 
-    bool isBatteryFull() const { return m_designCapacity < m_fullBatteryThreshold / 100 * m_designCapacity; }
-
+    bool isBatteryFull() const { return m_currentCapacity > m_fullBatteryThreshold / 100 * m_designCapacity; }
 
     double timeToFull(const double chargingPowerWatts) const {
         if (chargingPowerWatts <= 0) return -1.0;

@@ -14,6 +14,7 @@
 #include "charge.h"
 #include "mission_control.h"
 
+
 constexpr bool W_OUT_TREE = true;
 const std::string TREE_FILE = "bt_config.xml";
 
@@ -64,7 +65,10 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
          <BehaviorTree ID="MainTree">
             <Sequence name="Seq_MainLoop">
 
-                <SubTree ID="ChargeRoutine" _autoremap="true"/>
+                <Fallback name="Fallback_ChargeCheck">
+                    <SubTree ID="ChargeRoutine" _autoremap="true"/>
+                    <AlwaysSuccess/>
+                </Fallback>
                 <SubTree ID="MissionControlRoutine" _autoremap="true"/>
 
                 <Fallback name="Fallback_MainStrategy">
@@ -173,7 +177,6 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
 
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
     tree->rootBlackboard()->set("ctx", ctx);
-
     if (W_OUT_TREE) {
         std::string xml_models = BT::writeTreeNodesModelXML(factory);
         std::string xml_full_tree = BT::WriteTreeToXML(*tree, true, true);

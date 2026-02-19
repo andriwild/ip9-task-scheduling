@@ -73,7 +73,7 @@ void DesApplication::initROS() {
 
 void DesApplication::loadAppointments(const std::string& path) {
     RCLCPP_INFO(m_node->get_logger(), "Load Appointments: %s", m_config->appointmentsPath.c_str());
-    const auto appts = ConfigLoader::loadAppointmentConfig(CONFIG_PATH + path);
+    const auto appts = ConfigLoader::loadAppointmentConfig(path);
     if (!appts.has_value()) {
         throw std::runtime_error("Could not load appointments from file");
     }
@@ -85,7 +85,7 @@ void DesApplication::loadEmployeeLocations() {
     RCLCPP_DEBUG(m_node->get_logger(), "Load Employee Locations");
     const auto locations = ConfigLoader::loadEmployeeLocations(CONFIG_PATH + "employee_locations.json");
     if (!locations.has_value()) {
-        throw std::runtime_error("Could not load appointments from file");
+        throw std::runtime_error("Could not load employee from file");
     }
     m_employeeLocations = locations.value();
     RCLCPP_INFO(m_node->get_logger(), "Successful loaded employee locations (%zu)", m_employeeLocations.size());

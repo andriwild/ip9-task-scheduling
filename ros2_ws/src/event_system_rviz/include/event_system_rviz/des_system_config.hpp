@@ -7,11 +7,14 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTreeWidget>
+#include <QFileDialog>
 #include <rviz_common/panel.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
+
+const QString DEFAULT_CONFIG_FILE_LOCATION = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config";
 
 using ServiceResponseFuture = rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedFuture;
 namespace des_system_config {
@@ -47,14 +50,19 @@ protected:
     QDoubleSpinBox* m_fullBatteryThreshold;
     QLineEdit* m_dockLocation;
     QCheckBox* m_cacheEnabled;
-    QLineEdit* m_appointmentsPath;
+    QLabel* m_appointmentsPath;
     QPushButton* m_btnSetConfig;
     QLabel* m_statusLabel;
+    QPushButton* m_fileDialogBtn;
+    QPushButton* m_btnFileDialog;
+    QFileDialog* m_fileDialog;
+    QString m_configFile;
 
 private Q_SLOTS:
     void onSetConfig();
     void onServiceResponse(ServiceResponseFuture future);
     void onSystemConfig(event_system_msgs::msg::SystemConfig::SharedPtr msg);
+    QString onChooseFile();
     QTreeWidgetItem* addConfigItem(QTreeWidgetItem* parent, QString label, QWidget* widget);
 };
 

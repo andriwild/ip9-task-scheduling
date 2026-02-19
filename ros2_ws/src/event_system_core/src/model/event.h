@@ -169,5 +169,5 @@ public:
     explicit BatteryFullEvent(const int time) : IEvent(time) {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "Battery Full"; }
-    des::EventType getType() const override { return des::EventType::START_ACCOMPANY; }
+    des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
 };

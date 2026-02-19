@@ -65,6 +65,8 @@ public:
 
 class ChargeState final : public  RobotState {
 public:
+    void enter(Robot& robot) override;
+    void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
 };

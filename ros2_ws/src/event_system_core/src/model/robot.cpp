@@ -10,7 +10,8 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
 bool Robot::isBusy() const {
     return m_state->getType() == des::RobotStateType::SEARCHING
         || m_state->getType() == des::RobotStateType::ACCOMPANY
-        || m_state->getType() == des::RobotStateType::CONVERSATE;
+        || m_state->getType() == des::RobotStateType::CONVERSATE
+        || m_state->getType() == des::RobotStateType::CHARGING;
 };
 
 void Robot::updateConfig(const des::SimConfig& config) {

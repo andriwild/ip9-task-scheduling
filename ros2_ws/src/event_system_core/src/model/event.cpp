@@ -87,7 +87,7 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.completeAppointment();
-    if (ctx.m_robot->isChargingRequired()) {
+    if (ctx.m_robot->updateAndGetChargingRequired()) {
         ctx.changeRobotState(std::make_unique<ChargeState>());
     }
     ctx.m_behaviorTree->tickOnce();
@@ -96,6 +96,6 @@ void MissionCompleteEvent::execute(SimulationContext& ctx) {
 
 void BatteryFullEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_robot->setChargingRequired(false);
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
