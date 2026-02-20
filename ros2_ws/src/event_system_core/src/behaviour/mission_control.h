@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "../model/context.h"
-#include "../model/robot_state.h"
 
 class HasPendingMission final : public BT::ConditionNode {
 public:
@@ -47,10 +46,8 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS) {
-            ctx->logd("IsMissionAssigned: Yes");
             return BT::NodeStatus::SUCCESS;
         }
-        ctx->logd("IsMissionAssigned: No");
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -65,7 +62,6 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         assert(ctx->hasPendingMission());
         ctx->logi("[BT] AcceptMissionAction");
-
         const auto appointment = ctx->popPendingMission();
         ctx->setAppointment(appointment);
         ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);

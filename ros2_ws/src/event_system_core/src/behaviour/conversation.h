@@ -32,9 +32,9 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        auto convResult = ctx->m_robot->getState()->getResult();
+        const auto convResult = ctx->m_robot->getState()->getResult();
         if (convResult == des::Result::RUNNING) {
             return BT::NodeStatus::FAILURE;
         }
@@ -42,7 +42,7 @@ public:
     }
 };
 
-class WasConversationSuccessful : public BT::ConditionNode {
+class WasConversationSuccessful final : public BT::ConditionNode {
 public:
     WasConversationSuccessful(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 

@@ -40,7 +40,6 @@ public:
     }
 
     void updateBalance(const int time, const double energyConsumption) {
-        std::cout << "energyConsumption: " << energyConsumption << std::endl;
         // energy in Watt, time in seconds (+ discharge, - charge)
         // Ah = (W * s) / (3600 * V)
         const int timeDelta = time - m_lastBalanceUpdate;

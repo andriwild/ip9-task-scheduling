@@ -16,20 +16,6 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
 }
 
-void FoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    const auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
-    ctx.m_robot->getState()->setResult(result);
-    ctx.m_behaviorTree->tickOnce();
-    ctx.notifyEvent(*this);
-}
-
-void DropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    const auto result = rnd::uni() < ctx.getConversationProbability() ? des::Result::SUCCESS : des::Result::FAILURE;
-    ctx.m_robot->getState()->setResult(result);
-    ctx.m_behaviorTree->tickOnce();
-    ctx.notifyEvent(*this);
-}
-
 void StartDriveEvent::execute(SimulationContext& ctx) {
     assert(!ctx.m_robot->isDriving());
 
@@ -59,17 +45,50 @@ void AbortSearchEvent::execute(SimulationContext& ctx) {
 }
 
 void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
+    assert(!ctx.m_robot->isDriving());
     double eventTime = this->time + ctx.getRndConversationTime();
-    ctx.m_queue.push(std::make_shared<DropOffConversationCompleteEvent>(eventTime));
+    if (rnd::uni() < ctx.getConversationProbability()) {
+        ctx.m_queue.push(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
+    } else {
+        ctx.m_queue.push(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));
+    }
     ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
     ctx.notifyEvent(*this);
 }
 
+void SuccessDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
+    ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
+    ctx.m_behaviorTree->tickOnce();
+    ctx.notifyEvent(*this);
+}
+
+void FailedDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
+    ctx.m_robot->getState()->setResult(des::Result::FAILURE);
+    ctx.m_behaviorTree->tickOnce();
+    ctx.notifyEvent(*this);
+}
+
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
-    ctx.m_robot->setDriving(false);
+    assert(!ctx.m_robot->isDriving());
     auto eventTime = this->time + ctx.getRndConversationTime();
-    ctx.m_queue.push(std::make_shared<FoundPersonConversationCompleteEvent>(eventTime));
+    if (rnd::uni() < ctx.getConversationProbability()) {
+        ctx.m_queue.push(std::make_shared<SuccessFoundPersonConversationCompleteEvent>(eventTime));
+    } else {
+        ctx.m_queue.push(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
+    }
     ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+    ctx.notifyEvent(*this);
+}
+
+void SuccessFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
+    ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
+    ctx.m_behaviorTree->tickOnce();
+    ctx.notifyEvent(*this);
+}
+
+void FailedFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
+    ctx.m_robot->getState()->setResult(des::Result::FAILURE);
+    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
 

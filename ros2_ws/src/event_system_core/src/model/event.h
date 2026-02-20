@@ -1,10 +1,10 @@
 #pragma once
 
+#include <format>
 #include <iostream>
 #include <memory>
 #include <queue>
 #include <vector>
-#include <format>
 
 #include "../util/types.h"
 
@@ -115,20 +115,54 @@ public:
     des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; };
 };
 
-class FoundPersonConversationCompleteEvent final : public IEvent {
+class FoundPersonConversationCompleteEvent : public IEvent {
 public:
     explicit FoundPersonConversationCompleteEvent(const int time) : IEvent(time) {}
-    void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "Conversation complete"; }
     des::EventType getType() const override { return des::EventType::FOUND_PERSON_CONV_COMPLETE; };
 };
 
-class DropOffConversationCompleteEvent final : public IEvent {
+class SuccessFoundPersonConversationCompleteEvent final: public FoundPersonConversationCompleteEvent {
+public:
+    explicit SuccessFoundPersonConversationCompleteEvent(const int time)
+        : FoundPersonConversationCompleteEvent(time)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Conversation Successful"; }
+};
+
+class FailedFoundPersonConversationCompleteEvent final: public FoundPersonConversationCompleteEvent {
+public:
+    explicit FailedFoundPersonConversationCompleteEvent(const int time)
+        : FoundPersonConversationCompleteEvent(time)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Conversation Failed "; }
+};
+
+class DropOffConversationCompleteEvent : public IEvent {
 public:
     explicit DropOffConversationCompleteEvent(const int time) : IEvent(time) {}
-    void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Conversation complete: " ; }
+    std::string getName() const override { return "Conversation complete" ; }
     des::EventType getType() const override { return des::EventType::DROP_OFF_CONV_COMPLETE; };
+};
+
+class SuccessDropOffConversationCompleteEvent final: public DropOffConversationCompleteEvent {
+public:
+    explicit SuccessDropOffConversationCompleteEvent(const int time)
+        : DropOffConversationCompleteEvent(time)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Conversation Successful"; }
+};
+
+class FailedDropOffConversationCompleteEvent final: public DropOffConversationCompleteEvent {
+public:
+    explicit FailedDropOffConversationCompleteEvent(const int time)
+        : DropOffConversationCompleteEvent(time)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Conversation Failed "; }
 };
 
 class AbortSearchEvent final : public IEvent {
