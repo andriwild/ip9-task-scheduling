@@ -59,7 +59,9 @@ public:
             );
             rect->setZValue(Z_PLAN_LINE);
 
-            QString labelText = QString::fromStdString(appt->description + " (" + appt->personName + ")");
+            const QString labelText = QString::fromStdString(
+                std::format("Mission {}: {} ({})", appt->id, appt->description, appt->personName )
+                );
             drawMeetingMarker(scene, appt->appointmentTime, labelText, yAxis, tf);
         }
 

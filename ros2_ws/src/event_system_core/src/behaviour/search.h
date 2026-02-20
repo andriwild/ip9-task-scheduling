@@ -19,7 +19,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         if (!ctx->m_robot->isDriving() && ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING) {
-            RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "IsSearching: SUCCESS");
+            RCLCPP_INFO(rclcpp::get_logger("BT"), "IsSearching: SUCCESS");
             return BT::NodeStatus::SUCCESS;
         }
         // RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "IsSearching: FAILURE");

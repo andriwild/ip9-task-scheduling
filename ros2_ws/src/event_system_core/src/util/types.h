@@ -141,17 +141,19 @@ enum MissionState {
     COMPLETED,
     IN_PROGRESS,
     FAILED,
-    CANCELLED
+    CANCELLED,
+    REJECTED
 };
 
 inline std::string missionStateStr(const MissionState state) {
     switch(state) {
-        case PENDING: return "PEND";
-        case COMPLETED: return "COMPL";
-        case IN_PROGRESS: return "IN_P";
-        case FAILED: return "FAIL";
-        case CANCELLED: return "CNLD";
-        default: return "UNK";
+        case PENDING: return "Pending";
+        case COMPLETED: return "Completed";
+        case IN_PROGRESS: return "In Progress";
+        case FAILED: return "Failed";
+        case CANCELLED: return "Cancelled";
+        case REJECTED: return "Rejected";
+        default: return "Unknown";
     };
 };
 

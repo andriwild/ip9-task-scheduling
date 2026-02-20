@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <utility>
 #include <vector>
 
 #include "../util/types.h"
@@ -63,9 +64,9 @@ public:
 class StartDriveEvent final : public IEvent {
     std::string location;
 public:
-    explicit StartDriveEvent(const int time, const std::string &location)
+    explicit StartDriveEvent(const int time, std::string location)
         : IEvent(time)
-        , location(location)
+        , location(std::move(location))
     {}
     void execute(SimulationContext& ctx) override;
     std::string getName() const override { return "Start Drive"; }
@@ -83,7 +84,7 @@ public:
         , location(location) 
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Stop Drive: " + location; }
+    std::string getName() const override { return "Arrived: " + location; }
     des::EventType getType() const override { return des::EventType::STOP_DRIVE; }
 };
 

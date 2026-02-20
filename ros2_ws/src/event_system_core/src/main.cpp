@@ -23,7 +23,7 @@ int main(const int argc, char *argv[]) {
                     if (!app.m_eventQueue.empty()) {
                         const auto e = app.m_eventQueue.top();
                         app.m_eventQueue.pop();
-                        RCLCPP_DEBUG(app.m_node->get_logger(), "Queue Event: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+                        RCLCPP_DEBUG(app.m_node->get_logger(), "-> Event Fired: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                         app.m_ctx->setTime(e->time);
                         e->execute(*app.m_ctx);
                     } else {

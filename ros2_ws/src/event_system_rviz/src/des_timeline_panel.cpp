@@ -58,7 +58,7 @@ void DesTimelinePanel::onStateChange(const event_system_msgs::msg::TimelineState
     m_timeline->handleStateChange(msg->time, msg->state, {msg->soc, msg->capacity, msg->low_threshold});
 }
 
-void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg){
+void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr& msg){
     auto appt = std::make_shared<des::Appointment>();
     appt->id = msg->id;
     appt->appointmentTime = msg->appointment_time;

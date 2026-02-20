@@ -78,7 +78,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        ctx->logi("[BT] RejectMissionAction");
+        ctx->logw("[BT] RejectMissionAction");
 
         assert(ctx->hasPendingMission());
         const auto appointment = ctx->popPendingMission();
