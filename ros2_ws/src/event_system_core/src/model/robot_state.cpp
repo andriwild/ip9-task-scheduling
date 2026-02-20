@@ -20,10 +20,10 @@ des::RobotStateType IdleState::getType() const {
 }
 double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
     auto energyConsumption = ctx.getConfig()->energyConsumptionBase;
-    if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
-        energyConsumption -= ctx.getConfig()->chargingRate;
-    } else if (ctx.m_robot->isDriving()) {
+    if (m_driving) {
         energyConsumption = ctx.getConfig()->energyConsumptionDrive;
+    } else if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
+        energyConsumption -= ctx.getConfig()->chargingRate;
     }
     return energyConsumption;
 }

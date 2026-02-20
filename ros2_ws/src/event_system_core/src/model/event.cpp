@@ -99,3 +99,13 @@ void BatteryFullEvent::execute(SimulationContext& ctx) {
     ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
 }
+
+void MissionStartEvent::execute(SimulationContext& ctx) {
+    const std::string person = appointment->personName;
+    assert(ctx.m_employeeLocations.contains(person));
+    std::vector<std::string> locations = ctx.m_employeeLocations.at(person);
+    assert(!locations.empty());
+    ctx.changeRobotState(std::make_unique<SearchState>(locations));
+    ctx.m_behaviorTree->tickOnce();
+    ctx.notifyEvent(*this);
+}

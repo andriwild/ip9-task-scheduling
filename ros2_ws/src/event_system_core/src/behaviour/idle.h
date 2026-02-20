@@ -40,6 +40,7 @@ public:
         if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
         }
+        ctx->changeRobotState(std::make_unique<IdleState>(true));
         ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
         return BT::NodeStatus::FAILURE;
     }

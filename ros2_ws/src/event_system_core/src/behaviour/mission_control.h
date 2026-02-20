@@ -69,13 +69,7 @@ public:
         const auto appointment = ctx->popPendingMission();
         ctx->setAppointment(appointment);
         ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);
-        const std::string person = appointment->personName;
-
-        assert(ctx->m_employeeLocations.contains(person));
-        std::vector<std::string> locations = ctx->m_employeeLocations.at(person);
-        assert(!locations.empty());
-
-        ctx->changeRobotState(std::make_unique<SearchState>(locations));
+        ctx->m_queue.push(std::make_shared<MissionStartEvent>(ctx->getTime(), appointment));
         return BT::NodeStatus::SUCCESS;
     }
 };

@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <tgmath.h>
+
 #include "../util/types.h"
 
 class Robot;
@@ -18,16 +20,20 @@ public:
     virtual double getEnergyConsumption(const SimulationContext& ctx) const = 0;
 
     des::Result getResult() const { return m_result; };
-    void setResult(des::Result result) { m_result = result; };
+    void setResult(const des::Result result) { m_result = result; };
 };
 
-class IdleState : public  RobotState {
+class IdleState final : public  RobotState {
+    bool m_driving;
 public:
+    explicit IdleState(const bool isDriving = false)
+    : RobotState()
+    , m_driving(isDriving)
+    {}
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
-
 };
 
 class AccompanyState final : public  RobotState {

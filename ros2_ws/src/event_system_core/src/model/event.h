@@ -173,3 +173,18 @@ public:
     std::string getName() const override { return "Battery Full"; }
     des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
 };
+
+class MissionStartEvent final : public IEvent {
+public:
+    std::shared_ptr<des::Appointment> appointment;
+    explicit MissionStartEvent(const int time, const std::shared_ptr<des::Appointment> &appointment)
+        : IEvent(time)
+        , appointment(appointment)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override {
+        return std::format("Mission {} Start", appointment->id);
+    }
+    des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
+};
+

@@ -70,8 +70,8 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                     <SubTree ID="ChargeRoutine" _autoremap="true"/>
                     <AlwaysSuccess/>
                 </Fallback>
-                <SubTree ID="MissionControlRoutine" _autoremap="true"/>
                 <Fallback name="Fallback_MainStrategy">
+                    <SubTree ID="MissionControlRoutine" _autoremap="true"/>
                     <SubTree ID="SearchRoutine" _autoremap="true"/>
                     <SubTree ID="ConversateRoutine" _autoremap="true"/>
                     <SubTree ID="AccompanyRoutine" _autoremap="true"/>
@@ -90,14 +90,9 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
         </BehaviorTree>
 
   <BehaviorTree ID="MissionControlRoutine">
-    <Fallback name="Fallback_MissionDecision">
-      <Sequence name="Seq_HandleMissions">
-        <IsIdle/>
-        <Inverter>
-          <HasPendingMission/>
-        </Inverter>
-      </Sequence>
-      <Sequence name="ProcessPendingMission">
+    <Sequence name="Seq_HandleMissions">
+      <IsIdle/>
+      <Sequence>
         <HasPendingMission/>
         <Fallback name="AcceptOrDeclineMission">
           <Sequence name="AcceptMissionSequence">
@@ -107,10 +102,8 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
           <RejectMissionAction/>
         </Fallback>
       </Sequence>
-      <AlwaysSuccess/>
-    </Fallback>
+    </Sequence>
   </BehaviorTree>
-
         <BehaviorTree ID="SearchRoutine">
             <Sequence name="Seq_SearchMain">
                 <IsSearching/>
