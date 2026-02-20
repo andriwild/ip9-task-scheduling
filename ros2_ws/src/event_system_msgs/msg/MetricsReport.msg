@@ -13,6 +13,7 @@ int32 missions_on_time
 int32 missions_late
 int32 missions_failed
 int32 missions_cancelled
+int32 missions_rejected
 
 # Performance Metrics
 float32 avg_early_arrival

@@ -105,7 +105,7 @@ void MissionDispatchEvent::execute(SimulationContext& ctx) {
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.completeAppointment();
+    ctx.completeAppointment(this->appointment);
     if (ctx.m_robot->updateAndGetChargingRequired()) {
         ctx.changeRobotState(std::make_unique<ChargeState>());
     }

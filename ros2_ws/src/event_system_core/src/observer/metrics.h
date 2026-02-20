@@ -20,6 +20,7 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     int nMissionFailed        = 0;
     int nMissionCompletedLate = 0;
     int nMissionCanceled      = 0;
+    int nMissionRejected      = 0;
     double movedDistance      = 0.0;
     bool wasDriving           = false;
     des::RobotStateType lastState;
@@ -50,12 +51,13 @@ public:
         nMissionFailed        = 0;
         nMissionCompletedLate = 0;
         nMissionCanceled      = 0;
+        nMissionRejected      = 0;
         movedDistance         = 0.0;
         wasDriving            = false;
     }
 
 
-    void onEvent(const int time, const des::EventType type, const std::string& message, const bool isDriving, const bool isCharging) override {
+    void onEvent(const int time, const des::EventType type, const std::string& /*message*/, const bool isDriving, const bool /*isCharging*/) override {
         if(isDriving && !wasDriving) {
             wasDriving = true;
             lastTimeMoved = time;
@@ -69,7 +71,7 @@ public:
         }
     };
 
-    void onStateChanged(const int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
+    void onStateChanged(const int time, const des::RobotStateType& newState, des::BatteryProps /*batStats*/) override {
         const int passedTime = time - lastTimeStateChanged;
 
         switch (lastState) {
@@ -85,9 +87,6 @@ public:
             case des::RobotStateType::IDLE:
                 idleTime += passedTime;
                 break;
-            // case des::RobotStateType::MOVING:
-            //     moveTime += passedTime;
-            //     break;
             case des::RobotStateType::CONVERSATE:
                 talkTime += passedTime;
                 break;
@@ -96,7 +95,8 @@ public:
         lastTimeStateChanged = time;
     }
 
-    void onMissionComplete(int /*time*/, des::MissionState& state, int timeDiff) override {
+    void onMissionComplete(int /*time*/, des::MissionState& state, const int timeDiff) override {
+        std::cout << "MISSION COMPL: " << state << std::endl;
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff >= 0) {
@@ -111,8 +111,10 @@ public:
                 nMissionCanceled++;
                 break;
             case des::MissionState::FAILED:
-            case des::MissionState::REJECTED:
                 nMissionFailed++;
+                break;
+            case des::MissionState::REJECTED:
+                nMissionRejected++;
                 break;
             default:
                 break;
@@ -120,6 +122,7 @@ public:
     }
 
     void onRobotMoved(int /*time*/, const std::string& /*location*/, double distance) override {
+        std::cout << "ROBOT Moved: " << distance<< std::endl;
         movedDistance += distance;
     }
 
@@ -132,11 +135,12 @@ private:
         msg.searching_time     = searchTime;
         msg.accompany_time     = accompanyTime;
         msg.charging_time      = chargingTime;
-        msg.total_missions     = nMissionCompleted + nMissionCompletedLate + nMissionFailed + nMissionCanceled;
+        msg.total_missions     = nMissionCompleted + nMissionCompletedLate + nMissionFailed + nMissionCanceled + nMissionRejected;
         msg.missions_on_time   = nMissionCompleted;
         msg.missions_late      = nMissionCompletedLate;
         msg.missions_failed    = nMissionFailed;
         msg.missions_cancelled = nMissionCanceled;
+        msg.missions_rejected  = nMissionRejected;
 
         msg.avg_early_arrival = (nMissionCompleted > 0) ? (float)accMissionToEarlyTime / nMissionCompleted : 0.0f;
         msg.avg_lateness = (nMissionCompletedLate > 0) ? (float)accMissionToLateTime / nMissionCompletedLate : 0.0f;
@@ -150,7 +154,6 @@ private:
         } else {
             msg.utilization = 0.0f;
         }
-
         m_publisher->publish(msg);
     }
 };

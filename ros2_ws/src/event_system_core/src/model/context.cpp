@@ -39,10 +39,10 @@ void SimulationContext::updateAppointmentState(const des::MissionState& newState
     m_currentAppointment->state = newState;
 }
 
-void SimulationContext::completeAppointment() const {
-    assert(m_currentAppointment != nullptr);
-    const int timeDiff = m_currentTime - m_currentAppointment->appointmentTime;
-    notifyMissionComplete(m_currentAppointment->state, timeDiff);
+void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointment>& appt) const {
+    assert(appt != nullptr);
+    const int timeDiff = m_currentTime - appt->appointmentTime;
+    notifyMissionComplete(appt->state, timeDiff);
 }
 
 void SimulationContext::resetContext(const int newTime) {

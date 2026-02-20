@@ -50,7 +50,7 @@ public:
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void updateAppointmentState(const des::MissionState& newState) const;
     void resetContext(int newTime);
-    void completeAppointment() const;
+    void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const;
 
     int getTime() const { return m_currentTime; }
 

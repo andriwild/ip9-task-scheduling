@@ -40,7 +40,7 @@ DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     grid->addWidget(new QLabel("<b>Robot State:</b>"), 0, 0);
     grid->addWidget(m_lblRobotState, 1, 0);
 
-    m_lblMissionStats = new QLabel("Total: 0\nOn Time: 0\nLate: 0\nFailed: 0\nCancelled: 0");
+    m_lblMissionStats = new QLabel("Total: 0\nOn Time: 0\nLate: 0\nFailed: 0\nCancelled: 0\nRejected: 0");
     grid->addWidget(new QLabel("<b>Missions:</b>"), 0, 1);
     grid->addWidget(m_lblMissionStats, 1, 1);
 
@@ -83,7 +83,7 @@ QString DesMetricsPanel::fmtTime(int s) {
     return QString::fromStdString(oss.str());
 }
 
-void DesMetricsPanel::onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
+void DesMetricsPanel::onReset(const event_system_msgs::msg::TimelineReset::SharedPtr /*msg*/) {
     auto emptyReport = std::make_shared<event_system_msgs::msg::MetricsReport>();
     onMetricsReport(emptyReport);
 }
@@ -96,8 +96,9 @@ void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsRepor
     m_missionSeries->slices().at(1)->setValue(msg->missions_late);
     m_missionSeries->slices().at(1)->setLabel(QString("Late: %1").arg(msg->missions_late));
 
-    m_missionSeries->slices().at(2)->setValue(msg->missions_failed + msg->missions_cancelled);  // Merging for "Not Success" logic
-    m_missionSeries->slices().at(2)->setLabel(QString("Failed: %1").arg(msg->missions_failed + msg->missions_cancelled));
+    int notSuccess = msg->missions_failed + msg->missions_cancelled + msg->missions_rejected;
+    m_missionSeries->slices().at(2)->setValue(notSuccess);  // Merging for "Not Success" logic
+    m_missionSeries->slices().at(2)->setLabel(QString("Failed/Rejected: %1").arg(notSuccess));
 
     QString stateText = QString("Idle: %1\nMoving: %2\nSearching: %3\nAccompany: %4\nCharging: %5")
                             .arg(fmtTime(msg->idle_time))
@@ -107,12 +108,13 @@ void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsRepor
                             .arg(fmtTime(msg->charging_time));
     m_lblRobotState->setText(stateText);
 
-    QString missionText = QString("Total: %1\nOn Time: %2\nLate: %3\nFailed: %4\nCancelled: %5")
+    QString missionText = QString("Total: %1\nOn Time: %2\nLate: %3\nFailed: %4\nCancelled: %5\nRejected: %6")
                               .arg(msg->total_missions)
                               .arg(msg->missions_on_time)
                               .arg(msg->missions_late)
                               .arg(msg->missions_failed)
-                              .arg(msg->missions_cancelled);
+                              .arg(msg->missions_cancelled)
+                              .arg(msg->missions_rejected);
     m_lblMissionStats->setText(missionText);
 
     QString perfText = QString("Avg Early: %1s\nAvg Late: %2s")
