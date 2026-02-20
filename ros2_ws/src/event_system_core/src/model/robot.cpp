@@ -11,7 +11,9 @@ bool Robot::isBusy() const {
     return m_state->getType() == des::RobotStateType::SEARCHING
         || m_state->getType() == des::RobotStateType::ACCOMPANY
         || m_state->getType() == des::RobotStateType::CONVERSATE
-        || m_state->getType() == des::RobotStateType::CHARGING;
+        || m_state->getType() == des::RobotStateType::CHARGING
+        // limitation: we cannot stop driving between two locations -> driving without a job is busy
+        || isDriving();
 };
 
 void Robot::updateConfig(const des::SimConfig& config) {

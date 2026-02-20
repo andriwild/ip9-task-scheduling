@@ -51,6 +51,7 @@ void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
     m_robot->setLocation(m_robot->getIdleLocation());
     m_robot->m_bat->reset(newTime);
+    m_pendingMissions = std::queue<std::shared_ptr<des::Appointment>>();
 }
 
 double SimulationContext::getRndConversationTime() const {
@@ -68,6 +69,7 @@ void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConf
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
     // get the energy consumption of the previous state
+    std::cout << "changeRobotState: " << static_cast<int>(m_robot->getState()->getType());
     m_robot->m_bat->updateBalance(m_currentTime, m_robot->getState()->getEnergyConsumption(*this));
     if (m_robot->m_bat->isBatteryLow()) {
         m_robot->setChargingRequired(true);

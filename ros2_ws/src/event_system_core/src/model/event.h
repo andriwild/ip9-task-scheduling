@@ -95,8 +95,10 @@ public:
         , appointment(appointment)
     {}
     void execute(SimulationContext& ctx) override;
-    std::string getName() const override { return "Mission Dispatch"; }
-    des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; };
+    std::string getName() const override {
+        return std::format("Mission {} Dispatch: {}", appointment->id, appointment->personName);
+    }
+    des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; }
 };
 
 class MissionCompleteEvent final : public IEvent {

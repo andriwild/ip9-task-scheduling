@@ -15,7 +15,6 @@ void IdleState::exit(Robot& robot) {
     RobotState::exit(robot);
     robot.setCharging(false);
 }
-
 des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
@@ -23,6 +22,8 @@ double IdleState::getEnergyConsumption(const SimulationContext& ctx) const {
     auto energyConsumption = ctx.getConfig()->energyConsumptionBase;
     if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
         energyConsumption -= ctx.getConfig()->chargingRate;
+    } else if (ctx.m_robot->isDriving()) {
+        energyConsumption = ctx.getConfig()->energyConsumptionDrive;
     }
     return energyConsumption;
 }

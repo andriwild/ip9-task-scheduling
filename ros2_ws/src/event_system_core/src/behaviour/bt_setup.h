@@ -15,7 +15,7 @@
 #include "mission_control.h"
 
 
-constexpr bool W_OUT_TREE = true;
+constexpr bool W_OUT_TREE   = true;
 const std::string TREE_FILE = "bt_config.xml";
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
@@ -43,6 +43,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<IsIdle>("IsIdle");
     factory.registerNodeType<Docking>("Docking");
     factory.registerNodeType<EnterIdle>("EnterIdle");
+    factory.registerNodeType<HasPendingMissionIdle>("HasPendingMissionIdle");
 
     // conversation
     factory.registerNodeType<IsConversating>("IsConversating");
@@ -60,7 +61,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
     factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
 
-    static const char * xml_text = R"(
+    static const char *xml_text = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
             <Sequence name="Seq_MainLoop">
@@ -70,7 +71,6 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                     <AlwaysSuccess/>
                 </Fallback>
                 <SubTree ID="MissionControlRoutine" _autoremap="true"/>
-
                 <Fallback name="Fallback_MainStrategy">
                     <SubTree ID="SearchRoutine" _autoremap="true"/>
                     <SubTree ID="ConversateRoutine" _autoremap="true"/>
@@ -89,22 +89,27 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                 </Sequence>
         </BehaviorTree>
 
-        <BehaviorTree ID="MissionControlRoutine">
-             <Fallback>
-                 <Sequence name="Seq_HandleMissions">
-                    <IsIdle/>
-                    <HasPendingMission/>
-                    <Fallback name="Fallback_MissionDecision">
-                        <Sequence name="Seq_TryAccept">
-                            <MissionFeasibilityCheck/>
-                            <AcceptMissionAction/>
-                        </Sequence>
-                         <RejectMissionAction/> 
-                    </Fallback>
-                </Sequence>
-                <AlwaysSuccess/>
-             </Fallback>
-        </BehaviorTree>
+  <BehaviorTree ID="MissionControlRoutine">
+    <Fallback name="Fallback_MissionDecision">
+      <Sequence name="Seq_HandleMissions">
+        <IsIdle/>
+        <Inverter>
+          <HasPendingMission/>
+        </Inverter>
+      </Sequence>
+      <Sequence name="ProcessPendingMission">
+        <HasPendingMission/>
+        <Fallback name="AcceptOrDeclineMission">
+          <Sequence name="AcceptMissionSequence">
+            <MissionFeasibilityCheck/>
+            <AcceptMissionAction/>
+          </Sequence>
+          <RejectMissionAction/>
+        </Fallback>
+      </Sequence>
+      <AlwaysSuccess/>
+    </Fallback>
+  </BehaviorTree>
 
         <BehaviorTree ID="SearchRoutine">
             <Sequence name="Seq_SearchMain">
@@ -168,6 +173,9 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
                 <Inverter>
                     <HasPendingMission/>
                 </Inverter>
+                <Inverter>
+                    <IsRobotBusy/>
+                </Inverter>
                 <Docking/>
                 <EnterIdle/>
             </Sequence>
@@ -178,12 +186,12 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
     tree->rootBlackboard()->set("ctx", ctx);
     if (W_OUT_TREE) {
-        std::string xml_models = BT::writeTreeNodesModelXML(factory);
+        std::string xml_models    = BT::writeTreeNodesModelXML(factory);
         std::string xml_full_tree = BT::WriteTreeToXML(*tree, true, true);
 
         std::ofstream file(TREE_FILE);
         if (file.is_open()) {
-            file << xml_full_tree; 
+            file << xml_full_tree;
             file.close();
             std::cout << "BehaviorTree and model written to file: " << TREE_FILE << std::endl;
         }

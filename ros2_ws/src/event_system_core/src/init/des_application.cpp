@@ -121,7 +121,7 @@ void DesApplication::setupQueue(const std::shared_ptr<des::SimConfig> &config) {
             m_rosObserver->publishMeeting(mission->appointment, mission->time);
         }
     }
-    RCLCPP_INFO(m_node->get_logger(), "Event queue: (%zu) events inserted", m_eventQueue.size());
+    RCLCPP_INFO(m_node->get_logger(), "Event queue: (%zu) events inserted (inkl. Start and End)", m_eventQueue.size());
 }
 
 void DesApplication::reset() {

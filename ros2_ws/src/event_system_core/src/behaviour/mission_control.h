@@ -17,6 +17,7 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->logd(std::format("[BT] HasPendingMission: {}",ctx->hasPendingMission() ? "y" : "n"));
         if (ctx->hasPendingMission()) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
@@ -28,10 +29,28 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
+
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->logd(std::format("[BT] IsRobotBusy: {}",ctx->m_robot->isBusy() ? "y" : "n"));
         if (ctx->m_robot->isBusy()) {
             return BT::NodeStatus::SUCCESS;
         }
+        return BT::NodeStatus::FAILURE;
+    }
+};
+
+class IsMissionAssigned final : public BT::ConditionNode {
+public:
+    IsMissionAssigned(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        if (ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS) {
+            ctx->logd("IsMissionAssigned: Yes");
+            return BT::NodeStatus::SUCCESS;
+        }
+        ctx->logd("IsMissionAssigned: No");
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -44,9 +63,8 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (!ctx->hasPendingMission()) {
-             return BT::NodeStatus::FAILURE;
-        }
+        assert(ctx->hasPendingMission());
+        ctx->logi("[BT] AcceptMissionAction");
 
         const auto appointment = ctx->popPendingMission();
         ctx->setAppointment(appointment);
@@ -70,14 +88,12 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->logi("[BT] RejectMissionAction");
 
-        if (!ctx->hasPendingMission()) {
-             return BT::NodeStatus::FAILURE;
-        }
-        
+        assert(ctx->hasPendingMission());
         const auto appointment = ctx->popPendingMission();
         appointment->state = des::MissionState::FAILED;
-        
+        ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(ctx->getTime(), appointment));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -90,7 +106,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        
+
         const auto appointment = ctx->nextPendingMission();
         if (ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation())){
             return BT::NodeStatus::SUCCESS;

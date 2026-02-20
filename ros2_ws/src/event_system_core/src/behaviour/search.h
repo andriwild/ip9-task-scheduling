@@ -18,9 +18,11 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING) {
+        if (!ctx->m_robot->isDriving() && ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING) {
+            RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "IsSearching: SUCCESS");
             return BT::NodeStatus::SUCCESS;
         }
+        // RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "IsSearching: FAILURE");
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -36,8 +38,10 @@ public:
 
         const bool personFound = rnd::uni() < ctx->getPersonFindProbability();
         if (personFound){
+            RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "ScanLocation: Person FOUND");
             return BT::NodeStatus::SUCCESS;
         }
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "ScanLocation: Person NOT found");
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -71,9 +75,11 @@ public:
         const auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
+            RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "HasNextLocation: NO locations left -> FAIL");
             ctx->updateAppointmentState(des::MissionState::FAILED);
             return BT::NodeStatus::FAILURE;
         }
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "HasNextLocation: %zu locations left -> SUCCESS", ss->locations.size());
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -90,6 +96,7 @@ public:
         const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
+        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "MoveToNextLocation: Target %s", nextLocation.c_str());
         ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), nextLocation));
         return BT::NodeStatus::SUCCESS;
     }

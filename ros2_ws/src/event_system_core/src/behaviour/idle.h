@@ -35,6 +35,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->logd("[BT] Docking");
 
         if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
             return BT::NodeStatus::SUCCESS;
@@ -55,5 +56,19 @@ public:
         assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
         ctx->changeRobotState(std::make_unique<IdleState>());
         return BT::NodeStatus::SUCCESS;
+    }
+};
+
+class HasPendingMissionIdle final : public BT::ConditionNode {
+public:
+    HasPendingMissionIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        ctx->logd(std::format("[BT] HasPendingMissionIdle: {}",ctx->hasPendingMission() ? "y" : "n"));
+        if (ctx->hasPendingMission()) { return BT::NodeStatus::SUCCESS; }
+        return BT::NodeStatus::FAILURE;
     }
 };

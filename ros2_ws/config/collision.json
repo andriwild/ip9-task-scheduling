@@ -8,9 +8,15 @@
         },
         {
             "personName": "Leo",
-            "roomName": "5.2B01",
+            "roomName": "5.2A13",
             "appointmentTime": 7300,
             "description": "Nachhilfe"
+        },
+        {
+            "personName": "Sarah",
+            "roomName": "5.2D_Open_Zone",
+            "appointmentTime": 7700,
+            "description": "Prüfungseinsicht"
         }
     ]
 }

@@ -46,6 +46,11 @@ public:
         const rclcpp::Logger& logger
     );
 
+    void logd(std::string msg) { RCLCPP_DEBUG(m_logger, msg.c_str()); }
+    void logi(std::string msg) { RCLCPP_INFO(m_logger, msg.c_str()); }
+    void logw(std::string msg) { RCLCPP_WARN(m_logger, msg.c_str()); }
+    void loge(std::string msg) { RCLCPP_ERROR(m_logger, msg.c_str()); }
+
     Journey scheduleArrival(const std::string& target) const;
     void changeRobotState(std::unique_ptr<RobotState> newState) const;
     double getRndConversationTime() const;
@@ -54,9 +59,9 @@ public:
     void resetContext(int newTime);
     void completeAppointment() const;
 
-    int getTime() const { return m_currentTime; };
+    int getTime() const { return m_currentTime; }
 
-    std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; };
+    std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; }
 
     void setAppointment(const std::shared_ptr<des::Appointment> &appointment) {
         m_currentAppointment = appointment;
