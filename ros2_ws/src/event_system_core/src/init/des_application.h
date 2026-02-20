@@ -14,8 +14,6 @@
 #include "../sim/ros/path_node.h"
 #include "../sim/scheduler.h"
 
-constexpr rclcpp::Logger::Level LOG_LEVEL = rclcpp::Logger::Level::Debug;
-
 class DesApplication {
 public:
     DesApplication(int argc, char * argv[]) {
@@ -23,11 +21,9 @@ public:
         QCoreApplication::setApplicationName("Discrete Event System");
         QCoreApplication::setApplicationVersion("1.0");
 
-        rclcpp::init(0, nullptr);
-        m_node = std::make_shared<rclcpp::Node>("des_application");
-        m_node->get_logger().set_level(LOG_LEVEL);
-        RCLCPP_INFO(m_node->get_logger(), "\n----- Descrete Event Sytem -----");
-        RCLCPP_INFO(m_node->get_logger(), "C++ Version: %ld", __cplusplus);
+        rclcpp::init(argc, argv);
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "\n----- Descrete Event Sytem -----");
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "C++ Version: %ld", __cplusplus);
     }
 
     ~DesApplication() {
@@ -55,13 +51,10 @@ public:
 
 
     EventQueue m_eventQueue;
-    rclcpp::Node::SharedPtr m_node;
     std::shared_ptr<SimulationContext> m_ctx;
     std::unique_ptr<QApplication> m_app;
 
 private:
-    // Qt Application
-
     std::unique_ptr<Scheduler> m_scheduler;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
     std::shared_ptr<des::SimConfig> m_config;

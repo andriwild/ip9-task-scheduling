@@ -5,7 +5,7 @@ int main(const int argc, char *argv[]) {
     app.setupApplication();
 
     auto _ = std::thread([&] {
-        RCLCPP_INFO(app.m_node->get_logger(), "Start Simulation Thread");
+        RCLCPP_INFO(rclcpp::get_logger("main"), "Start Simulation Thread");
         while (rclcpp::ok()) {
             app.updateConfig();
 
@@ -23,21 +23,21 @@ int main(const int argc, char *argv[]) {
                     if (!app.m_eventQueue.empty()) {
                         const auto e = app.m_eventQueue.top();
                         app.m_eventQueue.pop();
-                        RCLCPP_DEBUG(app.m_node->get_logger(), "-> Event Fired: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                         app.m_ctx->setTime(e->time);
                         e->execute(*app.m_ctx);
                     } else {
-                        RCLCPP_DEBUG(app.m_node->get_logger(), "Simulation complete. Event Queue empty.");
+                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");
                         app.enterPause();
                     }
                     break;
                 default:
-                        RCLCPP_WARN(app.m_node->get_logger(), "Unrecognized Simulation State!");
+                        RCLCPP_WARN(rclcpp::get_logger("main"), "Unrecognized Simulation State!");
                     break;
             }
         }
 
-        RCLCPP_INFO(app.m_node->get_logger(), "Simulation complete");
+        RCLCPP_INFO(rclcpp::get_logger("main"), "Simulation complete");
 
         QCoreApplication::quit();
         QApplication::quit();

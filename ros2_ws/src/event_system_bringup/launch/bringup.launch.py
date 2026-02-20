@@ -6,9 +6,11 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time", default=True)
+    log_level = LaunchConfiguration("log_level", default="INFO")
 
     return LaunchDescription([
         DeclareLaunchArgument("use_sim_time", default_value=use_sim_time),
+        DeclareLaunchArgument("log_level", default_value=log_level),
 
         # Node(
         #     package='event_system_tf_transform',
@@ -32,6 +34,18 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim_time': use_sim_time,
-            }]
+            }],
+            ros_arguments=[
+                '--log-level', ['des_application:=', log_level],
+                '--log-level', ['event_system_planner_node:=', log_level],
+                '--log-level', ['event_system_controller_node:=', log_level],
+                '--log-level', ['event_system_config_node:=', log_level],
+                '--log-level', ['event_system_metrics_node:=', log_level],
+                '--log-level', ['SimulationContext:=', log_level],
+                '--log-level', ['Robot:=', log_level],
+                '--log-level', ['Battery:=', log_level],
+                '--log-level', ['Scheduler:=', log_level],
+                '--log-level', ['Context:=', log_level]
+            ]
         ),
     ])

@@ -111,6 +111,7 @@ public:
                 nMissionCanceled++;
                 break;
             case des::MissionState::FAILED:
+            case des::MissionState::REJECTED:
                 nMissionFailed++;
                 break;
             default:

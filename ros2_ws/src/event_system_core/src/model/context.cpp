@@ -9,18 +9,16 @@ SimulationContext::SimulationContext(
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<PathPlannerNode> plannerNode,
     std::map<std::string, std::vector<std::string>> employeeLocations,
-    Scheduler& scheduler,
-    const rclcpp::Logger& logger
+    Scheduler& scheduler
 )
     : m_simConfig(std::move(simConfig))
     , m_scheduler(scheduler)
-    , m_logger(logger)
     , m_plannerNode(std::move(plannerNode))
     , m_queue(queue)
     , m_employeeLocations(std::move(employeeLocations))
 {
-    m_robot = std::make_unique<Robot>(m_simConfig, logger);
-    RCLCPP_INFO(m_logger, "Simulation Context created!");
+    m_robot = std::make_unique<Robot>(m_simConfig);
+    RCLCPP_INFO(rclcpp::get_logger("Context"), "Simulation Context created!");
 }
 
 Journey SimulationContext::scheduleArrival(const std::string& target) const {
@@ -64,7 +62,7 @@ double SimulationContext::getRndConversationTime() const {
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("SimulationContext"), *m_simConfig);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("Context"), *m_simConfig);
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {

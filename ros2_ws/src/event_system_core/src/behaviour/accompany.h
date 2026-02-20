@@ -20,7 +20,9 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         const bool isArrived = ctx->m_robot->getLocation() == ctx->m_robot->getTargetLocation();
-        if (ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY && isArrived) {
+        const bool isAccompany = ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - AccompanyRoutine"), "IsAccompany: %d (arrived: %d)", isAccompany, isArrived);
+        if (isAccompany && isArrived) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -36,9 +38,9 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         // TODO: add randomness
-        return true
-                   ? BT::NodeStatus::SUCCESS
-                   : BT::NodeStatus::FAILURE;
+        const bool arrived = true;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - AccompanyRoutine"), "ArrivedWithPerson: %d", arrived);
+        return arrived ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
@@ -53,6 +55,7 @@ public:
 
         ctx->m_queue.push(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>());
+        RCLCPP_INFO(rclcpp::get_logger("BT - AccompanyRoutine"), "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -68,6 +71,7 @@ public:
 
         ctx->updateAppointmentState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
+        RCLCPP_WARN(rclcpp::get_logger("BT - AccompanyRoutine"), "Abort Accompany!");
         return BT::NodeStatus::SUCCESS;
     }
 };

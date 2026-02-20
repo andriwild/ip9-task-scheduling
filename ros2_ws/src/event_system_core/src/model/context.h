@@ -28,7 +28,6 @@ class SimulationContext {
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
     std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
     Scheduler& m_scheduler;
-    rclcpp::Logger m_logger;
 
 public:
     std::shared_ptr<PathPlannerNode> m_plannerNode;
@@ -42,14 +41,8 @@ public:
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> plannerNode,
         std::map<std::string, std::vector<std::string>> employeeLocations,
-        Scheduler& scheduler,
-        const rclcpp::Logger& logger
+        Scheduler& scheduler
     );
-
-    void logd(std::string msg) { RCLCPP_DEBUG(m_logger, msg.c_str()); }
-    void logi(std::string msg) { RCLCPP_INFO(m_logger, msg.c_str()); }
-    void logw(std::string msg) { RCLCPP_WARN(m_logger, msg.c_str()); }
-    void loge(std::string msg) { RCLCPP_ERROR(m_logger, msg.c_str()); }
 
     Journey scheduleArrival(const std::string& target) const;
     void changeRobotState(std::unique_ptr<RobotState> newState) const;
@@ -69,7 +62,7 @@ public:
 
     void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) {
         m_pendingMissions.push(appointment);
-        RCLCPP_DEBUG(m_logger, "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
+        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
     }
     
     bool hasPendingMission() const {
@@ -85,7 +78,7 @@ public:
         if (m_pendingMissions.empty()) { return nullptr; }
         auto appointment = m_pendingMissions.front();
         m_pendingMissions.pop();
-        RCLCPP_DEBUG(m_logger, "Mission removed from pending list - %zu remaining", m_pendingMissions.size());
+        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission removed from pending list - %zu remaining", m_pendingMissions.size());
         return appointment;
     }
 
@@ -133,13 +126,13 @@ public:
         }
     }
 
-    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) {
+    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const {
         const double missionDuration = m_scheduler.optimisticMeeting(appointment.personName, startPos, appointment.roomName);
         if (appointment.appointmentTime - missionDuration  >= getTime()) {
-            RCLCPP_DEBUG(m_logger, "Mission %u is feasible", appointment.id);
+            RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", appointment.id);
             return true;
         }
-        RCLCPP_DEBUG(m_logger, "Mission %u is NOT feasible", appointment.id);
+        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is NOT feasible", appointment.id);
         return false;
     };
 

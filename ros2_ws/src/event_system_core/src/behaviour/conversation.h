@@ -18,7 +18,9 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (ctx->m_robot->getStateType() == des::RobotStateType::CONVERSATE) {
+        const bool isConversating = ctx->m_robot->getStateType() == des::RobotStateType::CONVERSATE;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsConversating: %d", isConversating);
+        if (isConversating) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -35,6 +37,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         const auto convResult = ctx->m_robot->getState()->getResult();
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
         if (convResult == des::Result::RUNNING) {
             return BT::NodeStatus::FAILURE;
         }
@@ -52,6 +55,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         const auto convResult = ctx->m_robot->getState()->getResult();
+        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
         if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -68,6 +72,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         ctx->m_queue.push(std::make_shared<StartAccompanyEvent>(ctx->getTime()));
+        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -83,7 +88,9 @@ public:
         const auto currentState = ctx->m_robot->getState();
         const auto convState = dynamic_cast<ConversateState*>(currentState);
         
-        if (convState && convState->conversationType == ConversateState::Type::FOUND_PERSON) {
+        const bool isFoundPerson = convState && convState->conversationType == ConversateState::Type::FOUND_PERSON;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsFoundPersonConversation: %d", isFoundPerson);
+        if (isFoundPerson) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -101,7 +108,9 @@ public:
         const auto currentState = ctx->m_robot->getState();
         const auto convState = dynamic_cast<ConversateState*>(currentState);
 
-        if (convState && convState->conversationType == ConversateState::Type::DROP_OFF) {
+        const bool isDropOff = convState && convState->conversationType == ConversateState::Type::DROP_OFF;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsDropOffConversation: %d", isDropOff);
+        if (isDropOff) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -125,6 +134,7 @@ public:
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
         ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getAppointment()));
+        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Complete Mission Action");
         
         return BT::NodeStatus::SUCCESS;
     }

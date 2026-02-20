@@ -16,8 +16,9 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        ctx->logd(std::format("[BT] HasPendingMission: {}",ctx->hasPendingMission() ? "y" : "n"));
-        if (ctx->hasPendingMission()) { return BT::NodeStatus::SUCCESS; }
+        const bool hasPending = ctx->hasPendingMission();
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "HasPendingMission: %d", hasPending);
+        if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
 };
@@ -30,8 +31,9 @@ public:
     BT::NodeStatus tick() override {
 
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        ctx->logd(std::format("[BT] IsRobotBusy: {}",ctx->m_robot->isBusy() ? "y" : "n"));
-        if (ctx->m_robot->isBusy()) {
+        const bool isBusy = ctx->m_robot->isBusy();
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsRobotBusy: %d", isBusy);
+        if (isBusy) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -45,7 +47,9 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        if (ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS) {
+        const bool assigned = ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsMissionAssigned: %d", assigned);
+        if (assigned) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -61,8 +65,8 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         assert(ctx->hasPendingMission());
-        ctx->logi("[BT] AcceptMissionAction");
         const auto appointment = ctx->popPendingMission();
+        RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for: %s", appointment->personName.c_str());
         ctx->setAppointment(appointment);
         ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);
         ctx->m_queue.push(std::make_shared<MissionStartEvent>(ctx->getTime(), appointment));
@@ -78,7 +82,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        ctx->logw("[BT] RejectMissionAction");
+        RCLCPP_WARN(rclcpp::get_logger("BT - MissionControlRoutine"), "RejectMissionAction");
 
         assert(ctx->hasPendingMission());
         const auto appointment = ctx->popPendingMission();
@@ -98,7 +102,9 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
         const auto appointment = ctx->nextPendingMission();
-        if (ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation())){
+        const bool isFeasible = ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation());
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "MissionFeasibilityCheck: %d", isFeasible);
+        if (isFeasible){
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;

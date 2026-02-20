@@ -15,26 +15,23 @@ class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::map<std::string, std::vector<std::string>> m_locations;
-    rclcpp::Logger m_logger;
 
 public:
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<PathPlannerNode> &plannerNode,
-        std::map<std::string, std::vector<std::string>> locations,
-        rclcpp::Logger logger
+        std::map<std::string, std::vector<std::string>> locations
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
         , m_locations(std::move(locations))
-        , m_logger(std::move(logger))
     {}
 
     std::vector<std::shared_ptr<MissionDispatchEvent>> simplePlan(
         std::vector<std::shared_ptr<des::Appointment>>& appointments,
         const std::string& startPos
     ) {
-        RCLCPP_DEBUG(m_logger, "[SimplePlan] Schedule %zu appointments", appointments.size());
+        RCLCPP_DEBUG(rclcpp::get_logger("Scheduler"), "[SimplePlan] Schedule %zu appointments", appointments.size());
         std::vector<std::shared_ptr<MissionDispatchEvent>> missions;
 
         for (auto& appointment : appointments) {

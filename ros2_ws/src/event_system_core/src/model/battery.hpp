@@ -12,21 +12,18 @@ class Battery {
     double m_lowBatteryThreshold; // %
     double m_fullBatteryThreshold; // %
     double m_voltage = 12.0;
-    rclcpp::Logger m_logger;
 
 public:
     explicit Battery(
         const double capacity,
         const double initialCapacity,
         const double lowBatteryThreshold,
-        const double fullBatteryThreshold,
-        const rclcpp::Logger &logger
+        const double fullBatteryThreshold
     )
         : m_designCapacity(capacity)
         , m_initialCapacity(initialCapacity)
         , m_lowBatteryThreshold(lowBatteryThreshold)
         , m_fullBatteryThreshold(fullBatteryThreshold)
-        , m_logger(logger)
     {
         m_currentCapacity = initialCapacity;
     }
@@ -44,7 +41,10 @@ public:
         // Ah = (W * s) / (3600 * V)
         const int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
-        m_currentCapacity -= energyConsumption * timeDelta / (3600 * m_voltage);
+        const double capacityDiff = energyConsumption * timeDelta / (3600 * m_voltage);
+        m_currentCapacity -= capacityDiff;
+        
+        //RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
 
         if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
             RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
@@ -66,9 +66,17 @@ public:
         return { m_currentCapacity / m_designCapacity, m_designCapacity, m_lowBatteryThreshold };
     }
 
-    bool isBatteryLow() const { return m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity; }
+    bool isBatteryLow() const { 
+        const bool isLow = m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity;
+        //RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "isBatteryLow: %d", isLow);
+        return isLow;
+    }
 
-    bool isBatteryFull() const { return m_currentCapacity > m_fullBatteryThreshold / 100 * m_designCapacity; }
+    bool isBatteryFull() const { 
+        const bool isFull = m_currentCapacity > m_fullBatteryThreshold / 100 * m_designCapacity;
+        RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "isBatteryFull: %d", isFull);
+        return isFull;
+    }
 
     double timeToFull(const double chargingPowerWatts) const {
         if (chargingPowerWatts <= 0) return -1.0;

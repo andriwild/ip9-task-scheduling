@@ -2,7 +2,7 @@
 #include "robot_state.h"
 
 void Robot::changeState(std::unique_ptr<RobotState> newState) {
-    m_state->exit(*this);
+    if (m_state) { m_state->exit(*this); }
     m_state = std::move(newState);
     m_state->enter(*this);
 }
@@ -17,6 +17,7 @@ bool Robot::isBusy() const {
 };
 
 void Robot::updateConfig(const des::SimConfig& config) {
+    RCLCPP_INFO(rclcpp::get_logger("Robot"), "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);
     setAccompanySpeed(config.robotAccompanySpeed);
     m_dockLocation = config.dockLocation;
