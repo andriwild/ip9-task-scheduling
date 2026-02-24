@@ -23,7 +23,10 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
 
     // charge
     factory.registerNodeType<IsBatteryLow>("IsBatteryLow");
+    factory.registerNodeType<IsCharging>("IsCharging");
+    factory.registerNodeType<IsTaskActive>("IsTaskActive");
     factory.registerNodeType<Charge>("Charge");
+    factory.registerNodeType<GoToDock>("GoToDock");
 
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
@@ -65,11 +68,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
             <Sequence name="Seq_MainLoop">
-
-                <Fallback name="Fallback_ChargeCheck">
-                    <SubTree ID="ChargeRoutine" _autoremap="true"/>
-                    <AlwaysSuccess/>
-                </Fallback>
+                <SubTree ID="ChargeRoutine" _autoremap="true"/>
                 <Fallback name="Fallback_MainStrategy">
                     <SubTree ID="MissionControlRoutine" _autoremap="true"/>
                     <SubTree ID="SearchRoutine" _autoremap="true"/>
@@ -81,13 +80,27 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
          </BehaviorTree>
 
 
-        <BehaviorTree ID="ChargeRoutine">
-                 <Sequence name="Seq_DockAndCharge">
-                    <IsBatteryLow/>
-                    <Docking/>
-                    <Charge/>
-                </Sequence>
-        </BehaviorTree>
+<BehaviorTree ID="ChargeRoutine">
+  <Fallback name="ChargeLogicTopLevel">
+
+    <Sequence name="ContinueRegularWork">
+      <Inverter><IsBatteryLow /></Inverter>
+      <Inverter><IsCharging /></Inverter>
+    </Sequence>
+
+    <IsTaskActive />
+
+    <ForceFailure>
+      <Fallback name="Execution">
+        <Sequence name="DockingSequence">
+          <GoToDock />
+          <Charge />
+        </Sequence>
+      </Fallback>
+    </ForceFailure>
+
+  </Fallback>
+</BehaviorTree>
 
   <BehaviorTree ID="MissionControlRoutine">
     <Sequence name="Seq_HandleMissions">

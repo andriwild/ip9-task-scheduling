@@ -30,11 +30,11 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     moveGroup->setText(0, "Movement");
     moveGroup->setExpanded(true);
 
-    m_robotSpeed = new QDoubleSpinBox(); m_robotSpeed->setRange(0.0, 10.0);
+    m_robotSpeed = new QDoubleSpinBox(); m_robotSpeed->setRange(0.0, 10.0), m_robotSpeed->setSingleStep(0.01);
     m_robotSpeed->setSuffix(" m/s");
     addConfigItem(moveGroup, "Robot Speed", m_robotSpeed);
 
-    m_robotAccompanySpeed = new QDoubleSpinBox(); m_robotAccompanySpeed->setRange(0.0, 10.0);
+    m_robotAccompanySpeed = new QDoubleSpinBox(); m_robotAccompanySpeed->setRange(0.0, 10.0), m_robotAccompanySpeed->setSingleStep(0.01);
     m_robotAccompanySpeed->setSuffix(" m/s");
     addConfigItem(moveGroup, "Accompany Speed", m_robotAccompanySpeed);
 

@@ -47,7 +47,7 @@ public:
         //RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
 
         if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
-            RCLCPP_WARN(rclcpp::get_logger("Battery"), "Batter Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
+            RCLCPP_WARN(rclcpp::get_logger("Battery"), "Battery Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
         }
 
         if (m_currentCapacity <= 0) {
@@ -86,7 +86,9 @@ public:
 
         const double capacityDiff = fullCapacity - m_currentCapacity; // Ah
         // Ah = (W * s) / (3600 * V) => s = (Ah * 3600 * V) / W
-        return (capacityDiff * 3600.0 * m_voltage) / chargingPowerWatts;
+        const double duration = (capacityDiff * 3600.0 * m_voltage) / chargingPowerWatts;
+        RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "Calculate time to full: %f", duration);
+        return duration;
     }
 
 private:

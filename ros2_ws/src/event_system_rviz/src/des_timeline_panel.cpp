@@ -26,7 +26,7 @@ DesTimelinePanel::DesTimelinePanel(QWidget * parent) : Panel(parent) {
 DesTimelinePanel::~DesTimelinePanel() = default;
 
 void DesTimelinePanel::onInitialize() {
-    auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
+    const auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
 
     m_subEvent = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(

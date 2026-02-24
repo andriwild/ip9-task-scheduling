@@ -21,6 +21,7 @@ class Robot {
     bool m_chargingRequired = false;
 
 public:
+    bool m_batteryFullEventScheduled = false;
     std::unique_ptr<Battery> m_bat;
 
     explicit Robot(const std::shared_ptr<des::SimConfig> &config)
@@ -38,6 +39,7 @@ public:
     }
 
     bool isBusy() const;
+    bool isTaskActive() const;
     void updateConfig(const des::SimConfig& config);
 
     std::string getLocation() const { return m_currentLocation; };

@@ -24,12 +24,8 @@ public:
 };
 
 class IdleState final : public  RobotState {
-    bool m_driving;
 public:
-    explicit IdleState(const bool isDriving = false)
-    : RobotState()
-    , m_driving(isDriving)
-    {}
+    explicit IdleState() : RobotState() {}
     void enter(Robot& robot) override;
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
@@ -65,6 +61,7 @@ public:
 
     ConversateState(const Type type = Type::FOUND_PERSON) : conversationType(type) {}
     
+    void enter(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const SimulationContext& ctx) const override;
 };

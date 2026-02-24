@@ -14,8 +14,13 @@ bool Robot::isBusy() const {
         || m_state->getType() == des::RobotStateType::CHARGING
         // limitation: we cannot stop driving between two locations -> driving without a job is busy
         || isDriving();
-};
+}
 
+bool Robot::isTaskActive() const {
+    return m_state->getType() == des::RobotStateType::SEARCHING
+        || m_state->getType() == des::RobotStateType::ACCOMPANY
+        || m_state->getType() == des::RobotStateType::CONVERSATE;
+}
 void Robot::updateConfig(const des::SimConfig& config) {
     RCLCPP_INFO(rclcpp::get_logger("Robot"), "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);

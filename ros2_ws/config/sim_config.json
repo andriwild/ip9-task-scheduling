@@ -1,5 +1,5 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/collision.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/light_load.json",
     "battery_capacity": 16.0,
     "cacheEnabled": true,
     "charging_rate": 500.0,
@@ -13,8 +13,8 @@
     "find_person_probability": 0.5299999713897705,
     "full_battery_threshold": 80.0,
     "initial_battery_capacity": 2.0,
-    "low_battery_threshold": 10.0,
-    "robot_accompany_speed": 0.20000000298023224,
-    "robot_speed": 0.30000001192092896,
+    "low_battery_threshold": 29.0,
+    "robot_accompany_speed": 0.09000000357627869,
+    "robot_speed": 0.15000000596046448,
     "timeBuffer": 120.0
 }

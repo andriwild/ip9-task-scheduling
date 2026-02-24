@@ -93,10 +93,10 @@ public:
         }
         lastState = newState;
         lastTimeStateChanged = time;
+
     }
 
     void onMissionComplete(int /*time*/, des::MissionState& state, const int timeDiff) override {
-        std::cout << "MISSION COMPL: " << state << std::endl;
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff >= 0) {
@@ -122,7 +122,6 @@ public:
     }
 
     void onRobotMoved(int /*time*/, const std::string& /*location*/, double distance) override {
-        std::cout << "ROBOT Moved: " << distance<< std::endl;
         movedDistance += distance;
     }
 

@@ -18,6 +18,8 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 
 void StartDriveEvent::execute(SimulationContext& ctx) {
     assert(!ctx.m_robot->isDriving());
+    ctx.m_robot->m_bat->updateBalance(ctx.getTime(), ctx.m_robot->getState()->getEnergyConsumption(ctx));
+    ctx.m_robot->setCharging(false);
 
     if (ctx.m_robot->getLocation() == location) {
         ctx.m_queue.push(std::make_shared<StopDriveEvent>(time, location, 0));
@@ -31,10 +33,15 @@ void StartDriveEvent::execute(SimulationContext& ctx) {
 
 void StopDriveEvent::execute(SimulationContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
+    ctx.m_robot->m_bat->updateBalance(ctx.getTime(), ctx.m_robot->getState()->getEnergyConsumption(ctx));
     ctx.m_robot->setDriving(false);
+    if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
+        ctx.m_robot->setCharging(true);
+    }
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void AbortSearchEvent::execute(SimulationContext& ctx) {
@@ -58,14 +65,14 @@ void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
 
 void SuccessDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void FailedDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->getState()->setResult(des::Result::FAILURE);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
@@ -82,14 +89,14 @@ void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
 
 void SuccessFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void FailedFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->getState()->setResult(des::Result::FAILURE);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void StartAccompanyEvent::execute(SimulationContext& ctx) {
@@ -100,23 +107,21 @@ void StartAccompanyEvent::execute(SimulationContext& ctx) {
 
 void MissionDispatchEvent::execute(SimulationContext& ctx) {
     ctx.addPendingMission(this->appointment);
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void MissionCompleteEvent::execute(SimulationContext& ctx) {
     ctx.completeAppointment(this->appointment);
-    if (ctx.m_robot->updateAndGetChargingRequired()) {
-        ctx.changeRobotState(std::make_unique<ChargeState>());
-    }
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void BatteryFullEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_behaviorTree->tickOnce();
+    ctx.m_robot->m_batteryFullEventScheduled = false;
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
 
 void MissionStartEvent::execute(SimulationContext& ctx) {
@@ -125,6 +130,6 @@ void MissionStartEvent::execute(SimulationContext& ctx) {
     std::vector<std::string> locations = ctx.m_employeeLocations.at(person);
     assert(!locations.empty());
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
-    ctx.m_behaviorTree->tickOnce();
     ctx.notifyEvent(*this);
+    ctx.m_behaviorTree->tickOnce();
 }
