@@ -1,5 +1,5 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/light_load.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/heavy_load.json",
     "battery_capacity": 16.0,
     "cacheEnabled": true,
     "charging_rate": 500.0,

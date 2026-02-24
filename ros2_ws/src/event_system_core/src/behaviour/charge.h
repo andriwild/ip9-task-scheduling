@@ -17,10 +17,6 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        // Update current battery balance before checking
-        const auto robotState = ctx->m_robot->getState();
-        ctx->m_robot->m_bat->updateBalance(ctx->getTime(), robotState->getEnergyConsumption(*ctx));
-
         const bool chargingRequired = ctx->m_robot->updateAndGetChargingRequired();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "IsBatteryLow: %d", chargingRequired);
         return chargingRequired ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;

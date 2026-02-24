@@ -24,7 +24,7 @@ int main(const int argc, char *argv[]) {
                         const auto e = app.m_eventQueue.top();
                         app.m_eventQueue.pop();
                         RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-                        app.m_ctx->setTime(e->time);
+                        app.m_ctx->advanceTime(e->time);
                         e->execute(*app.m_ctx);
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");

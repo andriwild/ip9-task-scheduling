@@ -86,8 +86,12 @@ public:
         return m_currentAppointment;
     }
 
-    void setTime(const int newTime) {
+    void advanceTime(const int newTime) {
         assert(newTime >= m_currentTime);
+        m_robot->m_bat->updateBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
+        if (m_robot->m_bat->isBatteryLow()) {
+            m_robot->setChargingRequired(true);
+        }
         m_currentTime = newTime;
     }
 

@@ -18,7 +18,6 @@ void SimulationEndEvent::execute(SimulationContext& ctx) {
 
 void StartDriveEvent::execute(SimulationContext& ctx) {
     assert(!ctx.m_robot->isDriving());
-    ctx.m_robot->m_bat->updateBalance(ctx.getTime(), ctx.m_robot->getState()->getEnergyConsumption(ctx));
     ctx.m_robot->setCharging(false);
 
     if (ctx.m_robot->getLocation() == location) {
@@ -33,7 +32,6 @@ void StartDriveEvent::execute(SimulationContext& ctx) {
 
 void StopDriveEvent::execute(SimulationContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
-    ctx.m_robot->m_bat->updateBalance(ctx.getTime(), ctx.m_robot->getState()->getEnergyConsumption(ctx));
     ctx.m_robot->setDriving(false);
     if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
         ctx.m_robot->setCharging(true);
