@@ -33,9 +33,6 @@ void StartDriveEvent::execute(SimulationContext& ctx) {
 void StopDriveEvent::execute(SimulationContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
     ctx.m_robot->setDriving(false);
-    if (ctx.m_robot->getLocation() == ctx.m_robot->getIdleLocation()) {
-        ctx.m_robot->setCharging(true);
-    }
     ctx.m_behaviorTree->rootBlackboard()->set("location", this->location);
     ctx.notifyEvent(*this);
 

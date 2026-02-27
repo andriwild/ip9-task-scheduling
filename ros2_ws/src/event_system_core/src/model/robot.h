@@ -44,7 +44,10 @@ public:
 
     std::string getLocation() const { return m_currentLocation; };
     void setLocation(const std::string &location) { 
-        m_currentLocation = location; 
+        m_currentLocation = location;
+        if (m_currentLocation == getIdleLocation()) {
+           m_isCharging = true;
+        }
         RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot location set to: %s", location.c_str());
     }
 

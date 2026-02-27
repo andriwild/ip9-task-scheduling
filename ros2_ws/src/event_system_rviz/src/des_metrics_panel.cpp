@@ -75,9 +75,9 @@ void DesMetricsPanel::onInitialize() {
         });
 }
 
-QString DesMetricsPanel::fmtTime(int s) {
-    int m = s / 60;
-    int sec = s % 60;
+QString DesMetricsPanel::fmtTime(const int s) {
+    const int m = s / 60;
+    const int sec = s % 60;
     std::ostringstream oss;
     oss << m << "m " << std::setw(2) << std::setfill('0') << sec << "s";
     return QString::fromStdString(oss.str());

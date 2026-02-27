@@ -32,7 +32,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
         const bool isCharging = ctx->m_robot->getState()->getType() == des::RobotStateType::CHARGING;
-        RCLCPP_ERROR(rclcpp::get_logger("BT - IsCharging"), "%d", isCharging);
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - IsCharging"), "%d", isCharging);
         return isCharging ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
 };

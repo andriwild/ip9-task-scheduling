@@ -30,8 +30,11 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     assert(distance.has_value());
 
     const double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
-    const double noiseFactor = rnd::getNormalDist(1.0, 0.1);
-    return { travelTime * noiseFactor, distance.value() };
+    double travelTimeRnd = rnd::getNormalDist(travelTime, getDriveTimeStd());
+    if (travelTimeRnd < 0) {
+        travelTimeRnd = travelTime;
+    }
+    return { travelTimeRnd, distance.value() };
 }
 
 void SimulationContext::updateAppointmentState(const des::MissionState& newState) const {
@@ -53,10 +56,11 @@ void SimulationContext::resetContext(const int newTime) {
 }
 
 double SimulationContext::getRndConversationTime() const {
-    return rnd::getNormalDist(
+    const double conversationTime = rnd::getNormalDist(
         getDefaultConversationTime(),
         getConversationDurationStd()
     );
+    return conversationTime < 1.0 ? 1.0 : conversationTime;
 }
 
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {

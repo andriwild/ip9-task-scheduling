@@ -144,5 +144,5 @@ public:
     double getConversationProbability() const { return m_simConfig->conversationProbability; };
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
     double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
-    double getDriveTimeVariance() const { return m_simConfig->driveTimeStd; };
+    double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
 };
