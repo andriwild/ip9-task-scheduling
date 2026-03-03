@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QApplication>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -17,10 +16,6 @@
 class DesApplication {
 public:
     DesApplication(int argc, char * argv[]) {
-        m_app = std::make_unique<QApplication>(argc, argv);
-        QCoreApplication::setApplicationName("Discrete Event System");
-        QCoreApplication::setApplicationVersion("1.0");
-
         rclcpp::init(argc, argv);
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "\n----- Descrete Event Sytem -----");
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "C++ Version: %ld", __cplusplus);
@@ -49,10 +44,8 @@ public:
     void updateConfig();
     void enterPause() const;
 
-
     EventQueue m_eventQueue;
     std::shared_ptr<SimulationContext> m_ctx;
-    std::unique_ptr<QApplication> m_app;
 
 private:
     std::unique_ptr<Scheduler> m_scheduler;

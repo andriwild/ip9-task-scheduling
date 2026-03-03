@@ -36,12 +36,6 @@ int main(const int argc, char *argv[]) {
                     break;
             }
         }
-
         RCLCPP_INFO(rclcpp::get_logger("main"), "Simulation complete");
-
-        QCoreApplication::quit();
-        QApplication::quit();
     });
-
-    return QApplication::exec();
 }
