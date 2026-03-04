@@ -1,7 +1,7 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/20_appts.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json",
     "battery_capacity": 16.0,
-    "cacheEnabled": false,
+    "cacheEnabled": true,
     "charging_rate": 500.0,
     "conversation_duration_mean": 28.0,
     "conversation_duration_std": 18.0,

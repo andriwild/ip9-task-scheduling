@@ -33,8 +33,8 @@ public:
 
 private:
   void topicCallback(
-        const std::shared_ptr<SystemState::Request> request, 
-        std::shared_ptr<SystemState::Response> response
+        const std::shared_ptr<SystemState::Request> &request,
+        const std::shared_ptr<SystemState::Response> &response
     ) {
     response->success = true;
     int old_state = currentState.load();
