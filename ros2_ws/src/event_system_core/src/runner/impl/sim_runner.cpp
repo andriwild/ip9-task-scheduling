@@ -33,12 +33,17 @@ void SimRunner::initROS() {
     }
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Planner ready");
 
+    m_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
     m_rosThread = std::thread([this] {
-        m_executor.add_node(m_plannerNode);
-        m_executor.add_node(m_controllerNode);
-        m_executor.add_node(m_systemConfigNode);
-        m_executor.add_node(m_metricsNode);
-        m_executor.spin();
+        m_executor->add_node(m_plannerNode);
+        m_executor->add_node(m_controllerNode);
+        m_executor->add_node(m_systemConfigNode);
+        m_executor->add_node(m_metricsNode);
+        m_executor->spin();
+        m_executor->remove_node(m_plannerNode);
+        m_executor->remove_node(m_controllerNode);
+        m_executor->remove_node(m_systemConfigNode);
+        m_executor->remove_node(m_metricsNode);
     });
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Launched all ROS Nodes");
 }
@@ -46,7 +51,6 @@ void SimRunner::initROS() {
 
 void SimRunner::setupObservers(const bool headless, const bool verbose = false) {
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
-
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
     if (verbose) { m_ctx->addObserver(std::make_shared<TerminalView>(TerminalView())); }

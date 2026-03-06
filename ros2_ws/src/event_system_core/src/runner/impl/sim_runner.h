@@ -22,12 +22,7 @@ public:
 
 
     ~SimRunner() override {
-        if (m_rosThread.joinable()) {
-            m_rosThread.join();
-        }
-        if (m_simThread.joinable()) {
-            m_simThread.join();
-        }
+        SimRunner::shutdown();
     }
 
     static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
@@ -41,31 +36,34 @@ public:
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;
+    void setupObservers(bool headless, bool verbose) override;
     void reset() override;
 
+
     void shutdown() override {
-        m_executor.cancel();
-        rclcpp::shutdown();
+        m_executor->cancel();
+
+        if (m_rosThread.joinable()) {
+            m_rosThread.join();
+        }
+        if (m_simThread.joinable()) {
+            m_simThread.join();
+        }
+
+        if (rclcpp::ok()) {
+            rclcpp::shutdown();
+        }
     }
 
 private:
     void initROS();
-    void setupObservers(bool headless, bool verbose);
     void updateConfig(std::shared_ptr<des::SimConfig> config);
     void setupQueue(const std::shared_ptr<des::SimConfig> &config);
 
-    std::unique_ptr<Scheduler> m_scheduler;
-    std::vector<std::shared_ptr<des::Appointment>> m_appointments;
-    std::shared_ptr<des::SimConfig> m_config;
-    std::map<std::string, des::Point> m_locationMap;
-    std::map<std::string, std::vector<std::string>> m_employeeLocations;
-
     // ROS
-    rclcpp::executors::MultiThreadedExecutor m_executor;
-    std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::shared_ptr<ControllerNode> m_controllerNode;
     std::shared_ptr<ConfigNode> m_systemConfigNode;
-    std::shared_ptr<MetricsNode> m_metricsNode;
     std::thread m_rosThread;
     std::thread m_simThread;
 

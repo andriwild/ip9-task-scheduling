@@ -7,6 +7,7 @@
 #include "../util/db.h"
 #include "../init/config_loader.h"
 
+class MetricsNode;
 constexpr int ONE_HOUR = 3600;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
@@ -21,6 +22,7 @@ public:
     virtual void enterPause() const = 0;
     virtual void reset() = 0;
     virtual void shutdown() = 0;
+    virtual void setupObservers(bool headless, bool verbose) = 0;
 
     EventQueue m_eventQueue;
     std::shared_ptr<SimulationContext> m_ctx;
@@ -30,6 +32,7 @@ protected:
     std::shared_ptr<des::SimConfig> m_config;
     std::unique_ptr<Scheduler> m_scheduler;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::vector<std::string>> m_employeeLocations;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
 

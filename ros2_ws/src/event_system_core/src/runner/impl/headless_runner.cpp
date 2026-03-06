@@ -25,6 +25,8 @@ void HeadlessRunner::setupQueue(const std::shared_ptr<des::SimConfig> &config) {
 
 void HeadlessRunner::initROS() {
     m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
+    m_metricsNode = std::make_shared<MetricsNode>();
+
     // leads to spam messages on lower logger level
     rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);
 
@@ -36,10 +38,16 @@ void HeadlessRunner::initROS() {
     m_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
     m_rosThread = std::thread([this] {
         m_executor->add_node(m_plannerNode);
+        m_executor->add_node(m_metricsNode);
         m_executor->spin();
         m_executor->remove_node(m_plannerNode);
+        m_executor->remove_node(m_metricsNode);
     });
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Launched all ROS Nodes");
+}
+
+void HeadlessRunner::setupObservers(bool headless, bool verbose) {
+    m_ctx->addObserver(m_metricsNode);
 }
 
 void HeadlessRunner::setupApplication() {
@@ -65,6 +73,7 @@ void HeadlessRunner::setupApplication() {
         *m_scheduler
     );
 
+    setupObservers(true, false); // (headless: no gz, verbose: no term obs)
     setupQueue(m_config);
     m_ctx->resetContext(m_eventQueue.top()->time);
 

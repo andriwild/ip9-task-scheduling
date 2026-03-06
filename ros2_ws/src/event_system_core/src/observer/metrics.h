@@ -153,6 +153,9 @@ private:
         } else {
             msg.utilization = 0.0f;
         }
+
+
+        RCLCPP_INFO(rclcpp::get_logger("Metrics"), "Publish Metrics");
         m_publisher->publish(msg);
     }
 };

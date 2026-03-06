@@ -2,6 +2,9 @@
 
 #include <memory>
 #include "../runner.h"
+#include "../../observer/metrics.h"
+
+class MetricsNode;
 
 class HeadlessRunner : public IAppRunner {
 
@@ -9,7 +12,6 @@ public:
     HeadlessRunner() = default;
 
     ~HeadlessRunner() override {
-
         if (rclcpp::ok()) {
             HeadlessRunner::shutdown();
             rclcpp::shutdown();
@@ -31,6 +33,7 @@ public:
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;
+    void setupObservers(bool headless, bool verbose) override;
     void reset() override;
 
     void shutdown() override {

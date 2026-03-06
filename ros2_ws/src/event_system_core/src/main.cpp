@@ -43,6 +43,10 @@ int main(const int argc, char *argv[]) {
                     }
                     break;
 
+                case SystemState::Request::EXIT:
+                    running = false;
+                    break;
+
                 case SystemState::Request::RUN:
                     if (!app->m_eventQueue.empty()) {
                         const auto e = app->m_eventQueue.top();

@@ -41,19 +41,22 @@ private:
     currentState.store(request->command_id);
 
     switch (request->command_id) {
-            case SystemState::Request::RUN:
-        response->message = "Running";
-        break;
-            case SystemState::Request::PAUSE:
-        response->message = "Paused";
-        break;
-            case SystemState::Request::RESET:
-        response->message = "Reset";
-        break;
-      default:
-        response->success = false;
-        response->message = "failed";
-        currentState.store(old_state);
+        case SystemState::Request::RUN:
+            response->message = "Running";
+            break;
+        case SystemState::Request::PAUSE:
+            response->message = "Paused";
+            break;
+        case SystemState::Request::RESET:
+            response->message = "Reset";
+            break;
+        case SystemState::Request::EXIT:
+            response->message = "Exit";
+            break;
+        default:
+            response->success = false;
+            response->message = "failed";
+            currentState.store(old_state);
     }
   }
 
