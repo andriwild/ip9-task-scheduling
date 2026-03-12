@@ -19,6 +19,7 @@ constexpr bool W_OUT_TREE   = true;
 const std::string TREE_FILE = "bt_config.xml";
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
+    RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Create Behaviour Tree");
     BT::BehaviorTreeFactory factory;
 
     // charge
@@ -202,5 +203,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
             std::cout << "BehaviorTree and model written to file: " << TREE_FILE << std::endl;
         }
     }
+
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Behaviour Tree created");
     return tree;
 }

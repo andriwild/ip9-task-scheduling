@@ -40,10 +40,19 @@ struct EventComparator {
     }
 };
 
-using EventQueue = std::priority_queue<
+using SortedEventQueue = std::priority_queue<
     std::shared_ptr<IEvent>,
     std::vector<std::shared_ptr<IEvent>>,
     EventComparator>;
+
+class ResetEvent final : public IEvent {
+    std::queue<std::string> m_fileQueue;
+public:
+    explicit ResetEvent(const int time, std::queue<std::string> queue) : IEvent(time), m_fileQueue(queue) {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { return "Reset"; }
+    des::EventType getType() const override { return des::EventType::RESET; }
+};
 
 class SimulationStartEvent final : public IEvent {
 public:

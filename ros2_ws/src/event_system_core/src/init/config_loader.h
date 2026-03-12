@@ -11,6 +11,7 @@
 using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
 
 const std::string DEFAULT_APPOINTMENT_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
+const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
 class ConfigLoader {
 public:
@@ -66,7 +67,7 @@ public:
         return employees;
     }
 
-    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath) {
+    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = SIM_CONFIG_FILE) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;

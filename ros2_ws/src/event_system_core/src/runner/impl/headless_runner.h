@@ -6,10 +6,17 @@
 
 class MetricsNode;
 
-class HeadlessRunner : public IAppRunner {
+class HeadlessRunner final : public IAppRunner {
 
 public:
-    HeadlessRunner() = default;
+    explicit HeadlessRunner() {
+        m_locationMap = IAppRunner::loadPointsOfInterest({"wsr_user", "wsr_password"});
+
+        m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
+        m_metricsNode = std::make_shared<MetricsNode>();
+
+        IAppRunner::initROS({ m_plannerNode, m_metricsNode });
+    }
 
     ~HeadlessRunner() override {
         if (rclcpp::ok()) {
@@ -29,11 +36,10 @@ public:
         return std::make_unique<HeadlessRunner>();
     }
 
-    void setupApplication() override;
+    void setupApplication(const std::string& path) override;
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;
-    void setupObservers(bool headless, bool verbose) override;
     void reset() override;
 
     void shutdown() override {
@@ -43,10 +49,9 @@ public:
     }
 
 private:
-    void initROS();
-    void setupQueue(const std::shared_ptr<des::SimConfig> &config);
-
-    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
-    std::thread m_rosThread;
+    SortedEventQueue setupQueue(
+        const std::shared_ptr<des::SimConfig> &config,
+        std::vector<std::shared_ptr<des::Appointment> > &appointments,
+        Scheduler &scheduler
+    ) const;
 };
-

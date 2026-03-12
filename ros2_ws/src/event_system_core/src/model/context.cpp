@@ -12,10 +12,10 @@ SimulationContext::SimulationContext(
     Scheduler& scheduler
 )
     : m_simConfig(std::move(simConfig))
-    , m_scheduler(scheduler)
     , m_plannerNode(std::move(plannerNode))
     , m_queue(queue)
     , m_employeeLocations(std::move(employeeLocations))
+    , m_scheduler(scheduler)
 {
     m_robot = std::make_unique<Robot>(m_simConfig);
     RCLCPP_INFO(rclcpp::get_logger("Context"), "Simulation Context created!");

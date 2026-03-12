@@ -12,7 +12,6 @@
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
 
-const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
 class ConfigNode final : public rclcpp::Node {
 public:
@@ -25,7 +24,7 @@ public:
             "/system_config", rclcpp::QoS(1).transient_local());
 
         // Load initial config
-        const auto loadedConfig = ConfigLoader::loadSimConfig(SIM_CONFIG_FILE);
+        const auto loadedConfig = ConfigLoader::loadSimConfig();
         if (loadedConfig.has_value()) {
             RCLCPP_INFO(this->get_logger(), "Initial Simulation Config loaded!");
             m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());

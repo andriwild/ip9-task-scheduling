@@ -36,6 +36,7 @@ public:
             config->lowBatteryThreshold,
             config->fullBatteryThreshold
         );
+        setLocation(m_dockLocation);
     }
 
     bool isBusy() const;

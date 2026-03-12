@@ -4,7 +4,6 @@
 #include <thread>
 #include <vector>
 
-#include "../../model/context.h"
 #include "../../model/event.h"
 #include "../../observer/metrics.h"
 #include "../../observer/ros.h"
@@ -18,12 +17,18 @@
 class SimRunner final : public IAppRunner {
 public:
 
-    SimRunner() = default;
+    explicit SimRunner() {
+        m_locationMap      = IAppRunner::loadPointsOfInterest({"wsr_user", "wsr_password"});
 
+        m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
+        m_controllerNode   = std::make_shared<ControllerNode>();
+        m_systemConfigNode = std::make_shared<ConfigNode>();
+        m_metricsNode      = std::make_shared<MetricsNode>();
 
-    ~SimRunner() override {
-        SimRunner::shutdown();
+        IAppRunner::initROS({ m_plannerNode, m_controllerNode, m_systemConfigNode, m_metricsNode });
     }
+
+    ~SimRunner() override { SimRunner::shutdown(); }
 
     static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
         rclcpp::init(argc, argv);
@@ -32,13 +37,11 @@ public:
         return std::make_unique<SimRunner>();
     }
 
-    void setupApplication() override;
+    void setupApplication(const std::string& path) override;
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;
-    void setupObservers(bool headless, bool verbose) override;
     void reset() override;
-
 
     void shutdown() override {
         m_executor->cancel();
@@ -56,16 +59,16 @@ public:
     }
 
 private:
-    void initROS();
     void updateConfig(std::shared_ptr<des::SimConfig> config);
-    void setupQueue(const std::shared_ptr<des::SimConfig> &config);
 
-    // ROS
-    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
+    SortedEventQueue setupQueue(
+        const std::shared_ptr<des::SimConfig> &config,
+        std::vector<std::shared_ptr<des::Appointment> > &appointments,
+        Scheduler &scheduler
+    ) const;
+
     std::shared_ptr<ControllerNode> m_controllerNode;
     std::shared_ptr<ConfigNode> m_systemConfigNode;
-    std::thread m_rosThread;
     std::thread m_simThread;
-
     std::shared_ptr<RosObserver> m_rosObserver;
 };

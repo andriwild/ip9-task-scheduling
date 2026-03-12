@@ -4,7 +4,23 @@
 #include "event.h"
 #include "context.h"
 #include "../util/rnd.h"
+#include "../init/config_loader.h"
+#include "../runner/runner.h"
 
+void ResetEvent::execute(SimulationContext& ctx) {
+    if (this->m_fileQueue.empty()) { return; }
+    auto path = this->m_fileQueue.front();
+    this->m_fileQueue.pop();
+    // load next appointment file
+    auto appts = ConfigLoader::loadAppointmentConfig(path);
+    ctx.m_queue.extend(IAppRunner::setupQueue(ctx.getConfig(), appts.value(), ctx.m_scheduler, "IMVS_Dock"));
+    // add new reset event into event queue
+    ctx.m_queue.push(std::make_shared<ResetEvent>(ctx.m_queue.getLastEventTime(), this->m_fileQueue));
+    ctx.m_queue.print();
+    ctx.resetRobot();
+    ctx.resetContext(ctx.m_queue.top()->time);
+    ctx.notifyEvent(*this);
+}
 
 void SimulationStartEvent::execute(SimulationContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());

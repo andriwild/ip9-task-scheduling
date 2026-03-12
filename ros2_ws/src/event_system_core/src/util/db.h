@@ -9,6 +9,14 @@
 
 #include "types.h"
 
+struct DBConfig {
+    std::string m_user;
+    std::string m_pw;
+    const std::string m_dbName = "wsr";
+    const std::string m_host = "localhost";
+    const int m_port = 5432;
+};
+
 class DBClient {
     QSqlDatabase m_db;
     std::string m_user;
@@ -18,7 +26,13 @@ class DBClient {
     const int m_port = 5432;
 
 public:
-    explicit DBClient(std::string user, std::string pw) : m_user(std::move(user)), m_pw(std::move(pw)) {
+    explicit DBClient(const DBConfig& dbCfg)
+    : m_user(dbCfg.m_user)
+    , m_pw(dbCfg.m_pw)
+    , m_dbName(dbCfg.m_dbName)
+    , m_host(dbCfg.m_host)
+    , m_port((dbCfg.m_port))
+    {
         init();
     }
 

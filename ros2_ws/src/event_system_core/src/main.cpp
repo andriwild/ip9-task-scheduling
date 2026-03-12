@@ -1,8 +1,14 @@
 #include <string>
 #include <memory>
+#include <filesystem>
+
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
+
+
+const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/test/";
+
 
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;
@@ -17,13 +23,14 @@ int main(const int argc, char *argv[]) {
         }
     }
 
+    // Initialize application runner
     if (headless) {
         app = HeadlessRunner::create(argc, argv);
+        app->setupApplication(APPOINTMENT_FILES);
     } else {
         app = SimRunner::create(argc, argv);
+        app->setupApplication("");
     }
-
-    app->setupApplication();
 
     bool running = true;
     auto sim_loop = [&] {
@@ -38,9 +45,7 @@ int main(const int argc, char *argv[]) {
                     break;
 
                 case SystemState::Request::PAUSE:
-                    if (!headless) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     break;
 
                 case SystemState::Request::EXIT:

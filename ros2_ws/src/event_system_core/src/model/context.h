@@ -14,6 +14,7 @@
 #include "robot.h"
 #include "../sim/scheduler.h"
 #include "robot_state.h"
+#include "../model/event_queue.h"
 
 
 struct Journey {
@@ -27,7 +28,6 @@ class SimulationContext {
     std::vector<std::shared_ptr<IObserver>> m_observers;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
     std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
-    Scheduler& m_scheduler;
 
 public:
     std::shared_ptr<PathPlannerNode> m_plannerNode;
@@ -35,6 +35,7 @@ public:
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
     std::map<std::string, std::vector<std::string>> m_employeeLocations;
+    Scheduler& m_scheduler;
 
     explicit SimulationContext(
         EventQueue& queue,
@@ -43,6 +44,11 @@ public:
         std::map<std::string, std::vector<std::string>> employeeLocations,
         Scheduler& scheduler
     );
+
+    void resetRobot() {
+        m_robot.reset();
+        m_robot = std::make_unique<Robot>(m_simConfig);
+    }
 
     Journey scheduleArrival(const std::string& target) const;
     void changeRobotState(std::unique_ptr<RobotState> newState) const;
