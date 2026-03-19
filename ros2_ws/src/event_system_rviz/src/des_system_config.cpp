@@ -1,5 +1,6 @@
 #include <qcheckbox.h>
 
+#include <QComboBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QTreeWidget>
@@ -91,6 +92,34 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     addConfigItem(energyGroup, "Standby Power Load", m_energyConsumptionIdle);
 
 
+    // People
+    QTreeWidgetItem* peopleGroup = new QTreeWidgetItem(m_treeWidget);
+    peopleGroup->setText(0, "People");
+
+    m_arrivalMean = new QTimeEdit();
+    m_arrivalMean->setDisplayFormat("HH:mm");
+    addConfigItem(peopleGroup, "Arrival Mean", m_arrivalMean);
+
+    m_arrivalStd = new QDoubleSpinBox(); m_arrivalStd->setRange(0.0, 86400.0); m_arrivalStd->setSingleStep(600.0);
+    m_arrivalStd->setSuffix(" s");
+    addConfigItem(peopleGroup, "Arrival Std", m_arrivalStd);
+
+    m_arrivalDistribution = new QComboBox();
+    m_arrivalDistribution->addItems({"normal", "uniform"});
+    addConfigItem(peopleGroup, "Arrival Distribution", m_arrivalDistribution);
+
+    m_departureMean = new QTimeEdit();
+    m_departureMean->setDisplayFormat("HH:mm");
+    addConfigItem(peopleGroup, "Departure Mean", m_departureMean);
+
+    m_departureStd = new QDoubleSpinBox(); m_departureStd->setRange(0.0, 86400.0); m_departureStd->setSingleStep(600.0);
+    m_departureStd->setSuffix(" s");
+    addConfigItem(peopleGroup, "Departure Std", m_departureStd);
+
+    m_departureDistribution = new QComboBox();
+    m_departureDistribution->addItems({"normal", "uniform"});
+    addConfigItem(peopleGroup, "Departure Distribution", m_departureDistribution);
+
     // General
     QTreeWidgetItem* generalGroup = new QTreeWidgetItem(m_treeWidget);
     generalGroup->setText(0, "General Settings");
@@ -163,6 +192,12 @@ void DesSystemConfig::onSetConfig() {
     request->charging_rate = m_chargingRate->value();
     request->low_battery_threshold = m_lowBatteryThreshold->value();
     request->full_battery_threshold = m_fullBatteryThreshold->value();
+    request->arrival_mean = QTime(0, 0).secsTo(m_arrivalMean->time());
+    request->arrival_std = m_arrivalStd->value();
+    request->departure_mean = QTime(0, 0).secsTo(m_departureMean->time());
+    request->departure_std = m_departureStd->value();
+    request->arrival_distribution = m_arrivalDistribution->currentText().toStdString();
+    request->departure_distribution = m_departureDistribution->currentText().toStdString();
     request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_configFile.toStdString();
@@ -204,6 +239,12 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_chargingRate->setValue(msg->charging_rate);
     m_lowBatteryThreshold->setValue(msg->low_battery_threshold);
     m_fullBatteryThreshold->setValue(msg->full_battery_threshold);
+    m_arrivalMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->arrival_mean)));
+    m_arrivalStd->setValue(msg->arrival_std);
+    m_departureMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->departure_mean)));
+    m_departureStd->setValue(msg->departure_std);
+    m_arrivalDistribution->setCurrentText(QString::fromStdString(msg->arrival_distribution));
+    m_departureDistribution->setCurrentText(QString::fromStdString(msg->departure_distribution));
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
     m_cacheEnabled->setChecked(msg->cache_enabled);
 

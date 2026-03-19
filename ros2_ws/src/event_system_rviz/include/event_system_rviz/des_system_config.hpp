@@ -2,10 +2,12 @@
 
 #include <qcheckbox.h>
 
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTimeEdit>
 #include <QTreeWidget>
 #include <QFileDialog>
 #include <rviz_common/panel.hpp>
@@ -48,6 +50,12 @@ protected:
     QDoubleSpinBox* m_chargingRate;
     QDoubleSpinBox* m_lowBatteryThreshold;
     QDoubleSpinBox* m_fullBatteryThreshold;
+    QTimeEdit* m_arrivalMean;
+    QDoubleSpinBox* m_arrivalStd;
+    QTimeEdit* m_departureMean;
+    QDoubleSpinBox* m_departureStd;
+    QComboBox* m_arrivalDistribution;
+    QComboBox* m_departureDistribution;
     QLineEdit* m_dockLocation;
     QCheckBox* m_cacheEnabled;
     QLabel* m_appointmentsPath;

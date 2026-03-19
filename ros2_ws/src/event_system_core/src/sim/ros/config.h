@@ -74,6 +74,12 @@ private:
                 request->charging_rate,
                 request->low_battery_threshold,
                 request->full_battery_threshold,
+                static_cast<double>(request->arrival_mean),
+                static_cast<double>(request->arrival_std),
+                static_cast<double>(request->departure_mean),
+                static_cast<double>(request->departure_std),
+                request->arrival_distribution,
+                request->departure_distribution,
                 request->dock_location,
                 request->cache_enabled,
                 request->appointments_path
@@ -108,6 +114,12 @@ private:
             msg.charging_rate              = m_currentConfig->chargingRate;
             msg.low_battery_threshold      = m_currentConfig->lowBatteryThreshold;
             msg.full_battery_threshold     = m_currentConfig->fullBatteryThreshold;
+            msg.arrival_mean               = m_currentConfig->arrivalMean;
+            msg.arrival_std                = m_currentConfig->arrivalStd;
+            msg.departure_mean             = m_currentConfig->departureMean;
+            msg.departure_std              = m_currentConfig->departureStd;
+            msg.arrival_distribution       = m_currentConfig->arrivalDistribution;
+            msg.departure_distribution     = m_currentConfig->departureDistribution;
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;

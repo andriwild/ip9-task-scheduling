@@ -19,6 +19,14 @@ float32 charging_rate
 float32 low_battery_threshold
 float32 full_battery_threshold
 
+# People
+float32 arrival_mean
+float32 arrival_std
+float32 departure_mean
+float32 departure_std
+string arrival_distribution
+string departure_distribution
+
 # General
 string dock_location
 string appointments_path

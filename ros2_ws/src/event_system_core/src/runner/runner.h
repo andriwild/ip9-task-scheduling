@@ -63,14 +63,20 @@ public:
     }
 
     static void scheduleOccupancy(
-        const double from,
-        const double to,
-        const double std,
+        const des::SimConfig& config,
         std::vector<std::shared_ptr<des::Person>> people
     ) {
         for (auto& p: people) {
-            p->arrivalTime   = rnd::normal(from, std);
-            p->departureTime = rnd::normal(to, std);
+            if (config.arrivalDistribution == "uniform") {
+                p->arrivalTime = rnd::uni(config.arrivalMean - config.arrivalStd, config.arrivalMean + config.arrivalStd);
+            } else {
+                p->arrivalTime = rnd::normal(config.arrivalMean, config.arrivalStd);
+            }
+            if (config.departureDistribution == "uniform") {
+                p->departureTime = rnd::uni(config.departureMean - config.departureStd, config.departureMean + config.departureStd);
+            } else {
+                p->departureTime = rnd::normal(config.departureMean, config.departureStd);
+            }
         }
     }
 

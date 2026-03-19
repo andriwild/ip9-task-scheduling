@@ -63,7 +63,7 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
         *m_scheduler
     );
 
-    IAppRunner::scheduleOccupancy(ONE_HOUR * 9, ONE_HOUR * 17, ONE_HOUR, people.value());
+    IAppRunner::scheduleOccupancy(*m_config, people.value());
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 

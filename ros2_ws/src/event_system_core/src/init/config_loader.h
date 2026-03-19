@@ -107,6 +107,12 @@ public:
             config.chargingRate             = j.at("charging_rate").get<double>();
             config.lowBatteryThreshold      = j.at("low_battery_threshold").get<double>();
             config.fullBatteryThreshold     = j.at("full_battery_threshold").get<double>();
+            config.arrivalMean              = j.value("arrival_mean", 9.0 * 3600);
+            config.arrivalStd               = j.value("arrival_std", 3600.0);
+            config.departureMean            = j.value("departure_mean", 17.0 * 3600);
+            config.departureStd             = j.value("departure_std", 3600.0);
+            config.arrivalDistribution      = j.value("arrival_distribution", "normal");
+            config.departureDistribution    = j.value("departure_distribution", "normal");
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
@@ -139,6 +145,12 @@ public:
         j["charging_rate"] = config->chargingRate;
         j["low_battery_threshold"] = config->lowBatteryThreshold;
         j["full_battery_threshold"] = config->fullBatteryThreshold;
+        j["arrival_mean"] = config->arrivalMean;
+        j["arrival_std"] = config->arrivalStd;
+        j["departure_mean"] = config->departureMean;
+        j["departure_std"] = config->departureStd;
+        j["arrival_distribution"] = config->arrivalDistribution;
+        j["departure_distribution"] = config->departureDistribution;
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;

@@ -60,6 +60,12 @@ struct SimConfig {
     double chargingRate;
     double lowBatteryThreshold;
     double fullBatteryThreshold;
+    double arrivalMean;
+    double arrivalStd;
+    double departureMean;
+    double departureStd;
+    std::string arrivalDistribution;
+    std::string departureDistribution;
     std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
@@ -83,6 +89,12 @@ struct SimConfig {
         os << std::left << std::setw(W) << "chargingRate" << ": " << config.chargingRate << std::endl;
         os << std::left << std::setw(W) << "lowBatteryThreshold" << ": " << config.lowBatteryThreshold << std::endl;
         os << std::left << std::setw(W) << "fullBatteryThreshold" << ": " << config.fullBatteryThreshold << std::endl;
+        os << std::left << std::setw(W) << "arrivalMean" << ": " << config.arrivalMean << std::endl;
+        os << std::left << std::setw(W) << "arrivalStd" << ": " << config.arrivalStd << std::endl;
+        os << std::left << std::setw(W) << "departureMean" << ": " << config.departureMean << std::endl;
+        os << std::left << std::setw(W) << "departureStd" << ": " << config.departureStd << std::endl;
+        os << std::left << std::setw(W) << "arrivalDistribution" << ": " << config.arrivalDistribution << std::endl;
+        os << std::left << std::setw(W) << "departureDistribution" << ": " << config.departureDistribution << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
