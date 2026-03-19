@@ -8,6 +8,7 @@
 #include "../init/config_loader.h"
 #include "../observer/ros.h"
 #include "../model/event_queue.h"
+#include "../util/rnd.h"
 
 class MetricsNode;
 constexpr int ONE_HOUR = 3600;
@@ -28,7 +29,7 @@ public:
     EventQueue m_eventQueue;
     std::shared_ptr<SimulationContext> m_ctx;
 
-    static SortedEventQueue setupQueue(
+    static SortedEventQueue createMissionQueue(
         const std::shared_ptr<des::SimConfig> &config,
         std::vector<std::shared_ptr<des::Appointment>>& appointments,
         Scheduler& scheduler,
@@ -39,14 +40,6 @@ public:
 
         const auto missions = scheduler.simplePlan(appointments, idleLocation);
 
-        int firstEventTime = missions.front()->time - ONE_HOUR;
-        int lastEventTime = missions.back()->time + ONE_HOUR;
-
-        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);
-
-        queue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
-        queue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
-
         for (const auto& mission : missions) {
             const double buffer = config->timeBuffer;
             mission->time = mission->time - buffer;
@@ -56,6 +49,30 @@ public:
         return queue;
     }
 
+    static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(
+        std::vector<std::shared_ptr<des::Person>> people,
+        std::string location
+    ) {
+        auto events = std::vector<std::shared_ptr<IEvent>> {};
+        for (auto& p: people) {
+            p->currentRoom = location;
+            const auto event = std::make_shared<PersonArrivedEvent>(p->arrivalTime, p);
+            events.push_back(event);
+        }
+        return events;
+    }
+
+    static void scheduleOccupancy(
+        const double from,
+        const double to,
+        const double std,
+        std::vector<std::shared_ptr<des::Person>> people
+    ) {
+        for (auto& p: people) {
+            p->arrivalTime   = rnd::normal(from, std);
+            p->departureTime = rnd::normal(to, std);
+        }
+    }
 
 protected:
     std::map<std::string, des::Point> m_locationMap;
@@ -98,16 +115,6 @@ protected:
         return locationMap;
     }
 
-    virtual std::map<std::string, std::vector<std::string>> loadEmployeeLocations(const std::string path = CONFIG_PATH + "employee_locations.json") {
-        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Load Employee Locations");
-        const auto locations = ConfigLoader::loadEmployeeLocations(path);
-        if (!locations.has_value()) {
-            throw std::runtime_error("Could not load employee from file");
-        }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded employee locations (%zu)", locations.value().size());
-        return locations.value();
-    }
-
     virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {
         // leads to spam messages on lower logger level
         rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);
@@ -135,6 +142,7 @@ protected:
         while (!queue.empty()) {
             auto currentEvent  = queue.top();
             const auto mission = std::dynamic_pointer_cast<MissionDispatchEvent>(currentEvent);
+
             if (mission) {
                 publisher->publishMeeting(mission->appointment, mission->time);
             }

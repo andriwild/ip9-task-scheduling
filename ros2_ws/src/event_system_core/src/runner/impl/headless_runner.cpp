@@ -10,10 +10,15 @@ void HeadlessRunner::setupApplication(const std::string& path) {
 
     assert(std::filesystem::exists(path) && std::filesystem::is_directory(path));
 
-    m_employeeLocations = loadEmployeeLocations();
     m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
-    m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
+    const auto people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!people.value().empty());
 
+    for (const auto& p: people.value()) {
+        m_employeeLocations[p->firstName] = p->roomLabels;
+    } 
+    m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
+    
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
@@ -27,6 +32,8 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         files.push(entry.path());
     }
 
+    IAppRunner::scheduleOccupancy(ONE_HOUR * 9, ONE_HOUR * 17, ONE_HOUR, people.value());
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
     m_eventQueue.push(std::make_shared<ResetEvent>(0, files));
 
     m_ctx->addObserver(m_metricsNode);

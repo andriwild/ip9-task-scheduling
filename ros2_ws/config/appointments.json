@@ -3,19 +3,19 @@
         {
             "personName": "Max",
             "roomName": "IMVS_Printer",
-            "appointmentTime": 7200,
+            "appointmentTime": 36000,
             "description": "Massage"
         },
         {
             "personName": "Leo",
             "roomName": "IMVS_Printer",
-            "appointmentTime": 18000,
+            "appointmentTime": 46000,
             "description": "Nachhilfe"
         },
         {
             "personName": "Leo",
             "roomName": "IMVS_Printer",
-            "appointmentTime": 30000,
+            "appointmentTime": 53000,
             "description": "Nachhilfe"
         }
     ]

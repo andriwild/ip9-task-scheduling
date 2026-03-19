@@ -78,7 +78,12 @@ void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::Shar
     m_timeline->handleReset();
 }
 
-void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) const {
+void DesTimelinePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
+
+    m_minStartTime = std::min(m_minStartTime, msg->time);
+    m_maxEndTime   = std::max(m_maxEndTime  , msg->time);
+    m_timeline->setRange(m_minStartTime - ONE_HOUR, m_maxEndTime + ONE_HOUR);
+
     m_timeline->handleEvent(
         msg->time,
         {QString::fromStdString(msg->label), des::EventType(msg->type)},

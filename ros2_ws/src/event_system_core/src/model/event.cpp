@@ -1,3 +1,4 @@
+#include <iterator>
 #include <memory>
 
 #include "robot_state.h"
@@ -13,7 +14,7 @@ void ResetEvent::execute(SimulationContext& ctx) {
     this->m_fileQueue.pop();
     // load next appointment file
     auto appts = ConfigLoader::loadAppointmentConfig(path);
-    ctx.m_queue.extend(IAppRunner::setupQueue(ctx.getConfig(), appts.value(), ctx.m_scheduler, "IMVS_Dock"));
+    ctx.m_queue.extend(IAppRunner::createMissionQueue(ctx.getConfig(), appts.value(), ctx.m_scheduler, "IMVS_Dock"));
     // add new reset event into event queue
     ctx.m_queue.push(std::make_shared<ResetEvent>(ctx.m_queue.getLastEventTime(), this->m_fileQueue));
     ctx.m_queue.print();
@@ -133,6 +134,50 @@ void BatteryFullEvent::execute(SimulationContext& ctx) {
     ctx.m_robot->m_batteryFullEventScheduled = false;
     ctx.notifyEvent(*this);
     ctx.m_behaviorTree->tickOnce();
+}
+
+void PersonTransitionEvent::execute(SimulationContext& ctx) {
+    ctx.notifyEvent(*this);
+    auto& p = *this->person;
+    if (p.currentRoom == "OUTDOOR") {
+        return;
+    }
+    
+    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
+    assert(it != p.roomLabels.end());
+    
+    int currentIndex = std::distance(p.roomLabels.begin(), it);
+    const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
+    int nextRoomIdx = rnd::discrete_dist(row);
+    
+    p.currentRoom = p.roomLabels.at(nextRoomIdx);
+    double nextExecutionTime = this->time + rnd::uni(60 * 10, ONE_HOUR * 2);
+    if(p.departureTime < nextExecutionTime) {
+        ctx.m_queue.push(std::make_shared<PersonDepartureEvent>(p.departureTime, this->person));
+    } else {
+        ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
+    }
+}
+
+void PersonArrivedEvent::execute(SimulationContext& ctx) {
+    ctx.notifyEvent(*this);
+    auto& p = *this->person;
+
+    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
+    assert(it != p.roomLabels.end());
+    
+    int currentIndex = std::distance(p.roomLabels.begin(), it);
+    const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
+    int nextRoomIdx = rnd::discrete_dist(row);
+    
+    p.currentRoom = p.roomLabels.at(nextRoomIdx);
+    double nextExecutionTime = this->time + rnd::uni(10, 30);
+    ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
+}
+
+void PersonDepartureEvent::execute(SimulationContext& ctx) {
+    this->person->currentRoom = "OUTDOOR";
+    ctx.notifyEvent(*this);
 }
 
 void MissionStartEvent::execute(SimulationContext& ctx) {

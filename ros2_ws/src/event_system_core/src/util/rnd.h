@@ -10,8 +10,14 @@ namespace rnd {
         return dist(rng);
     }
 
-    inline double getNormalDist(const double mean, const double std) {
+    inline double normal(const double mean, const double std) {
         std::normal_distribution<double> dist(mean, std);
         return dist(rng);
     }
+
+    inline int discrete_dist(std::vector<double> list) {
+        std::discrete_distribution<int> dist(list.begin(), list.end());
+        return dist(rng);
+    }
+
 }

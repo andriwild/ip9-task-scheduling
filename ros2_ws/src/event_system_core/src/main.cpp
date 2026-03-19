@@ -1,10 +1,13 @@
+#include <cstdlib>
 #include <string>
 #include <memory>
 #include <filesystem>
 
+#include "init/config_loader.h"
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
+#include "util/rnd.h"
 
 
 const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/test/";
@@ -31,10 +34,12 @@ int main(const int argc, char *argv[]) {
         app = SimRunner::create(argc, argv);
         app->setupApplication("");
     }
+    
 
     bool running = true;
     auto sim_loop = [&] {
         RCLCPP_INFO(rclcpp::get_logger("main"), "Start Simulation Loop (Headless Mode: %d)", headless);
+        app->m_eventQueue.print();
         while (running && rclcpp::ok()) {
             app->updateConfig();
 

@@ -232,3 +232,40 @@ public:
     des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
 };
 
+class PersonTransitionEvent: public IEvent {
+public:
+    const std::shared_ptr<des::Person> person;
+    explicit PersonTransitionEvent(const int time, std::shared_ptr<des::Person> p) :
+        IEvent(time), 
+        person(p) 
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { 
+        return std::format("{} moved to {}", person->firstName, person->currentRoom);
+ }
+    des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
+};
+
+class PersonArrivedEvent final : public PersonTransitionEvent {
+public:
+    explicit PersonArrivedEvent(const int time, std::shared_ptr<des::Person> p) :
+        PersonTransitionEvent(time, p)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { 
+        return std::format("{} arrived to {}", person->firstName, person->currentRoom);
+ }
+    des::EventType getType() const override { return des::EventType::PERSON_ARRIVED; }
+};
+
+class PersonDepartureEvent final : public PersonTransitionEvent {
+public:
+    explicit PersonDepartureEvent(const int time, std::shared_ptr<des::Person> p) : 
+    PersonTransitionEvent(time, p)
+    {}
+    void execute(SimulationContext& ctx) override;
+    std::string getName() const override { 
+        return std::format("{} leaved to {}", person->firstName, person->currentRoom);
+ }
+    des::EventType getType() const override { return des::EventType::PERSON_DEPARTURE; }
+};

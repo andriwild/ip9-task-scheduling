@@ -104,7 +104,7 @@ public:
             person.lastName       = query.value("last_name").toString().toStdString();
             person.birthDate      = query.value("birth_date").toString().toStdString();
             person.sex            = query.value("sex").toString().toStdString();
-            person.assignedRoomId = query.value("assigned_room_id").toInt();
+            person.workplace = query.value("assigned_room_id").toInt();
             return person;
         }
         return std::nullopt;

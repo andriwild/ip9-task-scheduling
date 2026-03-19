@@ -1,12 +1,6 @@
 {
     "appointments": [
         {
-            "personName": "LabTeam",
-            "roomName": "IMVS_Printer",
-            "appointmentTime": 1800,
-            "description": "Print Docs"
-        },
-        {
             "personName": "CoffeeGroup",
             "roomName": "IMVS_CoffeeMachine",
             "appointmentTime": 3600,

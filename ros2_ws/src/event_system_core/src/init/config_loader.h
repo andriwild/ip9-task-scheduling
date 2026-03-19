@@ -32,9 +32,9 @@ public:
             for (const auto& item : jAppts) {
                 des::Appointment appointment;
                 appointment.id = idCounter++;
-                appointment.personName = item.at("personName").get<std::string>();
-                appointment.description = item.at("description").get<std::string>();
-                appointment.roomName = item.at("roomName").get<std::string>();
+                appointment.personName      = item.at("personName").get<std::string>();
+                appointment.description     = item.at("description").get<std::string>();
+                appointment.roomName        = item.at("roomName").get<std::string>();
                 appointment.appointmentTime = item.at("appointmentTime").get<int>();
 
                 appointments.emplace_back(std::make_shared<des::Appointment>(appointment));
@@ -47,23 +47,39 @@ public:
         return appointments;
     };
 
-    static std::optional<std::map<std::string, std::vector<std::string>>> loadEmployeeLocations(const std::string& filePath) {
-        auto json = getJson(filePath);
-        if (!json.has_value()) {
+    static std::optional<std::vector<std::shared_ptr<des::Person>>> loadEmployees(const std::string& filePath) {
+        auto jsonOpt = getJson(filePath);
+        if (!jsonOpt.has_value()) {
             return std::nullopt;
         }
 
-        std::map<std::string, std::vector<std::string>> employees;
+        std::vector<std::shared_ptr<des::Person>> employees;
         try {
-            for (const auto& item : json.value()["employees"]) {
-                const auto name = item.at("name").get<std::string>();
-                const auto locations = item.at("locations").get<std::vector<std::string>>();
-                employees[name] = locations;
+            const auto& jsonArray = jsonOpt.value().at("employees");
+
+            for (const auto& item : jsonArray) {
+                des::Person p;
+                p.id               = item.at("id").get<int>();
+                p.firstName        = item.at("firstName").get<std::string>();
+                p.lastName         = item.at("lastName").get<std::string>();
+                p.birthDate        = item.at("birthDate").get<std::string>();
+                p.sex              = item.at("sex").get<std::string>();
+                p.workplace        = item.at("workplace").get<std::string>();
+                p.currentRoom      = item.at("currentRoom").get<std::string>();
+                p.roomLabels       = item.at("roomLabels").get<std::vector<std::string>>();
+                p.transitionMatrix = item.at("transitionMatrix").get<std::vector<std::vector<double>>>();
+
+                if (p.transitionMatrix.size() != p.roomLabels.size()) {
+                    std::cerr << "Warnung: Matrix-Dimension passt nicht zu roomLabels für " << p.firstName << std::endl;
+                }
+
+                employees.push_back(std::make_shared<des::Person>(p));
             }
-        } catch (const nlohmann::json::type_error& e) {
-            std::cerr << "Failed to parse employee locations json: " << filePath << std::endl;
+        } catch (const nlohmann::json::exception& e) {
+            std::cerr << "JSON Parsing Error: " << e.what() << std::endl;
             return std::nullopt;
         }
+
         return employees;
     }
 
@@ -76,23 +92,23 @@ public:
         try {
             auto j = json.value();
             des::SimConfig config;
-            config.personFindProbability = j.at("find_person_probability").get<double>();
-            config.driveTimeStd = j.at("drive_time_std").get<double>();
-            config.robotSpeed = j.at("robot_speed").get<double>();
-            config.robotAccompanySpeed = j.at("robot_accompany_speed").get<double>();
-            config.conversationProbability = j.at("conversation_probability").get<double>();
-            config.conversationDurationStd = j.at("conversation_duration_std").get<double>();
+            config.personFindProbability    = j.at("find_person_probability").get<double>();
+            config.driveTimeStd             = j.at("drive_time_std").get<double>();
+            config.robotSpeed               = j.at("robot_speed").get<double>();
+            config.robotAccompanySpeed      = j.at("robot_accompany_speed").get<double>();
+            config.conversationProbability  = j.at("conversation_probability").get<double>();
+            config.conversationDurationStd  = j.at("conversation_duration_std").get<double>();
             config.conversationDurationMean = j.at("conversation_duration_mean").get<double>();
-            config.timeBuffer = j.at("timeBuffer").get<double>();
-            config.energyConsumptionDrive = j.at("energy_consumption_drive").get<double>();
-            config.energyConsumptionBase = j.at("energy_consumption_base").get<double>();
-            config.batteryCapacity = j.at("battery_capacity").get<double>();
-            config.initialBatteryCapacity = j.at("initial_battery_capacity").get<double>();
-            config.chargingRate = j.at("charging_rate").get<double>();
-            config.lowBatteryThreshold = j.at("low_battery_threshold").get<double>();
-            config.fullBatteryThreshold = j.at("full_battery_threshold").get<double>();
-            config.dockLocation= j.at("dock_location").get<std::string>();
-            config.cacheEnabled = j.at("cacheEnabled").get<bool>();
+            config.timeBuffer               = j.at("timeBuffer").get<double>();
+            config.energyConsumptionDrive   = j.at("energy_consumption_drive").get<double>();
+            config.energyConsumptionBase    = j.at("energy_consumption_base").get<double>();
+            config.batteryCapacity          = j.at("battery_capacity").get<double>();
+            config.initialBatteryCapacity   = j.at("initial_battery_capacity").get<double>();
+            config.chargingRate             = j.at("charging_rate").get<double>();
+            config.lowBatteryThreshold      = j.at("low_battery_threshold").get<double>();
+            config.fullBatteryThreshold     = j.at("full_battery_threshold").get<double>();
+            config.dockLocation             = j.at("dock_location").get<std::string>();
+            config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
             if (j.contains("appointments_path")) {
                 config.appointmentsPath = j.at("appointments_path").get<std::string>();

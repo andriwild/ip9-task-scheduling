@@ -7,7 +7,7 @@
 
 class EventQueue {
     SortedEventQueue m_queue;
-    int lastEventTime = 0;
+    int m_lastEventTime = 0;
 
 
 public:
@@ -16,11 +16,17 @@ public:
     void extend(SortedEventQueue queue) {
         while(!queue.empty()){
             auto item = queue.top();
-            if (item->time > lastEventTime) {
-                lastEventTime = item->time;
+            if (item->time > m_lastEventTime) {
+                m_lastEventTime = item->time;
             }
             m_queue.push(std::move(item));
             queue.pop();
+        }
+    }
+
+    void extend(std::vector<std::shared_ptr<IEvent>> events) {
+        for (const auto& event: events) {
+            m_queue.push(std::move(event));
         }
     }
 
@@ -29,8 +35,8 @@ public:
     [[nodiscard]] size_t size() const { return m_queue.size(); }
 
     void push(const std::shared_ptr<IEvent>& event) {
-        if (event->time > lastEventTime) {
-            lastEventTime = event->time;
+        if (event->time > m_lastEventTime) {
+            m_lastEventTime = event->time;
         }
         m_queue.push(event);
     }
@@ -40,7 +46,7 @@ public:
             m_queue.pop();
 
             if (m_queue.empty()){
-                lastEventTime = 0;
+                m_lastEventTime = 0;
             }
         }
     }
@@ -56,7 +62,7 @@ public:
     }
 
     int getLastEventTime() const {
-        return lastEventTime;
+        return m_lastEventTime;
     }
 
     int getFirstEventTime() const {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iomanip>
+#include <vector>
 #include <string>
 
 namespace des {
@@ -125,7 +126,10 @@ enum class EventType : int {
     ARRIVED_ACCOMPANY = 11,
     START_DRIVE = 12,
     BATTERY_FULL = 13,
-    RESET = 14
+    RESET = 14,
+    PERSON_TRANSITION = 15,
+    PERSON_ARRIVED = 16,
+    PERSON_DEPARTURE = 17
 };
 
 struct Person {
@@ -134,7 +138,35 @@ struct Person {
     std::string lastName;
     std::string birthDate;
     std::string sex;
-    int assignedRoomId;
+    std::string workplace;
+    std::string currentRoom;
+    int arrivalTime;
+    int departureTime;
+    std::vector<std::string> roomLabels;  // header of transition matrix
+    std::vector<std::vector<double>> transitionMatrix;
+
+    friend std::ostream& operator<<(std::ostream& os, const Person& p) {
+        os << "-------------------------------------------\n"
+            << "ID: " << p.id << " | Name: " << p.firstName << " " << p.lastName << "\n"
+            << "b-day: " << p.birthDate << " | sex: " << p.sex << "\n"
+            << "workplace: " << p.workplace << " | current room: " 
+            << (p.currentRoom.empty() ? "(not set)" : p.currentRoom) << "\n"
+            << "Transition Matrix (Labels: ";
+
+        for (size_t i = 0; i < p.roomLabels.size(); ++i) {
+            os << p.roomLabels[i] << (i == p.roomLabels.size() - 1 ? "" : ", ");
+        }
+        os << "):\n";
+
+        for (const auto& row : p.transitionMatrix) {
+            os << "  [ ";
+            for (double val : row) {
+                os << std::fixed << std::setprecision(2) << val << " ";
+            }
+            os << "]\n";
+        }
+        return os;
+    }
 };
 
 enum MissionState {

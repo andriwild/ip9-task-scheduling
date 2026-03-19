@@ -24,7 +24,7 @@ void SimRunner::reset() {
     m_metricsNode->clear();
 
     m_appointments = loadAppointments(m_config->appointmentsPath);
-    m_eventQueue.extend(IAppRunner::setupQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
+    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
     // wait until reset message is properly sendet until distribute new meetings data
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -44,12 +44,16 @@ void SimRunner::updateConfig(std::shared_ptr<des::SimConfig> config) {
 
 void SimRunner::setupApplication(const std::string& /*path*/) {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
-    m_config            = m_systemConfigNode->getConfig();
-    m_appointments      = loadAppointments(m_config->appointmentsPath);
-    m_employeeLocations = loadEmployeeLocations();
+    m_config         = m_systemConfigNode->getConfig();
+    m_appointments   = loadAppointments(m_config->appointmentsPath);
+    const auto people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!people.value().empty());
 
+    for (const auto& p: people.value()) {
+        m_employeeLocations[p->firstName] = p->roomLabels;
+    } 
+    
     m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
-
 
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
@@ -58,7 +62,21 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
         m_employeeLocations,
         *m_scheduler
     );
-    m_eventQueue.extend(IAppRunner::setupQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
+
+    IAppRunner::scheduleOccupancy(ONE_HOUR * 9, ONE_HOUR * 17, ONE_HOUR, people.value());
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
+    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
+
+    int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
+    int lastEventTime  = m_eventQueue.getLastEventTime();
+
+    auto latest = std::max_element(people.value().begin(), people.value().end(), [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
+    int lastDepartureTime = (*latest)->departureTime;
+
+    RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);
+
+    m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(std::max(lastEventTime, lastDepartureTime) + ONE_HOUR));
 
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
     m_ctx->addObserver(m_metricsNode);

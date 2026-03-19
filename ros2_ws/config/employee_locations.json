@@ -173,14 +173,6 @@
             ]
         },
         {
-            "name": "LabTeam",
-            "locations": [
-                "IMVS_Printer",
-                "IMVS_Dock",
-                "IMVS_Kitchen"
-            ]
-        },
-        {
             "name": "CoffeeGroup",
             "locations": [
                 "IMVS_CoffeeMachine",
