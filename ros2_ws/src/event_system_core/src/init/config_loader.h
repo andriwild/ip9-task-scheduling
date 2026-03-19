@@ -111,8 +111,8 @@ public:
             config.arrivalStd               = j.value("arrival_std", 3600.0);
             config.departureMean            = j.value("departure_mean", 17.0 * 3600);
             config.departureStd             = j.value("departure_std", 3600.0);
-            config.arrivalDistribution      = j.value("arrival_distribution", "normal");
-            config.departureDistribution    = j.value("departure_distribution", "normal");
+            config.arrivalDistribution      = des::distributionTypeFromString(j.value("arrival_distribution", "normal"));
+            config.departureDistribution    = des::distributionTypeFromString(j.value("departure_distribution", "normal"));
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
@@ -149,8 +149,8 @@ public:
         j["arrival_std"] = config->arrivalStd;
         j["departure_mean"] = config->departureMean;
         j["departure_std"] = config->departureStd;
-        j["arrival_distribution"] = config->arrivalDistribution;
-        j["departure_distribution"] = config->departureDistribution;
+        j["arrival_distribution"] = des::distributionTypeToString(config->arrivalDistribution);
+        j["departure_distribution"] = des::distributionTypeToString(config->departureDistribution);
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;

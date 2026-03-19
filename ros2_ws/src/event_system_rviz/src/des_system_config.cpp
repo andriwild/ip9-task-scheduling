@@ -105,8 +105,11 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     addConfigItem(peopleGroup, "Arrival Std", m_arrivalStd);
 
     m_arrivalDistribution = new QComboBox();
-    m_arrivalDistribution->addItems({"normal", "uniform"});
+    m_arrivalDistribution->addItems({"normal", "uniform", "exponential", "log_normal"});
     addConfigItem(peopleGroup, "Arrival Distribution", m_arrivalDistribution);
+    connect(m_arrivalDistribution, &QComboBox::currentTextChanged, this, [this](const QString& text) {
+        m_arrivalStd->setEnabled(text != "exponential");
+    });
 
     m_departureMean = new QTimeEdit();
     m_departureMean->setDisplayFormat("HH:mm");
@@ -117,8 +120,11 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     addConfigItem(peopleGroup, "Departure Std", m_departureStd);
 
     m_departureDistribution = new QComboBox();
-    m_departureDistribution->addItems({"normal", "uniform"});
+    m_departureDistribution->addItems({"normal", "uniform", "exponential", "log_normal"});
     addConfigItem(peopleGroup, "Departure Distribution", m_departureDistribution);
+    connect(m_departureDistribution, &QComboBox::currentTextChanged, this, [this](const QString& text) {
+        m_departureStd->setEnabled(text != "exponential");
+    });
 
     // General
     QTreeWidgetItem* generalGroup = new QTreeWidgetItem(m_treeWidget);

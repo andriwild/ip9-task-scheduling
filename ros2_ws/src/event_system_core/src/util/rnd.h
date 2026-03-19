@@ -15,6 +15,16 @@ namespace rnd {
         return dist(rng);
     }
 
+    inline double exponential(const double mean) {
+        std::exponential_distribution<double> dist(1.0 / mean);
+        return dist(rng);
+    }
+
+    inline double logNormal(const double mu, const double sigma) {
+        std::lognormal_distribution<double> dist(mu, sigma);
+        return dist(rng);
+    }
+
     inline int discrete_dist(std::vector<double> list) {
         std::discrete_distribution<int> dist(list.begin(), list.end());
         return dist(rng);

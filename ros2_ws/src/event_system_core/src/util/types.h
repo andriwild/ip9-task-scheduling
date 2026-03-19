@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iomanip>
+#include <regex>
 #include <vector>
 #include <string>
 
@@ -44,6 +45,30 @@ struct Location {
     }
 };
 
+enum class DistributionType {
+    NORMAL,
+    UNIFORM,
+    EXPONENTIAL,
+    LOG_NORMAL
+};
+
+inline std::string distributionTypeToString(const DistributionType type) {
+    switch (type) {
+        case DistributionType::UNIFORM:     return "uniform";
+        case DistributionType::NORMAL:       return "normal";
+        case DistributionType::EXPONENTIAL:  return "exponential";
+        case DistributionType::LOG_NORMAL:   return "log_normal";
+        default: return "normal";
+    }
+}
+
+inline DistributionType distributionTypeFromString(const std::string& str) {
+    if (str == "uniform") return DistributionType::UNIFORM;
+    if (str == "exponential") return DistributionType::EXPONENTIAL;
+    if (str == "log_normal") return DistributionType::LOG_NORMAL;
+    return DistributionType::NORMAL;
+}
+
 struct SimConfig {
     double personFindProbability;
     double robotSpeed;
@@ -64,8 +89,8 @@ struct SimConfig {
     double arrivalStd;
     double departureMean;
     double departureStd;
-    std::string arrivalDistribution;
-    std::string departureDistribution;
+    DistributionType arrivalDistribution;
+    DistributionType departureDistribution;
     std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
@@ -93,8 +118,8 @@ struct SimConfig {
         os << std::left << std::setw(W) << "arrivalStd" << ": " << config.arrivalStd << std::endl;
         os << std::left << std::setw(W) << "departureMean" << ": " << config.departureMean << std::endl;
         os << std::left << std::setw(W) << "departureStd" << ": " << config.departureStd << std::endl;
-        os << std::left << std::setw(W) << "arrivalDistribution" << ": " << config.arrivalDistribution << std::endl;
-        os << std::left << std::setw(W) << "departureDistribution" << ": " << config.departureDistribution << std::endl;
+        os << std::left << std::setw(W) << "arrivalDistribution" << ": " << distributionTypeToString(config.arrivalDistribution) << std::endl;
+        os << std::left << std::setw(W) << "departureDistribution" << ": " << distributionTypeToString(config.departureDistribution) << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
@@ -116,6 +141,21 @@ enum class RobotSubState {
     STANDING,
     DRIVING
 };
+
+enum class RoomType {
+    WORKPLACE,
+    TOILET,
+    KITCHEN,
+    OTHER
+};
+
+inline RoomType parseRoomName(const std::string& roomName) {
+    if (roomName.find("Toilet") != std::string::npos) return RoomType::TOILET;
+    if (roomName.find("Kitchen") != std::string::npos) return RoomType::KITCHEN;
+    static const std::regex workplacePattern(R"(5\.2[A-Z]\d+)");
+    if (std::regex_match(roomName, workplacePattern)) return RoomType::WORKPLACE;
+    return RoomType::OTHER;
+}
 
 enum class Result {
     FAILURE,

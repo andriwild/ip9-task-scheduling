@@ -137,22 +137,45 @@ void BatteryFullEvent::execute(SimulationContext& ctx) {
 }
 
 void PersonTransitionEvent::execute(SimulationContext& ctx) {
-    ctx.notifyEvent(*this);
     auto& p = *this->person;
     if (p.currentRoom == "OUTDOOR") {
+        ctx.notifyEvent(*this);
         return;
     }
-    
+
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
     assert(it != p.roomLabels.end());
-    
+
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
     int nextRoomIdx = rnd::discrete_dist(row);
-    
+
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
-    double nextExecutionTime = this->time + rnd::uni(60 * 10, ONE_HOUR * 2);
+    ctx.notifyEvent(*this);
+
+    double nextExecutionTime;
+    des::RoomType roomType = des::parseRoomName(p.currentRoom);
+    switch (roomType) {
+        case des::RoomType::WORKPLACE: 
+            nextExecutionTime = this->time + rnd::uni(60 * 10, ONE_HOUR * 2);
+            break;
+        case des::RoomType::TOILET: 
+            nextExecutionTime = this->time + rnd::logNormal(4.8, 0.7);
+            break;
+        case des::RoomType::KITCHEN: 
+            nextExecutionTime = this->time + rnd::uni(30, 1800);
+            break;
+        case des::RoomType::OTHER: 
+            nextExecutionTime = this->time + rnd::uni(60, ONE_HOUR * 1);
+            break;
+    }
+
     if(p.departureTime < nextExecutionTime) {
+        auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
+            [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
+        if (elevatorIt != p.roomLabels.end()) {
+            p.currentRoom = *elevatorIt;
+        }
         ctx.m_queue.push(std::make_shared<PersonDepartureEvent>(p.departureTime, this->person));
     } else {
         ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
@@ -160,17 +183,17 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
 }
 
 void PersonArrivedEvent::execute(SimulationContext& ctx) {
-    ctx.notifyEvent(*this);
     auto& p = *this->person;
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
     assert(it != p.roomLabels.end());
-    
+
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
     int nextRoomIdx = rnd::discrete_dist(row);
-    
+
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
+    ctx.notifyEvent(*this);
     double nextExecutionTime = this->time + rnd::uni(10, 30);
     ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
 }

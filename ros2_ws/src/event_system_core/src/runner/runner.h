@@ -66,17 +66,18 @@ public:
         const des::SimConfig& config,
         std::vector<std::shared_ptr<des::Person>> people
     ) {
+        auto sample = [](des::DistributionType type, double mean, double std) -> double {
+            switch (type) {
+                case des::DistributionType::UNIFORM:     return rnd::uni(mean - std, mean + std);
+                case des::DistributionType::EXPONENTIAL:  return rnd::exponential(mean);
+                case des::DistributionType::LOG_NORMAL:   return rnd::logNormal(mean, std);
+                default:                                  return rnd::normal(mean, std);
+            }
+        };
+
         for (auto& p: people) {
-            if (config.arrivalDistribution == "uniform") {
-                p->arrivalTime = rnd::uni(config.arrivalMean - config.arrivalStd, config.arrivalMean + config.arrivalStd);
-            } else {
-                p->arrivalTime = rnd::normal(config.arrivalMean, config.arrivalStd);
-            }
-            if (config.departureDistribution == "uniform") {
-                p->departureTime = rnd::uni(config.departureMean - config.departureStd, config.departureMean + config.departureStd);
-            } else {
-                p->departureTime = rnd::normal(config.departureMean, config.departureStd);
-            }
+            p->arrivalTime = sample(config.arrivalDistribution, config.arrivalMean, config.arrivalStd);
+            p->departureTime = sample(config.departureDistribution, config.departureMean, config.departureStd);
         }
     }
 
