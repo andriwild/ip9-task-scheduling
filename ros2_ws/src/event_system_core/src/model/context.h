@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <memory>
+#include <random>
 #include <rclcpp/rclcpp.hpp>
 #include <vector>
 
@@ -30,6 +31,9 @@ class SimulationContext {
     std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
 
 public:
+    static constexpr unsigned int DEFAULT_SEED = 42;
+    mutable std::mt19937 m_rng{DEFAULT_SEED};
+
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
     EventQueue& m_queue;

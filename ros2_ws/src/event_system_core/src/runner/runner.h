@@ -64,14 +64,15 @@ public:
 
     static void scheduleOccupancy(
         const des::SimConfig& config,
-        std::vector<std::shared_ptr<des::Person>> people
+        std::vector<std::shared_ptr<des::Person>> people,
+        std::mt19937& rng
     ) {
-        auto sample = [](des::DistributionType type, double mean, double std) -> double {
+        auto sample = [&rng](des::DistributionType type, double mean, double std) -> double {
             switch (type) {
-                case des::DistributionType::UNIFORM:     return rnd::uni(mean - std, mean + std);
-                case des::DistributionType::EXPONENTIAL:  return rnd::exponential(mean);
-                case des::DistributionType::LOG_NORMAL:   return rnd::logNormal(mean, std);
-                default:                                  return rnd::normal(mean, std);
+                case des::DistributionType::UNIFORM:     return rnd::uni(rng, mean - std, mean + std);
+                case des::DistributionType::EXPONENTIAL:  return rnd::exponential(rng, mean);
+                case des::DistributionType::LOG_NORMAL:   return rnd::logNormal(rng, mean, std);
+                default:                                  return rnd::normal(rng, mean, std);
             }
         };
 

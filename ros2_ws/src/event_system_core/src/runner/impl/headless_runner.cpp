@@ -32,7 +32,7 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         files.push(entry.path());
     }
 
-    IAppRunner::scheduleOccupancy(*m_config, people.value());
+    IAppRunner::scheduleOccupancy(*m_config, people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
     m_eventQueue.push(std::make_shared<ResetEvent>(0, files));
 

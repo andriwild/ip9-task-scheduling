@@ -25,7 +25,7 @@ void SimRunner::reset() {
 
     m_appointments = loadAppointments(m_config->appointmentsPath);
 
-    IAppRunner::scheduleOccupancy(*m_config, m_people.value());
+    IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
@@ -66,7 +66,7 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
         *m_scheduler
     );
 
-    IAppRunner::scheduleOccupancy(*m_config, m_people.value());
+    IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 

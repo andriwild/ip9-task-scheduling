@@ -30,7 +30,7 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     assert(distance.has_value());
 
     const double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
-    double travelTimeRnd = rnd::normal(travelTime, getDriveTimeStd());
+    double travelTimeRnd = rnd::normal(m_rng, travelTime, getDriveTimeStd());
     if (travelTimeRnd < 0) {
         travelTimeRnd = travelTime;
     }
@@ -52,11 +52,13 @@ void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
     m_currentAppointment = nullptr;
     m_pendingMissions = std::queue<std::shared_ptr<des::Appointment>>();
+    m_rng.seed(DEFAULT_SEED);
     resetRobot();
 }
 
 double SimulationContext::getRndConversationTime() const {
     const double conversationTime = rnd::normal(
+        m_rng,
         getDefaultConversationTime(),
         getConversationDurationStd()
     );

@@ -66,7 +66,7 @@ void AbortSearchEvent::execute(SimulationContext& ctx) {
 void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
     assert(!ctx.m_robot->isDriving());
     double eventTime = this->time + ctx.getRndConversationTime();
-    if (rnd::uni() < ctx.getConversationProbability()) {
+    if (rnd::uni(ctx.m_rng) < ctx.getConversationProbability()) {
         ctx.m_queue.push(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
     } else {
         ctx.m_queue.push(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));
@@ -90,7 +90,7 @@ void FailedDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
 void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
     assert(!ctx.m_robot->isDriving());
     auto eventTime = this->time + ctx.getRndConversationTime();
-    if (rnd::uni() < ctx.getConversationProbability()) {
+    if (rnd::uni(ctx.m_rng) < ctx.getConversationProbability()) {
         ctx.m_queue.push(std::make_shared<SuccessFoundPersonConversationCompleteEvent>(eventTime));
     } else {
         ctx.m_queue.push(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
@@ -148,7 +148,7 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-    int nextRoomIdx = rnd::discrete_dist(row);
+    int nextRoomIdx = rnd::discrete_dist(ctx.m_rng, row);
 
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
     ctx.notifyEvent(*this);
@@ -156,17 +156,17 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
     double nextExecutionTime;
     des::RoomType roomType = des::parseRoomName(p.currentRoom);
     switch (roomType) {
-        case des::RoomType::WORKPLACE: 
-            nextExecutionTime = this->time + rnd::uni(60 * 10, ONE_HOUR * 2);
+        case des::RoomType::WORKPLACE:
+            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 60 * 10, ONE_HOUR * 2);
             break;
-        case des::RoomType::TOILET: 
-            nextExecutionTime = this->time + rnd::logNormal(4.8, 0.7);
+        case des::RoomType::TOILET:
+            nextExecutionTime = this->time + rnd::logNormal(ctx.m_rng, 4.8, 0.7);
             break;
-        case des::RoomType::KITCHEN: 
-            nextExecutionTime = this->time + rnd::uni(30, 1800);
+        case des::RoomType::KITCHEN:
+            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 30, 1800);
             break;
-        case des::RoomType::OTHER: 
-            nextExecutionTime = this->time + rnd::uni(60, ONE_HOUR * 1);
+        case des::RoomType::OTHER:
+            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 60, ONE_HOUR * 1);
             break;
     }
 
@@ -191,10 +191,10 @@ void PersonArrivedEvent::execute(SimulationContext& ctx) {
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-    int nextRoomIdx = rnd::discrete_dist(row);
+    int nextRoomIdx = rnd::discrete_dist(ctx.m_rng, row);
 
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
-    double nextExecutionTime = this->time + rnd::uni(10, 30);
+    double nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 10, 30);
     ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
 }
 

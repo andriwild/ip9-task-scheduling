@@ -32,7 +32,7 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const bool personFound = rnd::uni() < ctx->getPersonFindProbability();
+        const bool personFound = rnd::uni(ctx->m_rng) < ctx->getPersonFindProbability();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d", personFound);
         return personFound ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
