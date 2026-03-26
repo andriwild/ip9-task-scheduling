@@ -1,72 +1,57 @@
 #include <iterator>
 #include <memory>
 
+#include <cassert>
 #include "robot_state.h"
+#include "robot.h"
 #include "event.h"
 #include "context.h"
 #include "../util/rnd.h"
-#include "../init/config_loader.h"
-#include "../runner/runner.h"
 
-void ResetEvent::execute(SimulationContext& ctx) {
-    if (this->m_fileQueue.empty()) { return; }
-    auto path = this->m_fileQueue.front();
-    this->m_fileQueue.pop();
-    // load next appointment file
-    auto appts = ConfigLoader::loadAppointmentConfig(path);
-    ctx.extendEvents(IAppRunner::createMissionQueue(ctx.getConfig(), appts.value(), ctx.m_scheduler, "IMVS_Dock"));
-    // add new reset event into event queue
-    ctx.pushEvent(std::make_shared<ResetEvent>(ctx.getLastEventTime(), this->m_fileQueue));
-    ctx.printEventQueue();
-    ctx.resetRobot();
-    ctx.resetContext(ctx.topEvent()->time);
-    ctx.notifyEvent(*this);
-}
-
-void SimulationStartEvent::execute(SimulationContext& ctx) {
+void SimulationStartEvent::execute(ISimContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.notifyEvent(*this);
 }
 
-void SimulationEndEvent::execute(SimulationContext& ctx) {
+void SimulationEndEvent::execute(ISimContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.notifyEvent(*this);
 }
 
-void StartDriveEvent::execute(SimulationContext& ctx) {
-    assert(!ctx.m_robot->isDriving());
-    ctx.m_robot->setCharging(false);
+void StartDriveEvent::execute(ISimContext& ctx) {
+    assert(!ctx.getRobot()->isDriving());
+    ctx.getRobot()->setCharging(false);
 
-    if (ctx.m_robot->getLocation() == location) {
+    if (ctx.getRobot()->getLocation() == location) {
         ctx.pushEvent(std::make_shared<StopDriveEvent>(time, location, 0));
     }
     auto [duration, distance] = ctx.scheduleArrival(location);
     ctx.pushEvent(std::make_shared<StopDriveEvent>(static_cast<int>(time + duration), location, distance));
-    ctx.m_robot->setDriving(true);
-    ctx.m_robot->setTargetLocation(location);
+    ctx.getRobot()->setDriving(true);
+    ctx.getRobot()->setTargetLocation(location);
     ctx.notifyEvent(*this);
 }
 
-void StopDriveEvent::execute(SimulationContext& ctx) {
+void StopDriveEvent::execute(ISimContext& ctx) {
     ctx.robotMoved(this->location, this->distance);
-    ctx.m_robot->setDriving(false);
+    ctx.getRobot()->setDriving(false);
     ctx.setBTBlackboard("location", this->location);
     ctx.notifyEvent(*this);
 
     ctx.tickBT();
 }
 
-void AbortSearchEvent::execute(SimulationContext& ctx) {
+void AbortSearchEvent::execute(ISimContext& ctx) {
     ctx.updateAppointmentState(des::MissionState::FAILED);
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, ctx.getAppointment()));
     ctx.notifyEvent(*this);
 }
 
-void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
-    assert(!ctx.m_robot->isDriving());
+void StartDropOffConversationEvent::execute(ISimContext& ctx) {
+    assert(!ctx.getRobot()->isDriving());
     double eventTime = this->time + ctx.getRndConversationTime();
-    if (rnd::uni(ctx.m_rng) < ctx.getConversationProbability()) {
+    if (rnd::uni(ctx.rng()) < ctx.getConversationProbability()) {
         ctx.pushEvent(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
     } else {
         ctx.pushEvent(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));
@@ -75,22 +60,22 @@ void StartDropOffConversationEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
 }
 
-void SuccessDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
+void SuccessDropOffConversationCompleteEvent::execute(ISimContext& ctx) {
+    ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void FailedDropOffConversationCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.m_robot->getState()->setResult(des::Result::FAILURE);
+void FailedDropOffConversationCompleteEvent::execute(ISimContext& ctx) {
+    ctx.getRobot()->getState()->setResult(des::Result::FAILURE);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
-    assert(!ctx.m_robot->isDriving());
+void StartFoundPersonConversationEvent::execute(ISimContext& ctx) {
+    assert(!ctx.getRobot()->isDriving());
     auto eventTime = this->time + ctx.getRndConversationTime();
-    if (rnd::uni(ctx.m_rng) < ctx.getConversationProbability()) {
+    if (rnd::uni(ctx.rng()) < ctx.getConversationProbability()) {
         ctx.pushEvent(std::make_shared<SuccessFoundPersonConversationCompleteEvent>(eventTime));
     } else {
         ctx.pushEvent(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
@@ -99,44 +84,44 @@ void StartFoundPersonConversationEvent::execute(SimulationContext& ctx) {
     ctx.notifyEvent(*this);
 }
 
-void SuccessFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.m_robot->getState()->setResult(des::Result::SUCCESS);
+void SuccessFoundPersonConversationCompleteEvent::execute(ISimContext& ctx) {
+    ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void FailedFoundPersonConversationCompleteEvent::execute(SimulationContext& ctx) {
-    ctx.m_robot->getState()->setResult(des::Result::FAILURE);
+void FailedFoundPersonConversationCompleteEvent::execute(ISimContext& ctx) {
+    ctx.getRobot()->getState()->setResult(des::Result::FAILURE);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void StartAccompanyEvent::execute(SimulationContext& ctx) {
+void StartAccompanyEvent::execute(ISimContext& ctx) {
     ctx.changeRobotState(std::make_unique<AccompanyState>());
     ctx.pushEvent(std::make_shared<StartDriveEvent>(time, ctx.getAppointment()->roomName));
     ctx.notifyEvent(*this);
 }
 
-void MissionDispatchEvent::execute(SimulationContext& ctx) {
+void MissionDispatchEvent::execute(ISimContext& ctx) {
     ctx.addPendingMission(this->appointment);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void MissionCompleteEvent::execute(SimulationContext& ctx) {
+void MissionCompleteEvent::execute(ISimContext& ctx) {
     ctx.completeAppointment(this->appointment);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void BatteryFullEvent::execute(SimulationContext& ctx) {
+void BatteryFullEvent::execute(ISimContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
-    ctx.m_robot->m_batteryFullEventScheduled = false;
+    ctx.getRobot()->m_batteryFullEventScheduled = false;
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
 
-void PersonTransitionEvent::execute(SimulationContext& ctx) {
+void PersonTransitionEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
     if (p.currentRoom == "OUTDOOR") {
         ctx.notifyEvent(*this);
@@ -148,7 +133,7 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-    int nextRoomIdx = rnd::discrete_dist(ctx.m_rng, row);
+    int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
 
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
     ctx.notifyEvent(*this);
@@ -157,16 +142,16 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
     des::RoomType roomType = des::parseRoomName(p.currentRoom);
     switch (roomType) {
         case des::RoomType::WORKPLACE:
-            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 60 * 10, ONE_HOUR * 2);
+            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 60 * 10, ONE_HOUR * 2);
             break;
         case des::RoomType::TOILET:
-            nextExecutionTime = this->time + rnd::logNormal(ctx.m_rng, 4.8, 0.7);
+            nextExecutionTime = this->time + rnd::logNormal(ctx.rng(), 4.8, 0.7);
             break;
         case des::RoomType::KITCHEN:
-            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 30, 1800);
+            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 30, 1800);
             break;
         case des::RoomType::OTHER:
-            nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 60, ONE_HOUR * 1);
+            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR * 1);
             break;
     }
 
@@ -182,7 +167,7 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
     }
 }
 
-void PersonArrivedEvent::execute(SimulationContext& ctx) {
+void PersonArrivedEvent::execute(ISimContext& ctx) {
     ctx.notifyEvent(*this);
     auto& p = *this->person;
 
@@ -191,19 +176,19 @@ void PersonArrivedEvent::execute(SimulationContext& ctx) {
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-    int nextRoomIdx = rnd::discrete_dist(ctx.m_rng, row);
+    int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
 
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
-    double nextExecutionTime = this->time + rnd::uni(ctx.m_rng, 10, 30);
+    double nextExecutionTime = this->time + rnd::uni(ctx.rng(), 10, 30);
     ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
 }
 
-void PersonDepartureEvent::execute(SimulationContext& ctx) {
+void PersonDepartureEvent::execute(ISimContext& ctx) {
     this->person->currentRoom = "OUTDOOR";
     ctx.notifyEvent(*this);
 }
 
-void MissionStartEvent::execute(SimulationContext& ctx) {
+void MissionStartEvent::execute(ISimContext& ctx) {
     const std::string person = appointment->personName;
     assert(ctx.hasEmployee(person));
     std::vector<std::string> locations = ctx.getPersonLocations(person);

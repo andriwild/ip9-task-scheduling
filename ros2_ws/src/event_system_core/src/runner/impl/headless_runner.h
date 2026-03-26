@@ -1,12 +1,16 @@
 #pragma once
 
 #include <memory>
+#include <queue>
+#include <string>
 #include "../runner.h"
 #include "../../observer/metrics.h"
 
 class MetricsNode;
 
 class HeadlessRunner final : public IAppRunner {
+    std::queue<std::string> m_appointmentFiles;
+    bool m_batchComplete = false;
 
 public:
     explicit HeadlessRunner() {
@@ -41,17 +45,14 @@ public:
     int loadAppState() const override;
     void enterPause() const override;
     void reset() override;
+    void onSimulationComplete();
 
     void shutdown() override {
         if (m_executor) {
-            m_executor->cancel(); // stop spinning
+            m_executor->cancel();
         }
     }
 
 private:
-    SortedEventQueue setupQueue(
-        const std::shared_ptr<des::SimConfig> &config,
-        std::vector<std::shared_ptr<des::Appointment> > &appointments,
-        Scheduler &scheduler
-    ) const;
+    bool loadNextBatch();
 };

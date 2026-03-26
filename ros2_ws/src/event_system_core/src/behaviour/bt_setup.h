@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 #include "accompany.h"
 #include "idle.h"
 #include "search.h"
@@ -18,7 +18,7 @@
 constexpr bool W_OUT_TREE   = true;
 const std::string TREE_FILE = "bt_config.xml";
 
-inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationContext> ctx) {
+inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> ctx) {
     RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Create Behaviour Tree");
     BT::BehaviorTreeFactory factory;
 
@@ -191,7 +191,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<SimulationCon
     )";
 
     auto tree = std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text));
-    tree->rootBlackboard()->set("ctx", ctx);
+    tree->rootBlackboard()->set<std::shared_ptr<ISimContext>>("ctx", ctx);
     if (W_OUT_TREE) {
         std::string xml_models    = BT::writeTreeNodesModelXML(factory);
         std::string xml_full_tree = BT::WriteTreeToXML(*tree, true, true);

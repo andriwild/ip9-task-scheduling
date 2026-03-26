@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/basic_types.h>
 #include <memory>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 #include "../model/robot_state.h"
 #include "../util/rnd.h"
 
@@ -17,8 +17,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const bool isSearching = !ctx->m_robot->isDriving() && ctx->m_robot->getStateType() == des::RobotStateType::SEARCHING;
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool isSearching = !ctx->getRobot()->isDriving() && ctx->getRobot()->getStateType() == des::RobotStateType::SEARCHING;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "IsSearching: %d", isSearching);
         return isSearching ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
@@ -31,8 +31,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const bool personFound = rnd::uni(ctx->m_rng) < ctx->getPersonFindProbability();
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool personFound = rnd::uni(ctx->rng()) < ctx->getPersonFindProbability();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d", personFound);
         return personFound ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
@@ -45,7 +45,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const auto target = ctx->getAppointment()->roomName;
         ctx->pushEvent(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "Start Accompany Conversation");
@@ -60,9 +60,9 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        const auto currentState = ctx->m_robot->getState();
+        const auto currentState = ctx->getRobot()->getState();
         const auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
@@ -82,8 +82,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const auto searchState = dynamic_cast<SearchState*>(ctx->m_robot->getState());
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto searchState = dynamic_cast<SearchState*>(ctx->getRobot()->getState());
         const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
@@ -100,7 +100,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime()));
         RCLCPP_WARN(rclcpp::get_logger("BT - SearchRoutine"), "Abort Search!");
         return BT::NodeStatus::SUCCESS;

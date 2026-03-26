@@ -125,7 +125,6 @@ public:
         movedDistance += distance;
     }
 
-private:
     void publishReport() const {
         auto msg = event_system_msgs::msg::MetricsReport();
 

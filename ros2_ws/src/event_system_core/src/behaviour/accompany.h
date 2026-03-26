@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/basic_types.h>
 #include <memory>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 #include "../model/robot_state.h"
 
 
@@ -17,10 +17,10 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        const bool isArrived = ctx->m_robot->getLocation() == ctx->m_robot->getTargetLocation();
-        const bool isAccompany = ctx->m_robot->getStateType() == des::RobotStateType::ACCOMPANY;
+        const bool isArrived = ctx->getRobot()->getLocation() == ctx->getRobot()->getTargetLocation();
+        const bool isAccompany = ctx->getRobot()->getStateType() == des::RobotStateType::ACCOMPANY;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - AccompanyRoutine"), "IsAccompany: %d (arrived: %d)", isAccompany, isArrived);
         if (isAccompany && isArrived) {
             return BT::NodeStatus::SUCCESS;
@@ -36,7 +36,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         // TODO: add randomness
         const bool arrived = true;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - AccompanyRoutine"), "ArrivedWithPerson: %d", arrived);
@@ -51,7 +51,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>());
@@ -67,7 +67,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         ctx->updateAppointmentState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());

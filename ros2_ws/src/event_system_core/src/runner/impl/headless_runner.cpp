@@ -1,6 +1,6 @@
 #include "headless_runner.h"
 #include <memory>
-#include <queue>
+#include <filesystem>
 #include "../../behaviour/bt_setup.h"
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "../../model/event_queue.h"
@@ -11,14 +11,14 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     assert(std::filesystem::exists(path) && std::filesystem::is_directory(path));
 
     m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
-    const auto people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
-    assert(!people.value().empty());
+    m_people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!m_people.value().empty());
 
-    for (const auto& p: people.value()) {
+    for (const auto& p: m_people.value()) {
         m_employeeLocations[p->firstName] = p->roomLabels;
-    } 
+    }
     m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
-    
+
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
@@ -27,34 +27,78 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         *m_scheduler
     );
 
-    std::queue<std::string> files;
-    for (const auto &entry : std::filesystem::directory_iterator(path)) {
-        files.push(entry.path());
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        m_appointmentFiles.push(entry.path());
     }
 
-    IAppRunner::scheduleOccupancy(*m_config, people.value(), m_ctx->m_rng);
-    m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
-    m_eventQueue.push(std::make_shared<ResetEvent>(0, files));
-
     m_ctx->addObserver(m_metricsNode);
-    m_ctx->resetContext(m_eventQueue.top()->time);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
+
+    loadNextBatch();
 
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Complete!");
 }
 
+bool HeadlessRunner::loadNextBatch() {
+    if (m_appointmentFiles.empty()) {
+        return false;
+    }
+
+    while (!m_eventQueue.empty()) {
+        m_eventQueue.pop();
+    }
+
+    auto path = m_appointmentFiles.front();
+    m_appointmentFiles.pop();
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Loading batch: %s", path.c_str());
+
+    auto appts = ConfigLoader::loadAppointmentConfig(path);
+    if (!appts.has_value()) {
+        RCLCPP_ERROR(rclcpp::get_logger("des_application"), "Failed to load appointments from: %s", path.c_str());
+        return loadNextBatch();
+    }
+    m_appointments = appts.value();
+
+    IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(), "5.2B_Elevator"));
+    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
+
+    int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
+    int lastEventTime = m_eventQueue.getLastEventTime() + ONE_HOUR;
+
+    m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
+
+    m_ctx->resetContext(m_eventQueue.getFirstEventTime());
+
+    m_eventQueue.print();
+    return true;
+}
+
+void HeadlessRunner::onSimulationComplete() {
+    m_metricsNode->publishReport();
+    m_metricsNode->clear();
+
+    if (!loadNextBatch()) {
+        m_batchComplete = true;
+    }
+}
+
 int HeadlessRunner::loadAppState() const {
+    if (m_batchComplete) {
+        return event_system_msgs::srv::SetSystemState::Request::EXIT;
+    }
     return event_system_msgs::srv::SetSystemState::Request::RUN;
 }
 
 void HeadlessRunner::reset() {
-    // not implemented yet
+    // not needed — batch sequencing handled by loadNextBatch()
 }
 
 void HeadlessRunner::enterPause() const {
-    // not implemented yet
+    // not needed in headless mode
 }
 
 void HeadlessRunner::updateConfig() {
-    // not implemented yet
+    // not needed in headless mode
 }

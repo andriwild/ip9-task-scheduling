@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 
 class IsBatteryLow final : public BT::ConditionNode {
 public:
@@ -16,8 +16,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const bool chargingRequired = ctx->m_robot->updateAndGetChargingRequired();
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool chargingRequired = ctx->getRobot()->updateAndGetChargingRequired();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "IsBatteryLow: %d", chargingRequired);
         return chargingRequired ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
@@ -30,8 +30,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        const bool isCharging = ctx->m_robot->getState()->getType() == des::RobotStateType::CHARGING;
+        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool isCharging = ctx->getRobot()->getState()->getType() == des::RobotStateType::CHARGING;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - IsCharging"), "%d", isCharging);
         return isCharging ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
@@ -45,8 +45,8 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx          = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
-        const bool isTaskActive = ctx->m_robot->isTaskActive();
+        const auto ctx          = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool isTaskActive = ctx->getRobot()->isTaskActive();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - IsCharging"), "%d", isTaskActive);
         return isTaskActive? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
@@ -61,15 +61,15 @@ public:
 
     BT::NodeStatus tick() override {
         std::cout << "GoToDock" << std::endl;
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         ctx->changeRobotState(std::make_unique<ChargeState>());
-        if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
+        if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
             RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "Docking check: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
-        if (!ctx->m_robot->isDriving()) {
-            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
+        if (!ctx->getRobot()->isDriving()) {
+            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
             RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "Not at dock, start driving to dock");
         }
         return BT::NodeStatus::FAILURE;
@@ -83,18 +83,18 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
 
-        if (ctx->m_robot->m_batteryFullEventScheduled) {
+        if (ctx->getRobot()->m_batteryFullEventScheduled) {
             return BT::NodeStatus::SUCCESS;
         }
 
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
-        const double timeToFull = ctx->m_robot->m_bat->timeToFull(netChargingPower);
+        const double timeToFull = ctx->getRobot()->m_bat->timeToFull(netChargingPower);
 
         ctx->pushEvent(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull)));
-        ctx->m_robot->m_batteryFullEventScheduled = true;
+        ctx->getRobot()->m_batteryFullEventScheduled = true;
         RCLCPP_INFO(rclcpp::get_logger("BT - ChargeRoutine"), "Start Charging, time to full: %.1fs", timeToFull);
         return BT::NodeStatus::SUCCESS;
     }

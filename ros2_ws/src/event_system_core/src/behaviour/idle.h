@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 #include "../model/robot_state.h"
 
 class IsIdle final : public BT::ConditionNode {
@@ -17,9 +17,9 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        const bool isIdle = ctx->m_robot->getStateType() == des::RobotStateType::IDLE;
+        const bool isIdle = ctx->getRobot()->getStateType() == des::RobotStateType::IDLE;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "IsIdle: %d", isIdle);
         if (isIdle) {
             return BT::NodeStatus::SUCCESS;
@@ -36,14 +36,14 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        if (ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation()) {
+        if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
             RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "Docking check: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
+        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
         RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock, start driving to dock");
         return BT::NodeStatus::FAILURE;
     }
@@ -56,8 +56,8 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        assert(ctx->m_robot->getLocation() == ctx->m_robot->getIdleLocation());
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
         ctx->changeRobotState(std::make_unique<IdleState>());
         RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Enter Idle");
         return BT::NodeStatus::SUCCESS;
@@ -71,7 +71,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool hasPending = ctx->hasPendingMission();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "HasPendingMissionIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }

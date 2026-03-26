@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/action_node.h>
 #include <memory>
 
-#include "../model/context.h"
+#include "../model/i_sim_context.h"
 
 class HasPendingMission final : public BT::ConditionNode {
 public:
@@ -16,7 +16,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
+        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool hasPending = ctx->hasPendingMission();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "HasPendingMission: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
@@ -32,8 +32,8 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx    = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
-        const bool isBusy = ctx->m_robot->isBusy();
+        const auto ctx    = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool isBusy = ctx->getRobot()->isBusy();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsRobotBusy: %d", isBusy);
         if (isBusy) {
             return BT::NodeStatus::SUCCESS;
@@ -50,7 +50,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx      = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
+        const auto ctx      = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool assigned = ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsMissionAssigned: %d", assigned);
         if (assigned) {
@@ -68,7 +68,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->hasPendingMission());
         const auto appointment = ctx->popPendingMission();
         RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for: %s",
@@ -88,7 +88,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         RCLCPP_WARN(rclcpp::get_logger("BT - MissionControlRoutine"), "RejectMissionAction");
 
         assert(ctx->hasPendingMission());
@@ -107,10 +107,10 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext> >("ctx");
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const auto appointment = ctx->nextPendingMission();
-        const bool isFeasible  = ctx->isMissionFeasible(*appointment, ctx->m_robot->getLocation());
+        const bool isFeasible  = ctx->isMissionFeasible(*appointment, ctx->getRobot()->getLocation());
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "MissionFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;

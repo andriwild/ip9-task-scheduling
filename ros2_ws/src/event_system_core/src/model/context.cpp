@@ -2,7 +2,6 @@
 
 #include <utility>
 #include "../util/rnd.h"
-#include "event.h"
 
 SimulationContext::SimulationContext(
     EventQueue& queue,
@@ -12,9 +11,9 @@ SimulationContext::SimulationContext(
     Scheduler& scheduler
 )
     : m_simConfig(std::move(simConfig))
-    , m_plannerNode(std::move(plannerNode))
     , m_queue(queue)
     , m_employeeLocations(std::move(employeeLocations))
+    , m_plannerNode(std::move(plannerNode))
     , m_scheduler(scheduler)
 {
     m_robot = std::make_unique<Robot>(m_simConfig);

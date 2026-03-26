@@ -11,7 +11,6 @@
 #include "../util/rnd.h"
 
 class MetricsNode;
-constexpr int ONE_HOUR = 3600;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 
 class IAppRunner {

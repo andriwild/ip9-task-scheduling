@@ -67,10 +67,11 @@ int main(const int argc, char *argv[]) {
                         e->execute(*app->m_ctx);
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");
-                        app->enterPause();
                         if (headless) {
-                            RCLCPP_INFO(rclcpp::get_logger("main"), "Fast simulation complete. Quitting...");
-                            running = false;
+                            auto* headlessApp = dynamic_cast<HeadlessRunner*>(app.get());
+                            headlessApp->onSimulationComplete();
+                        } else {
+                            app->enterPause();
                         }
                     }
                     break;

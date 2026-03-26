@@ -12,6 +12,7 @@
 #include "../sim/ros/path_node.h"
 #include "../util/types.h"
 #include "event.h"
+#include "i_sim_context.h"
 #include "mission_manager.h"
 #include "robot.h"
 #include "../sim/scheduler.h"
@@ -24,7 +25,7 @@ struct Journey {
     double distance;
 };
 
-class SimulationContext {
+class SimulationContext : public ISimContext {
     int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
@@ -35,6 +36,7 @@ class SimulationContext {
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
+    // mutable: RNG state changes are an implementation detail, allowing use in const methods
     mutable std::mt19937 m_rng{DEFAULT_SEED};
 
     std::shared_ptr<PathPlannerNode> m_plannerNode;
@@ -54,19 +56,23 @@ public:
         m_robot = std::make_unique<Robot>(m_simConfig);
     }
 
-    Journey scheduleArrival(const std::string& target) const;
-    void changeRobotState(std::unique_ptr<RobotState> newState) const;
-    double getRndConversationTime() const;
+    Journey scheduleArrival(const std::string& target) const override;
+    void changeRobotState(std::unique_ptr<RobotState> newState) const override;
+    double getRndConversationTime() const override;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void resetContext(int newTime);
-    void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const;
+    void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const override;
 
-    int getTime() const { return m_currentTime; }
+    int getTime() const override { return m_currentTime; }
 
-    std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; }
+    std::shared_ptr<des::SimConfig> getConfig() const override { return m_simConfig; }
+
+    std::shared_ptr<Robot> getRobot() const override { return m_robot; }
+
+    std::mt19937& rng() const override { return m_rng; }
 
     // Event queue access
-    void pushEvent(const std::shared_ptr<IEvent>& event) {
+    void pushEvent(const std::shared_ptr<IEvent>& event) override {
         m_queue.push(event);
     }
 
@@ -86,11 +92,11 @@ public:
         m_behaviorTree = std::move(tree);
     }
 
-    void tickBT() {
+    void tickBT() override {
         m_behaviorTree->tickOnce();
     }
 
-    void setBTBlackboard(const std::string& key, const std::string& value) {
+    void setBTBlackboard(const std::string& key, const std::string& value) override {
         m_behaviorTree->rootBlackboard()->set(key, value);
     }
 
@@ -99,40 +105,40 @@ public:
         return m_employeeLocations;
     }
 
-    const std::vector<std::string>& getPersonLocations(const std::string& person) const {
+    const std::vector<std::string>& getPersonLocations(const std::string& person) const override {
         return m_employeeLocations.at(person);
     }
 
-    bool hasEmployee(const std::string& person) const {
+    bool hasEmployee(const std::string& person) const override {
         return m_employeeLocations.contains(person);
     }
 
     // Mission management (delegated to MissionManager)
-    void setAppointment(const std::shared_ptr<des::Appointment>& appointment) {
+    void setAppointment(const std::shared_ptr<des::Appointment>& appointment) override {
         m_missions.setCurrent(appointment);
     }
 
-    std::shared_ptr<des::Appointment> getAppointment() const {
+    std::shared_ptr<des::Appointment> getAppointment() const override {
         return m_missions.getCurrent();
     }
 
-    void updateAppointmentState(const des::MissionState& newState) {
+    void updateAppointmentState(const des::MissionState& newState) override {
         m_missions.updateState(newState);
     }
 
-    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) {
+    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) override {
         m_missions.addPending(appointment);
     }
 
-    bool hasPendingMission() const {
+    bool hasPendingMission() const override {
         return m_missions.hasPending();
     }
 
-    std::shared_ptr<des::Appointment> nextPendingMission() {
+    std::shared_ptr<des::Appointment> nextPendingMission() override {
         return m_missions.peekPending();
     }
 
-    std::shared_ptr<des::Appointment> popPendingMission() {
+    std::shared_ptr<des::Appointment> popPendingMission() override {
         return m_missions.popPending();
     }
 
@@ -166,16 +172,16 @@ public:
         m_eventBus.notifyStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
     }
 
-    void notifyEvent(const IEvent& event) const {
+    void notifyEvent(const IEvent& event) const override {
         m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
     }
 
-    void robotMoved(const std::string& location, const double distance = 0) const {
+    void robotMoved(const std::string& location, const double distance = 0) const override {
         m_robot->setLocation(location);
         m_eventBus.notifyMoved(m_currentTime, location, distance);
     }
 
-    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const {
+    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const override {
         const double missionDuration = m_scheduler.optimisticMeeting(appointment.personName, startPos, appointment.roomName);
         if (appointment.appointmentTime - missionDuration  >= getTime()) {
             RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", appointment.id);
@@ -185,8 +191,8 @@ public:
         return false;
     };
 
-    double getPersonFindProbability() const { return m_simConfig->personFindProbability; };
-    double getConversationProbability() const { return m_simConfig->conversationProbability; };
+    double getPersonFindProbability() const override { return m_simConfig->personFindProbability; };
+    double getConversationProbability() const override { return m_simConfig->conversationProbability; };
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
     double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
     double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
