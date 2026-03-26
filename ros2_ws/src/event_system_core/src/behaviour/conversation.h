@@ -71,7 +71,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
-        ctx->m_queue.push(std::make_shared<StartAccompanyEvent>(ctx->getTime()));
+        ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime()));
         RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }
@@ -133,7 +133,7 @@ public:
             ctx->updateAppointmentState(des::MissionState::FAILED);
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
-        ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getAppointment()));
+        ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getAppointment()));
         RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Complete Mission Action");
         
         return BT::NodeStatus::SUCCESS;

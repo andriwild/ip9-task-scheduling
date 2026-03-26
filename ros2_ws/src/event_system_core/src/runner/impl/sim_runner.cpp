@@ -33,7 +33,7 @@ void SimRunner::reset() {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     publishMissions(m_eventQueue, m_rosObserver);
-    m_ctx->resetContext(m_eventQueue.top()->time);
+    m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "System Reset Complete");
 }
@@ -87,9 +87,9 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
 
     IAppRunner::publishMissions(m_eventQueue, m_rosObserver);
 
-    m_ctx->resetContext(m_eventQueue.top()->time);
+    m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
-    m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);
+    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Complete!");
 }

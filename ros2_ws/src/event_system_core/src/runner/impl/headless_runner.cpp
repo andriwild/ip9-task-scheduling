@@ -38,7 +38,7 @@ void HeadlessRunner::setupApplication(const std::string& path) {
 
     m_ctx->addObserver(m_metricsNode);
     m_ctx->resetContext(m_eventQueue.top()->time);
-    m_ctx->m_behaviorTree = setupBehaviorTree(m_ctx);
+    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Complete!");
 }

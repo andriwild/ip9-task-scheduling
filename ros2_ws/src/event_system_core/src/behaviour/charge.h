@@ -69,7 +69,7 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
         if (!ctx->m_robot->isDriving()) {
-            ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
+            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
             RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "Not at dock, start driving to dock");
         }
         return BT::NodeStatus::FAILURE;
@@ -93,7 +93,7 @@ public:
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
         const double timeToFull = ctx->m_robot->m_bat->timeToFull(netChargingPower);
 
-        ctx->m_queue.push(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull)));
+        ctx->pushEvent(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull)));
         ctx->m_robot->m_batteryFullEventScheduled = true;
         RCLCPP_INFO(rclcpp::get_logger("BT - ChargeRoutine"), "Start Charging, time to full: %.1fs", timeToFull);
         return BT::NodeStatus::SUCCESS;

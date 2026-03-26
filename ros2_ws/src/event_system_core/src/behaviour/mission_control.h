@@ -75,7 +75,7 @@ public:
                     appointment->personName.c_str());
         ctx->setAppointment(appointment);
         ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);
-        ctx->m_queue.push(std::make_shared<MissionStartEvent>(ctx->getTime(), appointment));
+        ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), appointment));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -94,7 +94,7 @@ public:
         assert(ctx->hasPendingMission());
         const auto appointment = ctx->popPendingMission();
         appointment->state     = des::MissionState::REJECTED;
-        ctx->m_queue.push(std::make_shared<MissionCompleteEvent>(ctx->getTime(), appointment));
+        ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), appointment));
         return BT::NodeStatus::SUCCESS;
     }
 };

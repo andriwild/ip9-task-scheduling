@@ -29,6 +29,9 @@ class SimulationContext {
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
     MissionManager m_missions;
+    EventQueue& m_queue;
+    std::shared_ptr<BT::Tree> m_behaviorTree;
+    std::map<std::string, std::vector<std::string>> m_employeeLocations;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -36,9 +39,6 @@ public:
 
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
-    EventQueue& m_queue;
-    std::shared_ptr<BT::Tree> m_behaviorTree;
-    std::map<std::string, std::vector<std::string>> m_employeeLocations;
     Scheduler& m_scheduler;
 
     explicit SimulationContext(
@@ -64,6 +64,48 @@ public:
     int getTime() const { return m_currentTime; }
 
     std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; }
+
+    // Event queue access
+    void pushEvent(const std::shared_ptr<IEvent>& event) {
+        m_queue.push(event);
+    }
+
+    void extendEvents(const SortedEventQueue& events) {
+        m_queue.extend(events);
+    }
+
+    int getFirstEventTime() const { return m_queue.getFirstEventTime(); }
+    int getLastEventTime() const { return m_queue.getLastEventTime(); }
+
+    std::shared_ptr<IEvent> topEvent() const { return m_queue.top(); }
+
+    void printEventQueue() const { m_queue.print(); }
+
+    // Behaviour tree access
+    void setBehaviorTree(std::shared_ptr<BT::Tree> tree) {
+        m_behaviorTree = std::move(tree);
+    }
+
+    void tickBT() {
+        m_behaviorTree->tickOnce();
+    }
+
+    void setBTBlackboard(const std::string& key, const std::string& value) {
+        m_behaviorTree->rootBlackboard()->set(key, value);
+    }
+
+    // Employee locations access
+    const std::map<std::string, std::vector<std::string>>& getEmployeeLocations() const {
+        return m_employeeLocations;
+    }
+
+    const std::vector<std::string>& getPersonLocations(const std::string& person) const {
+        return m_employeeLocations.at(person);
+    }
+
+    bool hasEmployee(const std::string& person) const {
+        return m_employeeLocations.contains(person);
+    }
 
     // Mission management (delegated to MissionManager)
     void setAppointment(const std::shared_ptr<des::Appointment>& appointment) {

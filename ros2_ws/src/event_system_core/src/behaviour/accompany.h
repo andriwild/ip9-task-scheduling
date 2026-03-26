@@ -53,7 +53,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<SimulationContext>>("ctx");
 
-        ctx->m_queue.push(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
+        ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>());
         RCLCPP_INFO(rclcpp::get_logger("BT - AccompanyRoutine"), "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;

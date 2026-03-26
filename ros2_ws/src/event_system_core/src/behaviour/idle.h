@@ -43,7 +43,7 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
-        ctx->m_queue.push(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
+        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->m_robot->getIdleLocation()));
         RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock, start driving to dock");
         return BT::NodeStatus::FAILURE;
     }
