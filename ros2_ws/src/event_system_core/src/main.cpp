@@ -1,17 +1,12 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
-#include <filesystem>
 
-#include "init/config_loader.h"
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
-#include "util/rnd.h"
-
 
 const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/test/";
-
 
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;

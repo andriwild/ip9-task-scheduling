@@ -10,6 +10,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time", default=True)
     log_level = LaunchConfiguration("log_level", default="INFO")
     mode = LaunchConfiguration("mode", default="full")
+    rounds = LaunchConfiguration("rounds", default="1")
 
     # Condition to check if mode is "headless"
     is_headless_mode = launch.substitutions.PythonExpression(["'", mode, "' == 'headless'"])
@@ -18,6 +19,7 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value=use_sim_time),
         DeclareLaunchArgument("log_level", default_value=log_level),
         DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full or headless"),
+        DeclareLaunchArgument("rounds", default_value=rounds, description="Number of rounds in headless mode"),
 
         Node(
             package='rviz2',
@@ -35,7 +37,7 @@ def generate_launch_description():
             parameters=[{
                 'use_sim_time': use_sim_time,
             }],
-            arguments=['--mode', mode],
+            arguments=['--mode', mode, '--rounds', rounds],
             ros_arguments=[
                 '--log-level', ['des_application:=', log_level],
                 '--log-level', ['event_system_planner_node:=', log_level],

@@ -45,7 +45,6 @@ void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointme
 void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
     m_missions.reset();
-    m_rng.seed(DEFAULT_SEED);
     resetRobot();
 }
 

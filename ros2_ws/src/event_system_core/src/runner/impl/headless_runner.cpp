@@ -28,11 +28,16 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     );
 
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        m_appointmentFiles.push(entry.path());
+        m_appointmentFilePaths.push_back(entry.path());
     }
+    std::sort(m_appointmentFilePaths.begin(), m_appointmentFilePaths.end());
+    rebuildFileQueue();
 
     m_ctx->addObserver(m_metricsNode);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
+
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Rounds: %d, Files per round: %zu",
+                m_totalRounds, m_appointmentFilePaths.size());
 
     loadNextBatch();
 
@@ -41,7 +46,13 @@ void HeadlessRunner::setupApplication(const std::string& path) {
 
 bool HeadlessRunner::loadNextBatch() {
     if (m_appointmentFiles.empty()) {
-        return false;
+        m_currentRound++;
+        if (m_currentRound >= m_totalRounds) {
+            return false;
+        }
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Starting round %d/%d",
+                    m_currentRound + 1, m_totalRounds);
+        rebuildFileQueue();
     }
 
     while (!m_eventQueue.empty()) {
@@ -50,7 +61,8 @@ bool HeadlessRunner::loadNextBatch() {
 
     auto path = m_appointmentFiles.front();
     m_appointmentFiles.pop();
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Loading batch: %s", path.c_str());
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Loading batch: %s (round %d/%d)",
+                path.c_str(), m_currentRound + 1, m_totalRounds);
 
     auto appts = ConfigLoader::loadAppointmentConfig(path);
     if (!appts.has_value()) {
@@ -64,10 +76,14 @@ bool HeadlessRunner::loadNextBatch() {
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
     int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
-    int lastEventTime = m_eventQueue.getLastEventTime() + ONE_HOUR;
+    int lastEventTime = m_eventQueue.getLastEventTime();
+
+    auto latest = std::max_element(m_people.value().begin(), m_people.value().end(),
+        [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
+    int lastDepartureTime = (*latest)->departureTime;
 
     m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
-    m_eventQueue.push(std::make_shared<SimulationEndEvent>(lastEventTime));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(std::max(lastEventTime, lastDepartureTime) + ONE_HOUR));
 
     m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
