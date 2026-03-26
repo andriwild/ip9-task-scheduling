@@ -21,6 +21,7 @@ public:
     virtual void execute(ISimContext& ctx) = 0;
     virtual std::string getName() const = 0;
     virtual des::EventType getType() const = 0;
+    virtual std::string getColor() const { return ""; }
 
     bool operator<(const IEvent& other) const {
         return time < other.time;
@@ -70,7 +71,7 @@ public:
         , location(std::move(location))
     {}
     void execute(ISimContext& ctx) override;
-    std::string getName() const override { return "Start Drive"; }
+    std::string getName() const override { return "Departing: " + location; }
     des::EventType getType() const override { return des::EventType::START_DRIVE; }
 };
 
@@ -236,6 +237,7 @@ public:
         return std::format("{} moved to {}", person->firstName, person->currentRoom);
  }
     des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
+    std::string getColor() const override { return person->color; }
 };
 
 class PersonArrivedEvent final : public PersonTransitionEvent {

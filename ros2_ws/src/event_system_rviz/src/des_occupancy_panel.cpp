@@ -31,8 +31,9 @@ DesOccupancyPanel::DesOccupancyPanel(QWidget* parent) : rviz_common::Panel(paren
     m_chart->legend()->setAlignment(Qt::AlignTop);
     m_chart->setMargins(QMargins(100, 5, 5, 5));
 
-    m_chartView = new QtCharts::QChartView(m_chart);
+    m_chartView = new InteractiveChartView(m_chart);
     m_chartView->setRenderHint(QPainter::Antialiasing);
+    m_chartView->setRubberBand(QtCharts::QChartView::HorizontalRubberBand);
     m_chartView->setMinimumHeight(350);
 
     mainLayout->addWidget(m_chartView);
@@ -69,6 +70,21 @@ void DesOccupancyPanel::onTimelineEvent(const event_system_msgs::msg::TimelineEv
         return;
     }
 
+    // Robot: START_DRIVE extends horizontal line to departure time,
+    //        STOP_DRIVE draws diagonal to arrival (location + time)
+    if (type == event_system_msgs::msg::TimelineEvent::START_DRIVE) {
+        addRobotDeparture(msg->time);
+        return;
+    }
+    if (type == event_system_msgs::msg::TimelineEvent::STOP_DRIVE) {
+        QString label = QString::fromStdString(msg->label);
+        static const QString prefix = "Arrived: ";
+        if (!label.startsWith(prefix)) return;
+        QString room = label.mid(prefix.length());
+        addRobotArrival(room, msg->time);
+        return;
+    }
+
     const bool isPersonEvent =
         type == event_system_msgs::msg::TimelineEvent::PERSON_TRANSITION ||
         type == event_system_msgs::msg::TimelineEvent::PERSON_ARRIVED ||
@@ -79,17 +95,7 @@ void DesOccupancyPanel::onTimelineEvent(const event_system_msgs::msg::TimelineEv
     auto [person, room] = parseLabel(QString::fromStdString(msg->label));
     if (person.isEmpty()) return;
 
-    const double hours = msg->time / 3600.0;
-    const int yIdx = roomIndex(room);
-
-    auto* series = getOrCreateSeries(person);
-
-    // Step-line: extend horizontal at previous Y, then jump vertical
-    if (m_lastY.contains(person)) {
-        series->append(hours, m_lastY[person]);
-    }
-    series->append(hours, yIdx);
-    m_lastY[person] = yIdx;
+    addPoint(person, room, msg->time, QString::fromStdString(msg->color));
 }
 
 void DesOccupancyPanel::onReset(const event_system_msgs::msg::TimelineReset::SharedPtr /*msg*/) {
@@ -142,7 +148,7 @@ int DesOccupancyPanel::roomIndex(const QString& room) {
     return idx;
 }
 
-QtCharts::QLineSeries* DesOccupancyPanel::getOrCreateSeries(const QString& person) {
+QtCharts::QLineSeries* DesOccupancyPanel::getOrCreateSeries(const QString& person, const QString& color) {
     if (m_seriesMap.contains(person)) {
         return m_seriesMap[person];
     }
@@ -150,8 +156,7 @@ QtCharts::QLineSeries* DesOccupancyPanel::getOrCreateSeries(const QString& perso
     auto* series = new QtCharts::QLineSeries();
     series->setName(person);
 
-    int colorIdx = m_seriesMap.size() % (sizeof(COLORS) / sizeof(COLORS[0]));
-    QPen pen(COLORS[colorIdx]);
+    QPen pen{QColor{color}};
     pen.setWidth(2);
     series->setPen(pen);
 
@@ -159,8 +164,83 @@ QtCharts::QLineSeries* DesOccupancyPanel::getOrCreateSeries(const QString& perso
     series->attachAxis(m_axisX);
     series->attachAxis(m_axisY);
 
+    connectSeriesSignals(series);
+    connectLegendMarkers();
+
     m_seriesMap[person] = series;
     return series;
+}
+
+void DesOccupancyPanel::connectSeriesSignals(QtCharts::QLineSeries* series) {
+    connect(series, &QtCharts::QLineSeries::hovered, this,
+        [this](const QPointF& point, bool state) {
+            if (!state) {
+                QToolTip::hideText();
+                return;
+            }
+            // Resolve room name from Y index
+            int yIdx = qRound(point.y());
+            QString room;
+            for (auto it = m_roomIndexMap.constBegin(); it != m_roomIndexMap.constEnd(); ++it) {
+                if (it.value() == yIdx) { room = it.key(); break; }
+            }
+            // Format time as HH:MM
+            int totalSeconds = static_cast<int>(point.x() * 3600);
+            int h = totalSeconds / 3600;
+            int m = (totalSeconds % 3600) / 60;
+            QString tip = QString("%1:%2 — %3").arg(h, 2, 10, QChar('0')).arg(m, 2, 10, QChar('0')).arg(room);
+            QToolTip::showText(QCursor::pos(), tip, m_chartView);
+        });
+}
+
+void DesOccupancyPanel::connectLegendMarkers() {
+    for (auto* marker : m_chart->legend()->markers()) {
+        // Disconnect first to avoid duplicate connections
+        disconnect(marker, &QtCharts::QLegendMarker::clicked, nullptr, nullptr);
+        connect(marker, &QtCharts::QLegendMarker::clicked, this, [marker]() {
+            auto* series = marker->series();
+            bool visible = !series->isVisible();
+            series->setVisible(visible);
+            marker->setVisible(true);  // Keep marker always visible
+            // Dim the marker label/icon when series is hidden
+            auto brush = marker->labelBrush();
+            auto color = brush.color();
+            color.setAlphaF(visible ? 1.0 : 0.4);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
+        });
+    }
+}
+
+void DesOccupancyPanel::addRobotDeparture(int time) {
+    if (!m_lastY.contains("Robot")) return;
+    const double hours = time / 3600.0;
+    auto* series = getOrCreateSeries("Robot", "#E00000");
+    // Extend horizontal line to the departure time at current location
+    series->append(hours, m_lastY["Robot"]);
+}
+
+void DesOccupancyPanel::addRobotArrival(const QString& room, int time) {
+    // Diagonal line: previous point (departure) connects directly to arrival
+    const double hours = time / 3600.0;
+    const int yIdx = roomIndex(room);
+    auto* series = getOrCreateSeries("Robot", "#E00000");
+    series->append(hours, yIdx);
+    m_lastY["Robot"] = yIdx;
+}
+
+void DesOccupancyPanel::addPoint(const QString& name, const QString& room, int time, const QString& color) {
+    const double hours = time / 3600.0;
+    const int yIdx = roomIndex(room);
+
+    auto* series = getOrCreateSeries(name, color);
+
+    // Step-line: extend horizontal at previous Y, then jump vertical
+    if (m_lastY.contains(name)) {
+        series->append(hours, m_lastY[name]);
+    }
+    series->append(hours, yIdx);
+    m_lastY[name] = yIdx;
 }
 
 void DesOccupancyPanel::updateXAxis() {

@@ -82,8 +82,19 @@ bool HeadlessRunner::loadNextBatch() {
         [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
     int lastDepartureTime = (*latest)->departureTime;
 
+    int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
     m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
-    m_eventQueue.push(std::make_shared<SimulationEndEvent>(std::max(lastEventTime, lastDepartureTime) + ONE_HOUR));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
+
+    for (auto& p : m_people.value()) {
+        auto startCopy = std::make_shared<des::Person>(*p);
+        startCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, startCopy));
+
+        auto endCopy = std::make_shared<des::Person>(*p);
+        endCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, endCopy));
+    }
 
     m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 

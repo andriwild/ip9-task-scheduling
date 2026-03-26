@@ -24,3 +24,4 @@ uint8 type
 bool is_driving
 bool is_charging
 string label
+string color

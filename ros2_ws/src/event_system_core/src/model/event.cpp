@@ -11,6 +11,7 @@
 void SimulationStartEvent::execute(ISimContext& ctx) {
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.notifyEvent(*this);
+    ctx.pushEvent(std::make_shared<StopDriveEvent>(time, ctx.getRobot()->getLocation(), 0));
 }
 
 void SimulationEndEvent::execute(ISimContext& ctx) {

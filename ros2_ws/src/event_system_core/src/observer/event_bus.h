@@ -26,9 +26,9 @@ public:
     }
 
     void notifyEvent(int time, const des::EventType& type, const std::string& name,
-                     bool isDriving, bool isCharging) const {
+                     bool isDriving, bool isCharging, const std::string& color = "") const {
         for (const auto& obs : m_observers) {
-            obs->onEvent(time, type, name, isDriving, isCharging);
+            obs->onEvent(time, type, name, isDriving, isCharging, color);
         }
     }
 

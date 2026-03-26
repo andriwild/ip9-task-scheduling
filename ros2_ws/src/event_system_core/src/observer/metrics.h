@@ -57,7 +57,7 @@ public:
     }
 
 
-    void onEvent(const int time, const des::EventType type, const std::string& /*message*/, const bool isDriving, const bool /*isCharging*/) override {
+    void onEvent(const int time, const des::EventType type, const std::string& /*message*/, const bool isDriving, const bool /*isCharging*/, const std::string& /*color*/ = "") override {
         if(isDriving && !wasDriving) {
             wasDriving = true;
             lastTimeMoved = time;

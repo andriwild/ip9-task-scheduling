@@ -192,6 +192,7 @@ struct Person {
     std::string birthDate;
     std::string sex;
     std::string workplace;
+    std::string color;
     std::string currentRoom;
     int arrivalTime;
     int departureTime;

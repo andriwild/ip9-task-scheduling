@@ -65,6 +65,7 @@ public:
                 p.birthDate        = item.at("birthDate").get<std::string>();
                 p.sex              = item.at("sex").get<std::string>();
                 p.workplace        = item.at("workplace").get<std::string>();
+                p.color            = item.value("color", "");
                 p.currentRoom      = item.at("currentRoom").get<std::string>();
                 p.roomLabels       = item.at("roomLabels").get<std::vector<std::string>>();
                 p.transitionMatrix = item.at("transitionMatrix").get<std::vector<std::vector<double>>>();

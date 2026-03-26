@@ -78,8 +78,20 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
 
     RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);
 
+    int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
     m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
-    m_eventQueue.push(std::make_shared<SimulationEndEvent>(std::max(lastEventTime, lastDepartureTime) + ONE_HOUR));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
+
+    // Place all persons at OUTDOOR at simulation start and end
+    for (auto& p : m_people.value()) {
+        auto startCopy = std::make_shared<des::Person>(*p);
+        startCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, startCopy));
+
+        auto endCopy = std::make_shared<des::Person>(*p);
+        endCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, endCopy));
+    }
 
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
     m_ctx->addObserver(m_metricsNode);

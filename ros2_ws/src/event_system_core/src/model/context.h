@@ -173,7 +173,7 @@ public:
     }
 
     void notifyEvent(const IEvent& event) const override {
-        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
+        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor());
     }
 
     void robotMoved(const std::string& location, const double distance = 0) const override {
