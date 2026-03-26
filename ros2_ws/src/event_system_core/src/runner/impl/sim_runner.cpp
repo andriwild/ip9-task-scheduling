@@ -24,6 +24,9 @@ void SimRunner::reset() {
     m_metricsNode->clear();
 
     m_appointments = loadAppointments(m_config->appointmentsPath);
+
+    IAppRunner::scheduleOccupancy(*m_config, m_people.value());
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
     // wait until reset message is properly sendet until distribute new meetings data
@@ -46,10 +49,10 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
     m_config         = m_systemConfigNode->getConfig();
     m_appointments   = loadAppointments(m_config->appointmentsPath);
-    const auto people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
-    assert(!people.value().empty());
+    m_people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!m_people.value().empty());
 
-    for (const auto& p: people.value()) {
+    for (const auto& p: m_people.value()) {
         m_employeeLocations[p->firstName] = p->roomLabels;
     } 
     
@@ -63,14 +66,14 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
         *m_scheduler
     );
 
-    IAppRunner::scheduleOccupancy(*m_config, people.value());
-    m_eventQueue.extend(IAppRunner::personArrivalGenerator(people.value(),  "5.2B_Elevator"));
+    IAppRunner::scheduleOccupancy(*m_config, m_people.value());
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
     int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
     int lastEventTime  = m_eventQueue.getLastEventTime();
 
-    auto latest = std::max_element(people.value().begin(), people.value().end(), [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
+    auto latest = std::max_element(m_people.value().begin(), m_people.value().end(), [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
     int lastDepartureTime = (*latest)->departureTime;
 
     RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);

@@ -229,7 +229,7 @@ public:
     std::string getName() const override {
         return std::format("Mission {} Start", appointment->id);
     }
-    des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
+    des::EventType getType() const override { return des::EventType::MISSION_START; }
 };
 
 class PersonTransitionEvent: public IEvent {

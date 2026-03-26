@@ -181,7 +181,8 @@ enum class EventType : int {
     RESET = 14,
     PERSON_TRANSITION = 15,
     PERSON_ARRIVED = 16,
-    PERSON_DEPARTURE = 17
+    PERSON_DEPARTURE = 17,
+    MISSION_START = 18
 };
 
 struct Person {

@@ -50,9 +50,9 @@ void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointme
 
 void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
-    m_robot->setLocation(m_robot->getIdleLocation());
-    m_robot->m_bat->reset(newTime);
+    m_currentAppointment = nullptr;
     m_pendingMissions = std::queue<std::shared_ptr<des::Appointment>>();
+    resetRobot();
 }
 
 double SimulationContext::getRndConversationTime() const {

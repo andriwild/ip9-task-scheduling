@@ -89,6 +89,7 @@ protected:
     std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::vector<std::string>> m_employeeLocations;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
+    std::optional<std::vector<std::shared_ptr<des::Person>>> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
 
