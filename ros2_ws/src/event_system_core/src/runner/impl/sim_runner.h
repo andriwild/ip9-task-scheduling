@@ -60,6 +60,7 @@ public:
 
 private:
     void updateConfig(std::shared_ptr<des::SimConfig> config);
+    void addPersonTransition();
 
     SortedEventQueue setupQueue(
         const std::shared_ptr<des::SimConfig> &config,

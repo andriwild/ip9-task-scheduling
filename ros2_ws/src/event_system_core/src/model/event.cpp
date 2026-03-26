@@ -183,6 +183,7 @@ void PersonTransitionEvent::execute(SimulationContext& ctx) {
 }
 
 void PersonArrivedEvent::execute(SimulationContext& ctx) {
+    ctx.notifyEvent(*this);
     auto& p = *this->person;
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
@@ -193,7 +194,6 @@ void PersonArrivedEvent::execute(SimulationContext& ctx) {
     int nextRoomIdx = rnd::discrete_dist(row);
 
     p.currentRoom = p.roomLabels.at(nextRoomIdx);
-    ctx.notifyEvent(*this);
     double nextExecutionTime = this->time + rnd::uni(10, 30);
     ctx.m_queue.push(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
 }

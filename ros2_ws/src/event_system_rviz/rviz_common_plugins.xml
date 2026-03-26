@@ -11,4 +11,7 @@
   <class type="des_metrics_panel::DesMetricsPanel" base_class_type="rviz_common::Panel">
     <description>Descrete Event System Metrics</description>
   </class>
+  <class type="des_occupancy_panel::DesOccupancyPanel" base_class_type="rviz_common::Panel">
+    <description>Descrete Event System Occupancy</description>
+  </class>
 </library>

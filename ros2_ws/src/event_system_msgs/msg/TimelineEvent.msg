@@ -16,7 +16,9 @@ uint8 START_DRIVE = 12
 uint8 BATTERY_FULL = 13
 uint8 RESET = 14
 uint8 PERSON_TRANSITION = 15
-    
+uint8 PERSON_ARRIVED = 16
+uint8 PERSON_DEPARTURE = 17
+
 uint8 type
 
 bool is_driving
