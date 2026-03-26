@@ -7,8 +7,10 @@
 #include <memory>
 
 #include "../model/i_sim_context.h"
+#include "../model/robot.h"
 #include "../model/robot_state.h"
 #include "../util/rnd.h"
+#include "../model/event.h"
 
 class IsSearching final : public BT::ConditionNode {
 public:
@@ -32,9 +34,11 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool personFound = rnd::uni(ctx->rng()) < ctx->getPersonFindProbability();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d", personFound);
-        return personFound ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
+        const auto& personRoom = ctx->getPersonCurrentRoom(ctx->getAppointment()->personName);
+        const bool personFound = ctx->getRobot()->getLocation() == personRoom;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d (robot: %s, person: %s)",
+                     personFound, ctx->getRobot()->getLocation().c_str(), personRoom.c_str());
+        return personFound ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 

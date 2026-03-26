@@ -14,13 +14,13 @@
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
-    std::map<std::string, std::vector<std::string>> m_locations;
+    std::map<std::string, std::shared_ptr<des::Person>> m_locations;
 
 public:
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<PathPlannerNode> &plannerNode,
-        std::map<std::string, std::vector<std::string>> locations
+        std::map<std::string, std::shared_ptr<des::Person>> locations
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
@@ -45,7 +45,7 @@ public:
 
     // Calc time to accompany a person to a meeting with using only one search location
     double optimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) {
-        const auto employeeLocation = m_locations[personName].front();
+        const auto employeeLocation = m_locations[personName]->roomLabels.front();
         const double searchTime    = driveTime(startPos, employeeLocation, m_simConfig->robotSpeed);
         const double accompanyTime = driveTime(employeeLocation, goalPos, m_simConfig->robotAccompanySpeed);
         return searchTime + accompanyTime;
@@ -55,7 +55,7 @@ public:
     double pessimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) {
         double searchTime = 0.0;
         std::string currentPos = startPos;
-        for (const auto& location: m_locations[personName]) {
+        for (const auto& location: m_locations[personName]->roomLabels) {
             searchTime += driveTime(currentPos, location, m_simConfig->robotSpeed);
             currentPos = location;
         }

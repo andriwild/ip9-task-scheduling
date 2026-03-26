@@ -29,7 +29,28 @@ void SimRunner::reset() {
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
-    // wait until reset message is properly sendet until distribute new meetings data
+    int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
+    int lastEventTime  = m_eventQueue.getLastEventTime();
+
+    auto latest = std::max_element(m_people.value().begin(), m_people.value().end(),
+        [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
+    int lastDepartureTime = (*latest)->departureTime;
+
+    int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
+    m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+    m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
+
+    for (auto& p : m_people.value()) {
+        auto startCopy = std::make_shared<des::Person>(*p);
+        startCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, startCopy));
+
+        auto endCopy = std::make_shared<des::Person>(*p);
+        endCopy->currentRoom = "OUTDOOR";
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, endCopy));
+    }
+
+    // wait until reset message is properly sent before distributing new meetings data
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     publishMissions(m_eventQueue, m_rosObserver);
@@ -49,13 +70,19 @@ void SimRunner::setupApplication(const std::string& /*path*/) {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
     m_config         = m_systemConfigNode->getConfig();
     m_appointments   = loadAppointments(m_config->appointmentsPath);
-    m_people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
-    assert(!m_people.value().empty());
+    auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!allPeople.value().empty());
+
+    ConfigLoader::validateConfig(m_appointments, allPeople.value(), m_locationMap, "5.2B_Elevator");
+
+    m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_appointments);
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees",
+                m_people.value().size(), allPeople.value().size());
 
     for (const auto& p: m_people.value()) {
-        m_employeeLocations[p->firstName] = p->roomLabels;
-    } 
-    
+        m_employeeLocations[p->firstName] = p;
+    }
+
     m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
 
     m_ctx = std::make_shared<SimulationContext>(

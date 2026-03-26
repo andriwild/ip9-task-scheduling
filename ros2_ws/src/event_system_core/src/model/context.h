@@ -32,7 +32,7 @@ class SimulationContext : public ISimContext {
     MissionManager m_missions;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
-    std::map<std::string, std::vector<std::string>> m_employeeLocations;
+    std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -47,7 +47,7 @@ public:
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<PathPlannerNode> plannerNode,
-        std::map<std::string, std::vector<std::string>> employeeLocations,
+        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
         Scheduler& scheduler
     );
 
@@ -100,13 +100,13 @@ public:
         m_behaviorTree->rootBlackboard()->set(key, value);
     }
 
-    // Employee locations access
-    const std::map<std::string, std::vector<std::string>>& getEmployeeLocations() const {
-        return m_employeeLocations;
+    // Employee data access
+    const std::vector<std::string>& getPersonLocations(const std::string& person) const override {
+        return m_employeeLocations.at(person)->roomLabels;
     }
 
-    const std::vector<std::string>& getPersonLocations(const std::string& person) const override {
-        return m_employeeLocations.at(person);
+    const std::string& getPersonCurrentRoom(const std::string& person) const override {
+        return m_employeeLocations.at(person)->currentRoom;
     }
 
     bool hasEmployee(const std::string& person) const override {

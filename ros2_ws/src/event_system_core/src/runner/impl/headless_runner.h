@@ -74,4 +74,5 @@ public:
 
 private:
     bool loadNextBatch();
+    std::vector<std::shared_ptr<des::Person>> m_allPeople;
 };

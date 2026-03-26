@@ -7,7 +7,7 @@ SimulationContext::SimulationContext(
     EventQueue& queue,
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<PathPlannerNode> plannerNode,
-    std::map<std::string, std::vector<std::string>> employeeLocations,
+    std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
     Scheduler& scheduler
 )
     : m_simConfig(std::move(simConfig))

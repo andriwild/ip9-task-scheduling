@@ -87,7 +87,7 @@ protected:
     std::unique_ptr<Scheduler> m_scheduler;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
-    std::map<std::string, std::vector<std::string>> m_employeeLocations;
+    std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
     std::optional<std::vector<std::shared_ptr<des::Person>>> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;

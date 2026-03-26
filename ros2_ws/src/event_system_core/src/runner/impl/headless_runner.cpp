@@ -11,12 +11,15 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     assert(std::filesystem::exists(path) && std::filesystem::is_directory(path));
 
     m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
-    m_people = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
-    assert(!m_people.value().empty());
+    auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    assert(!allPeople.value().empty());
+    m_allPeople = allPeople.value();
 
-    for (const auto& p: m_people.value()) {
-        m_employeeLocations[p->firstName] = p->roomLabels;
+    // employeeLocations needs all people for scheduler path lookups
+    for (const auto& p: m_allPeople) {
+        m_employeeLocations[p->firstName] = p;
     }
+
     m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
 
     m_ctx = std::make_shared<SimulationContext>(
@@ -70,6 +73,12 @@ bool HeadlessRunner::loadNextBatch() {
         return loadNextBatch();
     }
     m_appointments = appts.value();
+
+    ConfigLoader::validateConfig(m_appointments, m_allPeople, m_locationMap, "5.2B_Elevator");
+
+    m_people = ConfigLoader::filterByAppointments(m_allPeople, m_appointments);
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees",
+                m_people.value().size(), m_allPeople.size());
 
     IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(), "5.2B_Elevator"));

@@ -1,9 +1,11 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <set>
 #include <vector>
 
 #include "../util/types.h"
@@ -126,6 +128,91 @@ public:
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
             return std::nullopt;
+        }
+    }
+
+    static std::vector<std::shared_ptr<des::Person>> filterByAppointments(
+        const std::vector<std::shared_ptr<des::Person>>& employees,
+        const AppointmentList& appointments
+    ) {
+        std::set<std::string> needed;
+        for (const auto& appt : appointments) {
+            needed.insert(appt->personName);
+        }
+        std::vector<std::shared_ptr<des::Person>> filtered;
+        for (const auto& p : employees) {
+            if (needed.contains(p->firstName)) {
+                filtered.push_back(p);
+            }
+        }
+        return filtered;
+    }
+
+    static void validateConfig(
+        const AppointmentList& appointments,
+        const std::vector<std::shared_ptr<des::Person>>& employees,
+        const std::map<std::string, des::Point>& locationMap,
+        const std::string& arrivalLocation
+    ) {
+        std::vector<std::string> errors;
+
+        // Build employee lookup
+        std::set<std::string> employeeNames;
+        for (const auto& p : employees) {
+            employeeNames.insert(p->firstName);
+        }
+
+        // Check appointments reference valid employees and rooms
+        for (const auto& appt : appointments) {
+            if (!employeeNames.contains(appt->personName)) {
+                errors.push_back("Appointment '" + appt->description +
+                    "': personName '" + appt->personName + "' does not match any employee");
+            }
+            if (!locationMap.contains(appt->roomName)) {
+                errors.push_back("Appointment '" + appt->description +
+                    "': roomName '" + appt->roomName + "' is not a known location");
+            }
+        }
+
+        // Check employee roomLabels reference valid rooms and arrival location is reachable
+        for (const auto& p : employees) {
+            for (const auto& room : p->roomLabels) {
+                if (!locationMap.contains(room)) {
+                    errors.push_back("Employee '" + p->firstName +
+                        "': roomLabel '" + room + "' is not a known location");
+                }
+            }
+
+            if (!arrivalLocation.empty()) {
+                auto it = std::find(p->roomLabels.begin(), p->roomLabels.end(), arrivalLocation);
+                if (it == p->roomLabels.end()) {
+                    errors.push_back("Employee '" + p->firstName +
+                        "': arrivalLocation '" + arrivalLocation + "' is not in roomLabels");
+                }
+            }
+
+            // Check transition matrix dimensions
+            if (p->transitionMatrix.size() != p->roomLabels.size()) {
+                errors.push_back("Employee '" + p->firstName +
+                    "': transitionMatrix has " + std::to_string(p->transitionMatrix.size()) +
+                    " rows but roomLabels has " + std::to_string(p->roomLabels.size()) + " entries");
+            }
+            for (size_t i = 0; i < p->transitionMatrix.size(); ++i) {
+                if (p->transitionMatrix[i].size() != p->roomLabels.size()) {
+                    errors.push_back("Employee '" + p->firstName +
+                        "': transitionMatrix row " + std::to_string(i) +
+                        " has " + std::to_string(p->transitionMatrix[i].size()) +
+                        " columns but expected " + std::to_string(p->roomLabels.size()));
+                }
+            }
+        }
+
+        if (!errors.empty()) {
+            std::string msg = "Configuration validation failed:\n";
+            for (const auto& e : errors) {
+                msg += "  - " + e + "\n";
+            }
+            throw std::runtime_error(msg);
         }
     }
 
