@@ -96,7 +96,7 @@ public:
 
     }
 
-    void onMissionComplete(int /*time*/, des::MissionState& state, const int timeDiff) override {
+    void onMissionComplete(int /*time*/, const des::MissionState& state, const int timeDiff) override {
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff >= 0) {

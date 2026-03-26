@@ -8,7 +8,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <vector>
 
-#include "../observer/observer.h"
+#include "../observer/event_bus.h"
 #include "../sim/ros/path_node.h"
 #include "../util/types.h"
 #include "event.h"
@@ -26,7 +26,7 @@ struct Journey {
 class SimulationContext {
     int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;
-    std::vector<std::shared_ptr<IObserver>> m_observers;
+    EventBus m_eventBus;
     std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
     std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
 
@@ -105,39 +105,34 @@ public:
         m_currentTime = newTime;
     }
 
-    // Observer functions
+    // Observer functions (delegated to EventBus)
     void addObserver(const std::shared_ptr<IObserver>& observer) {
-        RCLCPP_INFO(rclcpp::get_logger("SimulationContext"), "Observer added: %s", observer->getName().c_str());
-        m_observers.emplace_back(observer);
+        m_eventBus.addObserver(observer);
     }
 
-    void notifyMissionComplete(des::MissionState& state, const int timeDiff) const {
-        for (const auto& obs : m_observers) {
-            obs->onMissionComplete(m_currentTime, state, timeDiff);
-        }
+    void removeObserver(const std::shared_ptr<IObserver>& observer) {
+        m_eventBus.removeObserver(observer);
+    }
+
+    void clearObservers() {
+        m_eventBus.clear();
+    }
+
+    void notifyMissionComplete(const des::MissionState& state, const int timeDiff) const {
+        m_eventBus.notifyMissionComplete(m_currentTime, state, timeDiff);
     }
 
     void notifyRobotStateChanged(const des::RobotStateType newState) const {
-        for (const auto& obs : m_observers) {
-            obs->onStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
-        }
+        m_eventBus.notifyStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
     }
 
     void notifyEvent(const IEvent& event) const {
-        for (const auto& obs : m_observers) {
-            obs->onEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
-        }
+        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
     }
 
     void robotMoved(const std::string& location, const double distance = 0) const {
         m_robot->setLocation(location);
-        notifyMoved(location, distance);
-    }
-
-    void notifyMoved(const std::string& location, const double distance) const {
-        for (const auto& obs : m_observers) {
-            obs->onRobotMoved(m_currentTime, location, distance);
-        }
+        m_eventBus.notifyMoved(m_currentTime, location, distance);
     }
 
     bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const {
