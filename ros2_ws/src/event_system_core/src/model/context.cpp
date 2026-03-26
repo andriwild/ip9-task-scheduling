@@ -37,11 +37,6 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     return { travelTimeRnd, distance.value() };
 }
 
-void SimulationContext::updateAppointmentState(const des::MissionState& newState) const {
-    assert(m_currentAppointment != nullptr);
-    m_currentAppointment->state = newState;
-}
-
 void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointment>& appt) const {
     assert(appt != nullptr);
     const int timeDiff = m_currentTime - appt->appointmentTime;
@@ -50,8 +45,7 @@ void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointme
 
 void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
-    m_currentAppointment = nullptr;
-    m_pendingMissions = std::queue<std::shared_ptr<des::Appointment>>();
+    m_missions.reset();
     m_rng.seed(DEFAULT_SEED);
     resetRobot();
 }

@@ -12,6 +12,7 @@
 #include "../sim/ros/path_node.h"
 #include "../util/types.h"
 #include "event.h"
+#include "mission_manager.h"
 #include "robot.h"
 #include "../sim/scheduler.h"
 #include "robot_state.h"
@@ -27,8 +28,7 @@ class SimulationContext {
     int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
-    std::shared_ptr<des::Appointment> m_currentAppointment = nullptr;
-    std::queue<std::shared_ptr<des::Appointment>> m_pendingMissions;
+    MissionManager m_missions;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -58,7 +58,6 @@ public:
     void changeRobotState(std::unique_ptr<RobotState> newState) const;
     double getRndConversationTime() const;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
-    void updateAppointmentState(const des::MissionState& newState) const;
     void resetContext(int newTime);
     void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const;
 
@@ -66,34 +65,33 @@ public:
 
     std::shared_ptr<des::SimConfig> getConfig() const { return m_simConfig; }
 
-    void setAppointment(const std::shared_ptr<des::Appointment> &appointment) {
-        m_currentAppointment = appointment;
-    }
-
-    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) {
-        m_pendingMissions.push(appointment);
-        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission added to pending list - queue size: %zu", m_pendingMissions.size());
-    }
-    
-    bool hasPendingMission() const {
-        return !m_pendingMissions.empty();
-    }
-
-    std::shared_ptr<des::Appointment> nextPendingMission() {
-        if (m_pendingMissions.empty()) { return nullptr; }
-        return m_pendingMissions.front();
-    }
-    
-    std::shared_ptr<des::Appointment> popPendingMission() {
-        if (m_pendingMissions.empty()) { return nullptr; }
-        auto appointment = m_pendingMissions.front();
-        m_pendingMissions.pop();
-        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission removed from pending list - %zu remaining", m_pendingMissions.size());
-        return appointment;
+    // Mission management (delegated to MissionManager)
+    void setAppointment(const std::shared_ptr<des::Appointment>& appointment) {
+        m_missions.setCurrent(appointment);
     }
 
     std::shared_ptr<des::Appointment> getAppointment() const {
-        return m_currentAppointment;
+        return m_missions.getCurrent();
+    }
+
+    void updateAppointmentState(const des::MissionState& newState) {
+        m_missions.updateState(newState);
+    }
+
+    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) {
+        m_missions.addPending(appointment);
+    }
+
+    bool hasPendingMission() const {
+        return m_missions.hasPending();
+    }
+
+    std::shared_ptr<des::Appointment> nextPendingMission() {
+        return m_missions.peekPending();
+    }
+
+    std::shared_ptr<des::Appointment> popPendingMission() {
+        return m_missions.popPending();
     }
 
     void advanceTime(const int newTime) {
