@@ -4,19 +4,19 @@
             "personName": "Max",
             "roomName": "IMVS_Printer",
             "appointmentTime": 36000,
-            "description": "Massage"
+            "description": "Dokument drucken"
         },
         {
             "personName": "Leo",
             "roomName": "IMVS_Printer",
             "appointmentTime": 46000,
-            "description": "Nachhilfe"
+            "description": "Poster abholen"
         },
         {
             "personName": "Leo",
             "roomName": "IMVS_Printer",
             "appointmentTime": 53000,
-            "description": "Nachhilfe"
+            "description": "Nachdruck"
         }
     ]
 }

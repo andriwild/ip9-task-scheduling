@@ -1,0 +1,40 @@
+{
+    "appointments": [
+        {
+            "personName": "Nina",
+            "roomName": "5.2D02",
+            "appointmentTime": 34200,
+            "description": "Lieferung Gebaeude D"
+        },
+        {
+            "personName": "Max",
+            "roomName": "5.2B03",
+            "appointmentTime": 36000,
+            "description": "Lieferung Gebaeude B"
+        },
+        {
+            "personName": "Sara",
+            "roomName": "5.2A13",
+            "appointmentTime": 37800,
+            "description": "Lieferung Gebaeude A"
+        },
+        {
+            "personName": "Tom",
+            "roomName": "5.2C07",
+            "appointmentTime": 39600,
+            "description": "Lieferung Gebaeude C"
+        },
+        {
+            "personName": "Nina",
+            "roomName": "5.2D_Open_Zone",
+            "appointmentTime": 41400,
+            "description": "Ruecklieferung Gebaeude D"
+        },
+        {
+            "personName": "Julia",
+            "roomName": "5.2B18",
+            "appointmentTime": 43200,
+            "description": "Lieferung Gebaeude B Sued"
+        }
+    ]
+}

@@ -1,0 +1,76 @@
+{
+    "appointments": [
+        {
+            "personName": "Max",
+            "roomName": "5.2B03",
+            "appointmentTime": 32400,
+            "description": "Morgenpost"
+        },
+        {
+            "personName": "Sara",
+            "roomName": "5.2A13",
+            "appointmentTime": 34200,
+            "description": "Laborprobe"
+        },
+        {
+            "personName": "Anna",
+            "roomName": "5.2B01",
+            "appointmentTime": 36000,
+            "description": "Paket"
+        },
+        {
+            "personName": "Tom",
+            "roomName": "5.2C07",
+            "appointmentTime": 37800,
+            "description": "Ersatzteil"
+        },
+        {
+            "personName": "Nina",
+            "roomName": "5.2D02",
+            "appointmentTime": 39600,
+            "description": "Dokument"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "5.2B15",
+            "appointmentTime": 41400,
+            "description": "Material"
+        },
+        {
+            "personName": "Fred",
+            "roomName": "5.2B13",
+            "appointmentTime": 43200,
+            "description": "Werkzeug"
+        },
+        {
+            "personName": "Julia",
+            "roomName": "5.2B18",
+            "appointmentTime": 45000,
+            "description": "Nachschub"
+        },
+        {
+            "personName": "Max",
+            "roomName": "5.2B10",
+            "appointmentTime": 48600,
+            "description": "Nachmittagspost"
+        },
+        {
+            "personName": "Sara",
+            "roomName": "5.2A10",
+            "appointmentTime": 50400,
+            "description": "Probenrueckgabe"
+        },
+        {
+            "personName": "Nina",
+            "roomName": "5.2D_Open_Zone",
+            "appointmentTime": 52200,
+            "description": "Unterlagen"
+        },
+        {
+            "personName": "Tom",
+            "roomName": "5.2C_Working_Space",
+            "appointmentTime": 54000,
+            "description": "Prototyp"
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "appointments": [
+        {
+            "personName": "Max",
+            "roomName": "5.2B03",
+            "appointmentTime": 36000,
+            "description": "Paket Zustellung"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "5.2B15",
+            "appointmentTime": 36060,
+            "description": "Dokument Zustellung"
+        },
+        {
+            "personName": "Fred",
+            "roomName": "5.2B13",
+            "appointmentTime": 36120,
+            "description": "Material Lieferung"
+        }
+    ]
+}

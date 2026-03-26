@@ -1,5 +1,5 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_long_distance.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -16,10 +16,10 @@
     "drive_time_std": 0.10000000149011612,
     "energy_consumption_base": 200.0,
     "energy_consumption_drive": 352.0,
-    "find_person_probability": 0.5,
+    "find_person_probability": 0.15000000596046448,
     "full_battery_threshold": 80.0,
     "initial_battery_capacity": 10.0,
-    "low_battery_threshold": 77.0,
+    "low_battery_threshold": 10.0,
     "robot_accompany_speed": 0.20000000298023224,
     "robot_speed": 0.30000001192092896,
     "timeBuffer": 120.0

@@ -1,0 +1,34 @@
+{
+    "appointments": [
+        {
+            "personName": "Anna",
+            "roomName": "5.2B01",
+            "appointmentTime": 36000,
+            "description": "Post Zustellung"
+        },
+        {
+            "personName": "Max",
+            "roomName": "5.2B03",
+            "appointmentTime": 36300,
+            "description": "Paket Zustellung"
+        },
+        {
+            "personName": "Julia",
+            "roomName": "5.2B18",
+            "appointmentTime": 36600,
+            "description": "Dokument Zustellung"
+        },
+        {
+            "personName": "Leo",
+            "roomName": "5.2B15",
+            "appointmentTime": 36900,
+            "description": "Material Lieferung"
+        },
+        {
+            "personName": "Fred",
+            "roomName": "5.2B13",
+            "appointmentTime": 37200,
+            "description": "Werkzeug Lieferung"
+        }
+    ]
+}
