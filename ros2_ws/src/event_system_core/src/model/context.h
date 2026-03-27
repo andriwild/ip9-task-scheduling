@@ -101,12 +101,8 @@ public:
     }
 
     // Employee data access
-    const std::vector<std::string>& getPersonLocations(const std::string& person) const override {
-        return m_employeeLocations.at(person)->roomLabels;
-    }
-
-    const std::string& getPersonCurrentRoom(const std::string& person) const override {
-        return m_employeeLocations.at(person)->currentRoom;
+    std::shared_ptr<des::Person> getPersonByName(const std::string& person) const override {
+        return m_employeeLocations.at(person);
     }
 
     bool hasEmployee(const std::string& person) const override {

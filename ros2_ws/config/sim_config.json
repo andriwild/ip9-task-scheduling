@@ -1,5 +1,5 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_long_distance.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_collision.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -7,7 +7,7 @@
     "cacheEnabled": true,
     "charging_rate": 500.0,
     "conversation_duration_mean": 28.0,
-    "conversation_duration_std": 18.0,
+    "conversation_duration_std": 14.0,
     "conversation_probability": 1.0,
     "departure_distribution": "normal",
     "departure_mean": 61200.0,

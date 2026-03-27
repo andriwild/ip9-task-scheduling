@@ -40,6 +40,16 @@ void StopDriveEvent::execute(ISimContext& ctx) {
     ctx.setBTBlackboard("location", this->location);
     ctx.notifyEvent(*this);
 
+    // Move accompanied person to arrival location
+    if (ctx.getRobot()->getStateType() == des::RobotStateType::ACCOMPANY && ctx.getAppointment()) {
+        const auto& personName = ctx.getAppointment()->personName;
+        if (ctx.hasEmployee(personName)) {
+            auto person = ctx.getPersonByName(personName);
+            person->currentRoom = ctx.getRobot()->getLocation();
+            ctx.pushEvent(std::make_shared<PersonTransitionEvent>(this->time, person));
+        }
+    }
+
     ctx.tickBT();
 }
 
@@ -131,7 +141,16 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
     }
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
-    assert(it != p.roomLabels.end());
+
+    // Person was moved outside their known rooms (e.g. by accompany) — notify, then return to workplace
+    if (it == p.roomLabels.end()) {
+        ctx.notifyEvent(*this);
+        auto returnCopy = std::make_shared<des::Person>(p);
+        returnCopy->currentRoom = p.workplace;
+        ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
+            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), returnCopy));
+        return;
+    }
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
@@ -174,7 +193,16 @@ void PersonArrivedEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
-    assert(it != p.roomLabels.end());
+
+    // Person arrived at unknown room (e.g. after accompany) — notify, then return to workplace
+    if (it == p.roomLabels.end()) {
+        ctx.notifyEvent(*this);
+        auto returnCopy = std::make_shared<des::Person>(p);
+        returnCopy->currentRoom = p.workplace;
+        ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
+            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), returnCopy));
+        return;
+    }
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
@@ -193,7 +221,7 @@ void PersonDepartureEvent::execute(ISimContext& ctx) {
 void MissionStartEvent::execute(ISimContext& ctx) {
     const std::string person = appointment->personName;
     assert(ctx.hasEmployee(person));
-    std::vector<std::string> locations = ctx.getPersonLocations(person);
+    const auto& locations = ctx.getPersonByName(person)->roomLabels;
     assert(!locations.empty());
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
     ctx.notifyEvent(*this);

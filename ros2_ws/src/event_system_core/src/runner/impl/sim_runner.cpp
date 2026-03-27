@@ -23,7 +23,14 @@ void SimRunner::reset() {
     m_rosObserver->publishReset();
     m_metricsNode->clear();
 
+
+    auto allPeople = ConfigLoader::loadEmployees();
+    assert(!allPeople.value().empty());
+
     m_appointments = loadAppointments(m_config->appointmentsPath);
+
+    ConfigLoader::validateConfig(m_appointments, allPeople.value(), m_locationMap, "5.2B_Elevator");
+    m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_appointments);
 
     IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(),  "5.2B_Elevator"));

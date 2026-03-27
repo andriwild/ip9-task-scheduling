@@ -2,19 +2,19 @@
     "appointments": [
         {
             "personName": "Nina",
-            "roomName": "5.2D02",
+            "roomName": "IMVS_Kitchen",
             "appointmentTime": 34200,
             "description": "Laborprobe Lieferung"
         },
         {
             "personName": "Sara",
-            "roomName": "5.2A13",
+            "roomName": "IMVS_Kitchen",
             "appointmentTime": 37800,
             "description": "Poster Zustellung"
         },
         {
             "personName": "Tom",
-            "roomName": "5.2C07",
+            "roomName": "IMVS_Kitchen",
             "appointmentTime": 41400,
             "description": "Ersatzteil Lieferung"
         }

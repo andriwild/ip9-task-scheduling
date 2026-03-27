@@ -30,4 +30,5 @@ string departure_distribution
 # General
 string dock_location
 string appointments_path
+string employee_path
 bool cache_enabled

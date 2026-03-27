@@ -151,6 +151,17 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     hLayout->addWidget(m_btnFileDialog);
     addConfigItem(generalGroup, "Appointments Config", container);
 
+    QWidget *employeeContainer = new QWidget(this);
+    QHBoxLayout *employeeLayout = new QHBoxLayout(employeeContainer);
+    employeeLayout->setContentsMargins(0,0,0,0);
+
+    m_btnEmployeeFileDialog = new QPushButton("Edit");
+    m_btnEmployeeFileDialog->setFixedWidth(50);
+    m_employeePath = new QLabel("employee.json");
+    employeeLayout->addWidget(m_employeePath);
+    employeeLayout->addWidget(m_btnEmployeeFileDialog);
+    addConfigItem(generalGroup, "Employee Config", employeeContainer);
+
     m_btnSetConfig  = new QPushButton("Set Config");
     m_statusLabel   = new QLabel("[status]");
 
@@ -165,6 +176,14 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
             const QFileInfo info(path);
             m_appointmentsPath->setText(info.fileName());
             m_configFile = path;
+        }
+    });
+    connect(m_btnEmployeeFileDialog, &QPushButton::released, this, [this] {
+        const auto path = QFileDialog::getOpenFileName(this, "Datei öffnen", DEFAULT_CONFIG_FILE_LOCATION, "*.json");
+        if (!path.isEmpty()) {
+            const QFileInfo info(path);
+            m_employeePath->setText(info.fileName());
+            m_employeeFile = path;
         }
     });
 }
@@ -207,6 +226,7 @@ void DesSystemConfig::onSetConfig() {
     request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_configFile.toStdString();
+    request->employee_path = m_employeeFile.toStdString();
 
     m_statusLabel->setText("Sending...");
 
@@ -258,6 +278,11 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     const QFileInfo info(appointmentConfigPath);
     m_appointmentsPath->setText(info.fileName());
     m_configFile = appointmentConfigPath;
+
+    const auto employeeConfigPath = QString::fromStdString(msg->employee_path);
+    const QFileInfo employeeInfo(employeeConfigPath);
+    m_employeePath->setText(employeeInfo.fileName());
+    m_employeeFile = employeeConfigPath;
 }
 
 }  // namespace des_system_config

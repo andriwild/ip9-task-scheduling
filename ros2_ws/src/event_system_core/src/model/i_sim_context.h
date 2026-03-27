@@ -53,8 +53,7 @@ public:
 
     // Employee data
     virtual bool hasEmployee(const std::string& person) const = 0;
-    virtual const std::vector<std::string>& getPersonLocations(const std::string& person) const = 0;
-    virtual const std::string& getPersonCurrentRoom(const std::string& person) const = 0;
+    virtual std::shared_ptr<des::Person> getPersonByName(const std::string& person) const = 0;
 
     // Configuration accessors
     virtual std::shared_ptr<des::SimConfig> getConfig() const = 0;

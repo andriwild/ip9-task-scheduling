@@ -22,6 +22,7 @@ string departure_distribution
 string dock_location
 bool cache_enabled
 string appointments_path
+string employee_path
 ---
 bool success
 string message
