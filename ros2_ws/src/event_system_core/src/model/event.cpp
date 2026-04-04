@@ -142,13 +142,12 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
 
-    // Person was moved outside their known rooms (e.g. by accompany) — notify, then return to workplace
+    // Person was moved outside their known rooms (e.g. by accompany) — return to workplace
     if (it == p.roomLabels.end()) {
         ctx.notifyEvent(*this);
-        auto returnCopy = std::make_shared<des::Person>(p);
-        returnCopy->currentRoom = p.workplace;
+        p.currentRoom = p.workplace;
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
-            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), returnCopy));
+            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
         return;
     }
 
@@ -156,8 +155,8 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
     int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
 
-    p.currentRoom = p.roomLabels.at(nextRoomIdx);
     ctx.notifyEvent(*this);
+    p.currentRoom = p.roomLabels.at(nextRoomIdx);
 
     double nextExecutionTime;
     des::RoomType roomType = des::parseRoomName(p.currentRoom);
@@ -194,13 +193,11 @@ void PersonArrivedEvent::execute(ISimContext& ctx) {
 
     auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
 
-    // Person arrived at unknown room (e.g. after accompany) — notify, then return to workplace
+    // Person arrived at unknown room (e.g. after accompany) — return to workplace
     if (it == p.roomLabels.end()) {
-        ctx.notifyEvent(*this);
-        auto returnCopy = std::make_shared<des::Person>(p);
-        returnCopy->currentRoom = p.workplace;
+        p.currentRoom = p.workplace;
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
-            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), returnCopy));
+            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
         return;
     }
 
@@ -214,8 +211,8 @@ void PersonArrivedEvent::execute(ISimContext& ctx) {
 }
 
 void PersonDepartureEvent::execute(ISimContext& ctx) {
-    this->person->currentRoom = "OUTDOOR";
     ctx.notifyEvent(*this);
+    this->person->currentRoom = "OUTDOOR";
 }
 
 void MissionStartEvent::execute(ISimContext& ctx) {

@@ -46,12 +46,13 @@ def generate_launch_description():
                 '--log-level', ['event_system_metrics_node:=', log_level],
                 '--log-level', ['SimulationContext:=', log_level],
                 '--log-level', ['Robot:=', log_level],
-                '--log-level', ['State:=', log_level],
-                '--log-level', ['Battery:=', log_level],
+                # '--log-level', ['State:=', log_level],
+                # '--log-level', ['Battery:=', log_level],
                 '--log-level', ['Scheduler:=', log_level],
-                '--log-level', ['Metrics:=', log_level],
+                # '--log-level', ['Metrics:=', log_level],
                 '--log-level', ['Context:=', log_level],
-                '--log-level', ['BT - ChargeRoutine:=', log_level]
+                # '--log-level', ['BT - ChargeRoutine:=', log_level],
+                '--log-level', ['BT - SearchRoutine:=', log_level]
             ]
         ),
     ])

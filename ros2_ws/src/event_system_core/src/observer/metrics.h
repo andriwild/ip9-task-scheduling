@@ -29,7 +29,8 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
 
 public:
     explicit MetricsNode() : Node("metrics_node") {
-        m_publisher = this->create_publisher<event_system_msgs::msg::MetricsReport>("/metrics_report", 10);
+        m_publisher = this->create_publisher<event_system_msgs::msg::MetricsReport>(
+            "/metrics_report", rclcpp::QoS(rclcpp::KeepAll()).reliable().transient_local());
     }
 
     std::string getName() override {

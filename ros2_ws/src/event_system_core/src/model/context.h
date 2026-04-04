@@ -101,6 +101,10 @@ public:
     }
 
     // Employee data access
+    void updateEmployeeLocations(const std::map<std::string, std::shared_ptr<des::Person>>& locations) {
+        m_employeeLocations = locations;
+    }
+
     std::shared_ptr<des::Person> getPersonByName(const std::string& person) const override {
         return m_employeeLocations.at(person);
     }
