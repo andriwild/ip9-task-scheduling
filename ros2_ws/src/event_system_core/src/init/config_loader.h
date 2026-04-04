@@ -123,6 +123,7 @@ public:
             } else {
                 config.appointmentsPath = "appointments.json";
             }
+            config.appointmentDuration = j.value("appointment_duration", 1800.0);
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
@@ -240,6 +241,7 @@ public:
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;
+        j["appointment_duration"] = config->appointmentDuration;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

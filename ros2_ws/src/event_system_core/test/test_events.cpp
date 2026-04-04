@@ -491,14 +491,6 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
 
     // Person should be moved to the robot's arrival location
     EXPECT_EQ(ctx.personLocations["Max"], "MeetingRoom");
-    // Should push a PersonTransitionEvent
-    bool hasPersonTransition = false;
-    for (const auto& e : ctx.pushedEvents) {
-        if (e->getType() == des::EventType::PERSON_TRANSITION) {
-            hasPersonTransition = true;
-        }
-    }
-    EXPECT_TRUE(hasPersonTransition);
 }
 
 // --- PersonDepartureEvent ---

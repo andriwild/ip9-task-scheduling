@@ -1,9 +1,10 @@
 #pragma once
 
 #include <iomanip>
-#include <regex>
 #include <vector>
 #include <string>
+
+#include "../model/person.h"
 
 namespace des {
 
@@ -93,6 +94,7 @@ struct SimConfig {
     std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
+    double appointmentDuration = 1800;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -121,6 +123,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
+        os << std::left << std::setw(W) << "appointmentDuration" << ": " << config.appointmentDuration << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;
@@ -139,21 +142,6 @@ enum class RobotSubState {
     STANDING,
     DRIVING
 };
-
-enum class RoomType {
-    WORKPLACE,
-    TOILET,
-    KITCHEN,
-    OTHER
-};
-
-inline RoomType parseRoomName(const std::string& roomName) {
-    if (roomName.find("Toilet") != std::string::npos) return RoomType::TOILET;
-    if (roomName.find("Kitchen") != std::string::npos) return RoomType::KITCHEN;
-    static const std::regex workplacePattern(R"(5\.2[A-Z]\d+)");
-    if (std::regex_match(roomName, workplacePattern)) return RoomType::WORKPLACE;
-    return RoomType::OTHER;
-}
 
 enum class Result {
     FAILURE,
@@ -180,49 +168,8 @@ enum class EventType : int {
     PERSON_TRANSITION = 15,
     PERSON_ARRIVED = 16,
     PERSON_DEPARTURE = 17,
-    MISSION_START = 18
-};
-
-struct Person {
-    Person() = default;
-    Person(const Person&) = delete;
-    Person& operator=(const Person&) = delete;
-    Person(Person&&) = default;
-    Person& operator=(Person&&) = default;
-
-    int id;
-    std::string firstName;
-    std::string lastName;
-    std::string birthDate;
-    std::string sex;
-    std::string workplace;
-    std::string color;
-    int arrivalTime;
-    int departureTime;
-    std::vector<std::string> roomLabels;  // header of transition matrix
-    std::vector<std::vector<double>> transitionMatrix;
-
-    friend std::ostream& operator<<(std::ostream& os, const Person& p) {
-        os << "-------------------------------------------\n"
-            << "ID: " << p.id << " | Name: " << p.firstName << " " << p.lastName << "\n"
-            << "b-day: " << p.birthDate << " | sex: " << p.sex << "\n"
-            << "workplace: " << p.workplace << "\n"
-            << "Transition Matrix (Labels: ";
-
-        for (size_t i = 0; i < p.roomLabels.size(); ++i) {
-            os << p.roomLabels[i] << (i == p.roomLabels.size() - 1 ? "" : ", ");
-        }
-        os << "):\n";
-
-        for (const auto& row : p.transitionMatrix) {
-            os << "  [ ";
-            for (double val : row) {
-                os << std::fixed << std::setprecision(2) << val << " ";
-            }
-            os << "]\n";
-        }
-        return os;
-    }
+    MISSION_START = 18,
+    APPOINTMENT_END = 19
 };
 
 enum MissionState {

@@ -81,7 +81,8 @@ private:
                 des::distributionTypeFromString(request->departure_distribution),
                 request->dock_location,
                 request->cache_enabled,
-                request->appointments_path
+                request->appointments_path,
+                request->appointment_duration
             };
             std::lock_guard lock(m_configMutex);
             m_currentConfig = std::make_shared<des::SimConfig>(config);
@@ -121,6 +122,7 @@ private:
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;
+            msg.appointment_duration       = m_currentConfig->appointmentDuration;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

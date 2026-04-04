@@ -55,6 +55,7 @@ protected:
     QDoubleSpinBox* m_departureStd;
     QComboBox* m_arrivalDistribution;
     QComboBox* m_departureDistribution;
+    QDoubleSpinBox* m_appointmentDuration;
     QLineEdit* m_dockLocation;
     QCheckBox* m_cacheEnabled;
     QLabel* m_appointmentsPath;

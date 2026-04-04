@@ -225,6 +225,18 @@ public:
     des::EventType getType() const override { return des::EventType::MISSION_START; }
 };
 
+class AppointmentEndEvent final : public IEvent {
+public:
+    std::shared_ptr<des::Person> person;
+    explicit AppointmentEndEvent(const int time, std::shared_ptr<des::Person> p)
+        : IEvent(time), person(std::move(p)) {}
+    void execute(ISimContext& ctx) override;
+    std::string getName() const override {
+        return std::format("{} Appointment End", person->firstName);
+    }
+    des::EventType getType() const override { return des::EventType::APPOINTMENT_END; }
+};
+
 class PersonTransitionEvent: public IEvent {
 public:
     const std::shared_ptr<des::Person> person;

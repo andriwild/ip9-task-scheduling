@@ -21,5 +21,6 @@
     "departure_distribution": "normal",
     "dock_location": "IMVS_Dock",
     "cacheEnabled": false,
-    "appointments_path": "test.json"
+    "appointments_path": "test.json",
+    "appointment_duration": 1800.0
 }

@@ -56,6 +56,10 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_conversationDurationStd = new QDoubleSpinBox(); m_conversationDurationStd->setRange(0.0, 200.0);
     addConfigItem(interactionGroup, "Conv Duration Std", m_conversationDurationStd);
 
+    m_appointmentDuration = new QDoubleSpinBox(); m_appointmentDuration->setRange(0.0, 7200.0); m_appointmentDuration->setSingleStep(60.0);
+    m_appointmentDuration->setSuffix(" s");
+    addConfigItem(interactionGroup, "Appointment Duration", m_appointmentDuration);
+
     // Energy & Docking
     QTreeWidgetItem* energyGroup = new QTreeWidgetItem(m_treeWidget);
     energyGroup->setText(0, "Energy & Battery");
@@ -223,6 +227,7 @@ void DesSystemConfig::onSetConfig() {
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_configFile.toStdString();
     request->employee_path = m_employeeFile.toStdString();
+    request->appointment_duration = m_appointmentDuration->value();
 
     m_statusLabel->setText("Sending...");
 
@@ -267,6 +272,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_arrivalDistribution->setCurrentText(QString::fromStdString(msg->arrival_distribution));
     m_departureDistribution->setCurrentText(QString::fromStdString(msg->departure_distribution));
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
+    m_appointmentDuration->setValue(msg->appointment_duration);
     m_cacheEnabled->setChecked(msg->cache_enabled);
 
     const auto appointmentConfigPath = QString::fromStdString(msg->appointments_path);

@@ -115,6 +115,7 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_EQ(result->dockLocation, "IMVS_Dock");
     EXPECT_FALSE(result->cacheEnabled);
     EXPECT_EQ(result->appointmentsPath, "test.json");
+    EXPECT_DOUBLE_EQ(result->appointmentDuration, 1800.0);
 }
 
 TEST(ConfigLoaderSimConfig, DistributionTypesParsedCorrectly) {
@@ -164,6 +165,7 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_EQ(original->appointmentsPath, reloaded->appointmentsPath);
     EXPECT_EQ(original->arrivalDistribution, reloaded->arrivalDistribution);
     EXPECT_EQ(original->departureDistribution, reloaded->departureDistribution);
+    EXPECT_DOUBLE_EQ(original->appointmentDuration, reloaded->appointmentDuration);
 
     std::filesystem::remove(tmpFile);
 }

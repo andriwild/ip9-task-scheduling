@@ -499,21 +499,21 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
 
     // ================================================================
-    //  Steps 12+: PersonTransition and StartDropOffConversation
-    //  These have the same timestamp, so order may vary.
-    //  Process both and verify we see each type exactly once.
+    //  Steps 12-13: PersonTransition (accompany arrival) + StartDropOffConversation
+    //  Same timestamp, order may vary.
     // ================================================================
-    bool seenPersonTransition = false;
-    bool seenStartDropOff = false;
-
-    for (int i = 0; i < 2; ++i) {
-        e = step(*ctx);
-        ASSERT_NE(e, nullptr);
-        if (e->getType() == des::EventType::PERSON_TRANSITION) seenPersonTransition = true;
-        if (e->getType() == des::EventType::START_DROP_OFF_CONV) seenStartDropOff = true;
+    {
+        bool seenPersonTransition = false;
+        bool seenStartDropOff = false;
+        for (int i = 0; i < 2; ++i) {
+            e = step(*ctx);
+            ASSERT_NE(e, nullptr);
+            if (e->getType() == des::EventType::PERSON_TRANSITION) seenPersonTransition = true;
+            if (e->getType() == des::EventType::START_DROP_OFF_CONV) seenStartDropOff = true;
+        }
+        EXPECT_TRUE(seenPersonTransition) << "Expected PersonTransition (accompany arrival)";
+        EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
     }
-    EXPECT_TRUE(seenPersonTransition) << "Expected PersonTransition (accompany moves person)";
-    EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
 
     // ================================================================
     //  Step 14: DropOffConversationComplete (Success)

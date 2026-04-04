@@ -56,10 +56,9 @@ int main(const int argc, char *argv[]) {
                     if (!app->m_eventQueue.empty()) {
                         const auto e = app->m_eventQueue.top();
                         app->m_eventQueue.pop();
-                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> [STEP] Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-
                         app->m_ctx->advanceTime(e->time);
                         e->execute(*app->m_ctx);
+                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> [STEP] Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Step: Event Queue empty.");
                     }
@@ -70,10 +69,9 @@ int main(const int argc, char *argv[]) {
                     if (!app->m_eventQueue.empty()) {
                         const auto e = app->m_eventQueue.top();
                         app->m_eventQueue.pop();
-                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-
                         app->m_ctx->advanceTime(e->time);
                         e->execute(*app->m_ctx);
+                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");
                         if (headless) {

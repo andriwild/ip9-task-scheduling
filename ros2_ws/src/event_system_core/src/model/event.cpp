@@ -45,8 +45,11 @@ void StopDriveEvent::execute(ISimContext& ctx) {
         const auto& personName = ctx.getAppointment()->personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);
-            ctx.setPersonLocation(personName, ctx.getRobot()->getLocation());
-            ctx.pushEvent(std::make_shared<PersonTransitionEvent>(this->time, person));
+            const auto& arrivalLocation = ctx.getRobot()->getLocation();
+            ctx.setPersonLocation(personName, arrivalLocation);
+            auto transition = std::make_shared<PersonTransitionEvent>(this->time, person);
+            transition->targetRoom = arrivalLocation;
+            ctx.pushEvent(transition);
         }
     }
 
@@ -109,6 +112,10 @@ void FailedFoundPersonConversationCompleteEvent::execute(ISimContext& ctx) {
 }
 
 void StartAccompanyEvent::execute(ISimContext& ctx) {
+    const auto& personName = ctx.getAppointment()->personName;
+    if (ctx.hasEmployee(personName)) {
+        ctx.getPersonByName(personName)->busy = true;
+    }
     ctx.changeRobotState(std::make_unique<AccompanyState>());
     ctx.pushEvent(std::make_shared<StartDriveEvent>(time, ctx.getAppointment()->roomName));
     ctx.notifyEvent(*this);
@@ -121,9 +128,21 @@ void MissionDispatchEvent::execute(ISimContext& ctx) {
 }
 
 void MissionCompleteEvent::execute(ISimContext& ctx) {
+    const auto& personName = this->appointment->personName;
+    if (ctx.hasEmployee(personName)) {
+        auto person = ctx.getPersonByName(personName);
+        int endTime = this->time + static_cast<int>(ctx.getConfig()->appointmentDuration);
+        ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
+    }
     ctx.completeAppointment(this->appointment);
     ctx.notifyEvent(*this);
     ctx.tickBT();
+}
+
+void AppointmentEndEvent::execute(ISimContext& ctx) {
+    person->busy = false;
+    ctx.pushEvent(std::make_shared<PersonTransitionEvent>(this->time, person));
+    ctx.notifyEvent(*this);
 }
 
 void BatteryFullEvent::execute(ISimContext& ctx) {
@@ -135,6 +154,14 @@ void BatteryFullEvent::execute(ISimContext& ctx) {
 
 void PersonTransitionEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
+
+    if (p.busy) {
+        if (!targetRoom.empty()) {
+            ctx.notifyEvent(*this);
+        }
+        return;
+    }
+
     const std::string currentRoom = ctx.getPersonLocation(p.firstName);
     targetRoom = currentRoom;
 
@@ -163,22 +190,7 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
     ctx.notifyEvent(*this);
     ctx.setPersonLocation(p.firstName, nextRoom);
 
-    double nextExecutionTime;
-    des::RoomType roomType = des::parseRoomName(nextRoom);
-    switch (roomType) {
-        case des::RoomType::WORKPLACE:
-            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 60 * 10, ONE_HOUR * 2);
-            break;
-        case des::RoomType::TOILET:
-            nextExecutionTime = this->time + rnd::logNormal(ctx.rng(), 4.8, 0.7);
-            break;
-        case des::RoomType::KITCHEN:
-            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 30, 1800);
-            break;
-        case des::RoomType::OTHER:
-            nextExecutionTime = this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR * 1);
-            break;
-    }
+    double nextExecutionTime = this->time + p.getStayDuration(nextRoom, ctx.rng());
 
     if(p.departureTime < nextExecutionTime) {
         auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
@@ -194,6 +206,11 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
 
 void PersonArrivedEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
+
+    if (p.busy) {
+        return;
+    }
+
     const std::string currentRoom = ctx.getPersonLocation(p.firstName);
     targetRoom = currentRoom;
     ctx.notifyEvent(*this);
@@ -218,6 +235,9 @@ void PersonArrivedEvent::execute(ISimContext& ctx) {
 }
 
 void PersonDepartureEvent::execute(ISimContext& ctx) {
+    if (this->person->busy) {
+        return;
+    }
     targetRoom = "OUTDOOR";
     ctx.notifyEvent(*this);
     ctx.setPersonLocation(this->person->firstName, "OUTDOOR");

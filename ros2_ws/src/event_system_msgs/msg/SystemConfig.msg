@@ -31,3 +31,4 @@ string dock_location
 string appointments_path
 string employee_path
 bool cache_enabled
+float32 appointment_duration
