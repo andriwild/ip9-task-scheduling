@@ -92,7 +92,6 @@ protected:
         max->firstName = "Max";
         max->lastName = "Mustermann";
         max->workplace = "Office";
-        max->currentRoom = "Office";
         max->roomLabels = {"Office"};
         max->transitionMatrix = {{1.0}};
         max->arrivalTime = 28800;
@@ -183,6 +182,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     eventQueue.push(std::make_shared<SimulationEndEvent>(endTime));
 
     ctx->resetContext(startTime);
+    ctx->setPersonLocation("Max", "Office");
     runEventLoop(*ctx);
 
     // Verify: mission was completed
@@ -247,6 +247,7 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
     eventQueue.push(std::make_shared<MissionDispatchEvent>(34000, appt));
     eventQueue.push(std::make_shared<SimulationEndEvent>(40000));
     ctx->resetContext(30000);
+    ctx->setPersonLocation("Max", "Office");
 
     runEventLoop(*ctx);
 
@@ -387,6 +388,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     eventQueue.push(std::make_shared<SimulationStartEvent>(startTime));
     eventQueue.push(std::make_shared<SimulationEndEvent>(40000));
     ctx->resetContext(startTime);
+    ctx->setPersonLocation("Max", "Office");
 
     // ================================================================
     //  Step 1: SimulationStart
@@ -493,7 +495,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "MeetingRoom");
     EXPECT_FALSE(ctx->getRobot()->isDriving());
-    EXPECT_EQ(employeeLocations["Max"]->currentRoom, "MeetingRoom");
+    EXPECT_EQ(ctx->getPersonLocation("Max"), "MeetingRoom");
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
 
     // ================================================================

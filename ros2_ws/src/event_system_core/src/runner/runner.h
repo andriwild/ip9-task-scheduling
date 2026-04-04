@@ -50,12 +50,10 @@ public:
     }
 
     static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(
-        std::vector<std::shared_ptr<des::Person>> people,
-        std::string location
+        std::vector<std::shared_ptr<des::Person>> people
     ) {
         auto events = std::vector<std::shared_ptr<IEvent>> {};
         for (auto& p: people) {
-            p->currentRoom = location;
             const auto event = std::make_shared<PersonArrivedEvent>(p->arrivalTime, p);
             events.push_back(event);
         }

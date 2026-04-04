@@ -34,10 +34,11 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const auto& person = ctx->getPersonByName(ctx->getAppointment()->personName);
-        const bool personFound = ctx->getRobot()->getLocation() == person->currentRoom;
+        const auto& personName = ctx->getAppointment()->personName;
+        const std::string personLocation = ctx->getPersonLocation(personName);
+        const bool personFound = ctx->getRobot()->getLocation() == personLocation;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d (robot: %s, person: %s)",
-                     personFound, ctx->getRobot()->getLocation().c_str(), person->currentRoom.c_str());
+                     personFound, ctx->getRobot()->getLocation().c_str(), personLocation.c_str());
         if(personFound) {
             return BT::NodeStatus::SUCCESS;
         }

@@ -69,7 +69,6 @@ public:
                 p.sex              = item.at("sex").get<std::string>();
                 p.workplace        = item.at("workplace").get<std::string>();
                 p.color            = item.value("color", "");
-                p.currentRoom      = item.at("currentRoom").get<std::string>();
                 p.roomLabels       = item.at("roomLabels").get<std::vector<std::string>>();
                 p.transitionMatrix = item.at("transitionMatrix").get<std::vector<std::vector<double>>>();
 
@@ -77,7 +76,7 @@ public:
                     std::cerr << "Warnung: Matrix-Dimension passt nicht zu roomLabels für " << p.firstName << std::endl;
                 }
 
-                employees.push_back(std::make_shared<des::Person>(p));
+                employees.push_back(std::make_shared<des::Person>(std::move(p)));
             }
         } catch (const nlohmann::json::exception& e) {
             std::cerr << "JSON Parsing Error: " << e.what() << std::endl;

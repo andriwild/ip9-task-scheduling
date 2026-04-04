@@ -55,6 +55,10 @@ public:
     virtual bool hasEmployee(const std::string& person) const = 0;
     virtual std::shared_ptr<des::Person> getPersonByName(const std::string& person) const = 0;
 
+    // Person location registry (single source of truth)
+    virtual std::string getPersonLocation(const std::string& name) const = 0;
+    virtual void setPersonLocation(const std::string& name, const std::string& room) = 0;
+
     // Configuration accessors
     virtual std::shared_ptr<des::SimConfig> getConfig() const = 0;
     virtual double getConversationProbability() const = 0;

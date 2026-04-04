@@ -184,6 +184,12 @@ enum class EventType : int {
 };
 
 struct Person {
+    Person() = default;
+    Person(const Person&) = delete;
+    Person& operator=(const Person&) = delete;
+    Person(Person&&) = default;
+    Person& operator=(Person&&) = default;
+
     int id;
     std::string firstName;
     std::string lastName;
@@ -191,7 +197,6 @@ struct Person {
     std::string sex;
     std::string workplace;
     std::string color;
-    std::string currentRoom;
     int arrivalTime;
     int departureTime;
     std::vector<std::string> roomLabels;  // header of transition matrix
@@ -201,8 +206,7 @@ struct Person {
         os << "-------------------------------------------\n"
             << "ID: " << p.id << " | Name: " << p.firstName << " " << p.lastName << "\n"
             << "b-day: " << p.birthDate << " | sex: " << p.sex << "\n"
-            << "workplace: " << p.workplace << " | current room: " 
-            << (p.currentRoom.empty() ? "(not set)" : p.currentRoom) << "\n"
+            << "workplace: " << p.workplace << "\n"
             << "Transition Matrix (Labels: ";
 
         for (size_t i = 0; i < p.roomLabels.size(); ++i) {

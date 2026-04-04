@@ -228,13 +228,14 @@ public:
 class PersonTransitionEvent: public IEvent {
 public:
     const std::shared_ptr<des::Person> person;
+    std::string targetRoom;
     explicit PersonTransitionEvent(const int time, std::shared_ptr<des::Person> p) :
-        IEvent(time), 
-        person(p) 
+        IEvent(time),
+        person(p)
     {}
     void execute(ISimContext& ctx) override;
-    std::string getName() const override { 
-        return std::format("{} moved to {}", person->firstName, person->currentRoom);
+    std::string getName() const override {
+        return std::format("{} moved to {}", person->firstName, targetRoom);
  }
     des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
     std::string getColor() const override { return person->color; }
@@ -246,8 +247,8 @@ public:
         PersonTransitionEvent(time, p)
     {}
     void execute(ISimContext& ctx) override;
-    std::string getName() const override { 
-        return std::format("{} arrived to {}", person->firstName, person->currentRoom);
+    std::string getName() const override {
+        return std::format("{} arrived to {}", person->firstName, targetRoom);
  }
     des::EventType getType() const override { return des::EventType::PERSON_ARRIVED; }
 };
@@ -258,8 +259,8 @@ public:
     PersonTransitionEvent(time, p)
     {}
     void execute(ISimContext& ctx) override;
-    std::string getName() const override { 
-        return std::format("{} leaved to {}", person->firstName, person->currentRoom);
+    std::string getName() const override {
+        return std::format("{} leaved to {}", person->firstName, targetRoom);
  }
     des::EventType getType() const override { return des::EventType::PERSON_DEPARTURE; }
 };

@@ -22,6 +22,7 @@ public:
     std::shared_ptr<des::Appointment> currentAppointment;
     std::shared_ptr<des::SimConfig> simConfig;
     std::map<std::string, std::shared_ptr<des::Person>> employees;
+    std::map<std::string, std::string> personLocations;
     std::vector<std::shared_ptr<des::Appointment>> pendingMissions;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
@@ -127,6 +128,13 @@ public:
     double getConversationProbability() const override { return simConfig->conversationProbability; }
     double getRndConversationTime() const override { return simConfig->conversationDurationMean; }
     std::mt19937& rng() const override { return m_rng; }
+
+    std::string getPersonLocation(const std::string& name) const override {
+        return personLocations.at(name);
+    }
+    void setPersonLocation(const std::string& name, const std::string& room) override {
+        personLocations[name] = room;
+    }
 };
 
 // --- SimulationStartEvent ---
@@ -469,9 +477,9 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "Office";
     person->roomLabels = {"Office", "MeetingRoom"};
     ctx.employees["Max"] = person;
+    ctx.personLocations["Max"] = "Office";
 
     auto appt = std::make_shared<des::Appointment>();
     appt->personName = "Max";
@@ -482,7 +490,7 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
     event.execute(ctx);
 
     // Person should be moved to the robot's arrival location
-    EXPECT_EQ(person->currentRoom, "MeetingRoom");
+    EXPECT_EQ(ctx.personLocations["Max"], "MeetingRoom");
     // Should push a PersonTransitionEvent
     bool hasPersonTransition = false;
     for (const auto& e : ctx.pushedEvents) {
@@ -500,13 +508,13 @@ TEST(EventExecute, PersonDepartureSetsRoomToOutdoor) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "Office";
     person->roomLabels = {"Office"};
+    ctx.personLocations["Max"] = "Office";
 
     PersonDepartureEvent event(61200, person);
     event.execute(ctx);
 
-    EXPECT_EQ(person->currentRoom, "OUTDOOR");
+    EXPECT_EQ(ctx.personLocations["Max"], "OUTDOOR");
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
 
@@ -517,8 +525,8 @@ TEST(EventExecute, PersonTransitionFromOutdoorDoesNotPushEvent) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "OUTDOOR";
     person->roomLabels = {"Office", "Kitchen"};
+    ctx.personLocations["Max"] = "OUTDOOR";
 
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
@@ -526,7 +534,7 @@ TEST(EventExecute, PersonTransitionFromOutdoorDoesNotPushEvent) {
     // Should only notify, not push any follow-up event
     EXPECT_TRUE(ctx.pushedEvents.empty());
     EXPECT_FALSE(ctx.notifiedEvents.empty());
-    EXPECT_EQ(person->currentRoom, "OUTDOOR");
+    EXPECT_EQ(ctx.personLocations["Max"], "OUTDOOR");
 }
 
 TEST(EventExecute, PersonTransitionFromUnknownRoomReturnsToWorkplace) {
@@ -534,14 +542,14 @@ TEST(EventExecute, PersonTransitionFromUnknownRoomReturnsToWorkplace) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "UnknownRoom";
     person->workplace = "Office";
     person->roomLabels = {"Office", "Kitchen"};
+    ctx.personLocations["Max"] = "UnknownRoom";
 
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
 
-    EXPECT_EQ(person->currentRoom, "Office");
+    EXPECT_EQ(ctx.personLocations["Max"], "Office");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
     // Follow-up time should be between 60 and 3600 seconds later
@@ -554,7 +562,6 @@ TEST(EventExecute, PersonTransitionMovesToNewRoomAndSchedulesNext) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "5.2B03"; // workplace pattern
     person->workplace = "5.2B03";
     person->departureTime = 999999; // far in the future
     person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
@@ -562,12 +569,13 @@ TEST(EventExecute, PersonTransitionMovesToNewRoomAndSchedulesNext) {
         {0.0, 1.0}, // from 5.2B03 always go to Kitchen
         {1.0, 0.0},
     };
+    ctx.personLocations["Max"] = "5.2B03";
 
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
 
     // Person should have moved to Kitchen (100% probability)
-    EXPECT_EQ(person->currentRoom, "IMVS_Kitchen");
+    EXPECT_EQ(ctx.personLocations["Max"], "IMVS_Kitchen");
     // Should schedule a follow-up transition
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
@@ -579,7 +587,6 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "5.2B03";
     person->workplace = "5.2B03";
     person->departureTime = 30001; // almost immediately
     person->roomLabels = {"5.2B03", "IMVS_Kitchen", "5.2B_Elevator"};
@@ -588,6 +595,7 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
         {1.0, 0.0, 0.0},
         {1.0, 0.0, 0.0},
     };
+    ctx.personLocations["Max"] = "5.2B03";
 
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
@@ -597,7 +605,7 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_DEPARTURE);
     EXPECT_EQ(ctx.pushedEvents[0]->time, 30001);
     // Person should be moved to elevator
-    EXPECT_EQ(person->currentRoom, "5.2B_Elevator");
+    EXPECT_EQ(ctx.personLocations["Max"], "5.2B_Elevator");
 }
 
 // --- PersonArrivedEvent ---
@@ -607,19 +615,19 @@ TEST(EventExecute, PersonArrivedSchedulesTransition) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "5.2B03";
     person->workplace = "5.2B03";
     person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
     person->transitionMatrix = {
         {0.0, 1.0},
         {1.0, 0.0},
     };
+    ctx.personLocations["Max"] = "5.2B03";
 
     PersonArrivedEvent event(30000, person);
     event.execute(ctx);
 
     // Should transition to a new room via the matrix
-    EXPECT_EQ(person->currentRoom, "IMVS_Kitchen");
+    EXPECT_EQ(ctx.personLocations["Max"], "IMVS_Kitchen");
     // Should push a PersonTransitionEvent with short delay (10-30s)
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
@@ -632,14 +640,14 @@ TEST(EventExecute, PersonArrivedAtUnknownRoomReturnsToWorkplace) {
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->currentRoom = "UnknownRoom";
     person->workplace = "Office";
     person->roomLabels = {"Office", "Kitchen"};
+    ctx.personLocations["Max"] = "UnknownRoom";
 
     PersonArrivedEvent event(30000, person);
     event.execute(ctx);
 
-    EXPECT_EQ(person->currentRoom, "Office");
+    EXPECT_EQ(ctx.personLocations["Max"], "Office");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
 }

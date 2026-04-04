@@ -45,7 +45,7 @@ void StopDriveEvent::execute(ISimContext& ctx) {
         const auto& personName = ctx.getAppointment()->personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);
-            person->currentRoom = ctx.getRobot()->getLocation();
+            ctx.setPersonLocation(personName, ctx.getRobot()->getLocation());
             ctx.pushEvent(std::make_shared<PersonTransitionEvent>(this->time, person));
         }
     }
@@ -135,17 +135,20 @@ void BatteryFullEvent::execute(ISimContext& ctx) {
 
 void PersonTransitionEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
-    if (p.currentRoom == "OUTDOOR") {
+    const std::string currentRoom = ctx.getPersonLocation(p.firstName);
+    targetRoom = currentRoom;
+
+    if (currentRoom == "OUTDOOR") {
         ctx.notifyEvent(*this);
         return;
     }
 
-    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
+    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), currentRoom);
 
     // Person was moved outside their known rooms (e.g. by accompany) — return to workplace
     if (it == p.roomLabels.end()) {
         ctx.notifyEvent(*this);
-        p.currentRoom = p.workplace;
+        ctx.setPersonLocation(p.firstName, p.workplace);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
             this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
         return;
@@ -155,11 +158,13 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
     int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
 
+    const std::string nextRoom = p.roomLabels.at(nextRoomIdx);
+    targetRoom = nextRoom;
     ctx.notifyEvent(*this);
-    p.currentRoom = p.roomLabels.at(nextRoomIdx);
+    ctx.setPersonLocation(p.firstName, nextRoom);
 
     double nextExecutionTime;
-    des::RoomType roomType = des::parseRoomName(p.currentRoom);
+    des::RoomType roomType = des::parseRoomName(nextRoom);
     switch (roomType) {
         case des::RoomType::WORKPLACE:
             nextExecutionTime = this->time + rnd::uni(ctx.rng(), 60 * 10, ONE_HOUR * 2);
@@ -179,7 +184,7 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
         auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
             [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
         if (elevatorIt != p.roomLabels.end()) {
-            p.currentRoom = *elevatorIt;
+            ctx.setPersonLocation(p.firstName, *elevatorIt);
         }
         ctx.pushEvent(std::make_shared<PersonDepartureEvent>(p.departureTime, this->person));
     } else {
@@ -188,14 +193,16 @@ void PersonTransitionEvent::execute(ISimContext& ctx) {
 }
 
 void PersonArrivedEvent::execute(ISimContext& ctx) {
-    ctx.notifyEvent(*this);
     auto& p = *this->person;
+    const std::string currentRoom = ctx.getPersonLocation(p.firstName);
+    targetRoom = currentRoom;
+    ctx.notifyEvent(*this);
 
-    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), p.currentRoom);
+    auto it = std::find(p.roomLabels.begin(), p.roomLabels.end(), currentRoom);
 
     // Person arrived at unknown room (e.g. after accompany) — return to workplace
     if (it == p.roomLabels.end()) {
-        p.currentRoom = p.workplace;
+        ctx.setPersonLocation(p.firstName, p.workplace);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
             this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
         return;
@@ -205,14 +212,15 @@ void PersonArrivedEvent::execute(ISimContext& ctx) {
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
     int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
 
-    p.currentRoom = p.roomLabels.at(nextRoomIdx);
+    ctx.setPersonLocation(p.firstName, p.roomLabels.at(nextRoomIdx));
     double nextExecutionTime = this->time + rnd::uni(ctx.rng(), 10, 30);
     ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
 }
 
 void PersonDepartureEvent::execute(ISimContext& ctx) {
+    targetRoom = "OUTDOOR";
     ctx.notifyEvent(*this);
-    this->person->currentRoom = "OUTDOOR";
+    ctx.setPersonLocation(this->person->firstName, "OUTDOOR");
 }
 
 void MissionStartEvent::execute(ISimContext& ctx) {

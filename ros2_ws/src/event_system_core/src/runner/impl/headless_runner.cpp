@@ -81,7 +81,7 @@ bool HeadlessRunner::loadNextBatch() {
                 m_people.value().size(), m_allPeople.size());
 
     IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
-    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value(), "5.2B_Elevator"));
+    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value()));
     m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
 
     int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
@@ -96,16 +96,16 @@ bool HeadlessRunner::loadNextBatch() {
     m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
 
     for (auto& p : m_people.value()) {
-        auto startCopy = std::make_shared<des::Person>(*p);
-        startCopy->currentRoom = "OUTDOOR";
-        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, startCopy));
-
-        auto endCopy = std::make_shared<des::Person>(*p);
-        endCopy->currentRoom = "OUTDOOR";
-        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, endCopy));
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, p));
+        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
     }
 
     m_ctx->resetContext(m_eventQueue.getFirstEventTime());
+
+    // Initialize person locations after resetContext clears them
+    for (auto& p : m_people.value()) {
+        m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
+    }
 
     m_eventQueue.print();
     return true;

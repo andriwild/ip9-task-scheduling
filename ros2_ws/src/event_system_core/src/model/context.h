@@ -33,6 +33,7 @@ class SimulationContext : public ISimContext {
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
+    std::map<std::string, std::string> m_personLocations;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -111,6 +112,14 @@ public:
 
     bool hasEmployee(const std::string& person) const override {
         return m_employeeLocations.contains(person);
+    }
+
+    std::string getPersonLocation(const std::string& name) const override {
+        return m_personLocations.at(name);
+    }
+
+    void setPersonLocation(const std::string& name, const std::string& room) override {
+        m_personLocations[name] = room;
     }
 
     // Mission management (delegated to MissionManager)
