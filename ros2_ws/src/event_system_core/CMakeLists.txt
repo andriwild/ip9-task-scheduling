@@ -63,9 +63,56 @@ install(DIRECTORY include/
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  set(TEST_FIXTURES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/fixtures")
+
+  # EventQueue tests
+  ament_add_gtest(test_event_queue test/test_event_queue.cpp)
+  target_compile_definitions(test_event_queue PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
+
+  # ConfigLoader tests
+  ament_add_gtest(test_config_loader test/test_config_loader.cpp)
+  target_link_libraries(test_config_loader nlohmann_json::nlohmann_json)
+  target_compile_definitions(test_config_loader PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
+
+  # MissionManager tests
+  ament_add_gtest(test_mission_manager test/test_mission_manager.cpp)
+  ament_target_dependencies(test_mission_manager rclcpp)
+  target_compile_definitions(test_mission_manager PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
+
+  # Scheduler tests (with MockPathPlanner)
+  ament_add_gtest(test_scheduler
+    test/test_scheduler.cpp
+    src/model/event.cpp
+    src/model/robot.cpp
+    src/model/robot_state.cpp
+  )
+  ament_target_dependencies(test_scheduler rclcpp behaviortree_cpp)
+  target_compile_definitions(test_scheduler PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
+
+  # Event execute tests (with MockSimContext)
+  ament_add_gtest(test_events
+    test/test_events.cpp
+    src/model/event.cpp
+    src/model/robot.cpp
+    src/model/robot_state.cpp
+  )
+  ament_target_dependencies(test_events rclcpp behaviortree_cpp)
+  target_compile_definitions(test_events PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
 endif()
 
 ament_package()

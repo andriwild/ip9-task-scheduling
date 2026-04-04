@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../observer/event_bus.h"
-#include "../sim/ros/path_node.h"
+#include "../sim/i_path_planner.h"
 #include "../util/types.h"
 #include "event.h"
 #include "i_sim_context.h"
@@ -39,14 +39,14 @@ public:
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
     mutable std::mt19937 m_rng{DEFAULT_SEED};
 
-    std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
     Scheduler& m_scheduler;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<PathPlannerNode> plannerNode,
+        std::shared_ptr<IPathPlanner> plannerNode,
         std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
         Scheduler& scheduler
     );

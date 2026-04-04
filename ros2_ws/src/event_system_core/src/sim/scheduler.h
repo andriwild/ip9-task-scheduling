@@ -9,17 +9,17 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "../model/event.h"
-#include "../sim/ros/path_node.h"
+#include "../sim/i_path_planner.h"
 
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
-    std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::shared_ptr<IPathPlanner> m_plannerNode;
     std::map<std::string, std::shared_ptr<des::Person>> m_locations;
 
 public:
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
-        const std::shared_ptr<PathPlannerNode> &plannerNode,
+        const std::shared_ptr<IPathPlanner> &plannerNode,
         std::map<std::string, std::shared_ptr<des::Person>> locations
     )
         : m_simConfig(simConfig)

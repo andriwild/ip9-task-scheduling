@@ -13,7 +13,7 @@ echo ""
 FAILED=0
 
 for test in build/event_system_core/test_*; do
-    if [ -x "$test" ]; then
+    if [ -x "$test" ] && [ -f "$test" ]; then
         echo "--- $(basename "$test") ---"
         if ! "$test"; then
             FAILED=1

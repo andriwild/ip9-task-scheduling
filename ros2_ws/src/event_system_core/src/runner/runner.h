@@ -4,6 +4,7 @@
 
 #include "../model/context.h"
 #include "../model/event.h"
+#include "../sim/ros/path_node.h"
 #include "../util/db.h"
 #include "../init/config_loader.h"
 #include "../observer/ros.h"

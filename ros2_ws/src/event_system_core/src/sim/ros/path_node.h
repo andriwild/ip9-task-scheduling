@@ -15,6 +15,7 @@
 #include <string>
 
 #include "../../util/types.h"
+#include "../i_path_planner.h"
 
 struct SimplePose {
     double x, y, yaw;
@@ -27,7 +28,7 @@ struct PathResult {
 
 using Cache = std::map<std::pair<std::string, std::string>, double>;
 
-class PathPlannerNode : public rclcpp::Node {
+class PathPlannerNode : public rclcpp::Node, public IPathPlanner {
 public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
