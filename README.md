@@ -33,3 +33,9 @@ export RCUTILS_COLORIZED_OUTPUT=1
 ```sh
 python3 -c "import matplotlib.pyplot as plt; import sys; data = [float(x) for x in sys.stdin]; plt.hist(data); plt.show()" < nums.txt
 ```
+
+## Listen to metrics messages
+
+```sh
+ros2 topic echo /metrics_report event_system_msgs/msg/MetricsReport
+```
