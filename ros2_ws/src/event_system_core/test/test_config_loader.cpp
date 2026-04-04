@@ -30,13 +30,17 @@ TEST(ConfigLoaderAppointments, LoadsValidAppointments) {
     EXPECT_EQ((*result)[1]->id, 1);
 }
 
-TEST(ConfigLoaderAppointments, NonexistentFileReturnsNullopt) {
-    // Falls back to DEFAULT_APPOINTMENT_FILE, which may or may not exist.
-    // We test with a path that definitely does not match any default either.
+TEST(ConfigLoaderAppointments, NonexistentFileFallsBackToDefault) {
     auto result = ConfigLoader::loadAppointmentConfig("/tmp/nonexistent_xyz_12345.json");
-    // The function falls back to DEFAULT_APPOINTMENT_FILE. If that exists, we get a value.
-    // We mainly verify no crash occurs.
-    SUCCEED();
+    // Function falls back to DEFAULT_APPOINTMENT_FILE - verify it loads something
+    ASSERT_TRUE(result.has_value());
+    EXPECT_FALSE(result->empty());
+    // Verify appointments have required fields populated
+    for (const auto& appt : *result) {
+        EXPECT_FALSE(appt->personName.empty());
+        EXPECT_FALSE(appt->roomName.empty());
+        EXPECT_GT(appt->appointmentTime, 0);
+    }
 }
 
 TEST(ConfigLoaderAppointments, InvalidJsonStructureReturnsNullopt) {

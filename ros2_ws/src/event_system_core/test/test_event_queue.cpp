@@ -120,6 +120,17 @@ TEST_F(EventQueueTest, LastEventTimeUpdatedByExtendSortedQueue) {
     EXPECT_EQ(queue.getLastEventTime(), 999);
 }
 
+TEST_F(EventQueueTest, ExtendFromVectorUpdatesLastEventTime) {
+    std::vector<std::shared_ptr<IEvent>> events = {
+        makeEvent(400),
+        makeEvent(800),
+    };
+
+    queue.extend(events);
+
+    EXPECT_EQ(queue.getLastEventTime(), 800);
+}
+
 TEST_F(EventQueueTest, ManyEventsOrderedCorrectly) {
     for (int i = 100; i >= 1; --i) {
         queue.push(makeEvent(i));

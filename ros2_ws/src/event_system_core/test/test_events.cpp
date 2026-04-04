@@ -2,15 +2,11 @@
 #include <memory>
 #include <random>
 
+#include "../src/model/context.h"
 #include "../src/model/event.h"
 #include "../src/model/i_sim_context.h"
 #include "../src/model/robot.h"
 #include "../src/model/robot_state.h"
-
-struct Journey {
-    double duration;
-    double distance;
-};
 
 class MockSimContext : public ISimContext {
 public:
@@ -18,6 +14,7 @@ public:
     std::vector<std::shared_ptr<IEvent>> pushedEvents;
     std::vector<std::string> notifiedEvents;
     int tickCount = 0;
+    bool completeAppointmentCalled = false;
     std::map<std::string, std::string> blackboard;
 
     // Configurable state
@@ -39,7 +36,7 @@ public:
         simConfig->fullBatteryThreshold = 95.0;
         simConfig->conversationProbability = 1.0;
         simConfig->conversationDurationMean = 30.0;
-        simConfig->conversationDurationStd = 0.0; // deterministic
+        simConfig->conversationDurationStd = 0.0;
         simConfig->personFindProbability = 1.0;
         simConfig->driveTimeStd = 0.0;
         simConfig->timeBuffer = 60.0;
@@ -52,7 +49,6 @@ public:
         robot = std::make_shared<Robot>(simConfig);
     }
 
-    // ISimContext implementation
     int getTime() const override { return currentTime; }
 
     void pushEvent(const std::shared_ptr<IEvent>& event) override {
@@ -112,7 +108,9 @@ public:
         return front;
     }
 
-    void completeAppointment(const std::shared_ptr<des::Appointment>& /*appt*/) const override {}
+    void completeAppointment(const std::shared_ptr<des::Appointment>& /*appt*/) const override {
+        const_cast<MockSimContext*>(this)->completeAppointmentCalled = true;
+    }
 
     bool isMissionFeasible(const des::Appointment& /*appointment*/, const std::string& /*startPos*/) const override {
         return true;
@@ -145,6 +143,16 @@ TEST(EventExecute, SimulationStartSetsIdleState) {
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
 
+TEST(EventExecute, SimulationStartPushesStopDriveEvent) {
+    MockSimContext ctx;
+    SimulationStartEvent event(500);
+    event.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx.pushedEvents[0]->time, 500);
+}
+
 // --- SimulationEndEvent ---
 
 TEST(EventExecute, SimulationEndSetsIdleState) {
@@ -155,7 +163,8 @@ TEST(EventExecute, SimulationEndSetsIdleState) {
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::IDLE);
-    EXPECT_FALSE(ctx.pushedEvents.empty());
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::STOP_DRIVE);
 }
 
 // --- MissionDispatchEvent ---
@@ -176,6 +185,7 @@ TEST(EventExecute, MissionDispatchAddsPendingAndTicksBT) {
     ASSERT_EQ(ctx.pendingMissions.size(), 1u);
     EXPECT_EQ(ctx.pendingMissions[0]->personName, "Max");
     EXPECT_EQ(ctx.tickCount, 1);
+    EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
 
 // --- MissionStartEvent ---
@@ -199,6 +209,13 @@ TEST(EventExecute, MissionStartSetsSearchState) {
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::SEARCHING);
     EXPECT_EQ(ctx.tickCount, 1);
+
+    // Verify SearchState has the correct locations
+    auto* searchState = dynamic_cast<SearchState*>(ctx.robot->getState());
+    ASSERT_NE(searchState, nullptr);
+    ASSERT_EQ(searchState->locations.size(), 2u);
+    EXPECT_EQ(searchState->locations[0], "Office");
+    EXPECT_EQ(searchState->locations[1], "Kitchen");
 }
 
 // --- AbortSearchEvent ---
@@ -223,7 +240,7 @@ TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
 
 // --- StartAccompanyEvent ---
 
-TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrives) {
+TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
     MockSimContext ctx;
 
     auto appt = std::make_shared<des::Appointment>();
@@ -239,24 +256,29 @@ TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrives) {
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::ACCOMPANY);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::START_DRIVE);
+    // Verify the drive target is the appointment room
+    auto* driveEvent = dynamic_cast<StartDriveEvent*>(ctx.pushedEvents[0].get());
+    ASSERT_NE(driveEvent, nullptr);
+    EXPECT_EQ(driveEvent->getName(), "Departing: MeetingRoom");
 }
 
 // --- StartFoundPersonConversationEvent ---
 
-TEST(EventExecute, StartFoundPersonConversationSetsConversateState) {
+TEST(EventExecute, StartFoundPersonConvPushesSuccessWithHighProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
+    ctx.simConfig->conversationProbability = 1.0;
 
     StartFoundPersonConversationEvent event(35000);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::CONVERSATE);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    // With conversationProbability=1.0, should always push Success
-    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::FOUND_PERSON_CONV_COMPLETE);
+    // Verify it's the Success variant by checking getName()
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
 }
 
-TEST(EventExecute, StartFoundPersonConvFailsWithZeroProbability) {
+TEST(EventExecute, StartFoundPersonConvPushesFailedWithZeroProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
     ctx.simConfig->conversationProbability = 0.0;
@@ -265,25 +287,50 @@ TEST(EventExecute, StartFoundPersonConvFailsWithZeroProbability) {
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    // With probability 0, rnd::uni will always be >= 0, so always fails
-    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::FOUND_PERSON_CONV_COMPLETE);
+    // With probability=0, rnd::uni >= 0 always, so Failed variant must be pushed
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Failed ");
+}
+
+TEST(EventExecute, StartFoundPersonConvEventTimeIncludesConversationDuration) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(false);
+    ctx.simConfig->conversationDurationMean = 45.0;
+
+    StartFoundPersonConversationEvent event(35000);
+    event.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->time, 35000 + 45);
 }
 
 // --- StartDropOffConversationEvent ---
 
-TEST(EventExecute, StartDropOffConversationSetsConversateState) {
+TEST(EventExecute, StartDropOffConvPushesSuccessWithHighProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
+    ctx.simConfig->conversationProbability = 1.0;
 
     StartDropOffConversationEvent event(35000);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::CONVERSATE);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::DROP_OFF_CONV_COMPLETE);
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
 }
 
-// --- SuccessFoundPersonConversationCompleteEvent ---
+TEST(EventExecute, StartDropOffConvPushesFailedWithZeroProbability) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(false);
+    ctx.simConfig->conversationProbability = 0.0;
+
+    StartDropOffConversationEvent event(35000);
+    event.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Failed ");
+}
+
+// --- Conversation complete events ---
 
 TEST(EventExecute, SuccessFoundPersonConvSetsResultAndTicks) {
     MockSimContext ctx;
@@ -296,13 +343,33 @@ TEST(EventExecute, SuccessFoundPersonConvSetsResultAndTicks) {
     EXPECT_EQ(ctx.tickCount, 1);
 }
 
-// --- FailedFoundPersonConversationCompleteEvent ---
-
 TEST(EventExecute, FailedFoundPersonConvSetsFailureAndTicks) {
     MockSimContext ctx;
     ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
 
     FailedFoundPersonConversationCompleteEvent event(35030);
+    event.execute(ctx);
+
+    EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::FAILURE);
+    EXPECT_EQ(ctx.tickCount, 1);
+}
+
+TEST(EventExecute, SuccessDropOffConvSetsResultAndTicks) {
+    MockSimContext ctx;
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+
+    SuccessDropOffConversationCompleteEvent event(35030);
+    event.execute(ctx);
+
+    EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::SUCCESS);
+    EXPECT_EQ(ctx.tickCount, 1);
+}
+
+TEST(EventExecute, FailedDropOffConvSetsFailureAndTicks) {
+    MockSimContext ctx;
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+
+    FailedDropOffConversationCompleteEvent event(35030);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::FAILURE);
@@ -326,7 +393,7 @@ TEST(EventExecute, BatteryFullSetsIdleAndResetsBatteryFlag) {
 
 // --- MissionCompleteEvent ---
 
-TEST(EventExecute, MissionCompleteNotifiesAndTicks) {
+TEST(EventExecute, MissionCompleteCallsCompleteAppointmentAndTicks) {
     MockSimContext ctx;
 
     auto appt = std::make_shared<des::Appointment>();
@@ -337,24 +404,49 @@ TEST(EventExecute, MissionCompleteNotifiesAndTicks) {
     MissionCompleteEvent event(36500, appt);
     event.execute(ctx);
 
+    EXPECT_TRUE(ctx.completeAppointmentCalled);
     EXPECT_EQ(ctx.tickCount, 1);
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
 
-// --- PersonDepartureEvent ---
+// --- StartDriveEvent ---
 
-TEST(EventExecute, PersonDepartureSetsRoomToOutdoor) {
+TEST(EventExecute, StartDriveSetsDrivingAndSchedulesArrival) {
     MockSimContext ctx;
+    ctx.robot->setDriving(false);
 
-    auto person = std::make_shared<des::Person>();
-    person->firstName = "Max";
-    person->currentRoom = "Office";
-    person->roomLabels = {"Office"};
-
-    PersonDepartureEvent event(61200, person);
+    StartDriveEvent event(35000, "Office");
     event.execute(ctx);
 
-    EXPECT_EQ(person->currentRoom, "OUTDOOR");
+    EXPECT_TRUE(ctx.robot->isDriving());
+    EXPECT_EQ(ctx.robot->getTargetLocation(), "Office");
+    // Should push a StopDriveEvent
+    ASSERT_GE(ctx.pushedEvents.size(), 1u);
+    bool hasStopDrive = false;
+    for (const auto& e : ctx.pushedEvents) {
+        if (e->getType() == des::EventType::STOP_DRIVE) {
+            hasStopDrive = true;
+        }
+    }
+    EXPECT_TRUE(hasStopDrive);
+}
+
+TEST(EventExecute, StartDriveToSameLocationPushesImmediateStop) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(false);
+    ctx.robot->setLocation("Office");
+
+    StartDriveEvent event(35000, "Office");
+    event.execute(ctx);
+
+    // When already at location, should push StopDriveEvent with time=35000
+    bool hasImmediateStop = false;
+    for (const auto& e : ctx.pushedEvents) {
+        if (e->getType() == des::EventType::STOP_DRIVE && e->time == 35000) {
+            hasImmediateStop = true;
+        }
+    }
+    EXPECT_TRUE(hasImmediateStop);
 }
 
 // --- StopDriveEvent ---
@@ -372,6 +464,188 @@ TEST(EventExecute, StopDriveMovesRobotAndSetsDrivingFalse) {
     EXPECT_EQ(ctx.tickCount, 1);
 }
 
+TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(true);
+    ctx.robot->changeState(std::make_unique<AccompanyState>());
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "Office";
+    person->roomLabels = {"Office", "MeetingRoom"};
+    ctx.employees["Max"] = person;
+
+    auto appt = std::make_shared<des::Appointment>();
+    appt->personName = "Max";
+    appt->roomName = "MeetingRoom";
+    ctx.currentAppointment = appt;
+
+    StopDriveEvent event(35100, "MeetingRoom", 10.0);
+    event.execute(ctx);
+
+    // Person should be moved to the robot's arrival location
+    EXPECT_EQ(person->currentRoom, "MeetingRoom");
+    // Should push a PersonTransitionEvent
+    bool hasPersonTransition = false;
+    for (const auto& e : ctx.pushedEvents) {
+        if (e->getType() == des::EventType::PERSON_TRANSITION) {
+            hasPersonTransition = true;
+        }
+    }
+    EXPECT_TRUE(hasPersonTransition);
+}
+
+// --- PersonDepartureEvent ---
+
+TEST(EventExecute, PersonDepartureSetsRoomToOutdoor) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "Office";
+    person->roomLabels = {"Office"};
+
+    PersonDepartureEvent event(61200, person);
+    event.execute(ctx);
+
+    EXPECT_EQ(person->currentRoom, "OUTDOOR");
+    EXPECT_FALSE(ctx.notifiedEvents.empty());
+}
+
+// --- PersonTransitionEvent ---
+
+TEST(EventExecute, PersonTransitionFromOutdoorDoesNotPushEvent) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "OUTDOOR";
+    person->roomLabels = {"Office", "Kitchen"};
+
+    PersonTransitionEvent event(30000, person);
+    event.execute(ctx);
+
+    // Should only notify, not push any follow-up event
+    EXPECT_TRUE(ctx.pushedEvents.empty());
+    EXPECT_FALSE(ctx.notifiedEvents.empty());
+    EXPECT_EQ(person->currentRoom, "OUTDOOR");
+}
+
+TEST(EventExecute, PersonTransitionFromUnknownRoomReturnsToWorkplace) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "UnknownRoom";
+    person->workplace = "Office";
+    person->roomLabels = {"Office", "Kitchen"};
+
+    PersonTransitionEvent event(30000, person);
+    event.execute(ctx);
+
+    EXPECT_EQ(person->currentRoom, "Office");
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+    // Follow-up time should be between 60 and 3600 seconds later
+    EXPECT_GT(ctx.pushedEvents[0]->time, 30000);
+    EXPECT_LE(ctx.pushedEvents[0]->time, 30000 + ONE_HOUR);
+}
+
+TEST(EventExecute, PersonTransitionMovesToNewRoomAndSchedulesNext) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "5.2B03"; // workplace pattern
+    person->workplace = "5.2B03";
+    person->departureTime = 999999; // far in the future
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
+    person->transitionMatrix = {
+        {0.0, 1.0}, // from 5.2B03 always go to Kitchen
+        {1.0, 0.0},
+    };
+
+    PersonTransitionEvent event(30000, person);
+    event.execute(ctx);
+
+    // Person should have moved to Kitchen (100% probability)
+    EXPECT_EQ(person->currentRoom, "IMVS_Kitchen");
+    // Should schedule a follow-up transition
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+    EXPECT_GT(ctx.pushedEvents[0]->time, 30000);
+}
+
+TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "5.2B03";
+    person->workplace = "5.2B03";
+    person->departureTime = 30001; // almost immediately
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen", "5.2B_Elevator"};
+    person->transitionMatrix = {
+        {0.0, 1.0, 0.0},
+        {1.0, 0.0, 0.0},
+        {1.0, 0.0, 0.0},
+    };
+
+    PersonTransitionEvent event(30000, person);
+    event.execute(ctx);
+
+    // nextExecutionTime will be > departureTime, so should schedule departure
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_DEPARTURE);
+    EXPECT_EQ(ctx.pushedEvents[0]->time, 30001);
+    // Person should be moved to elevator
+    EXPECT_EQ(person->currentRoom, "5.2B_Elevator");
+}
+
+// --- PersonArrivedEvent ---
+
+TEST(EventExecute, PersonArrivedSchedulesTransition) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "5.2B03";
+    person->workplace = "5.2B03";
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
+    person->transitionMatrix = {
+        {0.0, 1.0},
+        {1.0, 0.0},
+    };
+
+    PersonArrivedEvent event(30000, person);
+    event.execute(ctx);
+
+    // Should transition to a new room via the matrix
+    EXPECT_EQ(person->currentRoom, "IMVS_Kitchen");
+    // Should push a PersonTransitionEvent with short delay (10-30s)
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+    EXPECT_GE(ctx.pushedEvents[0]->time, 30010);
+    EXPECT_LE(ctx.pushedEvents[0]->time, 30030);
+}
+
+TEST(EventExecute, PersonArrivedAtUnknownRoomReturnsToWorkplace) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->currentRoom = "UnknownRoom";
+    person->workplace = "Office";
+    person->roomLabels = {"Office", "Kitchen"};
+
+    PersonArrivedEvent event(30000, person);
+    event.execute(ctx);
+
+    EXPECT_EQ(person->currentRoom, "Office");
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+}
+
 // --- Event metadata ---
 
 TEST(EventMetadata, EventTypesAreCorrect) {
@@ -382,6 +656,8 @@ TEST(EventMetadata, EventTypesAreCorrect) {
     EXPECT_EQ(StartAccompanyEvent(0).getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(StartDropOffConversationEvent(0).getType(), des::EventType::START_DROP_OFF_CONV);
     EXPECT_EQ(StartFoundPersonConversationEvent(0).getType(), des::EventType::START_FOUND_PERSON_CONV);
+    EXPECT_EQ(StopDriveEvent(0, "x", 0).getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(StartDriveEvent(0, "x").getType(), des::EventType::START_DRIVE);
 }
 
 TEST(EventMetadata, EventNamesAreNonEmpty) {
@@ -389,4 +665,6 @@ TEST(EventMetadata, EventNamesAreNonEmpty) {
     EXPECT_FALSE(SimulationEndEvent(0).getName().empty());
     EXPECT_FALSE(AbortSearchEvent(0).getName().empty());
     EXPECT_FALSE(BatteryFullEvent(0).getName().empty());
+    EXPECT_FALSE(StopDriveEvent(0, "X", 0).getName().empty());
+    EXPECT_FALSE(StartDriveEvent(0, "X").getName().empty());
 }

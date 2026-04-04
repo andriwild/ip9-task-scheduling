@@ -113,6 +113,21 @@ if(BUILD_TESTING)
   target_compile_definitions(test_events PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
+
+  # Integration tests (real BT + SimulationContext, MockPathPlanner)
+  ament_add_gtest(test_integration
+    test/test_integration.cpp
+    src/model/event.cpp
+    src/model/event_queue.cpp
+    src/model/robot.cpp
+    src/model/robot_state.cpp
+    src/model/context.cpp
+  )
+  target_link_libraries(test_integration nlohmann_json::nlohmann_json)
+  ament_target_dependencies(test_integration rclcpp behaviortree_cpp)
+  target_compile_definitions(test_integration PRIVATE
+    TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+  )
 endif()
 
 ament_package()

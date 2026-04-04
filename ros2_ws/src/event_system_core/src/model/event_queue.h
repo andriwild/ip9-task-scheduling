@@ -26,6 +26,9 @@ public:
 
     void extend(std::vector<std::shared_ptr<IEvent>> events) {
         for (const auto& event: events) {
+            if (event->time > m_lastEventTime) {
+                m_lastEventTime = event->time;
+            }
             m_queue.push(std::move(event));
         }
     }
