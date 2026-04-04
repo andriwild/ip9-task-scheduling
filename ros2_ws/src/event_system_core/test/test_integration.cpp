@@ -113,6 +113,16 @@ protected:
         }
     }
 
+    // Execute the next event from the queue and return it
+    std::shared_ptr<IEvent> step(SimulationContext& ctx) {
+        if (eventQueue.empty()) return nullptr;
+        auto e = eventQueue.top();
+        eventQueue.pop();
+        ctx.advanceTime(e->time);
+        e->execute(ctx);
+        return e;
+    }
+
     std::unique_ptr<Scheduler> makeScheduler() {
         return std::make_unique<Scheduler>(config, planner, employeeLocations);
     }
@@ -341,4 +351,234 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
         EXPECT_GE(observer->events[i].first, observer->events[i - 1].first)
             << "Event at index " << i << " is out of order";
     }
+}
+
+// --- Step-by-step event execution ---
+//
+// Traces a complete single-mission scenario event by event.
+// After each step the robot state, location, driving flag, and
+// mission state are verified so that regressions in the event
+// chain are caught precisely.
+
+TEST_F(IntegrationTest, StepByStepSingleMission) {
+    auto scheduler = makeScheduler();
+
+    auto ctx = std::make_shared<SimulationContext>(
+        eventQueue, config, planner, employeeLocations, *scheduler
+    );
+    ctx->addObserver(observer);
+    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+
+    // --- Setup: one appointment for Max at MeetingRoom @ 36000 (10:00) ---
+    auto appt = std::make_shared<des::Appointment>();
+    appt->id = 0;
+    appt->personName = "Max";
+    appt->roomName = "MeetingRoom";
+    appt->appointmentTime = 36000;
+    appt->description = "Dokument abholen";
+
+    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
+    auto missions = scheduler->simplePlan(appointments, "IMVS_Dock");
+    for (auto& m : missions) {
+        m->time = m->time - config->timeBuffer;
+        eventQueue.push(m);
+    }
+
+    int startTime = eventQueue.getFirstEventTime() - ONE_HOUR;
+    eventQueue.push(std::make_shared<SimulationStartEvent>(startTime));
+    eventQueue.push(std::make_shared<SimulationEndEvent>(40000));
+    ctx->resetContext(startTime);
+
+    // ================================================================
+    //  Step 1: SimulationStart
+    // ================================================================
+    auto e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::SIMULATION_START);
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
+    EXPECT_FALSE(ctx->getRobot()->isDriving());
+
+    // ================================================================
+    //  Step 2: StopDrive (initial, at Dock — pushed by SimStart)
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
+    EXPECT_FALSE(ctx->getRobot()->isDriving());
+    // BT ticks: Idle, no pending -> Docking -> already at dock -> EnterIdle
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
+
+    // ================================================================
+    //  Step 3: MissionDispatch
+    //  BT accepts the mission, pushes MissionStartEvent
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::MISSION_DISPATCH);
+    EXPECT_EQ(appt->state, des::MissionState::IN_PROGRESS);
+
+    // ================================================================
+    //  Step 4: MissionStart -> Robot enters SearchState
+    //  BT: HasNextLocation -> MoveToNextLocation -> pushes StartDrive
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::MISSION_START);
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
+
+    // ================================================================
+    //  Step 5: StartDrive to Office (person's first location)
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
+    EXPECT_TRUE(ctx->getRobot()->isDriving());
+    EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "Office");
+
+    // ================================================================
+    //  Step 6: StopDrive at Office
+    //  BT: ScanLocation finds Max -> StartAccompanyConversation
+    //  Robot is still SEARCHING — state changes when conversation event runs
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
+    EXPECT_FALSE(ctx->getRobot()->isDriving());
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
+
+    // ================================================================
+    //  Step 7: StartFoundPersonConversation
+    //  Now robot enters CONVERSATE state, pushes ConvComplete event
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_FOUND_PERSON_CONV);
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
+
+    // ================================================================
+    //  Step 8: FoundPersonConversationComplete (probability=1.0 -> Success)
+    //  BT: WasConversationSuccessful -> StartAccompanyAction
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::FOUND_PERSON_CONV_COMPLETE);
+    EXPECT_EQ(ctx->getRobot()->getState()->getResult(), des::Result::SUCCESS);
+
+    // ================================================================
+    //  Step 9: StartAccompany -> AccompanyState, pushes StartDrive
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_ACCOMPANY);
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::ACCOMPANY);
+
+    // ================================================================
+    //  Step 10: StartDrive to MeetingRoom (with person)
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
+    EXPECT_TRUE(ctx->getRobot()->isDriving());
+    EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "MeetingRoom");
+
+    // ================================================================
+    //  Step 11: StopDrive at MeetingRoom
+    //  ACCOMPANY mode -> person moved to MeetingRoom (PersonTransition pushed)
+    //  BT: ArrivedWithPerson -> StartDropOffConversation -> CONVERSATE
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "MeetingRoom");
+    EXPECT_FALSE(ctx->getRobot()->isDriving());
+    EXPECT_EQ(employeeLocations["Max"]->currentRoom, "MeetingRoom");
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
+
+    // ================================================================
+    //  Steps 12+: PersonTransition and StartDropOffConversation
+    //  These have the same timestamp, so order may vary.
+    //  Process both and verify we see each type exactly once.
+    // ================================================================
+    bool seenPersonTransition = false;
+    bool seenStartDropOff = false;
+
+    for (int i = 0; i < 2; ++i) {
+        e = step(*ctx);
+        ASSERT_NE(e, nullptr);
+        if (e->getType() == des::EventType::PERSON_TRANSITION) seenPersonTransition = true;
+        if (e->getType() == des::EventType::START_DROP_OFF_CONV) seenStartDropOff = true;
+    }
+    EXPECT_TRUE(seenPersonTransition) << "Expected PersonTransition (accompany moves person)";
+    EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
+
+    // ================================================================
+    //  Step 14: DropOffConversationComplete (Success)
+    //  BT: CompleteMission -> COMPLETED, state -> IDLE
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::DROP_OFF_CONV_COMPLETE);
+    EXPECT_EQ(appt->state, des::MissionState::COMPLETED);
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
+
+    // ================================================================
+    //  Step 15: MissionComplete
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::MISSION_COMPLETE);
+    EXPECT_FALSE(observer->missionCompletions.empty());
+    EXPECT_EQ(observer->missionCompletions.back().second, des::MissionState::COMPLETED);
+
+    // ================================================================
+    //  Step 16: StartDrive back to Dock
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
+    EXPECT_TRUE(ctx->getRobot()->isDriving());
+
+    // ================================================================
+    //  Step 17: StopDrive at Dock -> robot is home
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
+    EXPECT_FALSE(ctx->getRobot()->isDriving());
+    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
+
+    // ================================================================
+    //  Remaining events: PersonTransition follow-ups + SimulationEnd
+    //  Drain until SimulationEnd, then verify final state.
+    // ================================================================
+    bool seenSimEnd = false;
+    while (!eventQueue.empty()) {
+        e = step(*ctx);
+        if (e->getType() == des::EventType::SIMULATION_END) {
+            seenSimEnd = true;
+            EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
+        }
+    }
+    EXPECT_TRUE(seenSimEnd) << "SimulationEnd event must be processed";
+
+    // ================================================================
+    //  Final assertions
+    // ================================================================
+    EXPECT_TRUE(eventQueue.empty());
+    EXPECT_EQ(appt->state, des::MissionState::COMPLETED);
+
+    // Verify key state transitions happened in correct order
+    bool foundSearch = false, foundAccompany = false, foundComplete = false;
+    for (const auto& [time, state] : observer->stateChanges) {
+        if (!foundSearch && state == des::RobotStateType::SEARCHING) foundSearch = true;
+        if (foundSearch && !foundAccompany && state == des::RobotStateType::ACCOMPANY) foundAccompany = true;
+        if (foundAccompany && !foundComplete && state == des::RobotStateType::IDLE) foundComplete = true;
+    }
+    EXPECT_TRUE(foundSearch) << "Missing SEARCHING state";
+    EXPECT_TRUE(foundAccompany) << "Missing ACCOMPANY state after SEARCHING";
+    EXPECT_TRUE(foundComplete) << "Missing final IDLE state after ACCOMPANY";
 }
