@@ -6,7 +6,7 @@
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
 
-const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/test/";
+const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/";
 
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;

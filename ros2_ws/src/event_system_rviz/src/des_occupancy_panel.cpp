@@ -43,14 +43,16 @@ void DesOccupancyPanel::onInitialize() {
     auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
 
+    auto qos = rclcpp::QoS(rclcpp::KeepAll()).reliable().transient_local();
+
     m_subEvent = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(
-        "/timeline/event", rclcpp::QoS(500),
+        "/timeline/event", qos,
         [this](const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onTimelineEvent(msg); });
         });
 
     m_subReset = m_node->create_subscription<event_system_msgs::msg::TimelineReset>(
-        "/timeline/reset", rclcpp::QoS(10),
+        "/timeline/reset", qos,
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });

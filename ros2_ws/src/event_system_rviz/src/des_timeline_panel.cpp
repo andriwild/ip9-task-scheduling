@@ -29,26 +29,28 @@ void DesTimelinePanel::onInitialize() {
     const auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
 
+    auto qos = rclcpp::QoS(rclcpp::KeepAll()).reliable().transient_local();
+
     m_subEvent = m_node->create_subscription<event_system_msgs::msg::TimelineEvent>(
-        "/timeline/event", rclcpp::QoS(500),
+        "/timeline/event", qos,
         [this](const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onEvent(msg); });
         });
 
     m_subMeeting = m_node->create_subscription<event_system_msgs::msg::TimelineMeeting>(
-        "/timeline/meeting", rclcpp::QoS(100),
+        "/timeline/meeting", qos,
         [this](const event_system_msgs::msg::TimelineMeeting::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onMeeting(msg); });
         });
 
     m_subStateChange = m_node->create_subscription<event_system_msgs::msg::TimelineStateChange>(
-        "/timeline/state_change", rclcpp::QoS(500),
+        "/timeline/state_change", qos,
         [this](const event_system_msgs::msg::TimelineStateChange::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onStateChange(msg); });
         });
 
     m_subReset = m_node->create_subscription<event_system_msgs::msg::TimelineReset>(
-        "/timeline/reset", rclcpp::QoS(10),
+        "/timeline/reset", qos,
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });

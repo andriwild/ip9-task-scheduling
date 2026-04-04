@@ -60,8 +60,10 @@ void DesMetricsPanel::onInitialize() {
     auto node_abstraction = getDisplayContext()->getRosNodeAbstraction().lock();
     m_node = node_abstraction->get_raw_node();
 
+    auto qos = rclcpp::QoS(rclcpp::KeepAll()).reliable().transient_local();
+
     m_subscriber = m_node->create_subscription<event_system_msgs::msg::MetricsReport>(
-        "/metrics_report", rclcpp::QoS(10),
+        "/metrics_report", qos,
         [this](const event_system_msgs::msg::MetricsReport::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() {
                 this->onMetricsReport(msg);
@@ -69,7 +71,7 @@ void DesMetricsPanel::onInitialize() {
         });
 
     m_subReset = m_node->create_subscription<event_system_msgs::msg::TimelineReset>(
-        "/timeline/reset", rclcpp::QoS(100),
+        "/timeline/reset", qos,
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { this->onReset(msg); });
         });
