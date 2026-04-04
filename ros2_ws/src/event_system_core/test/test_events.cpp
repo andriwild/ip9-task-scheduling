@@ -37,7 +37,6 @@ public:
         simConfig->conversationProbability = 1.0;
         simConfig->conversationDurationMean = 30.0;
         simConfig->conversationDurationStd = 0.0;
-        simConfig->personFindProbability = 1.0;
         simConfig->driveTimeStd = 0.0;
         simConfig->timeBuffer = 60.0;
         simConfig->energyConsumptionDrive = 0.1;
@@ -125,7 +124,6 @@ public:
     }
 
     std::shared_ptr<des::SimConfig> getConfig() const override { return simConfig; }
-    double getPersonFindProbability() const override { return simConfig->personFindProbability; }
     double getConversationProbability() const override { return simConfig->conversationProbability; }
     double getRndConversationTime() const override { return simConfig->conversationDurationMean; }
     std::mt19937& rng() const override { return m_rng; }

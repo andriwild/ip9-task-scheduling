@@ -1,7 +1,8 @@
 uint8 RUN=0
 uint8 PAUSE=1
 uint8 RESET=2
-uint8 EXIT=3
+uint8 STEP=3
+uint8 EXIT=4
 
 uint8 command_id
 ---

@@ -52,6 +52,20 @@ int main(const int argc, char *argv[]) {
                     running = false;
                     break;
 
+                case SystemState::Request::STEP:
+                    if (!app->m_eventQueue.empty()) {
+                        const auto e = app->m_eventQueue.top();
+                        app->m_eventQueue.pop();
+                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> [STEP] Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+
+                        app->m_ctx->advanceTime(e->time);
+                        e->execute(*app->m_ctx);
+                    } else {
+                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Step: Event Queue empty.");
+                    }
+                    app->enterPause();
+                    break;
+
                 case SystemState::Request::RUN:
                     if (!app->m_eventQueue.empty()) {
                         const auto e = app->m_eventQueue.top();

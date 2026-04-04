@@ -1,4 +1,3 @@
-float32 find_person_probability
 float32 drive_time_std
 float32 robot_speed
 float32 robot_accompany_speed

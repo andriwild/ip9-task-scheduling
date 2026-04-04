@@ -35,7 +35,6 @@ protected:
     rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subscriber;
 
     QTreeWidget* m_treeWidget;
-    QDoubleSpinBox* m_findPersonProb;
     QDoubleSpinBox* m_driveTimeStd;
     QDoubleSpinBox* m_robotSpeed;
     QDoubleSpinBox* m_robotAccompanySpeed;

@@ -191,7 +191,6 @@ public:
         return false;
     };
 
-    double getPersonFindProbability() const override { return m_simConfig->personFindProbability; };
     double getConversationProbability() const override { return m_simConfig->conversationProbability; };
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
     double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };

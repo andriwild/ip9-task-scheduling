@@ -4,7 +4,6 @@ float32 robot_speed
 float32 robot_accompany_speed
 
 # Meeting
-float32 find_person_probability
 float32 conversation_probability
 float32 conversation_duration_std
 float32 conversation_duration_mean

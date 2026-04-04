@@ -59,7 +59,6 @@ private:
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> &response
     ) { {
             auto config = des::SimConfig{
-                request->find_person_probability,
                 request->robot_speed,
                 request->robot_accompany_speed,
                 request->drive_time_std,
@@ -99,7 +98,6 @@ private:
         auto msg = event_system_msgs::msg::SystemConfig();
         {
             std::lock_guard lock(m_configMutex);
-            msg.find_person_probability    = m_currentConfig->personFindProbability;
             msg.drive_time_std             = m_currentConfig->driveTimeStd;
             msg.robot_speed                = m_currentConfig->robotSpeed;
             msg.robot_accompany_speed      = m_currentConfig->robotAccompanySpeed;

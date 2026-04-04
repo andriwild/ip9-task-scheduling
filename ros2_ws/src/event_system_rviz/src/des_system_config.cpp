@@ -46,9 +46,6 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     QTreeWidgetItem* interactionGroup = new QTreeWidgetItem(m_treeWidget);
     interactionGroup->setText(0, "Interaction");
 
-    m_findPersonProb = new QDoubleSpinBox(); m_findPersonProb->setRange(0.0, 1.0); m_findPersonProb->setSingleStep(0.01);
-    addConfigItem(interactionGroup, "Find Person Prob", m_findPersonProb);
-
     m_conversationProbability = new QDoubleSpinBox(); m_conversationProbability->setRange(0.0, 1.0);
     addConfigItem(interactionGroup, "Conv Prob", m_conversationProbability);
 
@@ -202,7 +199,6 @@ void DesSystemConfig::onInitialize() {
 void DesSystemConfig::onSetConfig() {
     auto request = std::make_shared<event_system_msgs::srv::SetSystemConfig::Request>();
 
-    request->find_person_probability = m_findPersonProb->value();
     request->drive_time_std = m_driveTimeStd->value();
     request->robot_speed = m_robotSpeed->value();
     request->robot_accompany_speed = m_robotAccompanySpeed->value();
@@ -250,7 +246,6 @@ void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
 }
 
 void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
-    m_findPersonProb->setValue(msg->find_person_probability);
     m_driveTimeStd->setValue(msg->drive_time_std);
     m_robotSpeed->setValue(msg->robot_speed);
     m_robotAccompanySpeed->setValue(msg->robot_accompany_speed);

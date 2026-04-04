@@ -70,7 +70,6 @@ inline DistributionType distributionTypeFromString(const std::string& str) {
 }
 
 struct SimConfig {
-    double personFindProbability;
     double robotSpeed;
     double robotAccompanySpeed;
     double driveTimeStd;
@@ -99,7 +98,6 @@ struct SimConfig {
         const int W = 30;
         os << "\n"
            << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
-        os << std::left << std::setw(W) << "personFindProbability" << ": " << config.personFindProbability << std::endl;
         os << std::left << std::setw(W) << "robotSpeed" << ": " << config.robotSpeed << std::endl;
         os << std::left << std::setw(W) << "robotAccompanySpeed" << ": " << config.robotAccompanySpeed << std::endl;
         os << std::left << std::setw(W) << "driveTimeStd" << ": " << config.driveTimeStd << std::endl;

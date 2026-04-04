@@ -69,7 +69,6 @@ protected:
         config->robotAccompanySpeed = 0.5;
         config->timeBuffer = 60.0;
         config->cacheEnabled = false;
-        config->personFindProbability = 1.0;
         config->conversationProbability = 1.0;
         config->conversationDurationMean = 30.0;
         config->conversationDurationStd = 0.0;

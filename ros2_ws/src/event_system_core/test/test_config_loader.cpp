@@ -104,7 +104,6 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_DOUBLE_EQ(result->personFindProbability, 0.8);
     EXPECT_DOUBLE_EQ(result->robotSpeed, 0.5);
     EXPECT_DOUBLE_EQ(result->robotAccompanySpeed, 0.3);
     EXPECT_DOUBLE_EQ(result->timeBuffer, 60.0);
@@ -146,7 +145,6 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     auto reloaded = ConfigLoader::loadSimConfig(tmpFile);
     ASSERT_TRUE(reloaded.has_value());
 
-    EXPECT_DOUBLE_EQ(original->personFindProbability, reloaded->personFindProbability);
     EXPECT_DOUBLE_EQ(original->robotSpeed, reloaded->robotSpeed);
     EXPECT_DOUBLE_EQ(original->robotAccompanySpeed, reloaded->robotAccompanySpeed);
     EXPECT_DOUBLE_EQ(original->timeBuffer, reloaded->timeBuffer);

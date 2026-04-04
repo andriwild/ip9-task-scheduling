@@ -96,7 +96,6 @@ public:
         try {
             auto j = json.value();
             des::SimConfig config;
-            config.personFindProbability    = j.at("find_person_probability").get<double>();
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();
             config.robotAccompanySpeed      = j.at("robot_accompany_speed").get<double>();
@@ -219,7 +218,6 @@ public:
 
     static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
         nlohmann::json j;
-        j["find_person_probability"] = config->personFindProbability;
         j["drive_time_std"] = config->driveTimeStd;
         j["robot_speed"] = config->robotSpeed;
         j["robot_accompany_speed"] = config->robotAccompanySpeed;

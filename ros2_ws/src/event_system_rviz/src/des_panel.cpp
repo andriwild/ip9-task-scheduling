@@ -15,19 +15,19 @@ DesPanel::DesPanel(QWidget *parent) : Panel(parent) {
     m_btnRun   = new QPushButton("Run");
     m_btnPause = new QPushButton("Pause");
     m_btnReset = new QPushButton("Reset");
-    m_btnExit  = new QPushButton("Exit");
+    m_btnStep  = new QPushButton("Step");
 
     layout->addWidget(m_stateLabel);
 
     layout->addWidget(m_btnRun);
     layout->addWidget(m_btnPause);
     layout->addWidget(m_btnReset);
-    layout->addWidget(m_btnExit);
+    layout->addWidget(m_btnStep);
 
     QObject::connect(m_btnRun,   &QPushButton::released, this, &DesPanel::btnRunClick);
     QObject::connect(m_btnPause, &QPushButton::released, this, &DesPanel::btnPauseClick);
     QObject::connect(m_btnReset, &QPushButton::released, this, &DesPanel::btnResetClick);
-    QObject::connect(m_btnExit,  &QPushButton::released, this, &DesPanel::btnExitClick);
+    QObject::connect(m_btnStep,  &QPushButton::released, this, &DesPanel::btnStepClick);
 }
 
 DesPanel::~DesPanel() = default;
@@ -71,9 +71,9 @@ void DesPanel::btnResetClick() {
 }
 
 
-void DesPanel::btnExitClick() {
+void DesPanel::btnStepClick() {
     auto request        = std::make_shared<event_system_msgs::srv::SetSystemState_Request>();
-    request->command_id = event_system_msgs::srv::SetSystemState::Request::EXIT;
+    request->command_id = event_system_msgs::srv::SetSystemState::Request::STEP;
 
     m_client->async_send_request(
         request,

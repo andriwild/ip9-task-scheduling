@@ -57,7 +57,6 @@ public:
 
     // Configuration accessors
     virtual std::shared_ptr<des::SimConfig> getConfig() const = 0;
-    virtual double getPersonFindProbability() const = 0;
     virtual double getConversationProbability() const = 0;
     virtual double getRndConversationTime() const = 0;
 

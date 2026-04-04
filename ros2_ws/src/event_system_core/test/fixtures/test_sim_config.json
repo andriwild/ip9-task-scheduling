@@ -1,5 +1,4 @@
 {
-    "find_person_probability": 0.8,
     "drive_time_std": 5.0,
     "robot_speed": 0.5,
     "robot_accompany_speed": 0.3,
