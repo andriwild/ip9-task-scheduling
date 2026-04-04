@@ -1,0 +1,8 @@
+{
+    "appointments": [
+        {
+            "personName": 123,
+            "roomName": true
+        }
+    ]
+}

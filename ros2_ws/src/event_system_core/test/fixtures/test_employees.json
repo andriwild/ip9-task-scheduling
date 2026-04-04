@@ -1,0 +1,36 @@
+{
+  "employees": [
+    {
+      "id": 1,
+      "firstName": "Max",
+      "lastName": "Mustermann",
+      "birthDate": "1990-05-15",
+      "sex": "male",
+      "color": "#0000C8",
+      "workplace": "5.2B03",
+      "currentRoom": "",
+      "roomLabels": ["5.2B03", "5.2B10", "5.2B_Elevator"],
+      "transitionMatrix": [
+        [0.00, 0.50, 0.50],
+        [0.50, 0.00, 0.50],
+        [0.50, 0.50, 0.00]
+      ]
+    },
+    {
+      "id": 2,
+      "firstName": "Anna",
+      "lastName": "Schmidt",
+      "birthDate": "1993-11-02",
+      "sex": "female",
+      "color": "#00A000",
+      "workplace": "5.2B01",
+      "currentRoom": "",
+      "roomLabels": ["5.2B01", "5.2B10", "5.2B_Elevator"],
+      "transitionMatrix": [
+        [0.00, 0.50, 0.50],
+        [0.50, 0.00, 0.50],
+        [0.50, 0.50, 0.00]
+      ]
+    }
+  ]
+}

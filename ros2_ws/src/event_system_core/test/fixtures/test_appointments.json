@@ -1,0 +1,16 @@
+{
+    "appointments": [
+        {
+            "personName": "Max",
+            "roomName": "5.2B10",
+            "appointmentTime": 36000,
+            "description": "Meeting A"
+        },
+        {
+            "personName": "Anna",
+            "roomName": "5.2B01",
+            "appointmentTime": 39600,
+            "description": "Meeting B"
+        }
+    ]
+}
