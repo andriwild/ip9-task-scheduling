@@ -20,14 +20,11 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         m_employeeLocations[p->firstName] = p;
     }
 
-    m_scheduler = std::make_unique<Scheduler>(m_config, m_plannerNode, m_employeeLocations);
-
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_plannerNode,
-        m_employeeLocations,
-        *m_scheduler
+        m_employeeLocations
     );
 
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
@@ -82,7 +79,7 @@ bool HeadlessRunner::loadNextBatch() {
 
     IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
     m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value()));
-    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, *m_scheduler, "IMVS_Dock"));
+    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, m_ctx->getScheduler(), "IMVS_Dock"));
 
     int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
     int lastEventTime = m_eventQueue.getLastEventTime();

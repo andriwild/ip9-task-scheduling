@@ -8,7 +8,6 @@
 #include "../src/model/event_queue.h"
 #include "../src/observer/observer.h"
 #include "../src/sim/i_path_planner.h"
-#include "../src/sim/scheduler.h"
 
 class MockPathPlanner : public IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;
@@ -121,9 +120,6 @@ protected:
         return e;
     }
 
-    std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, employeeLocations);
-    }
 };
 
 // --- Config Roundtrip (kept here for completeness with integration) ---
@@ -151,10 +147,8 @@ TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
 // --- Event Loop: full scenario ---
 
 TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -169,7 +163,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 
     // Schedule mission (same as IAppRunner::createMissionQueue)
     std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
-    auto missions = scheduler->simplePlan(appointments, "IMVS_Dock");
+    auto missions = ctx->getScheduler().simplePlan(appointments, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;
         eventQueue.push(m);
@@ -207,10 +201,8 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 }
 
 TEST_F(IntegrationTest, EventLoopDrainsQueue) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -227,10 +219,8 @@ TEST_F(IntegrationTest, EventLoopDrainsQueue) {
 }
 
 TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -263,10 +253,8 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
 // --- Reset behavior ---
 
 TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -302,10 +290,8 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
 }
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -332,10 +318,8 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
 // --- Observer integration ---
 
 TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -361,10 +345,8 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
 // chain are caught precisely.
 
 TEST_F(IntegrationTest, StepByStepSingleMission) {
-    auto scheduler = makeScheduler();
-
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, *scheduler
+        eventQueue, config, planner, employeeLocations
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -378,7 +360,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     appt->description = "Dokument abholen";
 
     std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
-    auto missions = scheduler->simplePlan(appointments, "IMVS_Dock");
+    auto missions = ctx->getScheduler().simplePlan(appointments, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;
         eventQueue.push(m);

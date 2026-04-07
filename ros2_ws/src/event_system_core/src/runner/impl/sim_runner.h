@@ -11,7 +11,6 @@
 #include "../../sim/ros/config.h"
 #include "../../sim/ros/controller.h"
 #include "../../sim/ros/path_node.h"
-#include "../../sim/scheduler.h"
 #include "../runner.h"
 
 class SimRunner final : public IAppRunner {
@@ -59,14 +58,10 @@ public:
     }
 
 private:
+    void reloadSimulationData();
+    void buildSimulation();
+    void rebuildEventQueue();
     void updateConfig(std::shared_ptr<des::SimConfig> config);
-    void addPersonTransition();
-
-    SortedEventQueue setupQueue(
-        const std::shared_ptr<des::SimConfig> &config,
-        std::vector<std::shared_ptr<des::Appointment> > &appointments,
-        Scheduler &scheduler
-    ) const;
 
     std::shared_ptr<ControllerNode> m_controllerNode;
     std::shared_ptr<ConfigNode> m_systemConfigNode;

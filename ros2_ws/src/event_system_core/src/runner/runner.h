@@ -83,7 +83,6 @@ public:
 protected:
     std::map<std::string, des::Point> m_locationMap;
     std::shared_ptr<des::SimConfig> m_config;
-    std::unique_ptr<Scheduler> m_scheduler;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;

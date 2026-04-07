@@ -34,6 +34,7 @@ class SimulationContext : public ISimContext {
     std::shared_ptr<BT::Tree> m_behaviorTree;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     std::map<std::string, std::string> m_personLocations;
+    std::unique_ptr<Scheduler> m_scheduler;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -42,15 +43,16 @@ public:
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
-    Scheduler& m_scheduler;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
-        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
-        Scheduler& scheduler
+        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations
     );
+
+    Scheduler& getScheduler() { return *m_scheduler; }
+    const Scheduler& getScheduler() const { return *m_scheduler; }
 
     void resetRobot() {
         m_robot.reset();
@@ -191,7 +193,7 @@ public:
     }
 
     bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const override {
-        const double missionDuration = m_scheduler.optimisticMeeting(appointment.personName, startPos, appointment.roomName);
+        const double missionDuration = m_scheduler->optimisticMeeting(appointment.personName, startPos, appointment.roomName);
         if (appointment.appointmentTime - missionDuration  >= getTime()) {
             RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", appointment.id);
             return true;
