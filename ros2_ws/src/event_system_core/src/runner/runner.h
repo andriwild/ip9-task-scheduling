@@ -91,6 +91,40 @@ protected:
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
 
+    void populateEventQueue() {
+        if (!m_ctx) {
+            throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
+        }
+
+        scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
+        m_eventQueue.extend(personArrivalGenerator(m_people.value()));
+        m_eventQueue.extend(createMissionQueue(m_config, m_appointments, m_ctx->getScheduler(), "IMVS_Dock"));
+
+        int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
+        int lastEventTime  = m_eventQueue.getLastEventTime();
+
+        auto latest = std::max_element(m_people.value().begin(), m_people.value().end(),
+            [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
+        int lastDepartureTime = (*latest)->departureTime;
+
+        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);
+
+        int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
+        m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+        m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
+
+        for (auto& p : m_people.value()) {
+            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, p));
+            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
+        }
+
+        m_ctx->resetContext(m_eventQueue.getFirstEventTime());
+
+        for (auto& p : m_people.value()) {
+            m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
+        }
+    }
+
     static std::vector<std::shared_ptr<des::Appointment>> loadAppointments(const std::string& path) {
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load Appointments: %s", path.c_str());
         const auto appointments = ConfigLoader::loadAppointmentConfig(path.c_str());

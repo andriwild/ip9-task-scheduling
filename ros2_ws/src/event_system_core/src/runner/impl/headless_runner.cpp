@@ -8,11 +8,15 @@
 void HeadlessRunner::setupApplication(const std::string& path) {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
 
-    assert(std::filesystem::exists(path) && std::filesystem::is_directory(path));
+    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
+        throw std::runtime_error("Appointment path does not exist or is not a directory: " + path);
+    }
 
     m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
     auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
-    assert(!allPeople.value().empty());
+    if (!allPeople.has_value() || allPeople.value().empty()) {
+        throw std::runtime_error("No employees loaded");
+    }
     m_allPeople = allPeople.value();
 
     // employeeLocations needs all people for scheduler path lookups
@@ -77,33 +81,7 @@ bool HeadlessRunner::loadNextBatch() {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees",
                 m_people.value().size(), m_allPeople.size());
 
-    IAppRunner::scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
-    m_eventQueue.extend(IAppRunner::personArrivalGenerator(m_people.value()));
-    m_eventQueue.extend(IAppRunner::createMissionQueue(m_config, m_appointments, m_ctx->getScheduler(), "IMVS_Dock"));
-
-    int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
-    int lastEventTime = m_eventQueue.getLastEventTime();
-
-    auto latest = std::max_element(m_people.value().begin(), m_people.value().end(),
-        [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
-    int lastDepartureTime = (*latest)->departureTime;
-
-    int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
-    m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
-    m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
-
-    for (auto& p : m_people.value()) {
-        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, p));
-        m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
-    }
-
-    m_ctx->resetContext(m_eventQueue.getFirstEventTime());
-
-    // Initialize person locations after resetContext clears them
-    for (auto& p : m_people.value()) {
-        m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
-    }
-
+    populateEventQueue();
     m_eventQueue.print();
     return true;
 }
