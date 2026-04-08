@@ -61,3 +61,24 @@ TEST_F(DBTest, AreaByNameReturnsNulloptForUnknown) {
     auto result = db->areaByName("NonExistentZone");
     EXPECT_FALSE(result.has_value());
 }
+
+TEST_F(DBTest, AllAreasReturnsData) {
+    auto result = db->allAreas();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_GT(result.value().size(), 0u);
+}
+
+TEST_F(DBTest, AllAreasContainsKnownZone) {
+    auto result = db->allAreas();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_TRUE(result.value().contains("IMVS_CoffeeMachine"));
+    EXPECT_GT(result.value().at("IMVS_CoffeeMachine"), 0.0);
+}
+
+TEST_F(DBTest, AllAreasConsistentWithAreaByName) {
+    auto all = db->allAreas();
+    auto single = db->areaByName("IMVS_CoffeeMachine");
+    ASSERT_TRUE(all.has_value());
+    ASSERT_TRUE(single.has_value());
+    EXPECT_DOUBLE_EQ(all.value().at("IMVS_CoffeeMachine"), single.value());
+}

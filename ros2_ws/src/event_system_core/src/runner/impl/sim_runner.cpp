@@ -63,7 +63,6 @@ void SimRunner::reset() {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "System Reset Complete");
 }
 
-
 void SimRunner::setupApplication(const std::string& /*path*/) {
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
 

@@ -13,10 +13,14 @@
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
+const std::string DB_USER = "wsr_user";
+const std::string DB_PASSWORD = "wsr_password";
 
 class IAppRunner {
 public:
-    IAppRunner() = default;
+    IAppRunner() : m_db({DB_USER, DB_PASSWORD}) {
+    };
+
     virtual ~IAppRunner() = default;
 
     virtual void setupApplication(const std::string& path) = 0;
@@ -82,6 +86,7 @@ public:
 
 protected:
     std::map<std::string, des::Point> m_locationMap;
+    std::map<std::string, double> m_searchAreaMap;
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
@@ -90,6 +95,7 @@ protected:
     std::optional<std::vector<std::shared_ptr<des::Person>>> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
+    DBClient m_db;
 
     void populateEventQueue() {
         if (!m_ctx) {
@@ -135,19 +141,22 @@ protected:
         return appointments.value();
     }
 
-    static std::map<std::string, des::Point> loadPointsOfInterest(const DBConfig& dbCfg) {
-        auto db = DBClient(dbCfg);
-        if (!db.init()) {
-            throw std::runtime_error("Could not connect DB");
+    std::map<std::string, double> loadSearchAreas() {
+        const auto areas = m_db.allAreas();
+        if (!areas.has_value()) {
+            throw std::runtime_error("Could not load search areas from DB");
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful connected to DB");
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu search areas", areas.value().size());
+        return areas.value();
+    }
 
-        const auto pois = db.waypoints();
+    std::map<std::string, des::Point> loadPointsOfInterest() {
+        const auto pois = m_db.waypoints();
         if (!pois.has_value()) {
-            throw std::runtime_error("Could not load points of interest from file");
+            throw std::runtime_error("Could not load points of interest from DB");
         }
         std::map<std::string, des::Point> locationMap;
-        for (auto poi : pois.value()) {
+        for (const auto& poi : pois.value()) {
             locationMap[poi.m_name] = poi.m_p;
             RCLCPP_DEBUG_STREAM(rclcpp::get_logger("des_application"), poi);
         }

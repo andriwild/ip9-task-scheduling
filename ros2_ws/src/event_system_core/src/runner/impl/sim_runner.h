@@ -17,7 +17,7 @@ class SimRunner final : public IAppRunner {
 public:
 
     explicit SimRunner() {
-        m_locationMap      = IAppRunner::loadPointsOfInterest({"wsr_user", "wsr_password"});
+        m_locationMap      = loadPointsOfInterest();
 
         m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
         m_controllerNode   = std::make_shared<ControllerNode>();

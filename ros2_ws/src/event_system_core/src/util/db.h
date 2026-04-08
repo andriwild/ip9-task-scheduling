@@ -3,7 +3,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
-#include <algorithm>
+#include <map>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <utility>
@@ -130,5 +130,22 @@ public:
             return query.value(0).toDouble();
         }
         return std::nullopt;
+    }
+
+    std::optional<std::map<std::string, double>> allAreas() {
+        if (!m_db.isOpen() && !m_db.open()) {
+            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        QSqlQuery query;
+        if (!query.exec("SELECT name, ST_Area(polygon) FROM search_zones")) {
+            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "allAreas Query failed: %s", query.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        std::map<std::string, double> areas;
+        while (query.next()) {
+            areas[query.value(0).toString().toStdString()] = query.value(1).toDouble();
+        }
+        return areas;
     }
 };
