@@ -128,6 +128,11 @@ if(BUILD_TESTING)
   target_compile_definitions(test_integration PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
+  # DB integration tests (requires running PostgreSQL)
+  ament_add_gtest(test_db test/test_db.cpp)
+  target_link_libraries(test_db Qt5::Core Qt5::Sql)
+  ament_target_dependencies(test_db rclcpp)
+
 endif()
 
 ament_package()
