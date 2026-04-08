@@ -3,6 +3,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
+#include <algorithm>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <utility>
@@ -71,9 +72,9 @@ public:
         }
         while (query.next()) {
             QString name = query.value(0).toString();
-            double x = query.value(1).toDouble();
-            double y = query.value(2).toDouble();
-            double yaw = query.value(3).toDouble();
+            double x     = query.value(1).toDouble();
+            double y     = query.value(2).toDouble();
+            double yaw   = query.value(3).toDouble();
             des::Point p = {x, y, yaw};
             locations.emplace_back(name.toStdString(), p);
         }
@@ -99,13 +100,34 @@ public:
 
         if (query.next()) {
             des::Person person;
-            person.id             = query.value("id").toInt();
-            person.firstName      = query.value("first_name").toString().toStdString();
-            person.lastName       = query.value("last_name").toString().toStdString();
-            person.birthDate      = query.value("birth_date").toString().toStdString();
-            person.sex            = query.value("sex").toString().toStdString();
+            person.id        = query.value("id").toInt();
+            person.firstName = query.value("first_name").toString().toStdString();
+            person.lastName  = query.value("last_name").toString().toStdString();
+            person.birthDate = query.value("birth_date").toString().toStdString();
+            person.sex       = query.value("sex").toString().toStdString();
             person.workplace = query.value("assigned_room_id").toInt();
             return person;
+        }
+        return std::nullopt;
+
+    }
+
+    std::optional<double> areaByName(const std::string& zoneName) {
+        if (!m_db.open()) {
+            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database not connected");
+            return std::nullopt;
+        }
+        QSqlQuery query;
+        query.prepare("SELECT ST_Area(polygon) FROM search_zones WHERE name = :zoneName");
+        query.bindValue(":zoneName", QString::fromStdString(zoneName));
+
+        if (!query.exec()) {
+            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "areaByName Query error: %s", zoneName.c_str());
+            return std::nullopt;
+        }
+
+        if (query.next()) {
+            return query.value(0).toDouble();
         }
         return std::nullopt;
     }
