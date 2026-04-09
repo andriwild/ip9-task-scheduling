@@ -256,23 +256,38 @@ void MissionStartEvent::execute(ISimContext& ctx) {
 
 void ScanAera::execute(ISimContext& ctx) {
     ctx.notifyEvent(*this);
-    const auto& personName = ctx.getAppointment()->personName;
-    const std::string personLocation = ctx.getPersonLocation(personName);
-    const std::string robotLocation = ctx.getRobot()->getLocation();
-    const bool personFound = robotLocation == personLocation;
-    const double areaToSearch = ctx.getSearchArea(robotLocation);
-    ctx.getConfig()->personDetectionRange;
     ctx.getRobot()->setScanning(true);
 
-    ctx.pushEvent(std::make_shared<ScanComplete>(this->time + 30, personFound));
+    const auto& personName = ctx.getAppointment()->personName;
+    const std::string personLocation = ctx.getPersonLocation(personName);
+    const std::string robotLocation  = ctx.getRobot()->getLocation();
+    const bool personPresent = robotLocation == personLocation;
+    const double areaToSearch = ctx.getSearchArea(robotLocation);
+    const double fieldOfView  = ctx.getConfig()->personDetectionRange * ctx.getConfig()->personDetectionRange;
+    assert(fieldOfView != 0);
+    const double steps = areaToSearch / fieldOfView;
+    const int scanTime = steps * (2 *  ctx.getConfig()->personDetectionRange / ctx.getConfig()->robotSpeed);
+    assert(scanTime != 0);
+    const int foundAt = rnd::uni(ctx.rng(), 1, scanTime);
 
-    // calc end of scan
-    // add event scan finished (found / not found)
-    // tick tree
+    if (personPresent) {
+        ctx.pushEvent(std::make_shared<ScanComplete>(this->time + foundAt, personPresent, scanTime - foundAt));
+    } else {
+        ctx.pushEvent(std::make_shared<ScanComplete>(this->time + scanTime, personPresent, 0));
+    }
 }
 
 void ScanComplete::execute(ISimContext & ctx) {
+    const auto& personName = ctx.getAppointment()->personName;
+    const std::string personLocation = ctx.getPersonLocation(personName);
+    const std::string robotLocation  = ctx.getRobot()->getLocation();
+    const bool personPresent = robotLocation == personLocation;
+    if (personPresent) {
+        ctx.getRobot()->setIsPersonVisible(true);
+    } else if(this->m_remainigSearchTime > 0) {
+        ctx.pushEvent(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, personPresent, 0));
+        return;
+    }
     ctx.notifyEvent(*this);
-    ctx.getRobot()->setIsPersonVisible(this->found);
     ctx.tickBT();
 }

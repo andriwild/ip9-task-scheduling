@@ -1,5 +1,6 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_single.json",
+    "appointment_duration": 1800.0,
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_heavy_load.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -19,6 +20,8 @@
     "full_battery_threshold": 80.0,
     "initial_battery_capacity": 10.0,
     "low_battery_threshold": 10.0,
+    "people_spawn_location": "IMVS_Entrance",
+    "person_detection_range": 5.0,
     "robot_accompany_speed": 0.20000000298023224,
     "robot_speed": 0.30000001192092896,
     "timeBuffer": 120.0
