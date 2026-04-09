@@ -7,13 +7,15 @@ SimulationContext::SimulationContext(
     EventQueue& queue,
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<IPathPlanner> plannerNode,
-    std::map<std::string, std::shared_ptr<des::Person>> employeeLocations
+    std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
+    std::map<std::string, double> searchAreas
 )
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)
     , m_employeeLocations(std::move(employeeLocations))
     , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_employeeLocations))
     , m_plannerNode(std::move(plannerNode))
+    , m_searchAreas(std::move(searchAreas))
 {
     m_robot = std::make_unique<Robot>(m_simConfig);
     RCLCPP_INFO(rclcpp::get_logger("Context"), "Simulation Context created!");

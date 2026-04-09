@@ -142,12 +142,6 @@ enum class RobotStateType {
     CONVERSATE
 };
 
-enum class RobotSubState {
-    STANDING,
-    DRIVING,
-    SCANNING
-};
-
 enum class Result {
     FAILURE,
     RUNNING,

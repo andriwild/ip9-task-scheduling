@@ -77,6 +77,7 @@ void StartDropOffConversationEvent::execute(ISimContext& ctx) {
 
 void SuccessDropOffConversationCompleteEvent::execute(ISimContext& ctx) {
     ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
+    ctx.getRobot()->setIsPersonVisible(false);
     ctx.notifyEvent(*this);
     ctx.tickBT();
 }
@@ -250,5 +251,28 @@ void MissionStartEvent::execute(ISimContext& ctx) {
     assert(!locations.empty());
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
     ctx.notifyEvent(*this);
+    ctx.tickBT();
+}
+
+void ScanAera::execute(ISimContext& ctx) {
+    ctx.notifyEvent(*this);
+    const auto& personName = ctx.getAppointment()->personName;
+    const std::string personLocation = ctx.getPersonLocation(personName);
+    const std::string robotLocation = ctx.getRobot()->getLocation();
+    const bool personFound = robotLocation == personLocation;
+    const double areaToSearch = ctx.getSearchArea(robotLocation);
+    ctx.getConfig()->personDetectionRange;
+    ctx.getRobot()->setScanning(true);
+
+    ctx.pushEvent(std::make_shared<ScanComplete>(this->time + 30, personFound));
+
+    // calc end of scan
+    // add event scan finished (found / not found)
+    // tick tree
+}
+
+void ScanComplete::execute(ISimContext & ctx) {
+    ctx.notifyEvent(*this);
+    ctx.getRobot()->setIsPersonVisible(this->found);
     ctx.tickBT();
 }

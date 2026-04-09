@@ -18,7 +18,9 @@ class Robot {
 
     bool m_isDriving        = false;
     bool m_isCharging       = false;
+    bool m_isScanning       = false;
     bool m_chargingRequired = false;
+    bool m_isPersonVisible  = false;
 
 public:
     bool m_batteryFullEventScheduled = false;
@@ -62,6 +64,9 @@ public:
     RobotState* getState() const { return m_state.get(); }
 
     bool isDriving() const { return m_isDriving; }
+    bool isPersonVisible() const { return m_isPersonVisible; }
+    bool setIsPersonVisible(const bool isPersonVisible) { return m_isPersonVisible = isPersonVisible; }
+
     void setDriving(const bool isDriving) { 
         m_isDriving = isDriving; 
     }
@@ -69,6 +74,11 @@ public:
     bool isCharging() const { return m_isCharging; }
     void setCharging(const bool isCharging) { 
         m_isCharging = isCharging; 
+    }
+
+    bool isScanning() const { return m_isScanning; }
+    void setScanning(const bool isScanning) { 
+        m_isScanning = isScanning; 
     }
 
     bool updateAndGetChargingRequired() {

@@ -31,6 +31,8 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
 
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
+    factory.registerNodeType<IsScanning>("IsScanning");
+    factory.registerNodeType<FoundPerson>("FoundPerson");
     factory.registerNodeType<ScanLocation>("ScanLocation");
     factory.registerNodeType<HasNextLocation>("HasNextLocation");
     factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
@@ -118,22 +120,28 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
       </Sequence>
     </Sequence>
   </BehaviorTree>
-        <BehaviorTree ID="SearchRoutine">
-            <Sequence name="Seq_SearchMain">
-                <IsSearching/>
-                <Fallback name="Fallback_SearchActions">
-                    <Sequence name="Seq_FoundTarget">
-                        <ScanLocation/>
-                        <StartAccompanyConversation/>
-                    </Sequence>
-                    <Sequence name="Seq_NextLocation">
-                        <HasNextLocation/>
-                        <MoveToNextLocation/>
-                    </Sequence>
-                    <AbortSearch/>
-                </Fallback>
-            </Sequence>
-        </BehaviorTree>
+  <BehaviorTree ID="SearchRoutine">
+    <Sequence name="Seq_SearchMain">
+      <IsSearching />
+      <Fallback name="Fallback_SearchActions">
+        <Sequence>
+          <Inverter>
+            <IsScanning />
+          </Inverter>
+          <ScanLocation />
+        </Sequence>
+        <Sequence name="Seq_FoundTarget">
+          <FoundPerson />
+          <StartAccompanyConversation />
+        </Sequence>
+        <Sequence name="Seq_NextLocation">
+          <HasNextLocation />
+          <MoveToNextLocation />
+        </Sequence>
+        <AbortSearch />
+      </Fallback>
+    </Sequence>
+  </BehaviorTree>
 
         <BehaviorTree ID="ConversateRoutine">
             <Sequence name="Seq_ConversateMain">

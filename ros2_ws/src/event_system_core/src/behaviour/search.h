@@ -4,6 +4,7 @@
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/basic_types.h>
+#include <cassert>
 #include <memory>
 
 #include "../model/i_sim_context.h"
@@ -26,6 +27,34 @@ public:
     }
 };
 
+
+class IsScanning final : public BT::ConditionNode {
+public:
+    IsScanning(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+    
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool isScanning = ctx->getRobot()->isScanning();
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "IsScanning: %d", isScanning);
+        return isScanning ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
+class FoundPerson final : public BT::ConditionNode {
+public:
+    FoundPerson(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+    
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        ctx->getRobot()->setScanning(false);
+        return ctx->getRobot()->isPersonVisible() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
 class ScanLocation final : public BT::SyncActionNode {
 public:
     ScanLocation(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
@@ -34,15 +63,8 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const auto& personName = ctx->getAppointment()->personName;
-        const std::string personLocation = ctx->getPersonLocation(personName);
-        const bool personFound = ctx->getRobot()->getLocation() == personLocation;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "ScanLocation - Person found: %d (robot: %s, person: %s)",
-                     personFound, ctx->getRobot()->getLocation().c_str(), personLocation.c_str());
-        if(personFound) {
-            return BT::NodeStatus::SUCCESS;
-        }
-        return BT::NodeStatus::FAILURE;
+        ctx->pushEvent(std::make_shared<ScanAera>(ctx->getTime()));
+        return BT::NodeStatus::SUCCESS;
     }
 };
 

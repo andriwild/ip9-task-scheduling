@@ -203,6 +203,23 @@ public:
     des::EventType getType() const override { return des::EventType::START_ACCOMPANY; }
 };
 
+class ScanAera final : public IEvent {
+public:
+    explicit ScanAera(const int time) : IEvent(time) {}
+    void execute(ISimContext& ctx) override;
+    std::string getName() const override { return "Scan Area"; }
+    des::EventType getType() const override { return des::EventType::SCAN_AREA; }
+};
+
+class ScanComplete final : public IEvent {
+public:
+    bool found;
+    explicit ScanComplete(const int time, const bool found) : IEvent(time), found(found) {}
+    void execute(ISimContext& ctx) override;
+    std::string getName() const override { return "Scan Complete"; }
+    des::EventType getType() const override { return des::EventType::SCAN_COMPLETE; }
+};
+
 class BatteryFullEvent final : public IEvent {
 public:
     explicit BatteryFullEvent(const int time) : IEvent(time) {}

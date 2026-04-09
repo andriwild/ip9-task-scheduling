@@ -3,6 +3,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 
 #include <cassert>
+#include <map>
 #include <memory>
 #include <random>
 #include <rclcpp/rclcpp.hpp>
@@ -43,12 +44,14 @@ public:
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
+    std::map<std::string, double> m_searchAreas;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
-        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations
+        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
+        std::map<std::string, double> searchAreas 
     );
 
     Scheduler& getScheduler() { return *m_scheduler; }
@@ -124,6 +127,15 @@ public:
         m_personLocations[name] = room;
     }
 
+    double getSearchArea(const std::string& name) const override {
+        auto it = m_searchAreas.find(name);
+        if (it == m_searchAreas.end()) {
+            RCLCPP_WARN(rclcpp::get_logger("SimulationContext"), "Search area not found for '%s', defaulting to 1.0", name.c_str());
+            return 1.0;
+        }
+        return it->second;
+    }
+
     // Mission management (delegated to MissionManager)
     void setAppointment(const std::shared_ptr<des::Appointment>& appointment) override {
         m_missions.setCurrent(appointment);
@@ -184,7 +196,7 @@ public:
     }
 
     void notifyEvent(const IEvent& event) const override {
-        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor());
+        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging());
     }
 
     void robotMoved(const std::string& location, const double distance = 0) const override {
