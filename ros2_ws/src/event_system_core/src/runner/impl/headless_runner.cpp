@@ -28,7 +28,8 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         m_eventQueue,
         m_config,
         m_plannerNode,
-        m_employeeLocations
+        m_employeeLocations,
+        m_searchAreaMap
     );
 
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
