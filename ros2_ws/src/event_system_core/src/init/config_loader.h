@@ -124,6 +124,8 @@ public:
                 config.appointmentsPath = "appointments.json";
             }
             config.appointmentDuration = j.value("appointment_duration", 1800.0);
+            config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
+            config.personDetectionRange = j.value("person_detection_range", 5.0);
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
@@ -242,6 +244,8 @@ public:
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;
         j["appointment_duration"] = config->appointmentDuration;
+        j["people_spawn_location"] = config->peopleSpawnLocation;
+        j["person_detection_range"] = config->personDetectionRange;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

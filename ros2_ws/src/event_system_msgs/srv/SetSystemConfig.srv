@@ -18,6 +18,8 @@ float32 departure_mean
 float32 departure_std
 string arrival_distribution
 string departure_distribution
+string people_spawn_location
+float32 person_detection_range
 string dock_location
 bool cache_enabled
 string appointments_path

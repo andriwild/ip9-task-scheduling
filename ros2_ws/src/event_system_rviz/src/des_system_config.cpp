@@ -113,6 +113,9 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     });
 
     m_departureMean = new QTimeEdit();
+    m_peopleSpawnLocation = new QLineEdit("IMVS_Entrance");
+    addConfigItem(peopleGroup, "Spawn Location", m_peopleSpawnLocation);
+
     m_departureMean->setDisplayFormat("HH:mm");
     addConfigItem(peopleGroup, "Departure Mean", m_departureMean);
 
@@ -126,6 +129,14 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     connect(m_departureDistribution, &QComboBox::currentTextChanged, this, [this](const QString& text) {
         m_departureStd->setEnabled(text != "exponential");
     });
+
+    // Robot Perception
+    QTreeWidgetItem* perceptionGroup = new QTreeWidgetItem(m_treeWidget);
+    perceptionGroup->setText(0, "Robot Perception");
+
+    m_personDetectionRange = new QDoubleSpinBox(); m_personDetectionRange->setRange(0.0, 50.0); m_personDetectionRange->setSingleStep(0.5);
+    m_personDetectionRange->setSuffix(" m");
+    addConfigItem(perceptionGroup, "Person Detection Range", m_personDetectionRange);
 
     // General
     QTreeWidgetItem* generalGroup = new QTreeWidgetItem(m_treeWidget);
@@ -228,6 +239,8 @@ void DesSystemConfig::onSetConfig() {
     request->appointments_path = m_configFile.toStdString();
     request->employee_path = m_employeeFile.toStdString();
     request->appointment_duration = m_appointmentDuration->value();
+    request->people_spawn_location = m_peopleSpawnLocation->text().toStdString();
+    request->person_detection_range = m_personDetectionRange->value();
 
     m_statusLabel->setText("Sending...");
 
@@ -273,6 +286,8 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_departureDistribution->setCurrentText(QString::fromStdString(msg->departure_distribution));
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
     m_appointmentDuration->setValue(msg->appointment_duration);
+    m_peopleSpawnLocation->setText(QString::fromStdString(msg->people_spawn_location));
+    m_personDetectionRange->setValue(msg->person_detection_range);
     m_cacheEnabled->setChecked(msg->cache_enabled);
 
     const auto appointmentConfigPath = QString::fromStdString(msg->appointments_path);

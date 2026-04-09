@@ -53,9 +53,6 @@ private:
         case SystemState::Request::STEP:
             response->message = "Step";
             break;
-        case SystemState::Request::EXIT:
-            response->message = "Exit";
-            break;
         default:
             response->success = false;
             response->message = "failed";

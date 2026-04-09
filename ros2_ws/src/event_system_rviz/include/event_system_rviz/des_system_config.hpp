@@ -57,6 +57,8 @@ protected:
     QComboBox* m_departureDistribution;
     QDoubleSpinBox* m_appointmentDuration;
     QLineEdit* m_dockLocation;
+    QLineEdit* m_peopleSpawnLocation;
+    QDoubleSpinBox* m_personDetectionRange;
     QCheckBox* m_cacheEnabled;
     QLabel* m_appointmentsPath;
     QLabel* m_employeePath;

@@ -25,6 +25,10 @@ float32 departure_mean
 float32 departure_std
 string arrival_distribution
 string departure_distribution
+string people_spawn_location
+
+# Robot Perception
+float32 person_detection_range
 
 # General
 string dock_location

@@ -82,7 +82,9 @@ private:
                 request->dock_location,
                 request->cache_enabled,
                 request->appointments_path,
-                request->appointment_duration
+                request->appointment_duration,
+                request->people_spawn_location,
+                request->person_detection_range
             };
             std::lock_guard lock(m_configMutex);
             m_currentConfig = std::make_shared<des::SimConfig>(config);
@@ -123,6 +125,8 @@ private:
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;
             msg.appointment_duration       = m_currentConfig->appointmentDuration;
+            msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
+            msg.person_detection_range     = m_currentConfig->personDetectionRange;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

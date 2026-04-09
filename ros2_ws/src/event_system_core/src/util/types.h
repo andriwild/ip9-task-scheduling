@@ -95,6 +95,8 @@ struct SimConfig {
     bool cacheEnabled;
     std::string appointmentsPath;
     double appointmentDuration = 1800;
+    std::string peopleSpawnLocation;
+    double personDetectionRange = 5.0;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -124,6 +126,8 @@ struct SimConfig {
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << std::left << std::setw(W) << "appointmentDuration" << ": " << config.appointmentDuration << std::endl;
+        os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
+        os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;
@@ -140,7 +144,8 @@ enum class RobotStateType {
 
 enum class RobotSubState {
     STANDING,
-    DRIVING
+    DRIVING,
+    SCANNING
 };
 
 enum class Result {
@@ -169,7 +174,9 @@ enum class EventType : int {
     PERSON_ARRIVED = 16,
     PERSON_DEPARTURE = 17,
     MISSION_START = 18,
-    APPOINTMENT_END = 19
+    APPOINTMENT_END = 19,
+    SCAN_AREA = 20,
+    SCAN_COMPLETE = 21
 };
 
 enum MissionState {
