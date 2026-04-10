@@ -1,5 +1,16 @@
 # IP9 - Task Scheduling System
 
+<p align="center">
+  <img src="docs/2026-04-10T11:05:29,552526942+02:00.png" width="49%" alt="RViz panel" />
+  <img src="docs/2026-04-10T11:06:09,195151599+02:00.png" width="49%" alt="RViz panel" />
+</p>
+
+![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
+![ROS 2 Jazzy](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros&logoColor=white)
+![CMake](https://img.shields.io/badge/CMake-colcon-064F8C?logo=cmake&logoColor=white)
+![PostGIS](https://img.shields.io/badge/PostGIS-wsr-336791?logo=postgresql&logoColor=white)
+![Blender](https://img.shields.io/badge/Blender-scene%20export-F5792A?logo=blender&logoColor=white)
+
 A discrete event simulation (DES) for evaluating task scheduling strategies of
 an autonomous service robot at FHNW. The simulator drives a behaviour-tree
 controlled robot through stochastically generated missions (person arrivals,
@@ -18,9 +29,10 @@ inspection and control.
   `event_system_core`, `event_system_bringup`, `event_system_msgs`,
   `event_system_rviz` and `event_system_tf_transform`. Metrics are published on
   `/metrics_report` (`event_system_msgs/msg/MetricsReport`).
-- **RViz Panel** — `event_system_rviz` provides a custom RViz panel plugin
-  (`rviz_common_plugins.xml`) to start, pause and inspect the simulation
-  visually.
+- **RViz Panel** — `event_system_rviz` provides several custom RViz panel
+  plugins (`DesPanel`, `DesSystemConfig`, `DesTimelinePanel`,
+  `DesMetricsPanel`, `DesOccupancyPanel`) to start, pause, configure and
+  inspect the simulation visually.
 - **Stochastik** — Random distributions for event timing, person behaviour and
   mission generation live in `ros2_ws/src/event_system_core/src/util/rnd.h`.
 - **Energiemanagement** — The robot model in `model/battery.hpp`, `robot.h`
@@ -90,7 +102,22 @@ Example headless batch run:
 ros2 launch event_system_bringup bringup.launch.py mode:=headless rounds:=50 log_level:=WARN
 ```
 
-### 3. TF Transform (optional)
+### 3. RViz Panels
+
+When launched in `mode:=full`, RViz 2 is started automatically by
+`bringup.launch.py`. To enable the custom DES panels in RViz, use
+`Panels -> Add New Panel` and add any of:
+
+- `des_panel/DesPanel` — main simulation control (start / pause / step).
+- `des_system_config/DesSystemConfig` — runtime configuration.
+- `des_timeline_panel/DesTimelinePanel` — event timeline view.
+- `des_metrics_panel/DesMetricsPanel` — live metrics.
+- `des_occupancy_panel/DesOccupancyPanel` — occupancy / map view.
+
+The panel layout can be saved into an RViz config so it is restored on
+subsequent launches.
+
+### 4. TF Transform (optional)
 
 ```sh
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map base_link
