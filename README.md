@@ -1,8 +1,8 @@
 # IP9 - Task Scheduling System
 
 <p align="center">
-  <img src="docs/2026-04-10T11%3A05%3A29%2C552526942%2B02%3A00.png" width="49%" alt="RViz panel" />
-  <img src="docs/2026-04-10T11%3A06%3A09%2C195151599%2B02%3A00.png" width="49%" alt="RViz panel" />
+  <img src="screenshots/rviz_1.png" width="49%" alt="RViz panel" />
+  <img src="screenshots/rviz_2.png" width="49%" alt="RViz panel" />
 </p>
 
 ![C++](https://img.shields.io/badge/C%2B%2B-00599C?logo=cplusplus&logoColor=white)
