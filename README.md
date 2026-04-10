@@ -1,15 +1,14 @@
 # IP9 - Task Scheduling System
 
 <p align="center">
-  <img src="docs/2026-04-10T11:05:29,552526942+02:00.png" width="49%" alt="RViz panel" />
-  <img src="docs/2026-04-10T11:06:09,195151599+02:00.png" width="49%" alt="RViz panel" />
+  <img src="docs/2026-04-10T11%3A05%3A29%2C552526942%2B02%3A00.png" width="49%" alt="RViz panel" />
+  <img src="docs/2026-04-10T11%3A06%3A09%2C195151599%2B02%3A00.png" width="49%" alt="RViz panel" />
 </p>
 
-![C++](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
+![C++](https://img.shields.io/badge/C%2B%2B-00599C?logo=cplusplus&logoColor=white)
 ![ROS 2 Jazzy](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros&logoColor=white)
 ![CMake](https://img.shields.io/badge/CMake-colcon-064F8C?logo=cmake&logoColor=white)
-![PostGIS](https://img.shields.io/badge/PostGIS-wsr-336791?logo=postgresql&logoColor=white)
-![Blender](https://img.shields.io/badge/Blender-scene%20export-F5792A?logo=blender&logoColor=white)
+![PostGIS](https://img.shields.io/badge/PostGIS-336791?logo=postgresql&logoColor=white)
 
 A discrete event simulation (DES) for evaluating task scheduling strategies of
 an autonomous service robot at FHNW. The simulator drives a behaviour-tree
