@@ -10,14 +10,17 @@
 
 #include "../model/event.h"
 #include "../sim/i_path_planner.h"
+#include "../plugins/order_registry.h"
 
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<IPathPlanner> m_plannerNode;
     const std::map<std::string, std::shared_ptr<des::Person>>& m_locations;
     const des::SearchAreaMap& m_searchAreas;
+    std::string m_startPosition = "IMVS_Dock";
 
 public:
+
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<IPathPlanner> &plannerNode,
@@ -30,24 +33,30 @@ public:
         , m_searchAreas(searchAreas)
     {}
 
-    std::vector<std::shared_ptr<MissionDispatchEvent>> simplePlan(
-        std::vector<std::shared_ptr<des::Appointment>>& appointments,
-        const std::string& startPos
-    ) {
-        RCLCPP_DEBUG(rclcpp::get_logger("Scheduler"), "[SimplePlan] Schedule %zu appointments", appointments.size());
-        std::vector<std::shared_ptr<MissionDispatchEvent>> missions;
+    std::string startPos() const {
+        return m_startPosition;
+    }
 
-        for (auto& appointment : appointments) {
-            assert(m_locations.contains(appointment->personName));
-            const double driveTime = pessimisticMeeting(appointment->personName, startPos, appointment->roomName);
-            const double startSeconds = appointment->appointmentTime - static_cast<int>(driveTime) - m_simConfig->timeBuffer;
-            missions.emplace_back(std::make_shared<MissionDispatchEvent>(startSeconds, appointment));
+    int timeBuffer() const {
+        return m_simConfig->timeBuffer;
+    }
+
+
+    std::vector<std::shared_ptr<MissionDispatchEvent>> simplePlan(des::OrderList& orders, const std::string& startPos) {
+        RCLCPP_DEBUG(rclcpp::get_logger("Scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
+        std::vector<std::shared_ptr<MissionDispatchEvent>> events;
+
+        for (const auto& order : orders) {
+            auto& plugin = OrderRegistry::instance().get(order->type);
+            const int dispatchTime = plugin.planDispatchTime(*order, *this, startPos);
+            order->dispatchTime = dispatchTime;
+            events.emplace_back(std::make_shared<MissionDispatchEvent>(dispatchTime, order));
         }
-        return missions;
+        return events;
     }
 
     // Calc time to accompany a person to a meeting with using only one search location
-    double optimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) {
+    double optimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) const {
         const auto employeeLocation = m_locations.at(personName)->roomLabels.front();
         const double searchTime     = getDriveTime(startPos, employeeLocation, m_simConfig->robotSpeed);
         const double scanTime       = getScanTime(employeeLocation);
@@ -56,7 +65,7 @@ public:
     }
 
     // Calc time to accompany a person to a meeting with using all the search locations
-    double pessimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) {
+    double pessimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) const {
         double searchTime = 0.0;
         std::string currentPos = startPos;
         for (const auto& location: m_locations.at(personName)->roomLabels) {

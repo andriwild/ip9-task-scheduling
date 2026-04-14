@@ -2,6 +2,7 @@
 
 #include <utility>
 #include "../util/rnd.h"
+#include "../sim/scheduler.h"
 
 SimulationContext::SimulationContext(
     EventQueue& queue,
@@ -37,10 +38,11 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     return { travelTimeRnd, distance.value() };
 }
 
-void SimulationContext::completeAppointment(const std::shared_ptr<des::Appointment>& appt) const {
-    assert(appt != nullptr);
-    const int timeDiff = m_currentTime - appt->appointmentTime;
-    notifyMissionComplete(appt->state, timeDiff);
+void SimulationContext::completeOrder(const des::OrderPtr& order) const {
+    assert(order != nullptr);
+    const int deadline = order->deadline.value_or(m_currentTime);
+    const int timeDiff = m_currentTime - deadline;
+    notifyMissionComplete(order->state, timeDiff);
 }
 
 void SimulationContext::resetContext(const int newTime) {

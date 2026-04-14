@@ -4,6 +4,8 @@
 
 #include "../src/sim/i_path_planner.h"
 #include "../src/sim/scheduler.h"
+#include "../src/plugins/order_registry.h"
+#include "../src/plugins/accompany/accompany_plugin.h"
 
 class MockPathPlanner : public IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;
@@ -28,6 +30,14 @@ protected:
     std::shared_ptr<des::SimConfig> config;
     des::PersonLocationMap locations;
     des::SearchAreaMap searchAreas;
+
+    static void SetUpTestSuite() {
+        static bool registered = false;
+        if (!registered) {
+            OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+            registered = true;
+        }
+    }
 
     void SetUp() override {
         planner = std::make_shared<MockPathPlanner>();
@@ -66,6 +76,22 @@ protected:
 
     std::unique_ptr<Scheduler> makeScheduler() {
         return std::make_unique<Scheduler>(config, planner, locations, searchAreas);
+    }
+
+    static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+            int id,
+            const std::string& person,
+            const std::string& room,
+            int appointmentTime,
+            const std::string& description = "Test") {
+        auto o = std::make_shared<AccompanyOrder>();
+        o->id = id;
+        o->type = "accompany";
+        o->personName = person;
+        o->roomName = room;
+        o->deadline = appointmentTime;
+        o->description = description;
+        return o;
     }
 };
 
@@ -109,47 +135,34 @@ TEST_F(SchedulerTest, PessimisticMeetingSearchesAllLocations) {
 TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
     auto scheduler = makeScheduler();
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "Max";
-    appt->roomName = "MeetingRoom";
-    appt->appointmentTime = 36000; // 10:00:00
-    appt->description = "Test Meeting";
+    des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000, "Test Meeting") };
 
-    des::AppointmentList appointments = {appt};
-
-    auto missions = scheduler->simplePlan(appointments, "Dock");
+    auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
-    // optimisticMeeting = 50s, timeBuffer = 60s
-    // startTime = 36000 - 50 - 60 = 35890
+    // pessimisticMeeting for Max with single location ["Office"]:
+    //   search Dock->Office (10/1.0 = 10)
+    //   accompany Office->MeetingRoom (20/0.5 = 40)
+    // total = 50. timeBuffer = 60. startTime = 36000 - 50 - 60 = 35890
     EXPECT_EQ(missions[0]->time, 35890);
-    EXPECT_EQ(missions[0]->appointment->personName, "Max");
+    auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(missions[0]->orderPtr);
+    ASSERT_NE(accompany, nullptr);
+    EXPECT_EQ(accompany->personName, "Max");
 }
 
 TEST_F(SchedulerTest, SimplePlanMultipleAppointments) {
     auto scheduler = makeScheduler();
 
-    auto appt1 = std::make_shared<des::Appointment>();
-    appt1->personName = "Max";
-    appt1->roomName = "MeetingRoom";
-    appt1->appointmentTime = 36000;
-    appt1->description = "Meeting 1";
+    des::OrderList orders = {
+        makeAccompanyOrder(1, "Max",  "MeetingRoom", 36000, "Meeting 1"),
+        makeAccompanyOrder(2, "Anna", "HallA",       39600, "Meeting 2"),
+    };
 
-    auto appt2 = std::make_shared<des::Appointment>();
-    appt2->personName = "Anna";
-    appt2->roomName = "HallA";
-    appt2->appointmentTime = 39600;
-    appt2->description = "Meeting 2";
-
-    des::AppointmentList appointments = {appt1, appt2};
-
-    auto missions = scheduler->simplePlan(appointments, "Dock");
+    auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 2u);
 
-    // Max: optimistic = 50s, start = 36000 - 50 - 60 = 35890
     EXPECT_EQ(missions[0]->time, 35890);
-
-    // Anna: optimistic = 12 + 16 = 28s, start = 39600 - 28 - 60 = 39512
+    // Anna: pessimistic = 12 + 16 = 28s, start = 39600 - 28 - 60 = 39512
     EXPECT_EQ(missions[1]->time, 39512);
 }
 
@@ -157,15 +170,9 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
     config->timeBuffer = 0.0;
     auto scheduler = makeScheduler();
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "Max";
-    appt->roomName = "MeetingRoom";
-    appt->appointmentTime = 36000;
-    appt->description = "Test";
+    des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000) };
 
-    des::AppointmentList appointments = {appt};
-
-    auto missions = scheduler->simplePlan(appointments, "Dock");
+    auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
     // Without buffer: 36000 - 50 - 0 = 35950
@@ -175,8 +182,8 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
 TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
     auto scheduler = makeScheduler();
 
-    des::AppointmentList appointments;
-    auto missions = scheduler->simplePlan(appointments, "Dock");
+    des::OrderList orders;
+    auto missions = scheduler->simplePlan(orders, "Dock");
     EXPECT_TRUE(missions.empty());
 }
 

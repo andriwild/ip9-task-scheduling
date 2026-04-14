@@ -11,6 +11,8 @@
 #include "../model/event_queue.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
+#include "../sim/scheduler.h"
+#include "../plugins/order_registry.h"
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
@@ -36,14 +38,14 @@ public:
 
     static SortedEventQueue createMissionQueue(
         const std::shared_ptr<des::SimConfig> &config,
-        std::vector<std::shared_ptr<des::Appointment>>& appointments,
+        des::OrderList& orders,
         Scheduler& scheduler,
         std::string idleLocation
     ) {
         RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Start filling event queue");
         SortedEventQueue queue;
 
-        const auto missions = scheduler.simplePlan(appointments, idleLocation);
+        const auto missions = scheduler.simplePlan(orders, idleLocation);
 
         for (const auto& mission : missions) {
             const double buffer = config->timeBuffer;
@@ -92,7 +94,7 @@ protected:
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
-    std::vector<std::shared_ptr<des::Appointment>> m_appointments;
+    des::OrderList m_orders;
     std::optional<des::PersonList> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
@@ -105,7 +107,7 @@ protected:
 
         scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
-        m_eventQueue.extend(createMissionQueue(m_config, m_appointments, m_ctx->getScheduler(), "IMVS_Dock"));
+        m_eventQueue.extend(createMissionQueue(m_config, m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
         int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
         int lastEventTime  = m_eventQueue.getLastEventTime();
@@ -132,14 +134,14 @@ protected:
         }
     }
 
-    static std::vector<std::shared_ptr<des::Appointment>> loadAppointments(const std::string& path) {
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load Appointments: %s", path.c_str());
-        const auto appointments = ConfigLoader::loadAppointmentConfig(path.c_str());
-        if (!appointments.has_value()) {
-            throw std::runtime_error("Could not load appointments from file");
+    static des::OrderList loadOrders(const std::string& path) {
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load orders: %s", path.c_str());
+        const auto orders = ConfigLoader::loadOrderConfig(path.c_str());
+        if (!orders.has_value()) {
+            throw std::runtime_error("Could not load orders from file");
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu appointments", appointments.value().size());
-        return appointments.value();
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu orders", orders.value().size());
+        return orders.value();
     }
 
     des::SearchAreaMap loadSearchAreas() {
@@ -194,7 +196,8 @@ protected:
             const auto mission = std::dynamic_pointer_cast<MissionDispatchEvent>(currentEvent);
 
             if (mission) {
-                publisher->publishMeeting(mission->appointment, mission->time);
+                auto& plugin = OrderRegistry::instance().get(mission->orderPtr->type);
+                plugin.publishTimeline(*mission->orderPtr, mission->time, *publisher);
             }
             queue.pop();
         }

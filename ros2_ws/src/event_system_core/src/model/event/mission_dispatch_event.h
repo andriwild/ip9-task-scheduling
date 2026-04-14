@@ -5,22 +5,26 @@
 #include "base.h"
 #include "../i_sim_context.h"
 
+class IEvent;
+class Robot;
+class Scheduler;
+
 class MissionDispatchEvent final : public IEvent {
 public:
-    std::shared_ptr<des::Appointment> appointment;
-    explicit MissionDispatchEvent(const int time, const std::shared_ptr<des::Appointment> &appointment)
+    des::OrderPtr orderPtr;
+    explicit MissionDispatchEvent(const int time, des::OrderPtr order)
         : IEvent(time)
-        , appointment(appointment)
+        , orderPtr(order)
     {}
 
     void execute(ISimContext& ctx) override {
-        ctx.addPendingMission(this->appointment);
+        ctx.addPendingMission(this->orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }
 
     std::string getName() const override {
-        return std::format("Mission {} Dispatch: {}", appointment->id, appointment->personName);
+        return std::format("Mission {} Dispatch", orderPtr->id);
     }
     des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; }
 };

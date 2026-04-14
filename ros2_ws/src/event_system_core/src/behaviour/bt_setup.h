@@ -2,17 +2,15 @@
 
 #include <fstream>
 #include <iostream>
+#include <rclcpp/rclcpp.hpp>
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
 
 #include "../model/i_sim_context.h"
-#include "accompany.h"
 #include "idle.h"
-#include "search.h"
-#include "conversation.h"
 #include "charge.h"
-#include "../plugin/order_registry.h"
+#include "../plugins/order_registry.h"
 #include "mission_control.h"
 
 
@@ -87,36 +85,11 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<Charge>("Charge");
     factory.registerNodeType<GoToDock>("GoToDock");
 
-    // search
-    factory.registerNodeType<IsSearching>("IsSearching");
-    factory.registerNodeType<IsScanning>("IsScanning");
-    factory.registerNodeType<FoundPerson>("FoundPerson");
-    factory.registerNodeType<ScanLocation>("ScanLocation");
-    factory.registerNodeType<HasNextLocation>("HasNextLocation");
-    factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
-    factory.registerNodeType<StartAccompanyConversation>("StartAccompanyConversation");
-    factory.registerNodeType<AbortSearch>("AbortSearch");
-
-    // accompany
-    factory.registerNodeType<IsAccompany>("IsAccompany");
-    factory.registerNodeType<ArrivedWithPerson>("ArrivedWithPerson");
-    factory.registerNodeType<StartDropOffConversation>("StartDropOffConversation");
-    factory.registerNodeType<AbortAccompany>("AbortAccompany");
-
     // idle
     factory.registerNodeType<IsIdle>("IsIdle");
     factory.registerNodeType<Docking>("Docking");
     factory.registerNodeType<EnterIdle>("EnterIdle");
     factory.registerNodeType<HasPendingMissionIdle>("HasPendingMissionIdle");
-
-    // conversation
-    factory.registerNodeType<IsConversating>("IsConversating");
-    factory.registerNodeType<ConversationFinished>("ConversationFinished");
-    factory.registerNodeType<WasConversationSuccessful>("WasConversationSuccessful");
-    factory.registerNodeType<IsFoundPersonConversation>("IsFoundPersonConversation");
-    factory.registerNodeType<IsDropOffConversation>("IsDropOffConversation");
-    factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
-    factory.registerNodeType<CompleteMissionAction>("CompleteMissionAction");
 
     // mission control
     factory.registerNodeType<HasPendingMission>("HasPendingMission");
@@ -141,7 +114,9 @@ inline std::string buildXml() {
                     <SubTree ID="MissionControlRoutine" _autoremap="true"/>)";
 
     for (auto* plugin : OrderRegistry::instance().all()) {
-        xml += "        <SubTree ID=\"" + plugin->subtreeId() + "\" _autoremap=\"true\"/>\n";
+        for (const auto& subtreeId : plugin->subtreeIds()) {
+            xml += "        <SubTree ID=\"" + subtreeId + "\" _autoremap=\"true\"/>\n";
+        }
     }
     
     xml += R"(       <SubTree ID="IdleRoutine" _autoremap="true"/>
@@ -173,70 +148,6 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
 
     std::string xml = buildXml();
 
-  // <BehaviorTree ID="SearchRoutine">
-  //   <Sequence name="Seq_SearchMain">
-  //     <IsSearching />
-  //     <Fallback name="Fallback_SearchActions">
-  //       <Sequence>
-  //         <Inverter>
-  //           <IsScanning />
-  //         </Inverter>
-  //         <ScanLocation />
-  //       </Sequence>
-  //       <Sequence name="Seq_FoundTarget">
-  //         <FoundPerson />
-  //         <StartAccompanyConversation />
-  //       </Sequence>
-  //       <Sequence name="Seq_NextLocation">
-  //         <HasNextLocation />
-  //         <MoveToNextLocation />
-  //       </Sequence>
-  //       <AbortSearch />
-  //     </Fallback>
-  //   </Sequence>
-  // </BehaviorTree>
-
-  //       <BehaviorTree ID="ConversateRoutine">
-  //           <Sequence name="Seq_ConversateMain">
-  //               <IsConversating/>
-  //               <ConversationFinished/>
-                
-  //               <Fallback name="Fallback_ConverseType">
-  //                  <Sequence name="Seq_FoundPersonType">
-  //                      <IsFoundPersonConversation/>
-  //                      <Fallback name="Fallback_FoundPersonResult">
-  //                           <Sequence name="Seq_FoundPersonSuccess">
-  //                               <WasConversationSuccessful/>
-  //                               <StartAccompanyAction/>
-  //                           </Sequence>
-  //                           <!-- If conversation failed -->
-  //                           <AbortSearch/> 
-  //                      </Fallback>
-  //                  </Sequence>
-
-  //                  <Sequence name="Seq_DropOffType">
-  //                      <IsDropOffConversation/>
-  //                      <CompleteMissionAction/>
-  //                  </Sequence>
-  //               </Fallback>
-  //           </Sequence>
-  //       </BehaviorTree>
-
-  //       <BehaviorTree ID="AccompanyRoutine">
-  //           <Sequence name="Seq_AccompanyMain">
-  //               <IsAccompany/>
-  //               <Fallback name="Fallback_AccompanyActions">
-  //                   <Sequence name="Seq_ArrivalAndDropOff">
-  //                       <ArrivedWithPerson/>
-  //                       <StartDropOffConversation/>
-  //                   </Sequence>
-  //                   <AbortAccompany/>
-  //               </Fallback>
-  //           </Sequence>
-  //       </BehaviorTree>
-
-  //    </root>
-    // )";
 
     factory.registerBehaviorTreeFromText(xml);
     auto tree = std::make_shared<BT::Tree>(factory.createTree("MainTree"));

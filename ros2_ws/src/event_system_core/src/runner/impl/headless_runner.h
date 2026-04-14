@@ -10,16 +10,16 @@
 class MetricsNode;
 
 class HeadlessRunner final : public IAppRunner {
-    std::vector<std::string> m_appointmentFilePaths;
-    std::queue<std::string> m_appointmentFiles;
+    std::vector<std::string> m_orderFilePaths;
+    std::queue<std::string> m_orderFiles;
     int m_totalRounds = 1;
     int m_currentRound = 0;
     bool m_batchComplete = false;
 
     void rebuildFileQueue() {
-        m_appointmentFiles = {};
-        for (const auto& path : m_appointmentFilePaths) {
-            m_appointmentFiles.push(path);
+        m_orderFiles = {};
+        for (const auto& path : m_orderFilePaths) {
+            m_orderFiles.push(path);
         }
     }
 

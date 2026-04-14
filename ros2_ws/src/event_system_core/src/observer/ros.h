@@ -50,14 +50,19 @@ public:
         m_pubReset->publish(msg);
     }
 
-    void publishMeeting(const std::shared_ptr<des::Appointment>& appt, const int startTime) {
+    void publishMeeting(const int id,
+                        const int startTime,
+                        const int scheduledTime,
+                        const int state,
+                        const std::string& primaryLabel,
+                        const std::string& description) {
         auto msg = event_system_msgs::msg::TimelineMeeting();
         msg.start_time       = startTime;
-        msg.id               = appt->id;
-        msg.appointment_time = appt->appointmentTime;
-        msg.mission_state    = appt->state;
-        msg.person_name      = appt->personName;
-        msg.description      = appt->description;
+        msg.id               = id;
+        msg.appointment_time = scheduledTime;
+        msg.mission_state    = state;
+        msg.person_name      = primaryLabel;
+        msg.description      = description;
         m_pubMeeting->publish(msg);
     }
 

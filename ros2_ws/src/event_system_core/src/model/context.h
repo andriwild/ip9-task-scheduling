@@ -7,17 +7,14 @@
 #include <memory>
 #include <random>
 #include <rclcpp/rclcpp.hpp>
-#include <vector>
 
-#include "../observer/event_bus.h"
-#include "../sim/i_path_planner.h"
-#include "../util/types.h"
-#include "event.h"
-#include "i_sim_context.h"
 #include "mission_manager.h"
 #include "robot.h"
-#include "../sim/scheduler.h"
 #include "robot_state.h"
+#include "../observer/event_bus.h"
+#include "../sim/i_path_planner.h"
+#include "../model/i_sim_context.h"
+#include "../util/types.h"
 #include "../model/event_queue.h"
 
 
@@ -50,6 +47,7 @@ public:
     );
 
     Scheduler& getScheduler() { return *m_scheduler; }
+
     const Scheduler& getScheduler() const { return *m_scheduler; }
 
     void resetRobot() {
@@ -62,7 +60,7 @@ public:
     double getRndConversationTime() const override;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void resetContext(int newTime);
-    void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const override;
+    void completeOrder(const des::OrderPtr& order) const override;
 
     int getTime() const override { return m_currentTime; }
 
@@ -132,31 +130,31 @@ public:
     }
 
     // Mission management (delegated to MissionManager)
-    void setAppointment(const std::shared_ptr<des::Appointment>& appointment) override {
-        m_missions.setCurrent(appointment);
+    void setOrderPtr(const des::OrderPtr& orderPtr) override {
+        m_missions.setCurrent(orderPtr);
     }
 
-    std::shared_ptr<des::Appointment> getAppointment() const override {
+    des::OrderPtr getOrderPtr() const override {
         return m_missions.getCurrent();
     }
 
-    void updateAppointmentState(const des::MissionState& newState) override {
+    void updateOrderState(const des::MissionState& newState) override {
         m_missions.updateState(newState);
     }
 
-    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) override {
-        m_missions.addPending(appointment);
+    void addPendingMission(const des::OrderPtr orderPtr) override {
+        m_missions.addPending(orderPtr);
     }
 
     bool hasPendingMission() const override {
         return m_missions.hasPending();
     }
 
-    std::shared_ptr<des::Appointment> nextPendingMission() override {
+    des::OrderPtr nextPendingMission() override {
         return m_missions.peekPending();
     }
 
-    std::shared_ptr<des::Appointment> popPendingMission() override {
+    des::OrderPtr popPendingMission() override {
         return m_missions.popPending();
     }
 
@@ -198,16 +196,6 @@ public:
         m_robot->setLocation(location);
         m_eventBus.notifyMoved(m_currentTime, location, distance);
     }
-
-    bool isMissionFeasible(const des::Appointment& appointment, const std::string &startPos) const override {
-        const double missionDuration = m_scheduler->optimisticMeeting(appointment.personName, startPos, appointment.roomName);
-        if (appointment.appointmentTime - missionDuration  >= getTime()) {
-            RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", appointment.id);
-            return true;
-        }
-        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is NOT feasible", appointment.id);
-        return false;
-    };
 
     double getConversationProbability() const override { return m_simConfig->conversationProbability; };
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };

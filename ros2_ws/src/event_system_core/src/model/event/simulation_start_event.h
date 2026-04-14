@@ -2,8 +2,6 @@
 
 #include "base.h"
 #include "stop_drive_event.h"
-#include "../i_sim_context.h"
-#include "../robot.h"
 #include "../robot_state.h"
 
 class SimulationStartEvent final : public IEvent {

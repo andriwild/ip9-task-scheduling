@@ -78,8 +78,14 @@ if(BUILD_TESTING)
   )
 
   # ConfigLoader tests
-  ament_add_gtest(test_config_loader test/test_config_loader.cpp)
+  ament_add_gtest(test_config_loader
+    test/test_config_loader.cpp
+    src/plugins/accompany/accompany_plugin.cpp
+    src/model/robot.cpp
+    src/model/robot_state.cpp
+  )
   target_link_libraries(test_config_loader nlohmann_json::nlohmann_json)
+  ament_target_dependencies(test_config_loader rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_config_loader PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
@@ -96,8 +102,9 @@ if(BUILD_TESTING)
     test/test_scheduler.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/plugins/accompany/accompany_plugin.cpp
   )
-  ament_target_dependencies(test_scheduler rclcpp behaviortree_cpp)
+  ament_target_dependencies(test_scheduler rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_scheduler PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
@@ -107,8 +114,9 @@ if(BUILD_TESTING)
     test/test_events.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/plugins/accompany/accompany_plugin.cpp
   )
-  ament_target_dependencies(test_events rclcpp behaviortree_cpp)
+  ament_target_dependencies(test_events rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_events PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
@@ -120,9 +128,10 @@ if(BUILD_TESTING)
     src/model/robot.cpp
     src/model/robot_state.cpp
     src/model/context.cpp
+    src/plugins/accompany/accompany_plugin.cpp
   )
   target_link_libraries(test_integration nlohmann_json::nlohmann_json)
-  ament_target_dependencies(test_integration rclcpp behaviortree_cpp)
+  ament_target_dependencies(test_integration rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_integration PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )

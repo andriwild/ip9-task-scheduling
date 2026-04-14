@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <random>
+#include <stdexcept>
 
 #include "../src/model/context.h"
 #include "../src/model/event.h"
 #include "../src/model/i_sim_context.h"
 #include "../src/model/robot.h"
 #include "../src/model/robot_state.h"
+#include "../src/plugins/accompany/accompany_order.h"
 
 class MockSimContext : public ISimContext {
 public:
@@ -14,16 +16,16 @@ public:
     EventList pushedEvents;
     std::vector<std::string> notifiedEvents;
     int tickCount = 0;
-    bool completeAppointmentCalled = false;
+    bool completeOrderCalled = false;
     std::map<std::string, std::string> blackboard;
 
     // Configurable state
     std::shared_ptr<Robot> robot;
-    std::shared_ptr<des::Appointment> currentAppointment;
+    des::OrderPtr currentOrder;
     std::shared_ptr<des::SimConfig> simConfig;
     des::PersonLocationMap employees;
     std::map<std::string, std::string> personLocations;
-    des::AppointmentList pendingMissions;
+    des::OrderList pendingMissions;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
 
@@ -75,45 +77,45 @@ public:
         return {10.0, 5.0};
     }
 
+    const Scheduler& getScheduler() const override {
+        throw std::runtime_error("MockSimContext::getScheduler not implemented");
+    }
+
     void notifyEvent(const IEvent& event) const override {
         const_cast<MockSimContext*>(this)->notifiedEvents.push_back(event.getName());
     }
 
-    void setAppointment(const std::shared_ptr<des::Appointment>& appointment) override {
-        currentAppointment = appointment;
+    void setOrderPtr(const des::OrderPtr& order) override {
+        currentOrder = order;
     }
 
-    std::shared_ptr<des::Appointment> getAppointment() const override {
-        return currentAppointment;
+    des::OrderPtr getOrderPtr() const override {
+        return currentOrder;
     }
 
-    void updateAppointmentState(const des::MissionState& newState) override {
-        if (currentAppointment) currentAppointment->state = newState;
+    void updateOrderState(const des::MissionState& newState) override {
+        if (currentOrder) currentOrder->state = newState;
     }
 
-    void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) override {
-        pendingMissions.push_back(appointment);
+    void addPendingMission(const des::OrderPtr order) override {
+        pendingMissions.push_back(order);
     }
 
     bool hasPendingMission() const override { return !pendingMissions.empty(); }
 
-    std::shared_ptr<des::Appointment> nextPendingMission() override {
+    des::OrderPtr nextPendingMission() override {
         return pendingMissions.empty() ? nullptr : pendingMissions.front();
     }
 
-    std::shared_ptr<des::Appointment> popPendingMission() override {
+    des::OrderPtr popPendingMission() override {
         if (pendingMissions.empty()) return nullptr;
         auto front = pendingMissions.front();
         pendingMissions.erase(pendingMissions.begin());
         return front;
     }
 
-    void completeAppointment(const std::shared_ptr<des::Appointment>& /*appt*/) const override {
-        const_cast<MockSimContext*>(this)->completeAppointmentCalled = true;
-    }
-
-    bool isMissionFeasible(const des::Appointment& /*appointment*/, const std::string& /*startPos*/) const override {
-        return true;
+    void completeOrder(const des::OrderPtr& /*order*/) const override {
+        const_cast<MockSimContext*>(this)->completeOrderCalled = true;
     }
 
     bool hasEmployee(const std::string& person) const override {
@@ -137,6 +139,22 @@ public:
     }
     double getSearchArea(const std::string& /*name*/) const override { return 0.0; }
 };
+
+static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+        int id,
+        const std::string& person,
+        const std::string& room = "Room1",
+        int appointmentTime = 36000,
+        const std::string& description = "Test") {
+    auto o = std::make_shared<AccompanyOrder>();
+    o->id = id;
+    o->type = "accompany";
+    o->personName = person;
+    o->roomName = room;
+    o->deadline = appointmentTime;
+    o->description = description;
+    return o;
+}
 
 // --- SimulationStartEvent ---
 
@@ -179,18 +197,15 @@ TEST(EventExecute, SimulationEndSetsIdleState) {
 TEST(EventExecute, MissionDispatchAddsPendingAndTicksBT) {
     MockSimContext ctx;
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = 1;
-    appt->personName = "Max";
-    appt->roomName = "Room1";
-    appt->appointmentTime = 36000;
-    appt->description = "Test";
+    auto order = makeAccompanyOrder(1, "Max");
 
-    MissionDispatchEvent event(35000, appt);
+    MissionDispatchEvent event(35000, order);
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pendingMissions.size(), 1u);
-    EXPECT_EQ(ctx.pendingMissions[0]->personName, "Max");
+    auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx.pendingMissions[0]);
+    ASSERT_NE(accompany, nullptr);
+    EXPECT_EQ(accompany->personName, "Max");
     EXPECT_EQ(ctx.tickCount, 1);
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
@@ -205,13 +220,9 @@ TEST(EventExecute, MissionStartSetsSearchState) {
     person->roomLabels = {"Office", "Kitchen"};
     ctx.employees["Max"] = person;
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = 1;
-    appt->personName = "Max";
-    appt->roomName = "Room1";
-    appt->appointmentTime = 36000;
+    auto order = makeAccompanyOrder(1, "Max");
 
-    MissionStartEvent event(35000, appt);
+    MissionStartEvent event(35000, order);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::SEARCHING);
@@ -230,16 +241,14 @@ TEST(EventExecute, MissionStartSetsSearchState) {
 TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
     MockSimContext ctx;
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = 1;
-    appt->personName = "Max";
-    appt->state = des::MissionState::IN_PROGRESS;
-    ctx.currentAppointment = appt;
+    auto order = makeAccompanyOrder(1, "Max");
+    order->state = des::MissionState::IN_PROGRESS;
+    ctx.currentOrder = order;
 
     AbortSearchEvent event(36000);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.currentAppointment->state, des::MissionState::FAILED);
+    EXPECT_EQ(ctx.currentOrder->state, des::MissionState::FAILED);
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::IDLE);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::MISSION_COMPLETE);
@@ -250,12 +259,8 @@ TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
 TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
     MockSimContext ctx;
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = 1;
-    appt->personName = "Max";
-    appt->roomName = "MeetingRoom";
-    appt->appointmentTime = 36000;
-    ctx.currentAppointment = appt;
+    auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
+    ctx.currentOrder = order;
 
     StartAccompanyEvent event(35500);
     event.execute(ctx);
@@ -400,18 +405,16 @@ TEST(EventExecute, BatteryFullSetsIdleAndResetsBatteryFlag) {
 
 // --- MissionCompleteEvent ---
 
-TEST(EventExecute, MissionCompleteCallsCompleteAppointmentAndTicks) {
+TEST(EventExecute, MissionCompleteCallsCompleteOrderAndTicks) {
     MockSimContext ctx;
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = 1;
-    appt->personName = "Max";
-    appt->state = des::MissionState::COMPLETED;
+    auto order = makeAccompanyOrder(1, "Max");
+    order->state = des::MissionState::COMPLETED;
 
-    MissionCompleteEvent event(36500, appt);
+    MissionCompleteEvent event(36500, order);
     event.execute(ctx);
 
-    EXPECT_TRUE(ctx.completeAppointmentCalled);
+    EXPECT_TRUE(ctx.completeOrderCalled);
     EXPECT_EQ(ctx.tickCount, 1);
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
@@ -482,10 +485,8 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
     ctx.employees["Max"] = person;
     ctx.personLocations["Max"] = "Office";
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "Max";
-    appt->roomName = "MeetingRoom";
-    ctx.currentAppointment = appt;
+    auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
+    ctx.currentOrder = order;
 
     StopDriveEvent event(35100, "MeetingRoom", 10.0);
     event.execute(ctx);

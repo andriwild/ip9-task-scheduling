@@ -4,6 +4,7 @@
 #include "person_transition.h"
 #include "../i_sim_context.h"
 #include "../robot.h"
+#include "../../plugins/accompany/accompany_order.h"
 
 class StopDriveEvent final : public IEvent {
 public:
@@ -23,8 +24,9 @@ public:
         ctx.notifyEvent(*this);
 
         // Move accompanied person to arrival location
-        if (ctx.getRobot()->getStateType() == des::RobotStateType::ACCOMPANY && ctx.getAppointment()) {
-            const auto& personName = ctx.getAppointment()->personName;
+        auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx.getOrderPtr());
+        if (ctx.getRobot()->getStateType() == des::RobotStateType::ACCOMPANY && accompany) {
+            const auto& personName = accompany->personName;
             if (ctx.hasEmployee(personName)) {
                 auto person = ctx.getPersonByName(personName);
                 const auto& arrivalLocation = ctx.getRobot()->getLocation();

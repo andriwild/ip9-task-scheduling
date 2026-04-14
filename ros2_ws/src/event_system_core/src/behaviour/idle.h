@@ -9,6 +9,8 @@
 
 #include "../model/i_sim_context.h"
 #include "../model/robot_state.h"
+#include "../model/robot.h"
+#include "../model/event.h"
 
 class IsIdle final : public BT::ConditionNode {
 public:

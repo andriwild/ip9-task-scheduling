@@ -17,8 +17,11 @@ struct VisualStateBlock {
 };
 
 struct VisualAppointment {
-    std::shared_ptr<des::Appointment> appt;
+    int id;
+    int scheduledTime;
     int startTime;
+    std::string primaryLabel;
+    std::string description;
 };
 
 struct TimelineTransformer {

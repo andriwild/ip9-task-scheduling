@@ -1,12 +1,16 @@
 {
-    "appointments": [
+    "orders": [
         {
+            "id": 0,
+            "type": "accompany",
             "personName": "Max",
             "roomName": "5.2B10",
             "appointmentTime": 36000,
             "description": "Meeting A"
         },
         {
+            "id": 1,
+            "type": "accompany",
             "personName": "Anna",
             "roomName": "5.2B01",
             "appointmentTime": 39600,

@@ -9,45 +9,30 @@
 #include <vector>
 
 #include "../util/types.h"
+#include "../plugins/order_registry.h"
+#include "../plugins/accompany/accompany_order.h"
 
-using des::AppointmentList;
-
-const std::string DEFAULT_APPOINTMENT_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
-const std::string DEFAULT_EMPLOYEE_FILE =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
-const std::string SIM_CONFIG_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
+const std::string DEFAULT_ORDER_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
+const std::string DEFAULT_EMPLOYEE_FILE    =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
+const std::string SIM_CONFIG_FILE          = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
 class ConfigLoader {
 public:
-    static std::optional<AppointmentList> loadAppointmentConfig(const std::string& filePath) {
+    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath) {
+
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            std::cout << "Use default appointment config file: " << DEFAULT_APPOINTMENT_FILE << std::endl;
-            json = getJson(DEFAULT_APPOINTMENT_FILE);
+            std::cout << "Use default appointment config file: " << DEFAULT_ORDER_FILE << std::endl;
+            json = getJson(DEFAULT_ORDER_FILE);
             assert(json.has_value());
         }
 
-        AppointmentList appointments;
-        try {
-            auto jAppts = json.value()["appointments"];
-            appointments.reserve(jAppts.size());
-
-            int idCounter = 0;
-            for (const auto& item : jAppts) {
-                des::Appointment appointment;
-                appointment.id = idCounter++;
-                appointment.personName      = item.at("personName").get<std::string>();
-                appointment.description     = item.at("description").get<std::string>();
-                appointment.roomName        = item.at("roomName").get<std::string>();
-                appointment.appointmentTime = item.at("appointmentTime").get<int>();
-
-                appointments.emplace_back(std::make_shared<des::Appointment>(appointment));
-            }
-
-        } catch (const nlohmann::json::type_error& e) {
-            std::cerr << "Failed to parse json file: " << filePath << std::endl;
-            return std::nullopt;
+        des::OrderList orders;
+        for (const auto& j : json.value().at("orders")) {
+            const std::string& type = j.at("type").get_ref<const std::string&>();
+            orders.push_back(OrderRegistry::instance().get(type).fromJson(j));
         }
-        return appointments;
+        return orders;
     };
 
     static std::optional<des::PersonList> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
@@ -135,11 +120,13 @@ public:
 
     static des::PersonList filterByAppointments(
         const des::PersonList& employees,
-        const AppointmentList& appointments
+        const des::OrderList& orders
     ) {
         std::set<std::string> needed;
-        for (const auto& appt : appointments) {
-            needed.insert(appt->personName);
+        for (const auto& order : orders) {
+            if (auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(order)) {
+                needed.insert(accompany->personName);
+            }
         }
         des::PersonList filtered;
         for (const auto& p : employees) {
@@ -151,7 +138,7 @@ public:
     }
 
     static void validateConfig(
-        const AppointmentList& appointments,
+        const des::OrderList& orders,
         const des::PersonList& employees,
         const std::map<std::string, des::Point>& locationMap,
         const std::string& arrivalLocation
@@ -164,15 +151,18 @@ public:
             employeeNames.insert(p->firstName);
         }
 
-        // Check appointments reference valid employees and rooms
-        for (const auto& appt : appointments) {
-            if (!employeeNames.contains(appt->personName)) {
-                errors.push_back("Appointment '" + appt->description +
-                    "': personName '" + appt->personName + "' does not match any employee");
+        // Check accompany orders reference valid employees and rooms.
+        // Other order types provide their own validation elsewhere.
+        for (const auto& order : orders) {
+            auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(order);
+            if (!accompany) { continue; }
+            if (!employeeNames.contains(accompany->personName)) {
+                errors.push_back("Order '" + accompany->description +
+                    "': personName '" + accompany->personName + "' does not match any employee");
             }
-            if (!locationMap.contains(appt->roomName)) {
-                errors.push_back("Appointment '" + appt->description +
-                    "': roomName '" + appt->roomName + "' is not a known location");
+            if (!locationMap.contains(accompany->roomName)) {
+                errors.push_back("Order '" + accompany->description +
+                    "': roomName '" + accompany->roomName + "' is not a known location");
             }
         }
 

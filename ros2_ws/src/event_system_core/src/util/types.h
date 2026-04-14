@@ -202,29 +202,7 @@ struct BatteryProps {
     double lowThreshold;
 };
 
-struct Appointment {
-    int id;
-    std::string personName;
-    std::string roomName;
-    int appointmentTime;
-    std::string description;
-    MissionState state = PENDING;
-
-    friend std::ostream& operator<<(std::ostream& os, const Appointment& appt) {
-        constexpr int W = 25;
-        os << "\n" << "\033[1m" << "--- Appointment ---" << "\033[0m" << std::endl;
-        os << std::left << std::setw(W) << "id" << ": " << appt.id << std::endl;
-        os << std::left << std::setw(W) << "state" << ": " << appt.state << std::endl;
-        os << std::left << std::setw(W) << "description" << ": " << appt.description << std::endl;
-        os << std::left << std::setw(W) << "time" << ": " << appt.appointmentTime << std::endl;
-        os << std::left << std::setw(W) << "personName" << ": " << appt.personName << std::endl;
-        os << std::left << std::setw(W) << "roomName" << ": " << appt.roomName << std::endl;
-        return os;
-    }
-};
-
 using PersonList        = std::vector<std::shared_ptr<Person>>;
-using AppointmentList   = std::vector<std::shared_ptr<Appointment>>;
 using PersonLocationMap = std::map<std::string, std::shared_ptr<Person>>;
 using SearchAreaMap     = std::map<std::string, double>;
 using LocationMap       = std::map<std::string, Point>;

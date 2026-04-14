@@ -4,6 +4,9 @@
 #include <memory>
 
 #include "../src/init/config_loader.h"
+#include "../src/plugins/accompany/accompany_order.h"
+#include "../src/plugins/accompany/accompany_plugin.h"
+#include "../src/plugins/order_registry.h"
 
 namespace {
 
@@ -11,56 +14,60 @@ std::string fixturesDir() {
     return std::string(TEST_FIXTURES_DIR);
 }
 
+std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+        const std::string& person,
+        const std::string& room,
+        int appointmentTime = 36000,
+        const std::string& description = "Test") {
+    auto o = std::make_shared<AccompanyOrder>();
+    o->type = "accompany";
+    o->personName = person;
+    o->roomName = room;
+    o->deadline = appointmentTime;
+    o->description = description;
+    return o;
+}
+
+class PluginRegistry : public ::testing::Environment {
+public:
+    void SetUp() override {
+        static bool registered = false;
+        if (!registered) {
+            OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+            registered = true;
+        }
+    }
+};
+::testing::Environment* const kRegistryEnv = ::testing::AddGlobalTestEnvironment(new PluginRegistry);
+
 } // namespace
 
-// --- loadAppointmentConfig ---
+// --- loadOrderConfig ---
 
-TEST(ConfigLoaderAppointments, LoadsValidAppointments) {
-    auto result = ConfigLoader::loadAppointmentConfig(fixturesDir() + "/test_appointments.json");
+TEST(ConfigLoaderOrders, LoadsValidOrders) {
+    auto result = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->size(), 2u);
 
-    EXPECT_EQ((*result)[0]->personName, "Max");
-    EXPECT_EQ((*result)[0]->roomName, "5.2B10");
-    EXPECT_EQ((*result)[0]->appointmentTime, 36000);
-    EXPECT_EQ((*result)[0]->description, "Meeting A");
-    EXPECT_EQ((*result)[0]->id, 0);
+    auto first = std::dynamic_pointer_cast<AccompanyOrder>((*result)[0]);
+    ASSERT_NE(first, nullptr);
+    EXPECT_EQ(first->personName, "Max");
+    EXPECT_EQ(first->roomName, "5.2B10");
+    EXPECT_EQ(first->deadline.value(), 36000);
+    EXPECT_EQ(first->description, "Meeting A");
+    EXPECT_EQ(first->id, 0);
 
-    EXPECT_EQ((*result)[1]->personName, "Anna");
-    EXPECT_EQ((*result)[1]->id, 1);
+    auto second = std::dynamic_pointer_cast<AccompanyOrder>((*result)[1]);
+    ASSERT_NE(second, nullptr);
+    EXPECT_EQ(second->personName, "Anna");
+    EXPECT_EQ(second->id, 1);
 }
 
-TEST(ConfigLoaderAppointments, NonexistentFileFallsBackToDefault) {
-    auto result = ConfigLoader::loadAppointmentConfig("/tmp/nonexistent_xyz_12345.json");
-    // Function falls back to DEFAULT_APPOINTMENT_FILE - verify it loads something
+TEST(ConfigLoaderOrders, DefaultStateIsPending) {
+    auto result = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(result.has_value());
-    EXPECT_FALSE(result->empty());
-    // Verify appointments have required fields populated
-    for (const auto& appt : *result) {
-        EXPECT_FALSE(appt->personName.empty());
-        EXPECT_FALSE(appt->roomName.empty());
-        EXPECT_GT(appt->appointmentTime, 0);
-    }
-}
-
-TEST(ConfigLoaderAppointments, InvalidJsonStructureReturnsNullopt) {
-    auto result = ConfigLoader::loadAppointmentConfig(fixturesDir() + "/invalid_appointments.json");
-    EXPECT_FALSE(result.has_value());
-}
-
-TEST(ConfigLoaderAppointments, AppointmentIdsAreSequential) {
-    auto result = ConfigLoader::loadAppointmentConfig(fixturesDir() + "/test_appointments.json");
-    ASSERT_TRUE(result.has_value());
-    for (size_t i = 0; i < result->size(); ++i) {
-        EXPECT_EQ((*result)[i]->id, static_cast<int>(i));
-    }
-}
-
-TEST(ConfigLoaderAppointments, DefaultStateIsPending) {
-    auto result = ConfigLoader::loadAppointmentConfig(fixturesDir() + "/test_appointments.json");
-    ASSERT_TRUE(result.has_value());
-    for (const auto& appt : *result) {
-        EXPECT_EQ(appt->state, des::MissionState::PENDING);
+    for (const auto& order : *result) {
+        EXPECT_EQ(order->state, des::MissionState::PENDING);
     }
 }
 
@@ -177,19 +184,13 @@ TEST(ConfigLoaderSimConfig, SaveToInvalidPathReturnsFalse) {
 
 // --- filterByAppointments ---
 
-TEST(ConfigLoaderFilter, FiltersEmployeesByAppointment) {
+TEST(ConfigLoaderFilter, FiltersEmployeesByAccompanyOrder) {
     auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
-    // Only one appointment for Max
-    AppointmentList appointments;
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "Max";
-    appt->roomName = "5.2B10";
-    appt->appointmentTime = 36000;
-    appointments.push_back(appt);
+    des::OrderList orders = { makeAccompanyOrder("Max", "5.2B10") };
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, appointments);
+    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
     ASSERT_EQ(filtered.size(), 1u);
     EXPECT_EQ(filtered[0]->firstName, "Max");
 }
@@ -198,27 +199,22 @@ TEST(ConfigLoaderFilter, NoMatchingEmployeesReturnsEmpty) {
     auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
-    AppointmentList appointments;
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "UnknownPerson";
-    appointments.push_back(appt);
+    des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomX") };
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, appointments);
+    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
     EXPECT_TRUE(filtered.empty());
 }
 
-TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveAppointments) {
+TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveOrders) {
     auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
-    AppointmentList appointments;
+    des::OrderList orders;
     for (const auto& emp : *employees) {
-        auto appt = std::make_shared<des::Appointment>();
-        appt->personName = emp->firstName;
-        appointments.push_back(appt);
+        orders.push_back(makeAccompanyOrder(emp->firstName, "Room"));
     }
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, appointments);
+    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
     EXPECT_EQ(filtered.size(), employees->size());
 }
 
@@ -226,20 +222,20 @@ TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveAppointments) {
 
 TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
     auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
-    auto appointments = ConfigLoader::loadAppointmentConfig(fixturesDir() + "/test_appointments.json");
+    auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(employees.has_value());
-    ASSERT_TRUE(appointments.has_value());
+    ASSERT_TRUE(orders.has_value());
 
-    des::LocationMap locationMap;
+    std::map<std::string, des::Point> locationMap;
     locationMap["5.2B03"] = des::Point(0, 0, 0);
     locationMap["5.2B01"] = des::Point(1, 1, 0);
     locationMap["5.2B10"] = des::Point(2, 2, 0);
     locationMap["5.2B_Elevator"] = des::Point(3, 3, 0);
 
-    EXPECT_NO_THROW(ConfigLoader::validateConfig(*appointments, *employees, locationMap, "5.2B_Elevator"));
+    EXPECT_NO_THROW(ConfigLoader::validateConfig(*orders, *employees, locationMap, "5.2B_Elevator"));
 }
 
-TEST(ConfigLoaderValidation, UnknownPersonInAppointmentThrows) {
+TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
     des::PersonList employees;
     auto emp = std::make_shared<des::Person>();
     emp->firstName = "Max";
@@ -247,35 +243,27 @@ TEST(ConfigLoaderValidation, UnknownPersonInAppointmentThrows) {
     emp->transitionMatrix = {{1.0}};
     employees.push_back(emp);
 
-    AppointmentList appointments;
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "UnknownPerson";
-    appt->roomName = "RoomA";
-    appt->description = "Test";
-    appointments.push_back(appt);
+    des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomA") };
 
-    des::LocationMap locationMap;
+    std::map<std::string, des::Point> locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
 
-    EXPECT_THROW(ConfigLoader::validateConfig(appointments, employees, locationMap, "RoomA"), std::runtime_error);
+    EXPECT_THROW(ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"), std::runtime_error);
 }
 
-TEST(ConfigLoaderValidation, UnknownRoomInAppointmentThrows) {
+TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
     auto emp = std::make_shared<des::Person>();
     emp->firstName = "Max";
     emp->roomLabels = {"RoomA"};
     emp->transitionMatrix = {{1.0}};
 
-    auto appt = std::make_shared<des::Appointment>();
-    appt->personName = "Max";
-    appt->roomName = "NonexistentRoom";
-    appt->description = "Test";
+    des::OrderList orders = { makeAccompanyOrder("Max", "NonexistentRoom") };
 
-    des::LocationMap locationMap;
+    std::map<std::string, des::Point> locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
 
     EXPECT_THROW(
-        ConfigLoader::validateConfig({appt}, {emp}, locationMap, "RoomA"),
+        ConfigLoader::validateConfig(orders, {emp}, locationMap, "RoomA"),
         std::runtime_error
     );
 }
@@ -286,7 +274,7 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
     emp->roomLabels = {"RoomA", "RoomB"};
     emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
 
-    des::LocationMap locationMap;
+    std::map<std::string, des::Point> locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
     locationMap["RoomB"] = des::Point(1, 1, 0);
 

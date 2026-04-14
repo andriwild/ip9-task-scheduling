@@ -61,17 +61,18 @@ void DesTimelinePanel::onStateChange(const event_system_msgs::msg::TimelineState
 }
 
 void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr& msg){
-    auto appt = std::make_shared<des::Appointment>();
-    appt->id = msg->id;
-    appt->appointmentTime = msg->appointment_time;
-    appt->description     = msg->description;
-    appt->personName      = msg->person_name;
+    VisualAppointment appt;
+    appt.id            = msg->id;
+    appt.scheduledTime = msg->appointment_time;
+    appt.startTime     = msg->start_time;
+    appt.primaryLabel  = msg->person_name;
+    appt.description   = msg->description;
 
     m_minStartTime = std::min(m_minStartTime, msg->start_time);
     m_maxEndTime   = std::max(m_maxEndTime  , msg->appointment_time);
 
     m_timeline->setRange(m_minStartTime - ONE_HOUR, m_maxEndTime + ONE_HOUR);
-    m_timeline->addMeetingPlan(appt, msg->start_time);
+    m_timeline->addMeetingPlan(appt);
 }
 
 void DesTimelinePanel::onReset(const event_system_msgs::msg::TimelineReset::SharedPtr msg){

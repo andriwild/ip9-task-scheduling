@@ -83,8 +83,8 @@ public:
         updateScene();
     }
 
-    void addMeetingPlan(const std::shared_ptr<des::Appointment> &appointment, const int startTime) const {
-        m_markerTrack->addMeetingPlan(appointment, startTime);
+    void addMeetingPlan(const VisualAppointment& appointment) const {
+        m_markerTrack->addMeetingPlan(appointment);
         updateScene();
     }
 

@@ -3,6 +3,7 @@
 #include "base.h"
 #include "../i_sim_context.h"
 #include "../robot.h"
+#include "../../plugins/accompany/accompany_order.h"
 
 class ScanComplete final : public IEvent {
 public:
@@ -15,7 +16,8 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        const auto& personName = ctx.getAppointment()->personName;
+        const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
+        const auto& personName = accompany.personName;
         const std::string personLocation = ctx.getPersonLocation(personName);
         const std::string robotLocation  = ctx.getRobot()->getLocation();
         const bool personPresent = robotLocation == personLocation;

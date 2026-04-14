@@ -3,13 +3,14 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 
-#include "../util/types.h"
 #include "robot_state.h"
+#include "../util/types.h"
+#include "../plugins/i_order.h"
 
 class IEvent;
 class Robot;
+class Scheduler;
 
 struct Journey {
     double duration;
@@ -37,22 +38,20 @@ public:
     virtual void changeRobotState(std::unique_ptr<RobotState> newState) const = 0;
     virtual void robotMoved(const std::string& location, double distance = 0) const = 0;
     virtual Journey scheduleArrival(const std::string& target) const = 0;
+    virtual const Scheduler& getScheduler() const = 0;
 
     // Notifications
     virtual void notifyEvent(const IEvent& event) const = 0;
 
     // Mission management
-    virtual void setAppointment(const std::shared_ptr<des::Appointment>& appointment) = 0;
-    virtual std::shared_ptr<des::Appointment> getAppointment() const = 0;
-    virtual void updateAppointmentState(const des::MissionState& newState) = 0;
-    virtual void addPendingMission(const std::shared_ptr<des::Appointment>& appointment) = 0;
+    virtual void setOrderPtr(const des::OrderPtr& orderPtr) = 0;
+    virtual des::OrderPtr getOrderPtr() const = 0;
+    virtual void updateOrderState(const des::MissionState& newState) = 0;
+    virtual void addPendingMission(const des::OrderPtr orderPtr) = 0;
     virtual bool hasPendingMission() const = 0;
-    virtual std::shared_ptr<des::Appointment> nextPendingMission() = 0;
-    virtual std::shared_ptr<des::Appointment> popPendingMission() = 0;
-    virtual void completeAppointment(const std::shared_ptr<des::Appointment>& appt) const = 0;
-
-    // Mission feasibility
-    virtual bool isMissionFeasible(const des::Appointment& appointment, const std::string& startPos) const = 0;
+    virtual des::OrderPtr nextPendingMission() = 0;
+    virtual des::OrderPtr popPendingMission() = 0;
+    virtual void completeOrder(const des::OrderPtr& appt) const = 0;
 
     // Employee data
     virtual bool hasEmployee(const std::string& person) const = 0;

@@ -2,8 +2,7 @@
 
 #include <cassert>
 
-#include "event.h"
-
+#include "../model/event/base.h"
 
 class EventQueue {
     SortedEventQueue m_queue;

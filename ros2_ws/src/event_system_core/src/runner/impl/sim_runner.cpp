@@ -15,15 +15,15 @@
 
 
 void SimRunner::reloadSimulationData() {
-    m_appointments = loadAppointments(m_config->appointmentsPath);
+    m_orders = loadOrders(m_config->appointmentsPath);
     auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
     }
 
-    ConfigLoader::validateConfig(m_appointments, allPeople.value(), m_locationMap, "5.2B_Elevator");
+    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_locationMap, "5.2B_Elevator");
 
-    m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_appointments);
+    m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_orders);
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees", m_people.value().size(), allPeople.value().size());
 
     m_employeeLocations.clear();

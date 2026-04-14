@@ -33,16 +33,16 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     );
 
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        m_appointmentFilePaths.push_back(entry.path());
+        m_orderFilePaths.push_back(entry.path());
     }
-    std::sort(m_appointmentFilePaths.begin(), m_appointmentFilePaths.end());
+    std::sort(m_orderFilePaths.begin(), m_orderFilePaths.end());
     rebuildFileQueue();
 
     m_ctx->addObserver(m_metricsNode);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Rounds: %d, Files per round: %zu",
-                m_totalRounds, m_appointmentFilePaths.size());
+                m_totalRounds, m_orderFilePaths.size());
 
     loadNextBatch();
 
@@ -50,7 +50,7 @@ void HeadlessRunner::setupApplication(const std::string& path) {
 }
 
 bool HeadlessRunner::loadNextBatch() {
-    if (m_appointmentFiles.empty()) {
+    if (m_orderFiles.empty()) {
         m_currentRound++;
         if (m_currentRound >= m_totalRounds) {
             return false;
@@ -64,21 +64,21 @@ bool HeadlessRunner::loadNextBatch() {
         m_eventQueue.pop();
     }
 
-    auto path = m_appointmentFiles.front();
-    m_appointmentFiles.pop();
+    auto path = m_orderFiles.front();
+    m_orderFiles.pop();
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Loading batch: %s (round %d/%d)",
                 path.c_str(), m_currentRound + 1, m_totalRounds);
 
-    auto appts = ConfigLoader::loadAppointmentConfig(path);
+    auto appts = ConfigLoader::loadOrderConfig(path);
     if (!appts.has_value()) {
         RCLCPP_ERROR(rclcpp::get_logger("des_application"), "Failed to load appointments from: %s", path.c_str());
         return loadNextBatch();
     }
-    m_appointments = appts.value();
+    m_orders = appts.value();
 
-    ConfigLoader::validateConfig(m_appointments, m_allPeople, m_locationMap, "5.2B_Elevator");
+    ConfigLoader::validateConfig(m_orders, m_allPeople, m_locationMap, "5.2B_Elevator");
 
-    m_people = ConfigLoader::filterByAppointments(m_allPeople, m_appointments);
+    m_people = ConfigLoader::filterByAppointments(m_allPeople, m_orders);
     RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees",
                 m_people.value().size(), m_allPeople.size());
 

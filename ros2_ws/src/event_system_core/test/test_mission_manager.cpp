@@ -2,19 +2,21 @@
 #include <memory>
 
 #include "../src/model/mission_manager.h"
+#include "../src/plugins/accompany/accompany_order.h"
 
 class MissionManagerTest : public ::testing::Test {
 protected:
     MissionManager manager;
 
-    static std::shared_ptr<des::Appointment> makeAppointment(int id, const std::string& person) {
-        auto appt = std::make_shared<des::Appointment>();
-        appt->id = id;
-        appt->personName = person;
-        appt->roomName = "Room" + std::to_string(id);
-        appt->appointmentTime = 1000 * id;
-        appt->description = "Test " + std::to_string(id);
-        return appt;
+    static std::shared_ptr<AccompanyOrder> makeOrder(int id, const std::string& person) {
+        auto order = std::make_shared<AccompanyOrder>();
+        order->id = id;
+        order->type = "accompany";
+        order->personName = person;
+        order->roomName = "Room" + std::to_string(id);
+        order->deadline = 1000 * id;
+        order->description = "Test " + std::to_string(id);
+        return order;
     }
 };
 
@@ -29,22 +31,22 @@ TEST_F(MissionManagerTest, InitialStateHasNoPending) {
 }
 
 TEST_F(MissionManagerTest, SetAndGetCurrent) {
-    auto appt = makeAppointment(1, "Max");
-    manager.setCurrent(appt);
-    EXPECT_EQ(manager.getCurrent(), appt);
-    EXPECT_EQ(manager.getCurrent()->personName, "Max");
+    auto order = makeOrder(1, "Max");
+    manager.setCurrent(order);
+    EXPECT_EQ(manager.getCurrent(), order);
+    EXPECT_EQ(std::dynamic_pointer_cast<AccompanyOrder>(manager.getCurrent())->personName, "Max");
 }
 
 TEST_F(MissionManagerTest, OverwriteCurrent) {
-    manager.setCurrent(makeAppointment(1, "Max"));
-    auto second = makeAppointment(2, "Anna");
+    manager.setCurrent(makeOrder(1, "Max"));
+    auto second = makeOrder(2, "Anna");
     manager.setCurrent(second);
-    EXPECT_EQ(manager.getCurrent()->personName, "Anna");
+    EXPECT_EQ(std::dynamic_pointer_cast<AccompanyOrder>(manager.getCurrent())->personName, "Anna");
 }
 
 TEST_F(MissionManagerTest, UpdateStateOnCurrent) {
-    auto appt = makeAppointment(1, "Max");
-    manager.setCurrent(appt);
+    auto order = makeOrder(1, "Max");
+    manager.setCurrent(order);
 
     manager.updateState(des::MissionState::IN_PROGRESS);
     EXPECT_EQ(manager.getCurrent()->state, des::MissionState::IN_PROGRESS);
@@ -54,8 +56,8 @@ TEST_F(MissionManagerTest, UpdateStateOnCurrent) {
 }
 
 TEST_F(MissionManagerTest, AddAndPopPending) {
-    auto a1 = makeAppointment(1, "Max");
-    auto a2 = makeAppointment(2, "Anna");
+    auto a1 = makeOrder(1, "Max");
+    auto a2 = makeOrder(2, "Anna");
 
     manager.addPending(a1);
     manager.addPending(a2);
@@ -74,7 +76,7 @@ TEST_F(MissionManagerTest, AddAndPopPending) {
 
 TEST_F(MissionManagerTest, PendingIsFIFO) {
     for (int i = 0; i < 5; ++i) {
-        manager.addPending(makeAppointment(i, "Person" + std::to_string(i)));
+        manager.addPending(makeOrder(i, "Person" + std::to_string(i)));
     }
 
     for (int i = 0; i < 5; ++i) {
@@ -84,7 +86,7 @@ TEST_F(MissionManagerTest, PendingIsFIFO) {
 }
 
 TEST_F(MissionManagerTest, PeekDoesNotRemove) {
-    manager.addPending(makeAppointment(1, "Max"));
+    manager.addPending(makeOrder(1, "Max"));
 
     auto peeked1 = manager.peekPending();
     auto peeked2 = manager.peekPending();
@@ -93,9 +95,9 @@ TEST_F(MissionManagerTest, PeekDoesNotRemove) {
 }
 
 TEST_F(MissionManagerTest, ResetClearsEverything) {
-    manager.setCurrent(makeAppointment(1, "Max"));
-    manager.addPending(makeAppointment(2, "Anna"));
-    manager.addPending(makeAppointment(3, "Leo"));
+    manager.setCurrent(makeOrder(1, "Max"));
+    manager.addPending(makeOrder(2, "Anna"));
+    manager.addPending(makeOrder(3, "Leo"));
 
     manager.reset();
 
@@ -105,13 +107,13 @@ TEST_F(MissionManagerTest, ResetClearsEverything) {
 }
 
 TEST_F(MissionManagerTest, ResetThenReuseWorks) {
-    manager.setCurrent(makeAppointment(1, "Max"));
+    manager.setCurrent(makeOrder(1, "Max"));
     manager.reset();
 
-    auto appt = makeAppointment(99, "NewPerson");
-    manager.setCurrent(appt);
+    auto order = makeOrder(99, "NewPerson");
+    manager.setCurrent(order);
     EXPECT_EQ(manager.getCurrent()->id, 99);
 
-    manager.addPending(makeAppointment(100, "AnotherPerson"));
+    manager.addPending(makeOrder(100, "AnotherPerson"));
     EXPECT_TRUE(manager.hasPending());
 }

@@ -10,9 +10,9 @@ public:
     explicit AbortSearchEvent(const int time) : IEvent(time) {}
 
     void execute(ISimContext& ctx) override {
-        ctx.updateAppointmentState(des::MissionState::FAILED);
+        ctx.updateOrderState(des::MissionState::FAILED);
         ctx.changeRobotState(std::make_unique<IdleState>());
-        ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, ctx.getAppointment()));
+        ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, ctx.getOrderPtr()));
         ctx.notifyEvent(*this);
     }
 

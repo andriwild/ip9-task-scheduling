@@ -7,6 +7,8 @@
 #include <memory>
 
 #include "../model/i_sim_context.h"
+#include "../model/event.h"
+#include "../plugins/order_registry.h"
 
 class HasPendingMission final : public BT::ConditionNode {
 public:
@@ -51,7 +53,8 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx      = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool assigned = ctx->getAppointment() != nullptr && ctx->getAppointment()->state == des::IN_PROGRESS;
+        const auto order    = ctx->getOrderPtr();
+        const bool assigned = order != nullptr && order->state == des::IN_PROGRESS;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsMissionAssigned: %d", assigned);
         if (assigned) {
             return BT::NodeStatus::SUCCESS;
@@ -70,12 +73,12 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->hasPendingMission());
-        const auto appointment = ctx->popPendingMission();
-        RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for: %s",
-                    appointment->personName.c_str());
-        ctx->setAppointment(appointment);
-        ctx->updateAppointmentState(des::MissionState::IN_PROGRESS);
-        ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), appointment));
+        const auto order = ctx->popPendingMission();
+        RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for order %d (type=%s)",
+                    order->id, order->type.c_str());
+        ctx->setOrderPtr(order);
+        ctx->updateOrderState(des::MissionState::IN_PROGRESS);
+        ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -92,9 +95,9 @@ public:
         RCLCPP_WARN(rclcpp::get_logger("BT - MissionControlRoutine"), "RejectMissionAction");
 
         assert(ctx->hasPendingMission());
-        const auto appointment = ctx->popPendingMission();
-        appointment->state     = des::MissionState::REJECTED;
-        ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), appointment));
+        const auto order = ctx->popPendingMission();
+        order->state     = des::MissionState::REJECTED;
+        ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -109,8 +112,9 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        const auto appointment = ctx->nextPendingMission();
-        const bool isFeasible  = ctx->isMissionFeasible(*appointment, ctx->getRobot()->getLocation());
+        const auto order = ctx->nextPendingMission();
+        const auto& plugin = OrderRegistry::instance().get(order->type);
+        const bool isFeasible  = plugin.isFeasible(*order, *ctx);
         RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "MissionFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;

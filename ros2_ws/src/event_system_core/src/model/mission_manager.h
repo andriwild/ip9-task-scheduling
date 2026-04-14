@@ -6,17 +6,18 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/types.h"
+#include "../plugins/i_order.h"
 
 class MissionManager {
-    std::shared_ptr<des::Appointment> m_current = nullptr;
-    std::queue<std::shared_ptr<des::Appointment>> m_pending;
+    des::OrderPtr m_current = nullptr;
+    std::queue<des::OrderPtr> m_pending;
 
 public:
-    void setCurrent(const std::shared_ptr<des::Appointment>& appointment) {
-        m_current = appointment;
+    void setCurrent(const des::OrderPtr order) {
+        m_current = order;
     }
 
-    std::shared_ptr<des::Appointment> getCurrent() const {
+    des::OrderPtr getCurrent() const {
         return m_current;
     }
 
@@ -25,8 +26,8 @@ public:
         m_current->state = newState;
     }
 
-    void addPending(const std::shared_ptr<des::Appointment>& appointment) {
-        m_pending.push(appointment);
+    void addPending(const des::OrderPtr order) {
+        m_pending.push(order);
         RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Mission added to pending list - queue size: %zu", m_pending.size());
     }
 
@@ -34,12 +35,12 @@ public:
         return !m_pending.empty();
     }
 
-    std::shared_ptr<des::Appointment> peekPending() {
+    des::OrderPtr peekPending() {
         if (m_pending.empty()) { return nullptr; }
         return m_pending.front();
     }
 
-    std::shared_ptr<des::Appointment> popPending() {
+    des::OrderPtr popPending() {
         if (m_pending.empty()) { return nullptr; }
         auto appointment = m_pending.front();
         m_pending.pop();
@@ -49,6 +50,6 @@ public:
 
     void reset() {
         m_current = nullptr;
-        m_pending = std::queue<std::shared_ptr<des::Appointment>>();
+        m_pending = std::queue<des::OrderPtr>();
     }
 };

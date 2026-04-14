@@ -7,6 +7,7 @@
 #include "../i_sim_context.h"
 #include "../robot.h"
 #include "../../util/rnd.h"
+#include "../../plugins/accompany/accompany_order.h"
 
 class ScanAera final : public IEvent {
 public:
@@ -16,7 +17,8 @@ public:
         ctx.notifyEvent(*this);
         ctx.getRobot()->setScanning(true);
 
-        const auto& personName = ctx.getAppointment()->personName;
+        const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
+        const auto& personName = accompany.personName;
         const std::string personLocation = ctx.getPersonLocation(personName);
         const std::string robotLocation  = ctx.getRobot()->getLocation();
         const bool personPresent = robotLocation == personLocation;

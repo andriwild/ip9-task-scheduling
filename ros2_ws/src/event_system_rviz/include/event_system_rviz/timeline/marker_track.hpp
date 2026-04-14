@@ -24,8 +24,8 @@ public:
         m_events.insert(time, ve);
     }
 
-    void addMeetingPlan(const std::shared_ptr<des::Appointment> &appt, const int startTime) {
-        m_appointments.push_back({appt, startTime});
+    void addMeetingPlan(const VisualAppointment& appt) {
+        m_appointments.push_back(appt);
     }
 
     double getHeight() const override {
@@ -42,17 +42,17 @@ public:
         const TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
 
         // Draw Appointments
-        for (const auto&[appt, startTime] : m_appointments) {
-            const double startX = tf.toX(startTime);
-            const double meetingX = tf.toX(appt->appointmentTime);
+        for (const auto& appt : m_appointments) {
+            const double startX = tf.toX(appt.startTime);
+            const double meetingX = tf.toX(appt.scheduledTime);
             double durationWidth = meetingX - startX;
 
             if (durationWidth < 0) durationWidth = 0;
 
             const auto rect = scene->addRect(
-                startX, 
-                yAxis, 
-                durationWidth, 
+                startX,
+                yAxis,
+                durationWidth,
                 -(MARKER_HEIGHT / 2),
                 QPen(Qt::NoPen),
                 QBrush(QColor(100, 100, 100, 50))
@@ -60,9 +60,9 @@ public:
             rect->setZValue(Z_PLAN_LINE);
 
             const QString labelText = QString::fromStdString(
-                std::format("Mission {}: {} ({})", appt->id, appt->description, appt->personName )
+                std::format("Mission {}: {} ({})", appt.id, appt.description, appt.primaryLabel)
                 );
-            drawMeetingMarker(scene, appt->appointmentTime, labelText, yAxis, tf);
+            drawMeetingMarker(scene, appt.scheduledTime, labelText, yAxis, tf);
         }
 
         // Draw Events
