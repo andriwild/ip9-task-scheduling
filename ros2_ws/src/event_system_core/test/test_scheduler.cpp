@@ -40,13 +40,17 @@ protected:
 
         auto max = std::make_shared<des::Person>();
         max->firstName = "Max";
-        max->roomLabels = {"Office", "Kitchen", "Elevator"};
+        max->roomLabels = {"Office"};
         locations["Max"] = max;
 
         auto anna = std::make_shared<des::Person>();
         anna->firstName = "Anna";
-        anna->roomLabels = {"Lab", "Kitchen"};
+        anna->roomLabels = {"Lab"};
         locations["Anna"] = anna;
+
+        // scanTime is part of optimisticMeeting; keep it zero for clean drive-time assertions.
+        searchAreas["Office"] = 0.0;
+        searchAreas["Lab"] = 0.0;
 
         // Dock -> Office = 10m, Office -> MeetingRoom = 20m
         planner->setDistance("Dock", "Office", 10.0);
@@ -86,6 +90,8 @@ TEST_F(SchedulerTest, OptimisticMeetingWithDifferentPerson) {
 // --- pessimisticMeeting ---
 
 TEST_F(SchedulerTest, PessimisticMeetingSearchesAllLocations) {
+    // Give Anna multiple rooms for this test
+    locations["Anna"]->roomLabels = {"Lab", "Kitchen"};
     auto scheduler = makeScheduler();
 
     // Anna has rooms ["Lab", "Kitchen"]

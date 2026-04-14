@@ -87,6 +87,11 @@ protected:
         planner->setDistance("Office", "MeetingRoom", 20.0);
         planner->setDistance("IMVS_Dock", "MeetingRoom", 25.0);
 
+        // Search area sizes so ScanAera produces a non-zero scanTime
+        searchAreas["IMVS_Dock"] = 50.0;
+        searchAreas["Office"] = 50.0;
+        searchAreas["MeetingRoom"] = 50.0;
+
         // Employee
         auto max = std::make_shared<des::Person>();
         max->firstName = "Max";
@@ -413,7 +418,24 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
 
     // ================================================================
-    //  Step 5: StartDrive to Office (person's first location)
+    //  Step 5: ScanAera at Dock (BT scans current location first)
+    //  Pushes ScanComplete; person not here so scan runs to completion.
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::SCAN_AREA);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
+
+    // ================================================================
+    //  Step 6: ScanComplete at Dock (person not found)
+    //  BT: HasNextLocation -> MoveToNextLocation -> pushes StartDrive to Office
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::SCAN_COMPLETE);
+
+    // ================================================================
+    //  Step 7: StartDrive to Office (person's first location)
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
@@ -422,8 +444,8 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "Office");
 
     // ================================================================
-    //  Step 6: StopDrive at Office
-    //  BT: ScanLocation finds Max -> StartAccompanyConversation
+    //  Step 8: StopDrive at Office
+    //  BT: ScanLocation -> pushes ScanAera at Office
     //  Robot is still SEARCHING — state changes when conversation event runs
     // ================================================================
     e = step(*ctx);
@@ -434,7 +456,23 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
 
     // ================================================================
-    //  Step 7: StartFoundPersonConversation
+    //  Step 9: ScanAera at Office (person present -> ScanComplete with found=true)
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::SCAN_AREA);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
+
+    // ================================================================
+    //  Step 10: ScanComplete at Office — person found
+    //  BT: FoundPerson -> StartAccompanyConversation -> pushes StartFoundPersonConv
+    // ================================================================
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::SCAN_COMPLETE);
+
+    // ================================================================
+    //  Step 11: StartFoundPersonConversation
     //  Now robot enters CONVERSATE state, pushes ConvComplete event
     // ================================================================
     e = step(*ctx);
@@ -443,7 +481,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
 
     // ================================================================
-    //  Step 8: FoundPersonConversationComplete (probability=1.0 -> Success)
+    //  Step 12: FoundPersonConversationComplete (probability=1.0 -> Success)
     //  BT: WasConversationSuccessful -> StartAccompanyAction
     // ================================================================
     e = step(*ctx);
@@ -452,7 +490,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getState()->getResult(), des::Result::SUCCESS);
 
     // ================================================================
-    //  Step 9: StartAccompany -> AccompanyState, pushes StartDrive
+    //  Step 13: StartAccompany -> AccompanyState, pushes StartDrive
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
@@ -460,7 +498,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::ACCOMPANY);
 
     // ================================================================
-    //  Step 10: StartDrive to MeetingRoom (with person)
+    //  Step 14: StartDrive to MeetingRoom (with person)
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
@@ -469,7 +507,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "MeetingRoom");
 
     // ================================================================
-    //  Step 11: StopDrive at MeetingRoom
+    //  Step 15: StopDrive at MeetingRoom
     //  ACCOMPANY mode -> person moved to MeetingRoom (PersonTransition pushed)
     //  BT: ArrivedWithPerson -> StartDropOffConversation -> CONVERSATE
     // ================================================================
@@ -482,7 +520,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
 
     // ================================================================
-    //  Steps 12-13: PersonTransition (accompany arrival) + StartDropOffConversation
+    //  Steps 16-17: PersonTransition (accompany arrival) + StartDropOffConversation
     //  Same timestamp, order may vary.
     // ================================================================
     {
@@ -499,7 +537,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     }
 
     // ================================================================
-    //  Step 14: DropOffConversationComplete (Success)
+    //  Step 18: DropOffConversationComplete (Success)
     //  BT: CompleteMission -> COMPLETED, state -> IDLE
     // ================================================================
     e = step(*ctx);
@@ -509,7 +547,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
 
     // ================================================================
-    //  Step 15: MissionComplete
+    //  Step 19: MissionComplete
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
@@ -518,7 +556,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(observer->missionCompletions.back().second, des::MissionState::COMPLETED);
 
     // ================================================================
-    //  Step 16: StartDrive back to Dock
+    //  Step 20: StartDrive back to Dock
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
@@ -526,7 +564,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_TRUE(ctx->getRobot()->isDriving());
 
     // ================================================================
-    //  Step 17: StopDrive at Dock -> robot is home
+    //  Step 21: StopDrive at Dock -> robot is home
     // ================================================================
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
