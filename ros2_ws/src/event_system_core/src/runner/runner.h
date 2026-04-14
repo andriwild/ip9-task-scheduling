@@ -72,10 +72,10 @@ public:
     ) {
         auto sample = [&rng](des::DistributionType type, double mean, double std) -> double {
             switch (type) {
-                case des::DistributionType::UNIFORM:     return rnd::uni(rng, mean - std, mean + std);
-                case des::DistributionType::EXPONENTIAL:  return rnd::exponential(rng, mean);
-                case des::DistributionType::LOG_NORMAL:   return rnd::logNormal(rng, mean, std);
-                default:                                  return rnd::normal(rng, mean, std);
+                case des::DistributionType::UNIFORM:        return rnd::uni(rng, mean - std, mean + std);
+                case des::DistributionType::EXPONENTIAL:    return rnd::exponential(rng, mean);
+                case des::DistributionType::LOG_NORMAL:     return rnd::logNormal(rng, mean, std);
+                default:                                    return rnd::normal(rng, mean, std);
             }
         };
 

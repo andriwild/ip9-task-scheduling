@@ -93,7 +93,6 @@ if(BUILD_TESTING)
   # Scheduler tests (with MockPathPlanner)
   ament_add_gtest(test_scheduler
     test/test_scheduler.cpp
-    src/model/event.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
   )
@@ -105,7 +104,6 @@ if(BUILD_TESTING)
   # Event execute tests (with MockSimContext)
   ament_add_gtest(test_events
     test/test_events.cpp
-    src/model/event.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
   )
@@ -117,7 +115,6 @@ if(BUILD_TESTING)
   # Integration tests (real BT + SimulationContext, MockPathPlanner)
   ament_add_gtest(test_integration
     test/test_integration.cpp
-    src/model/event.cpp
     src/model/event_queue.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
