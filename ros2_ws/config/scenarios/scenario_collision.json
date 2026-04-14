@@ -1,18 +1,24 @@
 {
-    "appointments": [
+    "orders": [
         {
+            "id": 0,
+            "type": "accompany",
             "personName": "Max",
             "roomName": "5.2B03",
             "appointmentTime": 36000,
             "description": "Paket Zustellung"
         },
         {
+            "id": 1,
+            "type": "accompany",
             "personName": "Leo",
             "roomName": "5.2B15",
             "appointmentTime": 36060,
             "description": "Dokument Zustellung"
         },
         {
+            "id": 2,
+            "type": "accompany",
             "personName": "Fred",
             "roomName": "5.2B13",
             "appointmentTime": 36120,

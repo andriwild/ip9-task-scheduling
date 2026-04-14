@@ -1,72 +1,96 @@
 {
-    "appointments": [
+    "orders": [
         {
+            "id": 0,
+            "type": "accompany",
             "personName": "Max",
             "roomName": "5.2B03",
             "appointmentTime": 32400,
             "description": "Morgenpost"
         },
         {
+            "id": 1,
+            "type": "accompany",
             "personName": "Sara",
             "roomName": "5.2A13",
             "appointmentTime": 34200,
             "description": "Laborprobe"
         },
         {
+            "id": 2,
+            "type": "accompany",
             "personName": "Anna",
             "roomName": "5.2B01",
             "appointmentTime": 36000,
             "description": "Paket"
         },
         {
+            "id": 3,
+            "type": "accompany",
             "personName": "Tom",
             "roomName": "5.2C07",
             "appointmentTime": 37800,
             "description": "Ersatzteil"
         },
         {
+            "id": 4,
+            "type": "accompany",
             "personName": "Nina",
             "roomName": "5.2D02",
             "appointmentTime": 39600,
             "description": "Dokument"
         },
         {
+            "id": 5,
+            "type": "accompany",
             "personName": "Leo",
             "roomName": "5.2B15",
             "appointmentTime": 41400,
             "description": "Material"
         },
         {
+            "id": 6,
+            "type": "accompany",
             "personName": "Fred",
             "roomName": "5.2B13",
             "appointmentTime": 43200,
             "description": "Werkzeug"
         },
         {
+            "id": 7,
+            "type": "accompany",
             "personName": "Julia",
             "roomName": "5.2B18",
             "appointmentTime": 45000,
             "description": "Nachschub"
         },
         {
+            "id": 8,
+            "type": "accompany",
             "personName": "Max",
             "roomName": "5.2B10",
             "appointmentTime": 48600,
             "description": "Nachmittagspost"
         },
         {
+            "id": 9,
+            "type": "accompany",
             "personName": "Sara",
             "roomName": "5.2A10",
             "appointmentTime": 50400,
             "description": "Probenrueckgabe"
         },
         {
+            "id": 10,
+            "type": "accompany",
             "personName": "Nina",
             "roomName": "5.2D_Open_Zone",
             "appointmentTime": 52200,
             "description": "Unterlagen"
         },
         {
+            "id": 11,
+            "type": "accompany",
             "personName": "Tom",
             "roomName": "5.2C_Working_Space",
             "appointmentTime": 54000,

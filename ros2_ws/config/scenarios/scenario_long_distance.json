@@ -1,18 +1,24 @@
 {
-    "appointments": [
+    "orders": [
         {
+            "id": 0,
+            "type": "accompany",
             "personName": "Nina",
             "roomName": "IMVS_Kitchen",
             "appointmentTime": 34200,
             "description": "Laborprobe Lieferung"
         },
         {
+            "id": 1,
+            "type": "accompany",
             "personName": "Sara",
             "roomName": "IMVS_Kitchen",
             "appointmentTime": 37800,
             "description": "Poster Zustellung"
         },
         {
+            "id": 2,
+            "type": "accompany",
             "personName": "Tom",
             "roomName": "IMVS_Kitchen",
             "appointmentTime": 41400,
