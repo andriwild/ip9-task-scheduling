@@ -90,7 +90,7 @@ TEST_F(EventQueueTest, ExtendFromSortedEventQueue) {
 }
 
 TEST_F(EventQueueTest, ExtendFromVector) {
-    std::vector<std::shared_ptr<IEvent>> events = {
+    EventList events = {
         makeEvent(400),
         makeEvent(200),
     };
@@ -121,7 +121,7 @@ TEST_F(EventQueueTest, LastEventTimeUpdatedByExtendSortedQueue) {
 }
 
 TEST_F(EventQueueTest, ExtendFromVectorUpdatesLastEventTime) {
-    std::vector<std::shared_ptr<IEvent>> events = {
+    EventList events = {
         makeEvent(400),
         makeEvent(800),
     };

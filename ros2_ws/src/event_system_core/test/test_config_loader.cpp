@@ -230,7 +230,7 @@ TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
     ASSERT_TRUE(employees.has_value());
     ASSERT_TRUE(appointments.has_value());
 
-    std::map<std::string, des::Point> locationMap;
+    des::LocationMap locationMap;
     locationMap["5.2B03"] = des::Point(0, 0, 0);
     locationMap["5.2B01"] = des::Point(1, 1, 0);
     locationMap["5.2B10"] = des::Point(2, 2, 0);
@@ -240,7 +240,7 @@ TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
 }
 
 TEST(ConfigLoaderValidation, UnknownPersonInAppointmentThrows) {
-    std::vector<std::shared_ptr<des::Person>> employees;
+    des::PersonList employees;
     auto emp = std::make_shared<des::Person>();
     emp->firstName = "Max";
     emp->roomLabels = {"RoomA"};
@@ -254,7 +254,7 @@ TEST(ConfigLoaderValidation, UnknownPersonInAppointmentThrows) {
     appt->description = "Test";
     appointments.push_back(appt);
 
-    std::map<std::string, des::Point> locationMap;
+    des::LocationMap locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
 
     EXPECT_THROW(ConfigLoader::validateConfig(appointments, employees, locationMap, "RoomA"), std::runtime_error);
@@ -271,7 +271,7 @@ TEST(ConfigLoaderValidation, UnknownRoomInAppointmentThrows) {
     appt->roomName = "NonexistentRoom";
     appt->description = "Test";
 
-    std::map<std::string, des::Point> locationMap;
+    des::LocationMap locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
 
     EXPECT_THROW(
@@ -286,7 +286,7 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
     emp->roomLabels = {"RoomA", "RoomB"};
     emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
 
-    std::map<std::string, des::Point> locationMap;
+    des::LocationMap locationMap;
     locationMap["RoomA"] = des::Point(0, 0, 0);
     locationMap["RoomB"] = des::Point(1, 1, 0);
 

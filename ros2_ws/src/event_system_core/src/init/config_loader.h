@@ -10,7 +10,7 @@
 
 #include "../util/types.h"
 
-using AppointmentList = std::vector<std::shared_ptr<des::Appointment>>;
+using des::AppointmentList;
 
 const std::string DEFAULT_APPOINTMENT_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
 const std::string DEFAULT_EMPLOYEE_FILE =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
@@ -50,13 +50,13 @@ public:
         return appointments;
     };
 
-    static std::optional<std::vector<std::shared_ptr<des::Person>>> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
+    static std::optional<des::PersonList> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
         auto jsonOpt = getJson(filePath);
         if (!jsonOpt.has_value()) {
             return std::nullopt;
         }
 
-        std::vector<std::shared_ptr<des::Person>> employees;
+        des::PersonList employees;
         try {
             const auto& jsonArray = jsonOpt.value().at("employees");
 
@@ -133,15 +133,15 @@ public:
         }
     }
 
-    static std::vector<std::shared_ptr<des::Person>> filterByAppointments(
-        const std::vector<std::shared_ptr<des::Person>>& employees,
+    static des::PersonList filterByAppointments(
+        const des::PersonList& employees,
         const AppointmentList& appointments
     ) {
         std::set<std::string> needed;
         for (const auto& appt : appointments) {
             needed.insert(appt->personName);
         }
-        std::vector<std::shared_ptr<des::Person>> filtered;
+        des::PersonList filtered;
         for (const auto& p : employees) {
             if (needed.contains(p->firstName)) {
                 filtered.push_back(p);
@@ -152,7 +152,7 @@ public:
 
     static void validateConfig(
         const AppointmentList& appointments,
-        const std::vector<std::shared_ptr<des::Person>>& employees,
+        const des::PersonList& employees,
         const std::map<std::string, des::Point>& locationMap,
         const std::string& arrivalLocation
     ) {

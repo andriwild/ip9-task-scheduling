@@ -10,6 +10,7 @@
 #include "../observer/ros.h"
 #include "../model/event_queue.h"
 #include "../util/rnd.h"
+#include "../util/types.h"
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
@@ -54,7 +55,7 @@ public:
     }
 
     static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(
-        std::vector<std::shared_ptr<des::Person>> people
+        des::PersonList people
     ) {
         auto events = std::vector<std::shared_ptr<IEvent>> {};
         for (auto& p: people) {
@@ -66,7 +67,7 @@ public:
 
     static void scheduleOccupancy(
         const des::SimConfig& config,
-        std::vector<std::shared_ptr<des::Person>> people,
+        des::PersonList people,
         std::mt19937& rng
     ) {
         auto sample = [&rng](des::DistributionType type, double mean, double std) -> double {
@@ -86,13 +87,13 @@ public:
 
 protected:
     std::map<std::string, des::Point> m_locationMap;
-    std::map<std::string, double> m_searchAreaMap;
+    des::SearchAreaMap m_searchAreaMap;
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     std::vector<std::shared_ptr<des::Appointment>> m_appointments;
-    std::optional<std::vector<std::shared_ptr<des::Person>>> m_people;
+    std::optional<des::PersonList> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
     DBClient m_db;
@@ -141,7 +142,7 @@ protected:
         return appointments.value();
     }
 
-    std::map<std::string, double> loadSearchAreas() {
+    des::SearchAreaMap loadSearchAreas() {
         const auto areas = m_db.allAreas();
         if (!areas.has_value()) {
             throw std::runtime_error("Could not load search areas from DB");

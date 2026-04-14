@@ -11,7 +11,7 @@
 class MockSimContext : public ISimContext {
 public:
     // Tracking
-    std::vector<std::shared_ptr<IEvent>> pushedEvents;
+    EventList pushedEvents;
     std::vector<std::string> notifiedEvents;
     int tickCount = 0;
     bool completeAppointmentCalled = false;
@@ -21,9 +21,9 @@ public:
     std::shared_ptr<Robot> robot;
     std::shared_ptr<des::Appointment> currentAppointment;
     std::shared_ptr<des::SimConfig> simConfig;
-    std::map<std::string, std::shared_ptr<des::Person>> employees;
+    des::PersonLocationMap employees;
     std::map<std::string, std::string> personLocations;
-    std::vector<std::shared_ptr<des::Appointment>> pendingMissions;
+    des::AppointmentList pendingMissions;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
 

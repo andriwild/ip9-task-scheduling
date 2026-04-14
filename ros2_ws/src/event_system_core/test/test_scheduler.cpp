@@ -26,7 +26,7 @@ class SchedulerTest : public ::testing::Test {
 protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
-    std::map<std::string, std::shared_ptr<des::Person>> locations;
+    des::PersonLocationMap locations;
 
     void SetUp() override {
         planner = std::make_shared<MockPathPlanner>();
@@ -108,7 +108,7 @@ TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
     appt->appointmentTime = 36000; // 10:00:00
     appt->description = "Test Meeting";
 
-    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
+    des::AppointmentList appointments = {appt};
 
     auto missions = scheduler->simplePlan(appointments, "Dock");
     ASSERT_EQ(missions.size(), 1u);
@@ -134,7 +134,7 @@ TEST_F(SchedulerTest, SimplePlanMultipleAppointments) {
     appt2->appointmentTime = 39600;
     appt2->description = "Meeting 2";
 
-    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt1, appt2};
+    des::AppointmentList appointments = {appt1, appt2};
 
     auto missions = scheduler->simplePlan(appointments, "Dock");
     ASSERT_EQ(missions.size(), 2u);
@@ -156,7 +156,7 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
     appt->appointmentTime = 36000;
     appt->description = "Test";
 
-    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
+    des::AppointmentList appointments = {appt};
 
     auto missions = scheduler->simplePlan(appointments, "Dock");
     ASSERT_EQ(missions.size(), 1u);
@@ -168,7 +168,7 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
 TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
     auto scheduler = makeScheduler();
 
-    std::vector<std::shared_ptr<des::Appointment>> appointments;
+    des::AppointmentList appointments;
     auto missions = scheduler->simplePlan(appointments, "Dock");
     EXPECT_TRUE(missions.empty());
 }

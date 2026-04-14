@@ -56,7 +56,7 @@ protected:
     EventQueue eventQueue;
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
-    std::map<std::string, std::shared_ptr<des::Person>> employeeLocations;
+    des::PersonLocationMap employeeLocations;
     std::shared_ptr<TrackingObserver> observer;
 
     void SetUp() override {
@@ -162,7 +162,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     appt->description = "Test Meeting";
 
     // Schedule mission (same as IAppRunner::createMissionQueue)
-    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
+    des::AppointmentList appointments = {appt};
     auto missions = ctx->getScheduler().simplePlan(appointments, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;
@@ -359,7 +359,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     appt->appointmentTime = 36000;
     appt->description = "Dokument abholen";
 
-    std::vector<std::shared_ptr<des::Appointment>> appointments = {appt};
+    des::AppointmentList appointments = {appt};
     auto missions = ctx->getScheduler().simplePlan(appointments, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;

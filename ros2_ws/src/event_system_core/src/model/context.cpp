@@ -8,7 +8,7 @@ SimulationContext::SimulationContext(
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<IPathPlanner> plannerNode,
     std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
-    std::map<std::string, double> searchAreas
+    des::SearchAreaMap searchAreas
 )
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)

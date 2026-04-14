@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iomanip>
-#include <vector>
+#include <map>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "../model/person.h"
 
@@ -220,6 +222,12 @@ struct Appointment {
         return os;
     }
 };
+
+using PersonList        = std::vector<std::shared_ptr<Person>>;
+using AppointmentList   = std::vector<std::shared_ptr<Appointment>>;
+using PersonLocationMap = std::map<std::string, std::shared_ptr<Person>>;
+using SearchAreaMap     = std::map<std::string, double>;
+using LocationMap       = std::map<std::string, Point>;
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
     const int hours   = static_cast<int>(sec / 3600.0);

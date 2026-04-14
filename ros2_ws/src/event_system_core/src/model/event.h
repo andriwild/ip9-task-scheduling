@@ -42,9 +42,11 @@ struct EventComparator {
     }
 };
 
+using EventList = std::vector<std::shared_ptr<IEvent>>;
+
 using SortedEventQueue = std::priority_queue<
     std::shared_ptr<IEvent>,
-    std::vector<std::shared_ptr<IEvent>>,
+    EventList,
     EventComparator>;
 
 class SimulationStartEvent final : public IEvent {

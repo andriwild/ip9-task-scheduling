@@ -44,14 +44,14 @@ public:
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
-    std::map<std::string, double> m_searchAreas;
+    des::SearchAreaMap m_searchAreas;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
         std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
-        std::map<std::string, double> searchAreas 
+        des::SearchAreaMap searchAreas 
     );
 
     Scheduler& getScheduler() { return *m_scheduler; }
