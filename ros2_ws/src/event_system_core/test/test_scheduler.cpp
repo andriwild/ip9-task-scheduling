@@ -27,6 +27,7 @@ protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
     des::PersonLocationMap locations;
+    des::SearchAreaMap searchAreas;
 
     void SetUp() override {
         planner = std::make_shared<MockPathPlanner>();
@@ -60,7 +61,7 @@ protected:
     }
 
     std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, locations);
+        return std::make_unique<Scheduler>(config, planner, locations, searchAreas);
     }
 };
 

@@ -11,7 +11,10 @@
 class IEvent;
 class Robot;
 
-struct Journey;
+struct Journey {
+    double duration;
+    double distance;
+};
 
 // Interface for the simulation context used by events and BT nodes.
 // Separates the simulation API from setup/lifecycle concerns (reset, config, observers).

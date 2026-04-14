@@ -21,11 +21,6 @@
 #include "../model/event_queue.h"
 
 
-struct Journey {
-    double duration;
-    double distance;
-};
-
 class SimulationContext : public ISimContext {
     int m_currentTime{};
     std::shared_ptr<des::SimConfig> m_simConfig;

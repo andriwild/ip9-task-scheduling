@@ -72,6 +72,7 @@ if(BUILD_TESTING)
 
   # EventQueue tests
   ament_add_gtest(test_event_queue test/test_event_queue.cpp)
+  ament_target_dependencies(test_event_queue rclcpp behaviortree_cpp)
   target_compile_definitions(test_event_queue PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
