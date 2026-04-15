@@ -4,7 +4,6 @@
 #include <string>
 
 #include "../i_order_plugin.h"
-#include "accompany_order.h"
 #include "accompany_subtree.h"
 
 class Scheduler;
@@ -16,9 +15,7 @@ public:
     explicit AccompanyOrderPlugin() = default;
 
     std::string typeName() const override { return "accompany"; }
-    std::vector<std::string> subtreeIds() const override {
-        return {"SearchRoutine", "ConversateRoutine", "AccompanyRoutine"};
-    }
+    std::string rootSubtreeId() const override { return "AccompanyRoutine"; }
 
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
     std::string subtreeXml() const override { return ACCOMPANY_SUBTREE_XML; }

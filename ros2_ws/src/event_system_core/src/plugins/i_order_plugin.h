@@ -1,8 +1,6 @@
 #pragma once
 
-#include <memory>
 #include <string>
-#include <vector>
 #include <nlohmann/json.hpp>
 
 #include "i_order.h"
@@ -17,7 +15,7 @@ public:
     virtual ~IOrderPlugin() = default;
 
     virtual std::string typeName() const = 0;
-    virtual std::vector<std::string> subtreeIds() const = 0;
+    virtual std::string rootSubtreeId() const = 0;
 
     virtual void registeredNodes(BT::BehaviorTreeFactory& factory) = 0;
     virtual std::string subtreeXml() const = 0;

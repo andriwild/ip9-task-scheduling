@@ -11,6 +11,7 @@
 #include "idle.h"
 #include "charge.h"
 #include "../plugins/order_registry.h"
+#include "is_active_order_type.h"
 #include "mission_control.h"
 
 
@@ -78,6 +79,8 @@ const std::string IDLE_ROUTINE = R"(
 
 
 inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
+    factory.registerNodeType<IsActiveOrderType>("IsActiveOrderType");
+
     // charge
     factory.registerNodeType<IsBatteryLow>("IsBatteryLow");
     factory.registerNodeType<IsCharging>("IsCharging");
@@ -100,10 +103,6 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
 }
 
 
-                    // <SubTree ID="SearchRoutine" _autoremap="true"/>
-                    // <SubTree ID="ConversateRoutine" _autoremap="true"/>
-                    // <SubTree ID="AccompanyRoutine" _autoremap="true"/>
-
 inline std::string buildXml() {
     std::string xml = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
@@ -114,13 +113,11 @@ inline std::string buildXml() {
                     <SubTree ID="MissionControlRoutine" _autoremap="true"/>)";
 
     for (auto* plugin : OrderRegistry::instance().all()) {
-        for (const auto& subtreeId : plugin->subtreeIds()) {
-            xml += "        <SubTree ID=\"" + subtreeId + "\" _autoremap=\"true\"/>\n";
-        }
+        xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
     }
     
-    xml += R"(       <SubTree ID="IdleRoutine" _autoremap="true"/>
-                </Fallback>
+    xml += R"(<SubTree ID="IdleRoutine" _autoremap="true"/>
+             </Fallback>
             </Sequence>
          </BehaviorTree>)";
 

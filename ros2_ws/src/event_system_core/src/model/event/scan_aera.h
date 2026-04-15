@@ -25,7 +25,7 @@ public:
         const double areaToSearch = ctx.getSearchArea(robotLocation);
         const double fieldOfView  = ctx.getConfig()->personDetectionRange * ctx.getConfig()->personDetectionRange;
         assert(fieldOfView != 0);
-        const double steps = areaToSearch / fieldOfView;
+        const double steps = (areaToSearch / fieldOfView) + 1;
         const int scanTime = steps * (2 * ctx.getConfig()->personDetectionRange / ctx.getConfig()->robotSpeed);
         assert(scanTime != 0);
         const int foundAt = rnd::uni(ctx.rng(), 1, scanTime);

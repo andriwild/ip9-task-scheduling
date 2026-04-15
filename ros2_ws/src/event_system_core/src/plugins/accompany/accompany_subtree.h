@@ -1,5 +1,16 @@
 inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
-  <BehaviorTree ID="SearchRoutine">
+  <BehaviorTree ID="AccompanyRoutine">
+    <Sequence>
+      <IsActiveOrderType type="accompany"/>
+      <Fallback>
+        <SubTree ID="AccompanySearch"     _autoremap="true"/>
+        <SubTree ID="AccompanyConversate" _autoremap="true"/>
+        <SubTree ID="AccompanyAccompany"  _autoremap="true"/>
+      </Fallback>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="AccompanySearch">
     <Sequence name="Seq_SearchMain">
       <IsSearching />
       <Fallback name="Fallback_SearchActions">
@@ -22,7 +33,7 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="ConversateRoutine">
+  <BehaviorTree ID="AccompanyConversate">
       <Sequence name="Seq_ConversateMain">
           <IsConversating/>
           <ConversationFinished/>
@@ -48,7 +59,7 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
       </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="AccompanyRoutine">
+  <BehaviorTree ID="AccompanyAccompany">
       <Sequence name="Seq_AccompanyMain">
           <IsAccompany/>
           <Fallback name="Fallback_AccompanyActions">
