@@ -60,7 +60,7 @@ public:
     double getRndConversationTime() const override;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void resetContext(int newTime);
-    void completeOrder(const des::OrderPtr& order) const override;
+    void completeOrder(const des::OrderPtr& order) override;
 
     int getTime() const override { return m_currentTime; }
 

@@ -38,11 +38,12 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     return { travelTimeRnd, distance.value() };
 }
 
-void SimulationContext::completeOrder(const des::OrderPtr& order) const {
+void SimulationContext::completeOrder(const des::OrderPtr& order) {
     assert(order != nullptr);
     const int deadline = order->deadline.value_or(m_currentTime);
     const int timeDiff = m_currentTime - deadline;
     notifyMissionComplete(order->state, timeDiff);
+    m_missions.setCurrent(nullptr);
 }
 
 void SimulationContext::resetContext(const int newTime) {

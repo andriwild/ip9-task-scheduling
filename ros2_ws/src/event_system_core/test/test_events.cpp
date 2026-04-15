@@ -114,8 +114,8 @@ public:
         return front;
     }
 
-    void completeOrder(const des::OrderPtr& /*order*/) const override {
-        const_cast<MockSimContext*>(this)->completeOrderCalled = true;
+    void completeOrder(const des::OrderPtr& /*order*/) override {
+        completeOrderCalled = true;
     }
 
     bool hasEmployee(const std::string& person) const override {

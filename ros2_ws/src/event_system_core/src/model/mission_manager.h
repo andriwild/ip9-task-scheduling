@@ -9,21 +9,21 @@
 #include "../plugins/i_order.h"
 
 class MissionManager {
-    des::OrderPtr m_current = nullptr;
+    des::OrderPtr m_currentOrder = nullptr;
     std::queue<des::OrderPtr> m_pending;
 
 public:
     void setCurrent(const des::OrderPtr order) {
-        m_current = order;
+        m_currentOrder = order;
     }
 
     des::OrderPtr getCurrent() const {
-        return m_current;
+        return m_currentOrder;
     }
 
     void updateState(const des::MissionState& newState) {
-        assert(m_current != nullptr);
-        m_current->state = newState;
+        assert(m_currentOrder != nullptr);
+        m_currentOrder->state = newState;
     }
 
     void addPending(const des::OrderPtr order) {
@@ -49,7 +49,7 @@ public:
     }
 
     void reset() {
-        m_current = nullptr;
+        m_currentOrder = nullptr;
         m_pending = std::queue<des::OrderPtr>();
     }
 };

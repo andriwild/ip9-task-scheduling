@@ -51,7 +51,7 @@ public:
     virtual bool hasPendingMission() const = 0;
     virtual des::OrderPtr nextPendingMission() = 0;
     virtual des::OrderPtr popPendingMission() = 0;
-    virtual void completeOrder(const des::OrderPtr& appt) const = 0;
+    virtual void completeOrder(const des::OrderPtr& appt) = 0;
 
     // Employee data
     virtual bool hasEmployee(const std::string& person) const = 0;

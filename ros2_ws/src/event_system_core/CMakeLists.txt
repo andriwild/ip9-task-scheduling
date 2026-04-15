@@ -124,7 +124,6 @@ if(BUILD_TESTING)
   # Integration tests (real BT + SimulationContext, MockPathPlanner)
   ament_add_gtest(test_integration
     test/test_integration.cpp
-    src/model/event_queue.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
     src/model/context.cpp
