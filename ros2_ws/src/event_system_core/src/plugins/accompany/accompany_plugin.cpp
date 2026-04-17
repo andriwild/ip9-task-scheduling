@@ -2,9 +2,9 @@
 
 #include <memory>
 
-#include "search.h"
-#include "accompany.h"
-#include "conversation.h"
+#include "bt_nodes/search.h"
+#include "bt_nodes/accompany.h"
+#include "bt_nodes/conversation.h"
 #include "../../sim/scheduler.h"
 #include "../../model/i_sim_context.h"
 #include "../../observer/ros.h"

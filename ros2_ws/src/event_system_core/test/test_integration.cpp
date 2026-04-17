@@ -463,14 +463,23 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(e->getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::ACCOMPANY);
 
-    // Step 14: StartDrive to MeetingRoom
-    e = step(*ctx);
-    ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
+    // Steps 14-15: PersonAccompanyDeparture + StartDrive (same time, order not guaranteed)
+    {
+        bool seenDeparture = false;
+        bool seenStartDrive = false;
+        for (int i = 0; i < 2; ++i) {
+            e = step(*ctx);
+            ASSERT_NE(e, nullptr);
+            if (e->getType() == des::EventType::PERSON_ACCOMPANY_DEPARTURE) seenDeparture = true;
+            if (e->getType() == des::EventType::START_DRIVE) seenStartDrive = true;
+        }
+        EXPECT_TRUE(seenDeparture) << "Expected PersonAccompanyDeparture at accompany start";
+        EXPECT_TRUE(seenStartDrive) << "Expected StartDrive to MeetingRoom";
+    }
     EXPECT_TRUE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "MeetingRoom");
 
-    // Step 15: StopDrive at MeetingRoom
+    // Step 16: StopDrive at MeetingRoom
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
@@ -479,17 +488,17 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getPersonLocation("Max"), "MeetingRoom");
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
 
-    // Steps 16-17: PersonTransition + StartDropOffConversation
+    // Steps 17-18: PersonAccompanyArrived + StartDropOffConversation
     {
-        bool seenPersonTransition = false;
+        bool seenArrived = false;
         bool seenStartDropOff = false;
         for (int i = 0; i < 2; ++i) {
             e = step(*ctx);
             ASSERT_NE(e, nullptr);
-            if (e->getType() == des::EventType::PERSON_TRANSITION) seenPersonTransition = true;
+            if (e->getType() == des::EventType::PERSON_ACCOMPANY_ARRIVED) seenArrived = true;
             if (e->getType() == des::EventType::START_DROP_OFF_CONV) seenStartDropOff = true;
         }
-        EXPECT_TRUE(seenPersonTransition) << "Expected PersonTransition (accompany arrival)";
+        EXPECT_TRUE(seenArrived) << "Expected PersonAccompanyArrived (accompany arrival)";
         EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
     }
 
