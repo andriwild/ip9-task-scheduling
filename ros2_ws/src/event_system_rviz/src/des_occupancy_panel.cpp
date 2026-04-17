@@ -87,6 +87,20 @@ void DesOccupancyPanel::onTimelineEvent(const event_system_msgs::msg::TimelineEv
         return;
     }
 
+    if (type == event_system_msgs::msg::TimelineEvent::PERSON_ACCOMPANY_DEPARTURE) {
+        auto [person, room] = parseLabel(QString::fromStdString(msg->label));
+        if (person.isEmpty()) return;
+        addPersonDeparture(person, room, msg->time, QString::fromStdString(msg->color));
+        return;
+    }
+
+    if (type == event_system_msgs::msg::TimelineEvent::PERSON_ACCOMPANY_ARRIVED) {
+        auto [person, room] = parseLabel(QString::fromStdString(msg->label));
+        if (person.isEmpty()) return;
+        addPersonArrival(person, room, msg->time, QString::fromStdString(msg->color));
+        return;
+    }
+
     const bool isPersonEvent =
         type == event_system_msgs::msg::TimelineEvent::PERSON_TRANSITION ||
         type == event_system_msgs::msg::TimelineEvent::PERSON_ARRIVED ||
@@ -229,6 +243,26 @@ void DesOccupancyPanel::addRobotArrival(const QString& room, int time) {
     auto* series = getOrCreateSeries("Robot", "#E00000");
     series->append(hours, yIdx);
     m_lastY["Robot"] = yIdx;
+}
+
+void DesOccupancyPanel::addPersonDeparture(const QString& name, const QString& room, int time, const QString& color) {
+    const int yIdx = roomIndex(room);
+    const double hours = time / 3600.0;
+    auto* series = getOrCreateSeries(name, color);
+    // Step to current room first (if the last known Y differs), then anchor at departure time.
+    if (m_lastY.contains(name) && m_lastY[name] != yIdx) {
+        series->append(hours, m_lastY[name]);
+    }
+    series->append(hours, yIdx);
+    m_lastY[name] = yIdx;
+}
+
+void DesOccupancyPanel::addPersonArrival(const QString& name, const QString& room, int time, const QString& color) {
+    const double hours = time / 3600.0;
+    const int yIdx = roomIndex(room);
+    auto* series = getOrCreateSeries(name, color);
+    series->append(hours, yIdx);
+    m_lastY[name] = yIdx;
 }
 
 void DesOccupancyPanel::addPoint(const QString& name, const QString& room, int time, const QString& color) {

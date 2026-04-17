@@ -172,7 +172,9 @@ enum class EventType : int {
     MISSION_START = 18,
     APPOINTMENT_END = 19,
     SCAN_AREA = 20,
-    SCAN_COMPLETE = 21
+    SCAN_COMPLETE = 21,
+    PERSON_ACCOMPANY_DEPARTURE = 22,
+    PERSON_ACCOMPANY_ARRIVED = 23
 };
 
 enum MissionState {

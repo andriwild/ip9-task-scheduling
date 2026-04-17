@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base.h"
-#include "person_transition.h"
+#include "person_accompany_event.h"
 #include "../i_sim_context.h"
 #include "../robot.h"
 #include "../../plugins/accompany/accompany_order.h"
@@ -31,9 +31,7 @@ public:
                 auto person = ctx.getPersonByName(personName);
                 const auto& arrivalLocation = ctx.getRobot()->getLocation();
                 ctx.setPersonLocation(personName, arrivalLocation);
-                auto transition = std::make_shared<PersonTransitionEvent>(this->time, person);
-                transition->targetRoom = arrivalLocation;
-                ctx.pushEvent(transition);
+                ctx.pushEvent(std::make_shared<PersonAccompanyArrivedEvent>(this->time, person, arrivalLocation));
             }
         }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.h"
+#include "person_accompany_event.h"
 #include "start_drive_event.h"
 #include "../i_sim_context.h"
 #include "../robot_state.h"
@@ -14,7 +15,10 @@ public:
         const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
         const auto& personName = accompany.personName;
         if (ctx.hasEmployee(personName)) {
-            ctx.getPersonByName(personName)->busy = true;
+            auto person = ctx.getPersonByName(personName);
+            person->busy = true;
+            const std::string currentRoom = ctx.getPersonLocation(personName);
+            ctx.pushEvent(std::make_shared<PersonAccompanyDepartureEvent>(time, person, currentRoom));
         }
         ctx.changeRobotState(std::make_unique<AccompanyState>());
         ctx.pushEvent(std::make_shared<StartDriveEvent>(time, accompany.roomName));

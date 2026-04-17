@@ -48,6 +48,8 @@ private:
     void connectLegendMarkers();
     void addRobotDeparture(int time);
     void addRobotArrival(const QString& room, int time);
+    void addPersonDeparture(const QString& name, const QString& room, int time, const QString& color);
+    void addPersonArrival(const QString& name, const QString& room, int time, const QString& color);
     void addPoint(const QString& name, const QString& room, int time, const QString& color);
     void updateXAxis();
 
