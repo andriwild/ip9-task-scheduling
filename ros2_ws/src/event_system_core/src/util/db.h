@@ -15,7 +15,7 @@ struct DBConfig {
     std::string m_pw;
     const std::string m_dbName = "wsr";
     const std::string m_host = "localhost";
-    const int m_port = 5432;
+    const int m_port = 5433;
 };
 
 class DBClient {
@@ -132,7 +132,7 @@ public:
         return std::nullopt;
     }
 
-    std::optional<des::SearchAreaMap> allAreas() {
+    std::optional<std::map<std::string, double>> allAreas() {
         if (!m_db.isOpen() && !m_db.open()) {
             RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
@@ -142,7 +142,7 @@ public:
             RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "allAreas Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
-        des::SearchAreaMap areas;
+        std::map<std::string, double> areas;
         while (query.next()) {
             areas[query.value(0).toString().toStdString()] = query.value(1).toDouble();
         }
