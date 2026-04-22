@@ -17,8 +17,12 @@ public:
     virtual std::string typeName() const = 0;
     virtual std::string rootSubtreeId() const = 0;
 
-    virtual void onMissionStart(ISimContext& ctx, des::IOrder& order) = 0;
-    virtual void onMissionEnd(ISimContext& ctx, des::IOrder& order) = 0;
+    // hooks
+    virtual void onMissionStart(ISimContext& ctx, des::IOrder& order)    = 0;
+    virtual void onMissionEnd(ISimContext& ctx, des::IOrder& order)      = 0;
+    virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) = 0;
+    virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order)  = 0;
+
     virtual void registeredNodes(BT::BehaviorTreeFactory& factory) = 0;
     virtual std::string subtreeXml() const = 0;
     virtual des::OrderPtr fromJson(const nlohmann::json& j) const = 0;

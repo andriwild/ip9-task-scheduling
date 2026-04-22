@@ -19,6 +19,9 @@ public:
 
     void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
     void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
+    virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+    virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
     std::string subtreeXml() const override { return ACCOMPANY_SUBTREE_XML; }
     des::OrderPtr fromJson(const nlohmann::json& j) const override;

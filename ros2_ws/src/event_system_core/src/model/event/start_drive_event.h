@@ -6,6 +6,7 @@
 #include "base.h"
 #include "stop_drive_event.h"
 #include "../i_sim_context.h"
+#include "../../plugins/order_registry.h"
 #include "../robot.h"
 
 class StartDriveEvent final : public IEvent {
@@ -27,6 +28,13 @@ public:
         ctx.pushEvent(std::make_shared<StopDriveEvent>(static_cast<int>(time + duration), location, distance));
         ctx.getRobot()->setDriving(true);
         ctx.getRobot()->setTargetLocation(location);
+
+        auto orderPtr = ctx.getOrderPtr();
+        if (orderPtr) {
+            auto& plugin = OrderRegistry::instance().get(orderPtr->type);
+            plugin.onStartDriveEvent(ctx, *orderPtr);
+        }
+
         ctx.notifyEvent(*this);
     }
 

@@ -53,6 +53,23 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
 }
 
+void AccompanyOrderPlugin::onStartDriveEvent(ISimContext& ctx, des::IOrder& order) {
+    // not implemented
+};
+
+void AccompanyOrderPlugin::onStopDriveEvent(ISimContext& ctx, des::IOrder& order) {
+    auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx.getOrderPtr());
+    if (ctx.getRobot()->getStateType() == des::RobotStateType::ACCOMPANY && accompany) {
+        const auto& personName = accompany->personName;
+        if (ctx.hasEmployee(personName)) {
+            auto person = ctx.getPersonByName(personName);
+            const auto& arrivalLocation = ctx.getRobot()->getLocation();
+            ctx.setPersonLocation(personName, arrivalLocation);
+            ctx.pushEvent(std::make_shared<PersonAccompanyArrivedEvent>(ctx.getTime(), person, arrivalLocation));
+        }
+    }
+};
+
 des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
     auto o = std::make_shared<AccompanyOrder>();
     o->id          = j.at("id");
