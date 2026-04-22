@@ -111,6 +111,7 @@ public:
             config.appointmentDuration = j.value("appointment_duration", 1800.0);
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personDetectionRange = j.value("person_detection_range", 5.0);
+            config.dataAcquisitionDuration = j.value("data_acquisition_duration", 120.0);
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;

@@ -18,6 +18,11 @@ public:
     std::string typeName() const override { return "data_acquisition"; }
     std::string rootSubtreeId() const override { return "DataAcquisitionRoutine"; }
 
+    void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
+    void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
+    virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+    virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
     std::string subtreeXml() const override { return DATA_ACQUISITION_SUBTREE_XML; }
     des::OrderPtr fromJson(const nlohmann::json& j) const override;

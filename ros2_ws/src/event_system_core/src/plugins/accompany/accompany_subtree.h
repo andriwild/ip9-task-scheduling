@@ -71,6 +71,4 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
           </Fallback>
       </Sequence>
   </BehaviorTree>
-
-  </root>
 )";

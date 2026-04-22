@@ -144,8 +144,6 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
     }
 
     std::string xml = buildXml();
-
-
     factory.registerBehaviorTreeFromText(xml);
     auto tree = std::make_shared<BT::Tree>(factory.createTree("MainTree"));
     tree->rootBlackboard()->set<std::shared_ptr<ISimContext>>("ctx", ctx);

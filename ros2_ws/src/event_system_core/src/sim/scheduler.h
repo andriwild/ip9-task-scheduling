@@ -55,6 +55,10 @@ public:
         return events;
     }
 
+    double robotDriveTime(const std::string& from, const std::string& to) const {
+        return getDriveTime(from, to, m_simConfig->robotSpeed);
+    }
+
     // Calc time to accompany a person to a meeting with using only one search location
     double optimisticMeeting(const std::string& personName, const std::string& startPos, const std::string& goalPos) const {
         const auto employeeLocation = m_locations.at(personName)->roomLabels.front();

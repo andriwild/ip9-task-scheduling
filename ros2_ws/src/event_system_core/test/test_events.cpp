@@ -9,6 +9,8 @@
 #include "../src/model/robot.h"
 #include "../src/model/robot_state.h"
 #include "../src/plugins/accompany/accompany_order.h"
+#include "../src/plugins/accompany/accompany_plugin.h"
+#include "../src/plugins/order_registry.h"
 #include "../src/plugins/accompany/events/abort_search_event.h"
 #include "../src/plugins/accompany/events/start_accompany_event.h"
 #include "../src/plugins/accompany/events/start_found_person_conversation_event.h"
@@ -146,6 +148,11 @@ public:
     double getSearchArea(const std::string& /*name*/) const override { return 0.0; }
 };
 
+static bool pluginsRegistered = [] {
+    OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+    return true;
+}();
+
 static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
         int id,
         const std::string& person,
@@ -227,6 +234,7 @@ TEST(EventExecute, MissionStartSetsSearchState) {
     ctx.employees["Max"] = person;
 
     auto order = makeAccompanyOrder(1, "Max");
+    ctx.setOrderPtr(order);
 
     MissionStartEvent event(35000, order);
     event.execute(ctx);
@@ -416,6 +424,7 @@ TEST(EventExecute, MissionCompleteCallsCompleteOrderAndTicks) {
 
     auto order = makeAccompanyOrder(1, "Max");
     order->state = des::MissionState::COMPLETED;
+    ctx.setOrderPtr(order);
 
     MissionCompleteEvent event(36500, order);
     event.execute(ctx);

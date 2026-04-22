@@ -4,6 +4,7 @@
 
 #include "plugins/order_registry.h"
 #include "plugins/accompany/accompany_plugin.h"
+#include "plugins/data_acquisition/data_acquisition_plugin.h"
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
@@ -13,6 +14,7 @@ const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;
     OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+    OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
 
     // ros parameter requires searching the flag (stability)
     bool headless = false;

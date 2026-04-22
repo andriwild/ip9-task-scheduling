@@ -24,8 +24,8 @@ find_package(event_system_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets Charts Sql REQUIRED)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h" "src/*.hpp")
 
 add_executable(event_system_core ${SOURCES} ${HEADERS})
 
