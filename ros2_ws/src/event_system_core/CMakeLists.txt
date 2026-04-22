@@ -31,6 +31,7 @@ add_executable(event_system_core ${SOURCES} ${HEADERS})
 
 target_include_directories(event_system_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -134,6 +135,10 @@ if(BUILD_TESTING)
   target_compile_definitions(test_integration PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
+  foreach(t test_event_queue test_config_loader test_mission_manager test_scheduler test_events test_integration)
+    target_include_directories(${t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  endforeach()
+
   # DB integration tests (requires running PostgreSQL)
   ament_add_gtest(test_db test/test_db.cpp)
   target_link_libraries(test_db Qt5::Core Qt5::Sql)

@@ -5,9 +5,10 @@
 #include "bt_nodes/search.h"
 #include "bt_nodes/accompany.h"
 #include "bt_nodes/conversation.h"
-#include "../../sim/scheduler.h"
-#include "../../model/i_sim_context.h"
-#include "../../observer/ros.h"
+#include "events/appointment_end_event.h"
+#include "sim/scheduler.h"
+#include "model/i_sim_context.h"
+#include "observer/ros.h"
 
 void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     // search
@@ -34,6 +35,22 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsDropOffConversation>("IsDropOffConversation");
     factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
     factory.registerNodeType<CompleteMissionAction>("CompleteMissionAction");
+}
+
+void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
+    auto accompanyOrder = static_cast<AccompanyOrder&>(order);
+    const auto& personName = accompanyOrder.personName;
+    if (ctx.hasEmployee(personName)) {
+        auto person = ctx.getPersonByName(personName);
+        int endTime = ctx.getTime() + static_cast<int>(ctx.getConfig()->appointmentDuration);
+        ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
+    }
+}
+
+void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) {
+    auto accompanyOrder = static_cast<AccompanyOrder&>(order);
+    auto locations = ctx.getPersonByName(accompanyOrder.personName)->roomLabels;
+    ctx.changeRobotState(std::make_unique<SearchState>(locations));
 }
 
 des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {

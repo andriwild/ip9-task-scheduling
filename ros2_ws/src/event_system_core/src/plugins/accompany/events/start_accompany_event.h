@@ -1,11 +1,11 @@
 #pragma once
 
-#include "base.h"
+#include "model/event/base.h"
 #include "person_accompany_event.h"
-#include "start_drive_event.h"
-#include "../i_sim_context.h"
-#include "../robot_state.h"
-#include "../../plugins/accompany/accompany_order.h"
+#include "model/event/start_drive_event.h"
+#include "model/i_sim_context.h"
+#include "model/robot_state.h"
+#include "plugins/accompany/accompany_order.h"
 
 class StartAccompanyEvent final : public IEvent {
 public:

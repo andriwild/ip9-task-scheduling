@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base.h"
-#include "mission_complete_event.h"
-#include "../i_sim_context.h"
-#include "../robot_state.h"
+#include "model/event/base.h"
+#include "model/event/mission_complete_event.h"
+#include "model/i_sim_context.h"
+#include "model/robot_state.h"
 
 class AbortSearchEvent final : public IEvent {
 public:

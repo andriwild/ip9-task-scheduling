@@ -7,12 +7,15 @@
 #include <cassert>
 #include <memory>
 
-#include "../../../model/i_sim_context.h"
-#include "../../../model/robot.h"
-#include "../../../model/robot_state.h"
-#include "../../../model/event.h"
-#include "../../../util/rnd.h"
-#include "../accompany_order.h"
+#include "model/i_sim_context.h"
+#include "model/robot.h"
+#include "model/robot_state.h"
+#include "model/event.h"
+#include "util/rnd.h"
+#include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/events/start_found_person_conversation_event.h"
+#include "plugins/accompany/events/scan_aera.h"
+#include "plugins/accompany/events/abort_search_event.h"
 
 class IsSearching final : public BT::ConditionNode {
 public:

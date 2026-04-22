@@ -3,9 +3,9 @@
 #include <format>
 #include <utility>
 
-#include "base.h"
-#include "person_transition.h"
-#include "../i_sim_context.h"
+#include "model/event/base.h"
+#include "model/event/person_transition.h"
+#include "model/i_sim_context.h"
 
 class AppointmentEndEvent final : public IEvent {
 public:
@@ -24,3 +24,5 @@ public:
     }
     des::EventType getType() const override { return des::EventType::APPOINTMENT_END; }
 };
+
+

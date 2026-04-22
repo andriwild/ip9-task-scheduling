@@ -7,7 +7,7 @@ from geoalchemy2 import Geometry
 # --- KONFIGURATION ---
 COLLECTION_NAME = "Waypoints"
 # Passe den Connection String an deine Umgebung an
-DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr" 
+DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr"
 # ---------------------
 print("-" * 30)
 def get_db_engine():

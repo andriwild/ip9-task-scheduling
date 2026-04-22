@@ -15,7 +15,7 @@ struct DBConfig {
     std::string m_pw;
     const std::string m_dbName = "wsr";
     const std::string m_host = "localhost";
-    const int m_port = 5433;
+    const int m_port = 5432;
 };
 
 class DBClient {

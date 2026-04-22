@@ -9,6 +9,12 @@
 #include "../src/model/robot.h"
 #include "../src/model/robot_state.h"
 #include "../src/plugins/accompany/accompany_order.h"
+#include "../src/plugins/accompany/events/abort_search_event.h"
+#include "../src/plugins/accompany/events/start_accompany_event.h"
+#include "../src/plugins/accompany/events/start_found_person_conversation_event.h"
+#include "../src/plugins/accompany/events/start_drop_off_conversation_event.h"
+#include "../src/plugins/accompany/events/found_person_conversation_complete.h"
+#include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
 
 class MockSimContext : public ISimContext {
 public:

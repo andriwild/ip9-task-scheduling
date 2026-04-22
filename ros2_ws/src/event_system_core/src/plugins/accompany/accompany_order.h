@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../i_order.h"
+#include "plugins/i_order.h"
 
 struct AccompanyOrder : des::IOrder {
     std::string personName;

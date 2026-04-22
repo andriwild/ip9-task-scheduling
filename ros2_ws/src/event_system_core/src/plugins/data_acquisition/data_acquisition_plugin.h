@@ -3,24 +3,23 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <string>
 
-#include "plugins/i_order_plugin.h"
-#include "accompany_subtree.h"
+#include "../i_order_plugin.h"
+#include "./data_acquisition_subtree.h"
+
 
 class Scheduler;
 class ISimContext;
 class RosObserver;
 
-class AccompanyOrderPlugin : public IOrderPlugin {
+class DataAcquisition: public IOrderPlugin {
 public:
-    explicit AccompanyOrderPlugin() = default;
+    explicit DataAcquisition() = default;
 
-    std::string typeName() const override { return "accompany"; }
-    std::string rootSubtreeId() const override { return "AccompanyRoutine"; }
+    std::string typeName() const override { return "data_acquisition"; }
+    std::string rootSubtreeId() const override { return "DataAcquisitionRoutine"; }
 
-    void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
-    void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
-    std::string subtreeXml() const override { return ACCOMPANY_SUBTREE_XML; }
+    std::string subtreeXml() const override { return DATA_ACQUISITION_SUBTREE_XML; }
     des::OrderPtr fromJson(const nlohmann::json& j) const override;
     int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;

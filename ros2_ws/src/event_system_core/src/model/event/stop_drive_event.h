@@ -1,10 +1,9 @@
 #pragma once
 
-#include "base.h"
-#include "person_accompany_event.h"
-#include "../i_sim_context.h"
-#include "../robot.h"
-#include "../../plugins/accompany/accompany_order.h"
+#include "model/event/base.h"
+#include "model/i_sim_context.h"
+#include "model/robot.h"
+#include "plugins/accompany/accompany_order.h"
 
 class StopDriveEvent final : public IEvent {
 public:
@@ -31,7 +30,7 @@ public:
                 auto person = ctx.getPersonByName(personName);
                 const auto& arrivalLocation = ctx.getRobot()->getLocation();
                 ctx.setPersonLocation(personName, arrivalLocation);
-                ctx.pushEvent(std::make_shared<PersonAccompanyArrivedEvent>(this->time, person, arrivalLocation));
+                // ctx.pushEvent(std::make_shared<PersonAccompanyArrivedEvent>(this->time, person, arrivalLocation));
             }
         }
 

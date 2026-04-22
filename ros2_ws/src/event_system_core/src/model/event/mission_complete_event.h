@@ -3,9 +3,8 @@
 #include <format>
 
 #include "base.h"
-#include "appointment_end_event.h"
+#include "../../plugins/order_registry.h"
 #include "../i_sim_context.h"
-#include "../../plugins/accompany/accompany_order.h"
 
 class MissionCompleteEvent final : public IEvent {
 public:
@@ -16,14 +15,9 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        if (auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(orderPtr)) {
-            const auto& personName = accompany->personName;
-            if (ctx.hasEmployee(personName)) {
-                auto person = ctx.getPersonByName(personName);
-                int endTime = this->time + static_cast<int>(ctx.getConfig()->appointmentDuration);
-                ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
-            }
-        }
+        auto orderPtr = ctx.getOrderPtr();
+        auto& plugin = OrderRegistry::instance().get(orderPtr->type);
+        plugin.onMissionEnd(ctx, *orderPtr);
         ctx.completeOrder(this->orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();

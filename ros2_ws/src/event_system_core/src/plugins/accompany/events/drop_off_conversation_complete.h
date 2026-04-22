@@ -1,9 +1,9 @@
 #pragma once
 
-#include "base.h"
-#include "../i_sim_context.h"
-#include "../robot.h"
-#include "../robot_state.h"
+#include "model/event/base.h"
+#include "model/i_sim_context.h"
+#include "model/robot.h"
+#include "model/robot_state.h"
 
 class DropOffConversationCompleteEvent : public IEvent {
 public:

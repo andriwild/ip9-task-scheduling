@@ -6,7 +6,7 @@
 #include "base.h"
 #include "../i_sim_context.h"
 #include "../robot_state.h"
-#include "../../plugins/accompany/accompany_order.h"
+#include "../../plugins/order_registry.h"
 
 class MissionStartEvent final : public IEvent {
 public:
@@ -17,12 +17,9 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        const auto& accompany = static_cast<const AccompanyOrder&>(*orderPtr);
-        const std::string& person = accompany.personName;
-        assert(ctx.hasEmployee(person));
-        const auto& locations = ctx.getPersonByName(person)->roomLabels;
-        assert(!locations.empty());
-        ctx.changeRobotState(std::make_unique<SearchState>(locations));
+        auto orderPtr = ctx.getOrderPtr();
+        auto& plugin = OrderRegistry::instance().get(orderPtr->type);
+        plugin.onMissionStart(ctx, *orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }

@@ -6,9 +6,10 @@
 #include <behaviortree_cpp/action_node.h>
 #include <memory>
 
-#include "../../../model/i_sim_context.h"
-#include "../../../model/robot_state.h"
-#include "../../../model/event.h"
+#include "model/i_sim_context.h"
+#include "model/robot_state.h"
+#include "plugins/accompany/events/start_accompany_event.h"
+#include "model/event.h"
 
 class IsConversating final : public BT::ConditionNode {
 public:

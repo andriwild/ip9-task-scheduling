@@ -5,9 +5,9 @@
 #include <string>
 #include <utility>
 
-#include "base.h"
-#include "../i_sim_context.h"
-#include "../person.h"
+#include "model/event/base.h"
+#include "model/i_sim_context.h"
+#include "model/person.h"
 
 class PersonAccompanyDepartureEvent final : public IEvent {
 public:

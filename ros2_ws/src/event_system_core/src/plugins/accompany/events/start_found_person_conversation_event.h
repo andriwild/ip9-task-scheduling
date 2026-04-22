@@ -2,12 +2,12 @@
 
 #include <cassert>
 
-#include "base.h"
+#include "model/event/base.h"
 #include "found_person_conversation_complete.h"
-#include "../i_sim_context.h"
-#include "../robot.h"
-#include "../robot_state.h"
-#include "../../util/rnd.h"
+#include "model/i_sim_context.h"
+#include "model/robot.h"
+#include "model/robot_state.h"
+#include "util/rnd.h"
 
 class StartFoundPersonConversationEvent final : public IEvent {
 public:

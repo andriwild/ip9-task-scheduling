@@ -1,6 +1,6 @@
 {
     "appointment_duration": 1800.0,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_heavy_load.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_single.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,

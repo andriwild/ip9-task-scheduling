@@ -2,12 +2,12 @@
 
 #include <cassert>
 
-#include "base.h"
+#include "model/event/base.h"
 #include "scan_complete.h"
-#include "../i_sim_context.h"
-#include "../robot.h"
-#include "../../util/rnd.h"
-#include "../../plugins/accompany/accompany_order.h"
+#include "model/i_sim_context.h"
+#include "model/robot.h"
+#include "util/rnd.h"
+#include "plugins/accompany/accompany_order.h"
 
 class ScanAera final : public IEvent {
 public:

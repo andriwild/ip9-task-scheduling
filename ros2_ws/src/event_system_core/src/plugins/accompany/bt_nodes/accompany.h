@@ -6,10 +6,11 @@
 #include <behaviortree_cpp/basic_types.h>
 #include <memory>
 
-#include "../../../model/event.h"
-#include "../../../model/i_sim_context.h"
-#include "../../../model/robot_state.h"
-#include "../../../model/robot.h"
+#include "model/event.h"
+#include "model/robot.h"
+#include "model/i_sim_context.h"
+#include "model/robot_state.h"
+#include "plugins/accompany/events/start_drop_off_conversation_event.h"
 
 
 class IsAccompany final : public BT::ConditionNode {
