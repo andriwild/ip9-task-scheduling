@@ -8,6 +8,8 @@
 #include <memory>
 
 #include "../model/i_sim_context.h"
+#include "../model/robot.h"
+#include "../model/event.h"
 
 class IsBatteryLow final : public BT::ConditionNode {
 public:

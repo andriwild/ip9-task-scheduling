@@ -15,7 +15,6 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        auto orderPtr = ctx.getOrderPtr();
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
         plugin.onMissionEnd(ctx, *orderPtr);
         ctx.completeOrder(this->orderPtr);

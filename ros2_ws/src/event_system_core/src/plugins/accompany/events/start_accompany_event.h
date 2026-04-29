@@ -16,7 +16,6 @@ public:
         const auto& personName = accompany.personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);
-            person->busy = true;
             const std::string currentRoom = ctx.getPersonLocation(personName);
             ctx.pushEvent(std::make_shared<PersonAccompanyDepartureEvent>(time, person, currentRoom));
         }

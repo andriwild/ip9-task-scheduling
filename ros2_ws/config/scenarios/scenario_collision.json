@@ -4,7 +4,7 @@
             "id": 0,
             "type": "accompany",
             "personName": "Max",
-            "roomName": "5.2B03",
+            "roomName": "5.2B18",
             "appointmentTime": 36000,
             "description": "Paket Zustellung"
         },
@@ -12,7 +12,7 @@
             "id": 1,
             "type": "accompany",
             "personName": "Leo",
-            "roomName": "5.2B15",
+            "roomName": "5.2B01",
             "appointmentTime": 36060,
             "description": "Dokument Zustellung"
         },

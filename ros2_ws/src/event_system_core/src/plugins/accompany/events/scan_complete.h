@@ -23,6 +23,8 @@ public:
         const bool personPresent = robotLocation == personLocation;
         if (personPresent) {
             ctx.getRobot()->setIsPersonVisible(true);
+            auto person = ctx.getPersonByName(personName);
+            person->busy = true;
         } else if (this->m_remainigSearchTime > 0) {
             ctx.pushEvent(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, personPresent, 0));
             return;
