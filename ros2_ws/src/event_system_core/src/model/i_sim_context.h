@@ -42,6 +42,7 @@ public:
 
     // Notifications
     virtual void notifyEvent(const IEvent& event) const = 0;
+    virtual void notifyBatteryChanged() const = 0;
 
     // Mission management
     virtual void setOrderPtr(const des::OrderPtr& orderPtr) = 0;

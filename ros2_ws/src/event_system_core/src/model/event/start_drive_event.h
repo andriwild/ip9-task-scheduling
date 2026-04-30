@@ -36,6 +36,7 @@ public:
         }
 
         ctx.notifyEvent(*this);
+        ctx.notifyBatteryChanged();
     }
 
     std::string getName() const override { return "Departing: " + location; }

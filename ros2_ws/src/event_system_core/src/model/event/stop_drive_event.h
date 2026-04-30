@@ -28,6 +28,7 @@ public:
         }
 
         ctx.notifyEvent(*this);
+        ctx.notifyBatteryChanged();
 
         ctx.tickBT();
     }

@@ -93,6 +93,8 @@ public:
         const_cast<MockSimContext*>(this)->notifiedEvents.push_back(event.getName());
     }
 
+    void notifyBatteryChanged() const override {}
+
     void setOrderPtr(const des::OrderPtr& order) override {
         currentOrder = order;
     }

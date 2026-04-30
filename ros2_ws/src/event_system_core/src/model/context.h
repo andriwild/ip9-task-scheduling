@@ -188,6 +188,10 @@ public:
         m_eventBus.notifyStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
     }
 
+    void notifyBatteryChanged() const override {
+        notifyRobotStateChanged(m_robot->getState()->getType());
+    }
+
     void notifyEvent(const IEvent& event) const override {
         m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor());
     }
