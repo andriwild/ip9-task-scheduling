@@ -100,6 +100,7 @@ struct SimConfig {
     std::string peopleSpawnLocation;
     double personDetectionRange = 5.0;
     double dataAcquisitionDuration = 120.0;
+    double cleaningArea = 0.09;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -131,6 +132,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "appointmentDuration" << ": " << config.appointmentDuration << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
+        os << std::left << std::setw(W) << "cleaningArea" << ": " << config.cleaningArea << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;
@@ -177,7 +179,9 @@ enum class EventType : int {
     PERSON_ACCOMPANY_DEPARTURE = 22,
     PERSON_ACCOMPANY_ARRIVED = 23,
     DATA_ACQUISITION_START = 24,
-    DATA_ACQUISITION = 25
+    DATA_ACQUISITION = 25,
+    CLEAN_START = 26,
+    CLEAN = 27
 };
 
 enum MissionState {
