@@ -19,7 +19,7 @@
 
 
 class SimulationContext : public ISimContext {
-    int m_currentTime{};
+    int m_currentTime {};
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
     MissionManager m_missions;
@@ -205,4 +205,25 @@ public:
     double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
     double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
     double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
+
+
+    void pushInterrupt(const des::OrderPtr& order) override {
+        auto savedState = m_robot->getState()->clone();
+        m_missions.pushInterrupt(order, std::move(savedState));
+        notifyRobotStateChanged(m_robot->getState()->getType());
+    }
+
+    void popInterrupt(const des::OrderPtr& completedOrder) override {
+        auto restoredState = m_missions.popInterrupt(completedOrder);
+        if (restoredState) {
+            // Last interrupt — restore pre-interrupt state.
+            changeRobotState(std::move(restoredState));
+        }
+        // Otherwise: more interrupts active, RobotState unchanged.
+    }
+
+    bool hasActiveInterrupt() const override {
+        return m_missions.hasInterrupt();
+    }
+
 };

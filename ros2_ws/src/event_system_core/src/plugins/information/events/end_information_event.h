@@ -3,15 +3,21 @@
 #include "model/event/base.h"
 #include "model/event/mission_complete_event.h"
 #include "model/i_sim_context.h"
+#include "plugins/i_order.h"
 
 class EndInformationEvent final : public IEvent {
+    des::OrderPtr m_order;
 public:
-    explicit EndInformationEvent(const int time) : IEvent(time) {}
+    explicit EndInformationEvent(const int time, const des::OrderPtr& order)
+        : IEvent(time), m_order(order) {}
 
     void execute(ISimContext& ctx) override {
-        ctx.updateOrderState(des::MissionState::COMPLETED);
+        m_order->state = des::MissionState::COMPLETED;
         ctx.notifyEvent(*this);
-        ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, ctx.getOrderPtr()));
+        // Pop the interrupt stack BEFORE tickBT — otherwise IdleRoutine in MainStrategy
+        // misfires (sees m_current=interrupt, no plugin matches, pushes spurious drive-to-dock).
+        ctx.popInterrupt(m_order);
+        ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
         ctx.tickBT();
     }
 

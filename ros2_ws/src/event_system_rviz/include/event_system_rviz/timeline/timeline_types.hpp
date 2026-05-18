@@ -62,6 +62,10 @@ inline QColor getEventColor(des::EventType type) {
         case des::EventType::START_ACCOMPANY:
             return QColor(0, 100, 255);
 
+        case des::EventType::INFORMATION:
+        case des::EventType::INFORMATION_START:
+            return QColor(0, 140, 155);
+
         case des::EventType::STOP_DRIVE:
         case des::EventType::START_DRIVE:
             return QColor(0, 150, 50);
@@ -85,6 +89,8 @@ inline RobotStateMeta getMeta(int type) {
         //     return {1, QColor(80, 200, 120), "Moving"};
         case des::RobotStateType::CHARGING:
             return {3, QColor(255, 210, 50), "Charging"};
+        case des::RobotStateType::RETURNING:
+            return {6, QColor(120, 200, 160), "Returning"};
         default: return {-1, Qt::gray, "Unknown"};
     }
 }

@@ -11,3 +11,4 @@
 #include "event/mission_start_event.h"
 #include "event/battery_full_event.h"
 #include "event/person_transition.h"
+#include "event/order_arrival_event.h"

@@ -5,6 +5,7 @@
 #include "base.h"
 #include "../../plugins/order_registry.h"
 #include "../i_sim_context.h"
+#include "util/types.h"
 
 class MissionCompleteEvent final : public IEvent {
 public:
@@ -17,7 +18,11 @@ public:
     void execute(ISimContext& ctx) override {
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
         plugin.onMissionEnd(ctx, *orderPtr);
-        ctx.completeOrder(this->orderPtr);
+        // popInterrupt is done in EndXxxEvent for INTERRUPT plugins so the subsequent
+        // tickBT sees the correct m_current.
+        if (orderPtr->execution != des::ExecutionMode::INTERRUPT) {
+            ctx.completeOrder(this->orderPtr);
+        }
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }

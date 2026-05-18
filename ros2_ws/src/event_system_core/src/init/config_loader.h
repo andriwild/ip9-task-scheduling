@@ -16,6 +16,16 @@ const std::string DEFAULT_ORDER_FILE = "/home/andri/repos/ip9-task-scheduling/ro
 const std::string DEFAULT_EMPLOYEE_FILE    =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
 const std::string SIM_CONFIG_FILE          = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
+struct AdHocGeneratorConfig {
+    std::string type;
+    des::ExecutionMode execution;
+    des::DistributionType distribution;
+    double ratePerSecond;     // <-- rate_per_hour / 3600
+    int from;
+    int to;
+    nlohmann::json params;
+};
+
 class ConfigLoader {
 public:
     static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath) {
@@ -33,6 +43,31 @@ public:
             orders.push_back(OrderRegistry::instance().get(type).fromJson(j));
         }
         return orders;
+    };
+
+    static std::optional<std::vector<AdHocGeneratorConfig>> loadAdHocGenerators(const std::string& filePath) {
+        auto json = getJson(filePath);
+        if (!json.has_value()) {
+            std::cout << "No scenario file found at " << filePath << " — skipping ad-hoc generators" << std::endl;
+            return std::vector<AdHocGeneratorConfig>{};
+        }
+        if (!json.value().contains("ad_hoc_generators")) {
+            return std::vector<AdHocGeneratorConfig>{};
+        }
+
+        std::vector<AdHocGeneratorConfig> generators;
+        for (const auto& j : json.value().at("ad_hoc_generators")) {
+            const std::string& type                  = j.at("type").get_ref<const std::string&>();
+            const des::ExecutionMode& execution      = des::executionTypeFromString(j.value("execution",    "background"));
+            const des::DistributionType distribution = des::distributionTypeFromString(j.value("distribution", "exponential"));
+            const double ratePerHour                 = j.at("rate_per_hour").get<double>() / 3600.0;
+            const int from                           = j.at("active_window").at("from").get<int>();
+            const int to                             = j.at("active_window").at("to").get<int>();
+            const nlohmann::json params              = j.at("params");
+
+            generators.push_back({type, execution, distribution, ratePerHour, from, to, params });
+        }
+        return generators;
     };
 
     static std::optional<des::PersonList> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
@@ -113,6 +148,7 @@ public:
             config.personDetectionRange = j.value("person_detection_range", 5.0);
             config.dataAcquisitionDuration = j.value("data_acquisition_duration", 120.0);
             config.cleaningArea = j.value("cleaning_area", 0.09);
+            config.informationDuration = j.value("information_duration", 30.0);
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;

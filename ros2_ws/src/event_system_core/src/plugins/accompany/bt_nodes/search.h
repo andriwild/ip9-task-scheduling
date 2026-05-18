@@ -67,7 +67,7 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        ctx->pushEvent(std::make_shared<ScanAera>(ctx->getTime()));
+        ctx->pushEvent(std::make_shared<ScanAera>(ctx->getTime(), ctx->getOrderPtr()));
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -134,7 +134,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime()));
+        ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime(), ctx->getOrderPtr()));
         RCLCPP_WARN(rclcpp::get_logger("BT - SearchRoutine"), "Abort Search!");
         return BT::NodeStatus::SUCCESS;
     }

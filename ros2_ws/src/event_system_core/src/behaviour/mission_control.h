@@ -77,7 +77,9 @@ public:
         RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
-        ctx->updateOrderState(des::MissionState::IN_PROGRESS);
+        // PENDING -> IN_PROGRESS transition happens in the plugin's StartXxxEvent,
+        // so plugin Execute nodes can use state==PENDING as an idempotency check
+        // for "mission physically started" on tick.
         ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }

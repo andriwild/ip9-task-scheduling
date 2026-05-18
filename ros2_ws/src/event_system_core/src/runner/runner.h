@@ -127,6 +127,8 @@ protected:
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
         }
 
+        addEventsFromAdHocGenerators(m_config->appointmentsPath);
+
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
         for (auto& p : m_people.value()) {
@@ -142,6 +144,31 @@ protected:
         }
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu orders", orders.value().size());
         return orders.value();
+    }
+
+    void addEventsFromAdHocGenerators(const std::string& path) {
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load ad-hoc generators: %s", path.c_str());
+        auto adHocGenerators = ConfigLoader::loadAdHocGenerators(path.c_str());
+        int eventId = 100000;
+
+        for (const auto& gen : adHocGenerators.value()) {
+            int t = gen.from;
+            while (t < gen.to) {
+                // TODO: not only exponential supported
+                // rnd::exponential takes the mean (sec/event), not the rate (event/sec).
+                const double dt = rnd::exponential(m_ctx->rng(), 1.0 / gen.ratePerSecond);
+                t += static_cast<int>(dt);
+                if (t < gen.to) {
+                    nlohmann::json params = gen.params;
+                    params["id"] = eventId++;
+                    auto orderPtr = OrderRegistry::instance().get(gen.type).fromJson(params);
+                    orderPtr->execution = gen.execution;
+
+                    m_eventQueue.push(std::make_shared<OrderArrivalEvent>(t, orderPtr));
+                }
+            }
+        }
+        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
     des::SearchAreaMap loadSearchAreas() {

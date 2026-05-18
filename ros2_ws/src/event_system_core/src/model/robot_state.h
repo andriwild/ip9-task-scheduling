@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <string>
 #include <tgmath.h>
@@ -18,6 +19,7 @@ public:
     virtual void exit(Robot& robot) { m_result = des::Result::SUCCESS; } ;
     virtual des::RobotStateType getType() const = 0;
     virtual double getEnergyConsumption(const ISimContext& ctx) const = 0;
+    virtual std::unique_ptr<RobotState> clone() const = 0;
 
     des::Result getResult() const { return m_result; };
     void setResult(const des::Result result) { m_result = result; };
@@ -30,6 +32,17 @@ public:
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<IdleState>(*this); }
+};
+
+class ReturningState final : public  RobotState {
+public:
+    explicit ReturningState() : RobotState() {}
+    void enter(Robot& robot) override;
+    void exit(Robot& robot) override;
+    des::RobotStateType getType() const override;
+    double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<ReturningState>(*this); }
 };
 
 class AccompanyState final : public  RobotState {
@@ -38,6 +51,7 @@ public:
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<AccompanyState>(*this); }
 };
 
 class SearchState final : public  RobotState {
@@ -48,6 +62,7 @@ public:
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<SearchState>(*this); }
 };
 
 class ConversateState final: public  RobotState {
@@ -60,10 +75,11 @@ public:
     const Type conversationType;
 
     ConversateState(const Type type = Type::FOUND_PERSON) : conversationType(type) {}
-    
+
     void enter(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<ConversateState>(*this); }
 };
 
 class ChargeState final : public  RobotState {
@@ -72,4 +88,5 @@ public:
     void exit(Robot& robot) override;
     des::RobotStateType getType() const override;
     double getEnergyConsumption(const ISimContext& ctx) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<ChargeState>(*this); }
 };

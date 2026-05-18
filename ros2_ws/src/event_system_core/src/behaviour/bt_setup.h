@@ -12,6 +12,7 @@
 #include "charge.h"
 #include "../plugins/order_registry.h"
 #include "is_active_order_type.h"
+#include "interrupt.h"
 #include "mission_control.h"
 
 
@@ -61,19 +62,17 @@ const std::string CHARGE_ROUTINE = R"(
 </BehaviorTree>
 )";
 
+
 const std::string IDLE_ROUTINE = R"(
 <BehaviorTree ID="IdleRoutine">
-    <Sequence name="Seq_IdleMain">
+<Sequence name="Seq_IdleMain">
+    <Fallback>
         <IsIdle/>
-        <Inverter>
-            <HasPendingMission/>
-        </Inverter>
-        <Inverter>
-            <IsRobotBusy/>
-        </Inverter>
-        <Docking/>
-        <EnterIdle/>
-    </Sequence>
+        <IsReturning/>
+    </Fallback>
+    <Docking/>
+    <EnterIdle/>
+</Sequence>
 </BehaviorTree>
 )";
 
@@ -90,6 +89,7 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
 
     // idle
     factory.registerNodeType<IsIdle>("IsIdle");
+    factory.registerNodeType<IsReturning>("IsReturning");
     factory.registerNodeType<Docking>("Docking");
     factory.registerNodeType<EnterIdle>("EnterIdle");
     factory.registerNodeType<HasPendingMissionIdle>("HasPendingMissionIdle");
@@ -100,6 +100,7 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
     factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
+    factory.registerNodeType<IsInterruptActive>("IsInterruptActive");
 }
 
 
@@ -107,23 +108,43 @@ inline std::string buildXml() {
     std::string xml = R"(
      <root BTCPP_format="4" main_tree_to_execute="MainTree">
          <BehaviorTree ID="MainTree">
-            <Sequence name="Seq_MainLoop">
+            <ReactiveSequence name="Seq_MainLoop">
+                <SubTree ID="InterruptRoutine" _autoremap="true"/>
                 <SubTree ID="ChargeRoutine" _autoremap="true"/>
                 <Fallback name="Fallback_MainStrategy">
                     <SubTree ID="MissionControlRoutine" _autoremap="true"/>)";
 
     for (auto* plugin : OrderRegistry::instance().all()) {
-        xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
+        if (plugin->executionMode() != des::ExecutionMode::INTERRUPT) {
+            xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
+        }
     }
-    
+
     xml += R"(<SubTree ID="IdleRoutine" _autoremap="true"/>
              </Fallback>
-            </Sequence>
+            </ReactiveSequence>
          </BehaviorTree>)";
 
     xml += CHARGE_ROUTINE;
     xml += MISSION_CONTROL_ROUTINE;
     xml += IDLE_ROUTINE;
+
+    xml += R"(
+        <BehaviorTree ID="InterruptRoutine">
+          <Fallback>
+            <Inverter><IsInterruptActive/></Inverter>
+            <Fallback>
+    )";
+    for (auto* plugin : OrderRegistry::instance().all()) {
+        if (plugin->executionMode() == des::ExecutionMode::INTERRUPT) {
+            xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
+        }
+    }
+    xml += R"(
+            </Fallback>
+          </Fallback>
+        </BehaviorTree>
+    )";
 
     for (auto* plugin : OrderRegistry::instance().all()){
         xml += plugin->subtreeXml();

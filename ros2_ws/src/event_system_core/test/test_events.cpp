@@ -95,6 +95,10 @@ public:
 
     void notifyBatteryChanged() const override {}
 
+    void pushInterrupt(const des::OrderPtr& /*order*/) override {}
+    void popInterrupt(const des::OrderPtr& /*completedOrder*/) override {}
+    bool hasActiveInterrupt() const override { return false; }
+
     void setOrderPtr(const des::OrderPtr& order) override {
         currentOrder = order;
     }
@@ -261,7 +265,7 @@ TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
     order->state = des::MissionState::IN_PROGRESS;
     ctx.currentOrder = order;
 
-    AbortSearchEvent event(36000);
+    AbortSearchEvent event(36000, order);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.currentOrder->state, des::MissionState::FAILED);
@@ -278,7 +282,7 @@ TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
     auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
     ctx.currentOrder = order;
 
-    StartAccompanyEvent event(35500);
+    StartAccompanyEvent event(35500, order);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::ACCOMPANY);
@@ -668,9 +672,9 @@ TEST(EventExecute, PersonArrivedAtUnknownRoomReturnsToWorkplace) {
 TEST(EventMetadata, EventTypesAreCorrect) {
     EXPECT_EQ(SimulationStartEvent(0).getType(), des::EventType::SIMULATION_START);
     EXPECT_EQ(SimulationEndEvent(0).getType(), des::EventType::SIMULATION_END);
-    EXPECT_EQ(AbortSearchEvent(0).getType(), des::EventType::ABORT_SEARCH);
+    EXPECT_EQ(AbortSearchEvent(0, nullptr).getType(), des::EventType::ABORT_SEARCH);
     EXPECT_EQ(BatteryFullEvent(0).getType(), des::EventType::BATTERY_FULL);
-    EXPECT_EQ(StartAccompanyEvent(0).getType(), des::EventType::START_ACCOMPANY);
+    EXPECT_EQ(StartAccompanyEvent(0, nullptr).getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(StartDropOffConversationEvent(0).getType(), des::EventType::START_DROP_OFF_CONV);
     EXPECT_EQ(StartFoundPersonConversationEvent(0).getType(), des::EventType::START_FOUND_PERSON_CONV);
     EXPECT_EQ(StopDriveEvent(0, "x", 0).getType(), des::EventType::STOP_DRIVE);
@@ -680,7 +684,7 @@ TEST(EventMetadata, EventTypesAreCorrect) {
 TEST(EventMetadata, EventNamesAreNonEmpty) {
     EXPECT_FALSE(SimulationStartEvent(0).getName().empty());
     EXPECT_FALSE(SimulationEndEvent(0).getName().empty());
-    EXPECT_FALSE(AbortSearchEvent(0).getName().empty());
+    EXPECT_FALSE(AbortSearchEvent(0, nullptr).getName().empty());
     EXPECT_FALSE(BatteryFullEvent(0).getName().empty());
     EXPECT_FALSE(StopDriveEvent(0, "X", 0).getName().empty());
     EXPECT_FALSE(StartDriveEvent(0, "X").getName().empty());

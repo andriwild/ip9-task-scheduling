@@ -6,17 +6,19 @@
 #include "plugins/accompany/accompany_order.h"
 
 class ScanComplete final : public IEvent {
+    des::OrderPtr m_order;
 public:
     int m_remainigSearchTime;
     bool m_found;
-    explicit ScanComplete(const int time, const bool found, const int remainingSearchTime)
+    explicit ScanComplete(const int time, const des::OrderPtr& order, const bool found, const int remainingSearchTime)
         : IEvent(time)
+        , m_order(order)
         , m_remainigSearchTime(remainingSearchTime)
         , m_found(found)
     {}
 
     void execute(ISimContext& ctx) override {
-        const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
+        const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
         const std::string personLocation = ctx.getPersonLocation(personName);
         const std::string robotLocation  = ctx.getRobot()->getLocation();
@@ -26,7 +28,7 @@ public:
             auto person = ctx.getPersonByName(personName);
             person->busy = true;
         } else if (this->m_remainigSearchTime > 0) {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, personPresent, 0));
+            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, m_order, personPresent, 0));
             return;
         }
         ctx.notifyEvent(*this);

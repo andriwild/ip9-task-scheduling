@@ -31,6 +31,18 @@ public:
 };
 
 
+class IsReturning final : public BT::ConditionNode {
+public:
+    IsReturning(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard->get<std::shared_ptr<ISimContext>>("ctx");
+        return ctx->getRobot()->getStateType() == des::RobotStateType::RETURNING
+            ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
 class Docking final : public BT::SyncActionNode {
 public:
     Docking(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
@@ -44,9 +56,13 @@ public:
             RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "Docking check: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
-        ctx->changeRobotState(std::make_unique<IdleState>());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
-        RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock, start driving to dock");
+        // If the robot is already driving back, do nothing — the in-flight StopDriveEvent
+        // will trigger the next tick.
+        if (!ctx->getRobot()->isDriving()) {
+            ctx->changeRobotState(std::make_unique<ReturningState>());
+            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
+            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock, start driving to dock");
+        }
         return BT::NodeStatus::FAILURE;
     }
 };

@@ -72,7 +72,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime()));
+        ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime(), ctx->getOrderPtr()));
         RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }

@@ -10,14 +10,16 @@
 #include "plugins/accompany/accompany_order.h"
 
 class ScanAera final : public IEvent {
+    des::OrderPtr m_order;
 public:
-    explicit ScanAera(const int time) : IEvent(time) {}
+    explicit ScanAera(const int time, const des::OrderPtr& order)
+        : IEvent(time), m_order(order) {}
 
     void execute(ISimContext& ctx) override {
         ctx.notifyEvent(*this);
         ctx.getRobot()->setScanning(true);
 
-        const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
+        const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
         const std::string personLocation = ctx.getPersonLocation(personName);
         const std::string robotLocation  = ctx.getRobot()->getLocation();
@@ -31,9 +33,9 @@ public:
         const int foundAt = rnd::uni(ctx.rng(), 1, scanTime);
 
         if (personPresent) {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + foundAt, personPresent, scanTime - foundAt));
+            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + foundAt, m_order, personPresent, scanTime - foundAt));
         } else {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + scanTime, personPresent, 0));
+            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + scanTime, m_order, personPresent, 0));
         }
     }
 

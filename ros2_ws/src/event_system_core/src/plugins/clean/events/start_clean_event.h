@@ -6,13 +6,17 @@
 #include "model/event/base.h"
 #include "model/i_sim_context.h"
 #include "model/robot.h"
+#include "plugins/i_order.h"
 #include "end_clean_event.h"
 
 class StartCleanEvent final : public IEvent {
+    des::OrderPtr m_order;
 public:
-    explicit StartCleanEvent(const int time) : IEvent(time) {}
+    explicit StartCleanEvent(const int time, const des::OrderPtr& order)
+        : IEvent(time), m_order(order) {}
 
     void execute(ISimContext& ctx) override {
+        m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
 
         const std::string robotLocation = ctx.getRobot()->getLocation();
@@ -24,7 +28,7 @@ public:
         const int cleanTime     = static_cast<int>(steps * (2.0 * broomSide / ctx.getConfig()->robotSpeed));
         assert(cleanTime > 0);
 
-        ctx.pushEvent(std::make_shared<EndCleanEvent>(this->time + cleanTime));
+        ctx.pushEvent(std::make_shared<EndCleanEvent>(this->time + cleanTime, m_order));
     }
 
     std::string getName() const override { return "Start Clean"; }

@@ -14,22 +14,28 @@ public:
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
-    BT::NodeStatus onStart() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: start");
-        ctx->pushEvent(std::make_shared<StartInformationEvent>(ctx->getTime()));
-        return BT::NodeStatus::RUNNING;
-    }
+    // onStart and onRunning share the same logic: each tick must check whether m_current
+    // is a NEW interrupt order (state==PENDING). BTCPP4 doesn't re-call onStart when
+    // m_current changes under the node (e.g. when a new interrupt is stacked on top).
+    BT::NodeStatus onStart() override   { return tickInternal(); }
+    BT::NodeStatus onRunning() override { return tickInternal(); }
+    void onHalted() override {}
 
-    BT::NodeStatus onRunning() override {
+private:
+    BT::NodeStatus tickInternal() {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == des::MissionState::COMPLETED) {
-            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: done");
+        if (!order) return BT::NodeStatus::FAILURE;
+
+        if (order->state == des::MissionState::PENDING) {
+            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: start (order id=%d)", order->id);
+            ctx->pushEvent(std::make_shared<StartInformationEvent>(ctx->getTime(), order));
+            return BT::NodeStatus::RUNNING;
+        }
+        if (order->state == des::MissionState::COMPLETED) {
+            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: done (order id=%d)", order->id);
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;
     }
-
-    void onHalted() override {}
 };

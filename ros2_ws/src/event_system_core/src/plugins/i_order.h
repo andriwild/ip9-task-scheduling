@@ -16,9 +16,9 @@ struct IOrder {
     std::optional<int> deadline;
     std::string description;
     MissionState state = PENDING;
+    ExecutionMode execution = ExecutionMode::BACKGROUND;
 
     virtual ~IOrder() = default;
-
 };
 
 using OrderPtr  = std::shared_ptr<IOrder>;

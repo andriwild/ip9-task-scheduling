@@ -6,6 +6,7 @@
 #include "plugins/accompany/accompany_plugin.h"
 #include "plugins/data_acquisition/data_acquisition_plugin.h"
 #include "plugins/clean/clean_plugin.h"
+#include "plugins/information/information_plugin.h"
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
@@ -17,6 +18,7 @@ int main(const int argc, char *argv[]) {
     OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
     OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
     OrderRegistry::instance().registerPlugin(std::make_unique<CleanPlugin>());
+    OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
 
     // ros parameter requires searching the flag (stability)
     bool headless = false;

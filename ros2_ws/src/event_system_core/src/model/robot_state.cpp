@@ -8,6 +8,7 @@
 void IdleState::enter(Robot& robot) {
     RobotState::enter(robot);
     RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Idle");
+    robot.setSpeed(robot.getDriveSpeed());
 }
 void IdleState::exit(Robot& robot) {
     RobotState::exit(robot);
@@ -16,13 +17,22 @@ des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
 double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
-    auto energyConsumption = ctx.getConfig()->energyConsumptionBase;
-    if (ctx.getRobot()->isDriving()) {
-        energyConsumption = ctx.getConfig()->energyConsumptionDrive;
-    } else if (ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation()) {
-        energyConsumption -= ctx.getConfig()->chargingRate;
-    }
+    auto energyConsumption = ctx.getConfig()->energyConsumptionBase - ctx.getConfig()->chargingRate;
     return energyConsumption;
+}
+
+void ReturningState::enter(Robot& robot) {
+    RobotState::enter(robot);
+    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Returning");
+    robot.setSpeed(robot.getDriveSpeed());
+}
+
+void ReturningState::exit(Robot& robot) { RobotState::exit(robot); }
+des::RobotStateType ReturningState::getType() const { return des::RobotStateType::RETURNING; }
+double ReturningState::getEnergyConsumption(const ISimContext& ctx) const {
+    return ctx.getRobot()->isDriving()
+        ? ctx.getConfig()->energyConsumptionDrive
+        : ctx.getConfig()->energyConsumptionBase;
 }
 
 

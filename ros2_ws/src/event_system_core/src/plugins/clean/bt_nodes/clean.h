@@ -63,8 +63,12 @@ public:
 
     BT::NodeStatus onStart() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        RCLCPP_INFO(rclcpp::get_logger("BT - Clean"), "ExecuteClean: start");
-        ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime()));
+        const auto order = ctx->getOrderPtr();
+        // Idempotent on resume after interrupt: only push StartCleanEvent if mission hasn't been started yet.
+        if (order && order->state == des::MissionState::PENDING) {
+            RCLCPP_INFO(rclcpp::get_logger("BT - Clean"), "ExecuteClean: start");
+            ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime(), order));
+        }
         return BT::NodeStatus::RUNNING;
     }
 

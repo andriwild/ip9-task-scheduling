@@ -43,7 +43,9 @@ void SimulationContext::completeOrder(const des::OrderPtr& order) {
     const int deadline = order->deadline.value_or(m_currentTime);
     const int timeDiff = m_currentTime - deadline;
     notifyMissionComplete(order->state, timeDiff);
-    m_missions.setCurrent(nullptr);
+    if (m_missions.getCurrent() == order) {
+        m_missions.setCurrent(nullptr);
+    }
 }
 
 void SimulationContext::resetContext(const int newTime) {

@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 #include "i_order.h"
+#include "../util/types.h"
 
 namespace BT { class BehaviorTreeFactory; }
 class Scheduler;
@@ -16,6 +17,7 @@ public:
 
     virtual std::string typeName() const = 0;
     virtual std::string rootSubtreeId() const = 0;
+    virtual des::ExecutionMode executionMode() const = 0;
 
     // hooks
     virtual void onMissionStart(ISimContext& ctx, des::IOrder& order)    = 0;

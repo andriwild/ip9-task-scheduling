@@ -63,8 +63,11 @@ public:
 
     BT::NodeStatus onStart() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        RCLCPP_INFO(rclcpp::get_logger("BT - DataAcquisition"), "ExecuteAcquisition: start");
-        ctx->pushEvent(std::make_shared<StartAcquisitionEvent>(ctx->getTime()));
+        const auto order = ctx->getOrderPtr();
+        if (order && order->state == des::MissionState::PENDING) {
+            RCLCPP_INFO(rclcpp::get_logger("BT - DataAcquisition"), "ExecuteAcquisition: start");
+            ctx->pushEvent(std::make_shared<StartAcquisitionEvent>(ctx->getTime(), order));
+        }
         return BT::NodeStatus::RUNNING;
     }
 

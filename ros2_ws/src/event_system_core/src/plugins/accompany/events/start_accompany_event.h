@@ -8,11 +8,13 @@
 #include "plugins/accompany/accompany_order.h"
 
 class StartAccompanyEvent final : public IEvent {
+    des::OrderPtr m_order;
 public:
-    explicit StartAccompanyEvent(const int time) : IEvent(time) {}
+    explicit StartAccompanyEvent(const int time, const des::OrderPtr& order)
+        : IEvent(time), m_order(order) {}
 
     void execute(ISimContext& ctx) override {
-        const auto& accompany = static_cast<const AccompanyOrder&>(*ctx.getOrderPtr());
+        const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);

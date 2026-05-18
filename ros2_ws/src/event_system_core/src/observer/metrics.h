@@ -12,6 +12,7 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     int moveTime              = 0;
     int talkTime              = 0;
     int chargingTime          = 0;
+    int returningTime         = 0;
     int lastTimeStateChanged  = 0;
     int lastTimeMoved         = 0;
     int accMissionToLateTime  = 0;
@@ -32,6 +33,7 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     double energyAccompany    = 0.0;
     double energyTalk         = 0.0;
     double energyCharging     = 0.0;
+    double energyReturning    = 0.0;
     bool wasDriving           = false;
     des::RobotStateType lastState;
 
@@ -54,6 +56,7 @@ public:
         moveTime              = 0;
         talkTime              = 0;
         chargingTime          = 0;
+        returningTime         = 0;
         lastTimeStateChanged  = 0;
         lastTimeMoved         = 0;
         accMissionToLateTime  = 0;
@@ -74,6 +77,7 @@ public:
         energyAccompany       = 0.0;
         energyTalk            = 0.0;
         energyCharging        = 0.0;
+        energyReturning       = 0.0;
         wasDriving            = false;
     }
 
@@ -120,6 +124,10 @@ public:
             case des::RobotStateType::CONVERSATE:
                 talkTime += passedTime;
                 energyTalk += consumedAh;
+                break;
+            case des::RobotStateType::RETURNING:
+                returningTime += passedTime;
+                energyReturning += consumedAh;
                 break;
         }
         lastSoc = batStats.soc;
@@ -187,11 +195,11 @@ public:
         msg.energy_accompany_ah  = static_cast<float>(energyAccompany);
         msg.energy_talk_ah       = static_cast<float>(energyTalk);
         msg.energy_charging_ah   = static_cast<float>(energyCharging);
-        msg.energy_total_consumed_ah = static_cast<float>(energyIdle + energySearching + energyAccompany + energyTalk);
+        msg.energy_total_consumed_ah = static_cast<float>(energyIdle + energySearching + energyAccompany + energyTalk + energyReturning);
 
         msg.total_distance = static_cast<float>(movedDistance);
 
-        const int totalDriveTime = accompanyTime + searchTime + moveTime;
+        const int totalDriveTime = accompanyTime + searchTime + moveTime + returningTime;
         const auto totalTime = static_cast<double>(chargingTime + idleTime + totalDriveTime);
         if (totalTime > 0) {
             msg.utilization = static_cast<float>((searchTime + accompanyTime) / totalTime * 100.0);

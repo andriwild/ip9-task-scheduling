@@ -72,6 +72,19 @@ inline DistributionType distributionTypeFromString(const std::string& str) {
     return DistributionType::NORMAL;
 }
 
+enum class ExecutionMode {
+    SCHEDULED,
+    BACKGROUND,
+    INTERRUPT
+};
+
+inline ExecutionMode executionTypeFromString(const std::string& str) {
+    if (str == "scheduled") return ExecutionMode::SCHEDULED;
+    if (str == "background") return ExecutionMode::BACKGROUND;
+    if (str == "interrupt") return ExecutionMode::INTERRUPT;
+    return ExecutionMode::BACKGROUND;
+}
+
 struct SimConfig {
     double robotSpeed;
     double robotAccompanySpeed;
@@ -101,6 +114,7 @@ struct SimConfig {
     double personDetectionRange = 5.0;
     double dataAcquisitionDuration = 120.0;
     double cleaningArea = 0.09;
+    double informationDuration = 30.0;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -144,7 +158,8 @@ enum class RobotStateType {
     ACCOMPANY,
     SEARCHING,
     CHARGING,
-    CONVERSATE
+    CONVERSATE,
+    RETURNING // drive back to dock
 };
 
 enum class Result {
@@ -181,7 +196,10 @@ enum class EventType : int {
     DATA_ACQUISITION_START = 24,
     DATA_ACQUISITION = 25,
     CLEAN_START = 26,
-    CLEAN = 27
+    CLEAN = 27,
+    ORDER_ARRIVAL = 28,
+    INFORMATION_START = 29,
+    INFORMATION = 30
 };
 
 enum MissionState {
