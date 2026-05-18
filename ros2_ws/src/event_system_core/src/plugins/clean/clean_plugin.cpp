@@ -8,6 +8,7 @@
 #include "model/robot.h"
 #include "observer/ros.h"
 #include "clean_order.h"
+#include "util/types.h"
 
 void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<CleanIsAtTargetLocation>("CleanIsAtTargetLocation");
@@ -28,8 +29,9 @@ des::OrderPtr CleanPlugin::fromJson(const nlohmann::json& j) const {
     o->id          = j.at("id");
     o->type        = "clean";
     o->deadline    = j.contains("appointmentTime") ? std::optional<int>(j.at("appointmentTime").get<int>()) : std::nullopt;
-    o->description = j.value("description", "");
+    o->description = j.value("description", "Clean");
     o->roomName    = j.at("roomName");
+    o->execution   = des::ExecutionMode::BACKGROUND;
     return o;
 }
 

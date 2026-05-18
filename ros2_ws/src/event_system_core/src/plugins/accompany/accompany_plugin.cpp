@@ -78,6 +78,7 @@ des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
     o->description = j.value("description", "");
     o->personName  = j.at("personName");
     o->roomName    = j.at("roomName");
+    o->execution   = des::ExecutionMode::SCHEDULED;
     return o;
 }
 

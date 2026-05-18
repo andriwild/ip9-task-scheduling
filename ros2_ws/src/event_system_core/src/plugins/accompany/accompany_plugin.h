@@ -16,6 +16,7 @@ public:
 
     std::string typeName() const override { return "accompany"; }
     std::string rootSubtreeId() const override { return "AccompanyRoutine"; }
+    des::ExecutionMode executionMode() const override { return des::ExecutionMode::SCHEDULED; }
 
     void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
     void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;

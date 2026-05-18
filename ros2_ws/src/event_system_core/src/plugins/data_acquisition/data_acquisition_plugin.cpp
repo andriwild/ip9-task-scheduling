@@ -30,6 +30,7 @@ des::OrderPtr DataAcquisition::fromJson(const nlohmann::json& j) const {
     o->deadline    = j.contains("appointmentTime") ? std::optional<int>(j.at("appointmentTime").get<int>()) : std::nullopt;
     o->description = j.value("description", "");
     o->roomName    = j.at("roomName");
+    o->execution   = des::ExecutionMode::BACKGROUND;
     return o;
 }
 

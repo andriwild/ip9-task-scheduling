@@ -17,6 +17,7 @@ public:
 
     std::string typeName() const override { return "data_acquisition"; }
     std::string rootSubtreeId() const override { return "DataAcquisitionRoutine"; }
+    des::ExecutionMode executionMode() const override { return des::ExecutionMode::BACKGROUND; }
 
     void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
     void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
