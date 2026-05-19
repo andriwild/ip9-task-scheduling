@@ -14,4 +14,7 @@
   <class type="des_occupancy_panel::DesOccupancyPanel" base_class_type="rviz_common::Panel">
     <description>Descrete Event System Occupancy</description>
   </class>
+  <class type="des_swimlane_panel::DesSwimlanePanel" base_class_type="rviz_common::Panel">
+    <description>Discrete Event System Timeline as Swimlanes (System / Missions / Persons / State / Battery) with minimap-brush and filterable lanes.</description>
+  </class>
 </library>
