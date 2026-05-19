@@ -17,7 +17,7 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        auto orderPtr = ctx.getOrderPtr();
+        //auto orderPtr = ctx.getOrderPtr();
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
         plugin.onMissionStart(ctx, *orderPtr);
         ctx.notifyEvent(*this);
@@ -28,4 +28,5 @@ public:
         return std::format("Mission {} Start", orderPtr->id);
     }
     des::EventType getType() const override { return des::EventType::MISSION_START; }
+    int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
 };

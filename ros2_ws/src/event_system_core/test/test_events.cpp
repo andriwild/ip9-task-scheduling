@@ -132,6 +132,8 @@ public:
         completeOrderCalled = true;
     }
 
+    void publishMission(const des::OrderPtr& /*order*/, int /*time*/) override {}
+
     bool hasEmployee(const std::string& person) const override {
         return employees.contains(person);
     }

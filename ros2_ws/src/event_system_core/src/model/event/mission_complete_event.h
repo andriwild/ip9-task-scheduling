@@ -31,4 +31,5 @@ public:
         return std::format("Mission {} Complete: {}", orderPtr->id, des::missionStateStr(orderPtr->state));
     }
     des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; }
+    int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
 };

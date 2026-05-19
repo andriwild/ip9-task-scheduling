@@ -57,7 +57,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
-        ctx->changeRobotState(std::make_unique<ConversateState>());
+        ctx->changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
         RCLCPP_INFO(rclcpp::get_logger("BT - AccompanyRoutine"), "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;
     }

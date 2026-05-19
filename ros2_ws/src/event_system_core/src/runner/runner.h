@@ -216,19 +216,4 @@ protected:
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "Launched all ROS Nodes");
     }
 
-    // publishEvents requires queue copy
-    static void publishMissions(EventQueue queue, const std::shared_ptr<RosObserver>& publisher) {
-        while (!queue.empty()) {
-            auto currentEvent  = queue.top();
-            const auto mission = std::dynamic_pointer_cast<MissionDispatchEvent>(currentEvent);
-
-            if (mission) {
-                auto& plugin = OrderRegistry::instance().get(mission->orderPtr->type);
-                plugin.publishTimeline(*mission->orderPtr, mission->time, *publisher);
-            }
-            queue.pop();
-        }
-    }
-    
-
 };

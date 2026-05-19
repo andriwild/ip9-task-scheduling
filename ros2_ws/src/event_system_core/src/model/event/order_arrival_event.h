@@ -15,6 +15,7 @@ public:
         : IEvent(time), m_order(std::move(order)) {}
 
     void execute(ISimContext& ctx) override {
+        ctx.publishMission(m_order, time);
         switch (m_order->execution) {
             case des::ExecutionMode::BACKGROUND:
             case des::ExecutionMode::SCHEDULED:
@@ -31,5 +32,6 @@ public:
     std::string getName() const override {
         return std::format("Order Arrival ({})", m_order->type);
     }
-    des::EventType getType() const override { return des::EventType::MISSION_START; }
+    des::EventType getType() const override { return des::EventType::ORDER_ARRIVAL; }
+    int getMissionId() const override { return m_order ? m_order->id : -1; }
 };

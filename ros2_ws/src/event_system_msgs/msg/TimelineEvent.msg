@@ -20,6 +20,8 @@ uint8 PERSON_ARRIVED = 16
 uint8 PERSON_DEPARTURE = 17
 uint8 PERSON_ACCOMPANY_DEPARTURE = 22
 uint8 PERSON_ACCOMPANY_ARRIVED = 23
+uint8 MISSION_START = 18
+uint8 ORDER_ARRIVAL = 28
 
 uint8 type
 
@@ -27,3 +29,6 @@ bool is_driving
 bool is_charging
 string label
 string color
+# -1 if the event is not associated with a mission (e.g. system events,
+# person transitions). Otherwise the IOrder.id of the active mission.
+int32 mission_id

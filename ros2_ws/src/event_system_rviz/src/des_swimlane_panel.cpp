@@ -41,26 +41,53 @@ constexpr int kSpanHeight       = 22;
 constexpr int kPadTime          = 600;  // 10 min padding around data
 
 // Lane IDs (logical) ---------------------------------------------------------
-const QString kLaneSystem  = "system";
-const QString kLaneMission = "mission";
-const QString kLaneState   = "state";
-const QString kLaneBattery = "battery";
-const QString kLanePersonPrefix = "person:";
+const QString kLaneSystem        = "system";
+const QString kLaneMissionBg     = "mission:background";
+const QString kLaneMissionSched  = "mission:scheduled";
+const QString kLaneMissionInt    = "mission:interrupt";
+const QString kLaneState         = "state";
+const QString kLaneBattery       = "battery";
+const QString kLanePersonPrefix  = "person:";
+
+// Match des::ExecutionMode ordering and TimelineMeeting.msg constants.
+constexpr quint8 kExecScheduled  = 0;
+constexpr quint8 kExecBackground = 1;
+constexpr quint8 kExecInterrupt  = 2;
+
+QString missionLaneIdFor(quint8 mode) {
+    switch (mode) {
+        case kExecScheduled: return kLaneMissionSched;
+        case kExecInterrupt: return kLaneMissionInt;
+        case kExecBackground:
+        default:             return kLaneMissionBg;
+    }
+}
+
+QString missionLaneLabelFor(quint8 mode) {
+    switch (mode) {
+        case kExecScheduled: return "Missions (Scheduled)";
+        case kExecInterrupt: return "Missions (Interrupt)";
+        case kExecBackground:
+        default:             return "Missions (Background)";
+    }
+}
 
 // Color for lane backgrounds (alternating) ----------------------------------
 QColor laneBg(int row) {
     return (row % 2 == 0) ? QColor(245, 245, 248) : QColor(232, 234, 238);
 }
 
+// Colors aligned with event_system_rviz/timeline/timeline_types.hpp (DesTimelinePanel)
 QColor stateColor(quint8 s) {
     using SC = event_system_msgs::msg::TimelineStateChange;
     switch (s) {
-        case SC::IDLE:       return QColor("#cccccc");
-        case SC::ACCOMPANY:  return QColor("#4caf50");
-        case SC::SEARCHING:  return QColor("#2196f3");
-        case SC::CHARGING:   return QColor("#ff9800");
-        case SC::CONVERSATE: return QColor("#9c27b0");
-        default:             return QColor("#888");
+        case SC::IDLE:       return QColor(200, 200, 200);
+        case SC::SEARCHING:  return QColor(255, 100, 100);
+        case SC::CONVERSATE: return QColor(180, 130, 220);
+        case SC::ACCOMPANY:  return QColor(100, 180, 255);
+        case SC::CHARGING:   return QColor(255, 210, 50);
+        case SC::RETURNING:  return QColor(120, 200, 160);
+        default:             return Qt::gray;
     }
 }
 
@@ -74,6 +101,7 @@ QString humanTime(int sec) {
 bool isMissionEvent(quint8 t) {
     using TE = event_system_msgs::msg::TimelineEvent;
     return t == TE::MISSION_DISPATCH
+        || t == TE::MISSION_START
         || t == TE::MISSION_COMPLETE
         || t == TE::START_DRIVE
         || t == TE::STOP_DRIVE
@@ -137,8 +165,9 @@ GlyphSpec glyphFor(quint8 type) {
             return {Glyph::TriangleLeft, 12};
 
         // Mission lifecycle → diamonds
-        case TE::MISSION_DISPATCH: return {Glyph::Diamond, 12};
-        case TE::MISSION_COMPLETE: return {Glyph::Diamond, 16};
+        case TE::MISSION_DISPATCH: return {Glyph::Diamond, 10};
+        case TE::MISSION_START:    return {Glyph::Diamond, 14};
+        case TE::MISSION_COMPLETE: return {Glyph::Diamond, 14};
 
         // System-wide markers → tall bars / squares
         case TE::SIMULATION_START:
@@ -150,13 +179,14 @@ GlyphSpec glyphFor(quint8 type) {
         // Faulty / abort → cross
         case TE::ABORT_SEARCH: return {Glyph::Cross, 14};
 
-        // Person events
+        // Person events — Arrival = ◀ (incoming, like STOP_DRIVE),
+        // Departure = ▶ (outgoing, like START_DRIVE).
         case TE::PERSON_ARRIVED:
         case TE::PERSON_ACCOMPANY_ARRIVED:
-            return {Glyph::TriangleRight, 10};
+            return {Glyph::TriangleLeft, 10};
         case TE::PERSON_DEPARTURE:
         case TE::PERSON_ACCOMPANY_DEPARTURE:
-            return {Glyph::TriangleLeft, 10};
+            return {Glyph::TriangleRight, 10};
         case TE::PERSON_TRANSITION: return {Glyph::Circle, 8};
         default:                    return {Glyph::Bar, 14};
     }
@@ -218,14 +248,15 @@ QGraphicsItem* makeGlyphItem(QGraphicsScene* scene, const GlyphSpec& g,
 double subBandFor(quint8 type) {
     using TE = event_system_msgs::msg::TimelineEvent;
     switch (type) {
-        // Start events → upper third
+        // Start / departure events → upper third
         case TE::START_DRIVE:
         case TE::START_ACCOMPANY:
         case TE::START_DROP_OFF_CONV:
         case TE::START_FOUND_PERSON_CONV:
         case TE::MISSION_DISPATCH:
-        case TE::PERSON_ARRIVED:
-        case TE::PERSON_ACCOMPANY_ARRIVED:
+        case TE::MISSION_START:
+        case TE::PERSON_DEPARTURE:
+        case TE::PERSON_ACCOMPANY_DEPARTURE:
             return 0.28;
         // End / arrival → lower third
         case TE::STOP_DRIVE:
@@ -233,8 +264,8 @@ double subBandFor(quint8 type) {
         case TE::DROP_OFF_CONV_COMPLETE:
         case TE::FOUND_PERSON_CONV_COMPLETE:
         case TE::MISSION_COMPLETE:
-        case TE::PERSON_DEPARTURE:
-        case TE::PERSON_ACCOMPANY_DEPARTURE:
+        case TE::PERSON_ARRIVED:
+        case TE::PERSON_ACCOMPANY_ARRIVED:
             return 0.72;
         default:
             return 0.50;
@@ -252,6 +283,7 @@ SwimlaneView::SwimlaneView(QWidget* parent)
     setDragMode(QGraphicsView::ScrollHandDrag);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
+    setAlignment(Qt::AlignLeft | Qt::AlignTop);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setBackgroundBrush(QColor(250, 250, 252));
@@ -601,7 +633,8 @@ void DesSwimlanePanel::onEvent(const event_system_msgs::msg::TimelineEvent::Shar
         QString::fromStdString(msg->label),
         QString::fromStdString(msg->color),
         msg->is_driving,
-        msg->is_charging
+        msg->is_charging,
+        msg->mission_id
     };
     m_events.push_back(std::move(r));
     m_tMin = std::min(m_tMin, msg->time);
@@ -624,7 +657,8 @@ void DesSwimlanePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::
         msg->start_time,
         QString::fromStdString(msg->person_name),
         QString::fromStdString(msg->room_name),
-        QString::fromStdString(msg->description)
+        QString::fromStdString(msg->description),
+        msg->execution_mode
     };
     m_meetings[msg->id] = std::move(m);
     m_tMin = std::min(m_tMin, msg->start_time);
@@ -711,6 +745,7 @@ QString DesSwimlanePanel::stateName(quint8 s) {
         case SC::SEARCHING:  return "Searching";
         case SC::CHARGING:   return "Charging";
         case SC::CONVERSATE: return "Conversate";
+        case SC::RETURNING:  return "Returning";
         default:             return "Unknown";
     }
 }
@@ -736,7 +771,13 @@ void DesSwimlanePanel::rebuildFilterList() {
         m_filterList->addItem(it);
     };
     add(kLaneSystem,  "System");
-    add(kLaneMission, "Missions");
+    // Only show mission lanes for execution modes that actually occurred
+    std::unordered_set<quint8> seenModes;
+    for (const auto& [id, mr] : m_meetings) seenModes.insert(mr.executionMode);
+    // Stable order: Scheduled, Background, Interrupt
+    if (seenModes.count(kExecScheduled))  add(kLaneMissionSched, missionLaneLabelFor(kExecScheduled));
+    if (seenModes.count(kExecBackground)) add(kLaneMissionBg,    missionLaneLabelFor(kExecBackground));
+    if (seenModes.count(kExecInterrupt))  add(kLaneMissionInt,   missionLaneLabelFor(kExecInterrupt));
     // Collect person names
     std::vector<QString> people;
     std::unordered_set<QString> seen;
@@ -812,7 +853,15 @@ void DesSwimlanePanel::redraw() {
     };
 
     pushLane(kLaneSystem,  "System",       kLaneHeightSystem);
-    pushLane(kLaneMission, "Missions",     kLaneHeightMission);
+    // Mission lanes split by execution mode (only show modes that occurred)
+    std::unordered_set<quint8> seenModes;
+    for (const auto& [id, mr] : m_meetings) seenModes.insert(mr.executionMode);
+    if (seenModes.count(kExecScheduled))
+        pushLane(kLaneMissionSched, missionLaneLabelFor(kExecScheduled), kLaneHeightMission);
+    if (seenModes.count(kExecBackground))
+        pushLane(kLaneMissionBg,    missionLaneLabelFor(kExecBackground), kLaneHeightMission);
+    if (seenModes.count(kExecInterrupt))
+        pushLane(kLaneMissionInt,   missionLaneLabelFor(kExecInterrupt), kLaneHeightMission);
 
     // Person lanes (one per person)
     std::vector<QString> people;
@@ -907,65 +956,153 @@ void DesSwimlanePanel::redraw() {
     };
 
     // -------- Mission spans --------------------------------------------
-    // Pair MISSION_DISPATCH and MISSION_COMPLETE events by extracting the
-    // mission ID from the label (format: "Mission <id> Dispatch" / "... Complete").
-    // We also fold in TimelineMeeting metadata for tooltips.
-    if (auto* lane = laneOf(kLaneMission); lane && lane->visible) {
-        struct Open { int dispatchTime; QString label; QColor color; };
+    // Span = MISSION_START → MISSION_COMPLETE (the active phase). MISSION_DISPATCH
+    // stays as a small marker before the span (Pending → Active transition is the
+    // span's left edge). If a mission is rejected directly after dispatch, there
+    // is no MISSION_START and therefore no span — only Dispatch + Complete markers.
+    {
+        struct Open { int startTime; QString label; };
         std::map<int, Open> open;
         auto extractId = [](const QString& label) -> int {
-            // "Mission 5 Dispatch" / "Mission 5 Complete: ..."
             QStringList parts = label.split(' ');
             if (parts.size() < 2 || parts[0] != "Mission") return -1;
             bool ok = false;
             int id = parts[1].toInt(&ok);
             return ok ? id : -1;
         };
-        const QColor missionColor("#1976d2");
+        // Final state parsed from MISSION_COMPLETE label: "Mission 5 Complete: Rejected"
+        auto stateFromCompleteLabel = [](const QString& label) -> QString {
+            int colon = label.indexOf(':');
+            if (colon < 0) return {};
+            return label.mid(colon + 1).trimmed();
+        };
+        auto spanColorForState = [](const QString& state) -> QColor {
+            if (state.compare("Completed",   Qt::CaseInsensitive) == 0) return QColor("#1976d2");
+            if (state.compare("Rejected",    Qt::CaseInsensitive) == 0) return QColor("#9e9e9e");
+            if (state.compare("Failed",      Qt::CaseInsensitive) == 0) return QColor("#d32f2f");
+            if (state.compare("Cancelled",   Qt::CaseInsensitive) == 0) return QColor("#bdbdbd");
+            return QColor("#1976d2");
+        };
+        auto laneForId = [&](int id) -> const LaneSlot* {
+            quint8 mode = kExecBackground;
+            if (auto it = m_meetings.find(id); it != m_meetings.end())
+                mode = it->second.executionMode;
+            return laneOf(missionLaneIdFor(mode));
+        };
         for (const auto& e : m_events) {
             using TE = event_system_msgs::msg::TimelineEvent;
-            const int id = extractId(e.label);
+            int id = e.missionId;
+            if (id < 0) id = extractId(e.label);
             if (id < 0) continue;
-            if (e.type == TE::MISSION_DISPATCH) {
-                open[id] = { e.time, e.label, parseColor(e.color, missionColor) };
+
+            // BG/SCHED missions become active at MISSION_START (fired by the
+            // BT's AcceptMissionAction). Interrupts have no MISSION_START —
+            // they become active directly at ORDER_ARRIVAL.
+            bool spanStart = (e.type == TE::MISSION_START);
+            if (e.type == TE::ORDER_ARRIVAL) {
+                if (auto it = m_meetings.find(id);
+                    it != m_meetings.end() && it->second.executionMode == kExecInterrupt) {
+                    spanStart = true;
+                }
+            }
+            if (spanStart) {
+                if (open.find(id) == open.end()) open[id] = { e.time, e.label };
             } else if (e.type == TE::MISSION_COMPLETE) {
                 auto it = open.find(id);
-                int t0 = (it != open.end()) ? it->second.dispatchTime : e.time;
-                QColor c  = (it != open.end()) ? it->second.color : missionColor;
-                int t1 = e.time;
-                double x0 = timeToX(t0);
-                double x1 = timeToX(t1);
-                int spanY = lane->yTop + (lane->height - kSpanHeight) / 2;
+                if (it == open.end()) continue;  // no span (e.g. rejected w/o start)
+                const LaneSlot* lane = laneForId(id);
+                if (!lane || !lane->visible) { open.erase(it); continue; }
+                const QString stateStr = stateFromCompleteLabel(e.label);
+                const QColor c = spanColorForState(stateStr);
+                const int t0 = it->second.startTime;
+                const int t1 = e.time;
+                const double x0 = timeToX(t0);
+                const double x1 = timeToX(t1);
+                const int spanY = lane->yTop + (lane->height - kSpanHeight) / 2;
                 QPen pen(c.darker(140));
                 pen.setCosmetic(true);
                 auto* rect = m_scene->addRect(x0, spanY, std::max(2.0, x1 - x0), kSpanHeight,
-                                              pen, QBrush(c.lighter(135)));
+                                              pen, QBrush(c.lighter(140)));
                 rect->setZValue(2);
-                QString tooltip;
-                tooltip = QString("<b>Mission %1</b><br>").arg(id);
+                QString tooltip = QString("<b>Mission %1</b><br>").arg(id);
+
+                // Punctuality: for scheduled missions with a real deadline,
+                // draw a dashed vertical line at the deadline and a thin
+                // diff bar (green=early, red=late) below the span.
+                int deadline = -1;
+                quint8 mode = kExecBackground;
                 if (auto mIt = m_meetings.find(id); mIt != m_meetings.end()) {
-                    tooltip += QString("Person: %1<br>Room: %2<br>")
-                                   .arg(mIt->second.personName, mIt->second.roomName);
+                    mode = mIt->second.executionMode;
+                    const char* modeLabel =
+                        (mode == kExecScheduled) ? "Scheduled" :
+                        (mode == kExecInterrupt) ? "Interrupt" : "Background";
+                    tooltip += QString("Mode: %1<br>").arg(modeLabel);
+                    if (!mIt->second.personName.isEmpty() || !mIt->second.roomName.isEmpty()) {
+                        tooltip += QString("Person: %1<br>Room: %2<br>")
+                                       .arg(mIt->second.personName, mIt->second.roomName);
+                    }
+                    // Real deadline = appointmentTime distinct from startTime
+                    if (mIt->second.appointmentTime > 0
+                        && mIt->second.appointmentTime != mIt->second.startTime) {
+                        deadline = mIt->second.appointmentTime;
+                    }
                 }
+                if (!stateStr.isEmpty()) tooltip += QString("State: %1<br>").arg(stateStr);
                 tooltip += QString("Start: %1<br>End: %2<br>Duration: %3 s")
                                .arg(humanTime(t0), humanTime(t1)).arg(t1 - t0);
+
+                if (mode == kExecScheduled && deadline > 0) {
+                    const double xD = timeToX(deadline);
+                    QPen dlPen(QColor(50, 50, 60, 220));
+                    dlPen.setStyle(Qt::DashLine);
+                    dlPen.setCosmetic(true);
+                    auto* dlLine = m_scene->addLine(xD, lane->yTop + 2,
+                                                    xD, lane->yTop + lane->height - 2, dlPen);
+                    dlLine->setZValue(3);
+                    dlLine->setToolTip(QString("<b>Mission %1 deadline</b><br>%2")
+                                           .arg(id).arg(humanTime(deadline)));
+
+                    const int diff = t1 - deadline;  // positive = late, negative = early
+                    if (diff != 0) {
+                        const QColor diffColor = (diff < 0) ? QColor("#2e7d32")   // green
+                                                            : QColor("#c62828");  // red
+                        const double xA = std::min(timeToX(t1), xD);
+                        const double xB = std::max(timeToX(t1), xD);
+                        const int diffY  = spanY + kSpanHeight + 1;
+                        constexpr int diffH = 4;
+                        auto* diffBar = m_scene->addRect(xA, diffY, xB - xA, diffH,
+                                                         QPen(Qt::NoPen), QBrush(diffColor));
+                        diffBar->setZValue(2);
+                        const QString diffLbl = (diff < 0)
+                            ? QString("%1 s early").arg(-diff)
+                            : QString("%1 s late").arg(diff);
+                        diffBar->setToolTip(QString("<b>Mission %1</b><br>%2").arg(id).arg(diffLbl));
+                        tooltip += QString("<br>Deadline: %1<br>%2")
+                                       .arg(humanTime(deadline), diffLbl);
+                    } else {
+                        tooltip += QString("<br>Deadline: %1<br>on time").arg(humanTime(deadline));
+                    }
+                }
+
                 rect->setToolTip(tooltip);
-                if (it != open.end()) open.erase(it);
+                open.erase(it);
             }
         }
-        // Render still-open spans up to current m_tMax
+        // Still-open spans (mission started, no Complete seen yet) up to m_tMax
         for (const auto& [id, op] : open) {
-            double x0 = timeToX(op.dispatchTime);
-            double x1 = timeToX(m_tMax);
-            int spanY = lane->yTop + (lane->height - kSpanHeight) / 2;
+            const LaneSlot* lane = laneForId(id);
+            if (!lane || !lane->visible) continue;
+            const double x0 = timeToX(op.startTime);
+            const double x1 = timeToX(m_tMax);
+            const int spanY = lane->yTop + (lane->height - kSpanHeight) / 2;
             QPen pen(QColor(160, 160, 160));
             pen.setCosmetic(true);
             pen.setStyle(Qt::DashLine);
             auto* rect = m_scene->addRect(x0, spanY, std::max(2.0, x1 - x0), kSpanHeight,
                                           pen, QBrush(QColor(220, 220, 220, 160)));
             rect->setZValue(2);
-            rect->setToolTip(QString("<b>Mission %1 (open)</b><br>Dispatched: %2")
-                                 .arg(id).arg(humanTime(op.dispatchTime)));
+            rect->setToolTip(QString("<b>Mission %1 (running)</b><br>Started: %2")
+                                 .arg(id).arg(humanTime(op.startTime)));
         }
     }
 
@@ -994,29 +1131,48 @@ void DesSwimlanePanel::redraw() {
                 drawEvent(e.time, *lane, e.type,
                           parseColor(e.color, QColor("#333")), tooltip);
         } else if (isMissionEvent(e.type)) {
-            if (auto* lane = laneOf(kLaneMission); lane && lane->visible) {
-                // Use plugin/event color if provided, otherwise pick by category
+            // Route to lane by mission ID → execution mode.
+            // Prefer the explicit field (populated by Context from m_current);
+            // fall back to label parsing for older msgs without mission_id.
+            int missionId = e.missionId;
+            if (missionId < 0) {
+                QStringList parts = e.label.split(' ');
+                if (parts.size() >= 2 && parts[0] == "Mission") {
+                    bool ok = false;
+                    int id = parts[1].toInt(&ok);
+                    if (ok) missionId = id;
+                }
+            }
+            quint8 mode = kExecBackground;
+            if (missionId >= 0) {
+                if (auto it = m_meetings.find(missionId); it != m_meetings.end())
+                    mode = it->second.executionMode;
+            }
+            if (auto* lane = laneOf(missionLaneIdFor(mode)); lane && lane->visible) {
+                // Colors aligned with timeline_types.hpp::getEventColor
                 QColor base;
                 using TE = event_system_msgs::msg::TimelineEvent;
                 switch (e.type) {
-                    case TE::START_DRIVE:
-                    case TE::STOP_DRIVE:
-                        base = QColor("#1565c0"); break;
-                    case TE::START_ACCOMPANY:
-                    case TE::ARRIVED_ACCOMPANY:
-                        base = QColor("#2e7d32"); break;
+                    case TE::MISSION_DISPATCH:
+                    case TE::MISSION_COMPLETE:
+                        base = QColor(220, 0, 0); break;
+                    case TE::ABORT_SEARCH:
+                        base = QColor(255, 165, 0); break;
                     case TE::START_DROP_OFF_CONV:
                     case TE::START_FOUND_PERSON_CONV:
                     case TE::DROP_OFF_CONV_COMPLETE:
                     case TE::FOUND_PERSON_CONV_COMPLETE:
-                        base = QColor("#7b1fa2"); break;
-                    case TE::MISSION_DISPATCH:
-                    case TE::MISSION_COMPLETE:
-                        base = QColor("#e65100"); break;
-                    case TE::ABORT_SEARCH:
-                        base = QColor("#c62828"); break;
+                        base = QColor(130, 0, 200); break;
+                    case TE::START_ACCOMPANY:
+                    case TE::ARRIVED_ACCOMPANY:
+                        base = QColor(0, 100, 255); break;
+                    case TE::START_DRIVE:
+                    case TE::STOP_DRIVE:
+                        base = QColor(0, 150, 50); break;
+                    case TE::MISSION_START:
+                        base = QColor(220, 0, 0); break;
                     default:
-                        base = QColor("#0d47a1");
+                        base = Qt::black;
                 }
                 drawEvent(e.time, *lane, e.type, parseColor(e.color, base), tooltip);
             }
@@ -1032,7 +1188,10 @@ void DesSwimlanePanel::redraw() {
     // -------- Robot state segments -------------------------------------
     if (auto* lane = laneOf(kLaneState); lane && lane->visible && !m_states.empty()) {
         auto sorted = m_states;
-        std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b){ return a.time < b.time; });
+        // stable_sort preserves arrival order between state-changes with the
+        // same timestamp (e.g. BT-tick + event-execute in the same step).
+        std::stable_sort(sorted.begin(), sorted.end(),
+                         [](const auto& a, const auto& b){ return a.time < b.time; });
         for (size_t i = 0; i < sorted.size(); ++i) {
             int t0 = sorted[i].time;
             int t1 = (i + 1 < sorted.size()) ? sorted[i + 1].time : m_tMax;

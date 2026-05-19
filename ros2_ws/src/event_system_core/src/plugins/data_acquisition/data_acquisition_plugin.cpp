@@ -61,5 +61,6 @@ void DataAcquisition::publishTimeline(const des::IOrder& order, int startTime, R
         o.deadline.value_or(startTime),
         static_cast<int>(o.state),
         "DataAcquisition",
-        o.description);
+        o.description,
+        static_cast<int>(o.execution));
 }

@@ -84,7 +84,7 @@ int main(const int argc, char *argv[]) {
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");
                         if (headless) {
-                            auto* headlessApp = dynamic_cast<HeadlessRunner*>(app.get());
+                            auto* headlessApp = static_cast<HeadlessRunner*>(app.get());
                             headlessApp->onSimulationComplete();
                         } else {
                             app->enterPause();
@@ -99,8 +99,8 @@ int main(const int argc, char *argv[]) {
         RCLCPP_INFO(rclcpp::get_logger("main"), "Simulation complete");
     };
 
-    auto _ = std::thread(sim_loop);
-    _.join();
+    std::thread t(sim_loop); 
+    t.join();
 
     // Stop ROS Executor and ROS-Thread
     app->shutdown();

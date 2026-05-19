@@ -31,6 +31,7 @@ struct EventRecord {
     QString color;
     bool isDriving;
     bool isCharging;
+    int missionId = -1;
 };
 
 struct StateChangeRecord {
@@ -47,6 +48,7 @@ struct MeetingRecord {
     QString personName;
     QString roomName;
     QString description;
+    quint8 executionMode = 1;  // default BACKGROUND
 };
 
 // ---------------- Main view: wheel-scroll, ctrl-wheel-zoom ----------------

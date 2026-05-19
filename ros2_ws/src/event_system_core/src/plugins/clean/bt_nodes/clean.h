@@ -19,7 +19,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const auto& order = static_cast<CleanOrder&>(*ctx->getOrderPtr());
+        const auto& order = dynamic_cast<CleanOrder&>(*ctx->getOrderPtr());
         const auto robot = ctx->getRobot();
         const bool atTarget = robot->getLocation() == order.roomName && !robot->isDriving();
         RCLCPP_DEBUG(rclcpp::get_logger("BT - Clean"), "CleanIsAtTargetLocation: %d", atTarget);

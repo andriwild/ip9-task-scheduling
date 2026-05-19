@@ -34,8 +34,6 @@ void SimRunner::reloadSimulationData() {
 
 void SimRunner::rebuildEventQueue() {
     populateEventQueue();
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    publishMissions(m_eventQueue, m_rosObserver);
 }
 
 void SimRunner::buildSimulation() {

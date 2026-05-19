@@ -21,6 +21,9 @@ public:
     virtual std::string getName() const = 0;
     virtual des::EventType getType() const = 0;
     virtual std::string getColor() const { return ""; }
+    // -1 if the event is not bound to a specific mission. Used by the
+    // telemetry layer to route events to the correct mission lane.
+    virtual int getMissionId() const { return -1; }
 
     bool operator<(const IEvent& other) const {
         return time < other.time;

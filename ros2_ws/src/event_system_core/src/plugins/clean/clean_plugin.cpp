@@ -62,5 +62,6 @@ void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosOb
         o.deadline.value_or(startTime),
         static_cast<int>(o.state),
         "Clean",
-        o.description);
+        o.description,
+        static_cast<int>(o.execution));
 }

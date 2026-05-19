@@ -38,7 +38,7 @@ public:
 
     std::string getName() override { return "TrackingObserver"; }
 
-    void onEvent(int time, des::EventType type, const std::string&, bool, bool, const std::string&) override {
+    void onEvent(int time, des::EventType type, const std::string&, bool, bool, const std::string&, int) override {
         events.emplace_back(time, type);
     }
 

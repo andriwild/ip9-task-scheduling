@@ -109,5 +109,6 @@ void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTi
         a.deadline.value_or(0),
         static_cast<int>(a.state),
         a.personName,
-        a.description);
+        a.description,
+        static_cast<int>(a.execution));
 }

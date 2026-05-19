@@ -39,5 +39,6 @@ void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime,
         startTime,
         static_cast<int>(order.state),
         "Information",
-        order.description);
+        order.description,
+        static_cast<int>(order.execution));
 }

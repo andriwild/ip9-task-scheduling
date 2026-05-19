@@ -158,6 +158,10 @@ public:
         return m_missions.popPending();
     }
 
+    void publishMission(const des::OrderPtr& order, const int time) override {
+        m_eventBus.notifyMissionPublished(order, time);
+    }
+
     void advanceTime(const int newTime) {
         assert(newTime >= m_currentTime);
         m_robot->m_bat->updateBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
@@ -193,7 +197,15 @@ public:
     }
 
     void notifyEvent(const IEvent& event) const override {
-        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor());
+        int missionId = event.getMissionId();
+        if (missionId < 0) {
+            if (auto current = m_missions.getCurrent(); current) {
+                missionId = current->id;
+            }
+        }
+        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(),
+                                m_robot->isDriving(), m_robot->isCharging(),
+                                event.getColor(), missionId);
     }
 
     void robotMoved(const std::string& location, const double distance = 0) const override {

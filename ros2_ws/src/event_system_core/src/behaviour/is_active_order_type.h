@@ -25,7 +25,7 @@ public:
         if (!order) return BT::NodeStatus::FAILURE;
 
         RCLCPP_DEBUG(rclcpp::get_logger("BT - IsActiveOrderType"), "Check order type: %s", inputType->c_str());
-        if (inputType.value() == order->type) {
+        if (inputType.has_value() && inputType.value() == order->type) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;

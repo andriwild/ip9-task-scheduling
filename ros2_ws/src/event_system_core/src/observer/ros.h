@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "observer.h"
+#include "../plugins/order_registry.h"
 
 #include "event_system_msgs/msg/timeline_event.hpp"
 #include "event_system_msgs/msg/timeline_state_change.hpp"
@@ -24,7 +25,7 @@ public:
         return "ROS";
     }
 
-    void onEvent(const int time, des::EventType type, const std::string& message, const bool isDriving, const bool isCharging, const std::string& color = "") override {
+    void onEvent(const int time, des::EventType type, const std::string& message, const bool isDriving, const bool isCharging, const std::string& color = "", const int missionId = -1) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
@@ -32,6 +33,7 @@ public:
         msg.is_driving = isDriving;
         msg.is_charging = isCharging;
         msg.color = color;
+        msg.mission_id = missionId;
         m_pubEvent->publish(msg);
     };
 
@@ -50,12 +52,22 @@ public:
         m_pubReset->publish(msg);
     }
 
+    // Event-driven: every time a mission becomes visible (arrival / dispatch),
+    // ask the matching plugin to emit a TimelineMeeting. This replaces the old
+    // up-front scan of the initial event queue.
+    void onMissionPublished(const des::OrderPtr& order, int time) override {
+        if (!order) return;
+        auto& plugin = OrderRegistry::instance().get(order->type);
+        plugin.publishTimeline(*order, time, *this);
+    }
+
     void publishMeeting(const int id,
                         const int startTime,
                         const int scheduledTime,
                         const int state,
                         const std::string& primaryLabel,
-                        const std::string& description) {
+                        const std::string& description,
+                        const int executionMode) {
         auto msg = event_system_msgs::msg::TimelineMeeting();
         msg.start_time       = startTime;
         msg.id               = id;
@@ -63,6 +75,7 @@ public:
         msg.mission_state    = state;
         msg.person_name      = primaryLabel;
         msg.description      = description;
+        msg.execution_mode   = static_cast<uint8_t>(executionMode);
         m_pubMeeting->publish(msg);
     }
 

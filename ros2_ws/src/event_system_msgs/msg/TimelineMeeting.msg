@@ -11,3 +11,9 @@ int32 start_time
 string person_name
 string room_name
 string description
+
+# Execution mode (matches des::ExecutionMode)
+uint8 SCHEDULED = 0
+uint8 BACKGROUND = 1
+uint8 INTERRUPT = 2
+uint8 execution_mode

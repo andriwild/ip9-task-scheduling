@@ -18,6 +18,7 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
+        ctx.publishMission(this->orderPtr, time);
         ctx.addPendingMission(this->orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
@@ -27,4 +28,5 @@ public:
         return std::format("Mission {} Dispatch", orderPtr->id);
     }
     des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; }
+    int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
 };

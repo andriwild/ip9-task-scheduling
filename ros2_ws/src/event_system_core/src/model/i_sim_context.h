@@ -53,6 +53,7 @@ public:
     virtual des::OrderPtr nextPendingMission() = 0;
     virtual des::OrderPtr popPendingMission() = 0;
     virtual void completeOrder(const des::OrderPtr& appt) = 0;
+    virtual void publishMission(const des::OrderPtr& order, int time) = 0;
 
     // Employee data
     virtual bool hasEmployee(const std::string& person) const = 0;

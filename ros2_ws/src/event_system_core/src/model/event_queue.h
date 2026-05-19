@@ -68,7 +68,8 @@ public:
     }
 
     int getFirstEventTime() const {
-        return top()->time;
+        auto t = top();
+        return t ? t->time : 0;
     }
 
     void print() const {

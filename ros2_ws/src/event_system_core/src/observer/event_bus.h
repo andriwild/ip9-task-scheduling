@@ -26,9 +26,10 @@ public:
     }
 
     void notifyEvent(int time, const des::EventType& type, const std::string& name,
-                     bool isDriving, bool isCharging, const std::string& color = "") const {
+                     bool isDriving, bool isCharging, const std::string& color = "",
+                     int missionId = -1) const {
         for (const auto& obs : m_observers) {
-            obs->onEvent(time, type, name, isDriving, isCharging, color);
+            obs->onEvent(time, type, name, isDriving, isCharging, color, missionId);
         }
     }
 
@@ -47,6 +48,12 @@ public:
     void notifyMoved(int time, const std::string& location, double distance) const {
         for (const auto& obs : m_observers) {
             obs->onRobotMoved(time, location, distance);
+        }
+    }
+
+    void notifyMissionPublished(const des::OrderPtr& order, int time) const {
+        for (const auto& obs : m_observers) {
+            obs->onMissionPublished(order, time);
         }
     }
 };
