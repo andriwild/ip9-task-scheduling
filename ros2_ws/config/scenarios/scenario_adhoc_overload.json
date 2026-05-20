@@ -1,0 +1,22 @@
+{
+    "orders": [],
+    "background": [
+        { "id": 100, "type": "clean",            "roomName": "5.2B01", "description": "Background clean 1" },
+        { "id": 101, "type": "clean",            "roomName": "5.2B03", "description": "Background clean 2" },
+        { "id": 102, "type": "data_acquisition", "roomName": "5.2B13", "description": "Background acq 1" },
+        { "id": 103, "type": "clean",            "roomName": "5.2B15", "description": "Background clean 3" },
+        { "id": 104, "type": "data_acquisition", "roomName": "5.2A15", "description": "Background acq 2" },
+        { "id": 105, "type": "clean",            "roomName": "5.2C07", "description": "Background clean 4" },
+        { "id": 106, "type": "data_acquisition", "roomName": "5.2B01", "description": "Background acq 3" },
+        { "id": 107, "type": "clean",            "roomName": "5.2B01", "description": "Background clean 5" }
+    ],
+    "ad_hoc_generators": [
+        {
+            "type": "information",
+            "distribution": "exponential",
+            "rate_per_hour": 600,
+            "active_window": { "from": 28800, "to": 64800 },
+            "params": { "description": "Info-Spam" }
+        }
+    ]
+}

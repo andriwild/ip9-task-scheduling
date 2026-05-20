@@ -1,0 +1,14 @@
+{
+    "orders": [
+        { "id": 0, "type": "accompany", "personName": "Max", "roomName": "5.2B03", "appointmentTime": 36000, "description": "Anchor order" }
+    ],
+    "ad_hoc_generators": [
+        {
+            "type": "information",
+            "distribution": "exponential",
+            "rate_per_hour": 0,
+            "active_window": { "from": 28800, "to": 64800 },
+            "params": { "description": "Zero rate" }
+        }
+    ]
+}

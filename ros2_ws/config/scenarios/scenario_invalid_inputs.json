@@ -1,0 +1,8 @@
+{
+    "orders": [
+        { "id": 0, "type": "accompany",        "personName": "Max",     "roomName": "5.2_DOES_NOT_EXIST", "appointmentTime": 36000, "description": "Invalid room name" },
+        { "id": 1, "type": "accompany",        "personName": "Unknown", "roomName": "5.2B03",             "appointmentTime": 37000, "description": "Unknown person name" },
+        { "id": 2, "type": "data_acquisition", "roomName": "ROOM_DOES_NOT_EXIST",                        "appointmentTime": 38000, "description": "Invalid data_acquisition room" },
+        { "id": 3, "type": "clean",            "roomName": "5.2C99",                                     "appointmentTime": 39000, "description": "Invalid clean room" }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "orders": [
+        { "id": 0, "type": "accompany", "personName": "Max",  "roomName": "5.2B03", "appointmentTime": 32400, "description": "Mix accompany A" },
+        { "id": 3, "type": "accompany", "personName": "Sara", "roomName": "5.2A13", "appointmentTime": 36000, "description": "Mix accompany B" },
+        { "id": 5, "type": "accompany", "personName": "Nina", "roomName": "5.2D02", "appointmentTime": 39600, "description": "Mix accompany C" },
+        { "id": 7, "type": "accompany", "personName": "Tom",  "roomName": "5.2C07", "appointmentTime": 43200, "description": "Mix accompany D" },
+        { "id": 9, "type": "accompany", "personName": "Leo",  "roomName": "5.2B15", "appointmentTime": 50400, "description": "Mix accompany E" }
+    ],
+    "background": [
+        { "id": 100, "type": "data_acquisition", "roomName": "5.2B01", "description": "Mix data 1" },
+        { "id": 101, "type": "clean",            "roomName": "5.2B01", "description": "Mix clean 1" },
+        { "id": 102, "type": "data_acquisition", "roomName": "5.2B13", "description": "Mix data 2" },
+        { "id": 103, "type": "clean",            "roomName": "5.2B15", "description": "Mix clean 2" },
+        { "id": 104, "type": "data_acquisition", "roomName": "5.2A15", "description": "Mix data 3" }
+    ],
+    "ad_hoc_generators": [
+        {
+            "type": "information",
+            "distribution": "exponential",
+            "rate_per_hour": 30,
+            "active_window": { "from": 28800, "to": 64800 },
+            "params": { "description": "Info-Anfrage" }
+        }
+    ]
+}

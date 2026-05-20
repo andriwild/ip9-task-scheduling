@@ -1,0 +1,16 @@
+{
+    "orders": [
+        { "id": 0,  "type": "accompany", "personName": "Max",   "roomName": "5.2C07", "appointmentTime": 32400, "description": "Battery stress 1 (far)" },
+        { "id": 1,  "type": "accompany", "personName": "Nina",  "roomName": "5.2B18", "appointmentTime": 32700, "description": "Battery stress 2 (far)" },
+        { "id": 2,  "type": "accompany", "personName": "Sara",  "roomName": "5.2A15", "appointmentTime": 33000, "description": "Battery stress 3 (far)" },
+        { "id": 3,  "type": "accompany", "personName": "Tom",   "roomName": "5.2C05", "appointmentTime": 33300, "description": "Battery stress 4 (far)" },
+        { "id": 4,  "type": "accompany", "personName": "Leo",   "roomName": "5.2B15", "appointmentTime": 33600, "description": "Battery stress 5 (far)" },
+        { "id": 5,  "type": "accompany", "personName": "Julia", "roomName": "5.2B18", "appointmentTime": 33900, "description": "Battery stress 6 (far)" },
+        { "id": 6,  "type": "accompany", "personName": "Fred",  "roomName": "5.2B13", "appointmentTime": 34200, "description": "Battery stress 7 (far)" },
+        { "id": 7,  "type": "accompany", "personName": "Anna",  "roomName": "5.2B01", "appointmentTime": 34500, "description": "Battery stress 8 (far)" },
+        { "id": 8,  "type": "accompany", "personName": "Max",   "roomName": "5.2C07", "appointmentTime": 34800, "description": "Battery stress 9 (far)" },
+        { "id": 9,  "type": "accompany", "personName": "Nina",  "roomName": "5.2D02", "appointmentTime": 35100, "description": "Battery stress 10 (far)" },
+        { "id": 10, "type": "accompany", "personName": "Sara",  "roomName": "5.2A13", "appointmentTime": 35400, "description": "Battery stress 11 (far)" },
+        { "id": 11, "type": "accompany", "personName": "Tom",   "roomName": "5.2C05", "appointmentTime": 35700, "description": "Battery stress 12 (far)" }
+    ]
+}

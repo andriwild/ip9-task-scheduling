@@ -1,0 +1,8 @@
+{
+    "orders": [
+        { "id": 0, "type": "accompany", "personName": "Max",  "roomName": "5.2B03", "appointmentTime": 25200, "description": "Exact sim_start 07:00" },
+        { "id": 1, "type": "accompany", "personName": "Nina", "roomName": "5.2D02", "appointmentTime": 68400, "description": "Exact sim_end 19:00" },
+        { "id": 2, "type": "accompany", "personName": "Sara", "roomName": "5.2A13", "appointmentTime": 25199, "description": "One second before sim_start" },
+        { "id": 3, "type": "accompany", "personName": "Tom",  "roomName": "5.2C07", "appointmentTime": 68401, "description": "One second after sim_end" }
+    ]
+}

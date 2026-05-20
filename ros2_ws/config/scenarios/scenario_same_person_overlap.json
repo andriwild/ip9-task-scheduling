@@ -1,0 +1,9 @@
+{
+    "orders": [
+        { "id": 0, "type": "accompany", "personName": "Max", "roomName": "5.2B03", "appointmentTime": 36000, "description": "Max conflict 1" },
+        { "id": 1, "type": "accompany", "personName": "Max", "roomName": "5.2D02", "appointmentTime": 36060, "description": "Max conflict 2 (1min later)" },
+        { "id": 2, "type": "accompany", "personName": "Max", "roomName": "5.2A13", "appointmentTime": 36120, "description": "Max conflict 3 (2min later)" },
+        { "id": 3, "type": "accompany", "personName": "Max", "roomName": "5.2C07", "appointmentTime": 36180, "description": "Max conflict 4 (3min later)" },
+        { "id": 4, "type": "accompany", "personName": "Max", "roomName": "5.2B15", "appointmentTime": 36240, "description": "Max conflict 5 (4min later)" }
+    ]
+}
