@@ -35,6 +35,13 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     double energyCharging     = 0.0;
     double energyReturning    = 0.0;
     bool wasDriving           = false;
+    // Mission-active time tracking — robot is "working" while any mission is
+    // in flight (regardless of robot-state). Depth counter handles nested
+    // interrupts; RejectMission completes without a prior Start so we guard
+    // against going below zero.
+    int missionActiveTime  = 0;
+    int missionActiveStart = -1;
+    int missionActiveDepth = 0;
     des::RobotStateType lastState;
 
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
@@ -79,6 +86,9 @@ public:
         energyCharging        = 0.0;
         energyReturning       = 0.0;
         wasDriving            = false;
+        missionActiveTime     = 0;
+        missionActiveStart    = -1;
+        missionActiveDepth    = 0;
     }
 
 
@@ -89,6 +99,22 @@ public:
         } else if(!isDriving && wasDriving){
            moveTime += time - lastTimeMoved;
             wasDriving = false;
+        }
+
+        if (type == des::EventType::MISSION_START) {
+            if (missionActiveDepth == 0) {
+                missionActiveStart = time;
+            }
+            missionActiveDepth++;
+        } else if (type == des::EventType::MISSION_COMPLETE) {
+            // Reject-path completes without a prior MissionStart; guard the depth.
+            if (missionActiveDepth > 0) {
+                missionActiveDepth--;
+                if (missionActiveDepth == 0 && missionActiveStart >= 0) {
+                    missionActiveTime += time - missionActiveStart;
+                    missionActiveStart = -1;
+                }
+            }
         }
 
         if(type == des::EventType::SIMULATION_END){
@@ -138,7 +164,11 @@ public:
     void onMissionComplete(int /*time*/, const des::MissionState& state, const int timeDiff) override {
         switch (state) {
             case des::MissionState::COMPLETED:
-                if (timeDiff >= 0) {
+                // timeDiff > 0 = strictly late. timeDiff == 0 covers both
+                // "exactly on deadline" (scheduled) and "no deadline at all"
+                // (background, where context maps missing deadline to now),
+                // both of which count as successful on-time completions.
+                if (timeDiff > 0) {
                     nMissionCompletedLate++;
                     accMissionToLateTime += timeDiff;
                     if (!hasLateMission || timeDiff < minLateness) minLateness = timeDiff;
@@ -199,12 +229,19 @@ public:
 
         msg.total_distance = static_cast<float>(movedDistance);
 
-        const int totalDriveTime = accompanyTime + searchTime + moveTime + returningTime;
-        const auto totalTime = static_cast<double>(chargingTime + idleTime + totalDriveTime);
+        // State buckets cover every simulated second exactly once (each
+        // onStateChange attributes elapsed time to the prior state), so their
+        // sum is the true total observation window.
+        const auto totalTime = static_cast<double>(
+            accompanyTime + searchTime + idleTime + chargingTime + talkTime + returningTime);
         if (totalTime > 0) {
-            msg.utilization = static_cast<float>((searchTime + accompanyTime) / totalTime * 100.0);
+            msg.utilization      = static_cast<float>(missionActiveTime / totalTime * 100.0);
+            msg.idle_percent     = static_cast<float>(idleTime           / totalTime * 100.0);
+            msg.charging_percent = static_cast<float>(chargingTime       / totalTime * 100.0);
         } else {
-            msg.utilization = 0.0f;
+            msg.utilization      = 0.0f;
+            msg.idle_percent     = 0.0f;
+            msg.charging_percent = 0.0f;
         }
 
 

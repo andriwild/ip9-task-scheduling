@@ -30,5 +30,26 @@ public:
     virtual des::OrderPtr fromJson(const nlohmann::json& j) const = 0;
     virtual int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const = 0;
     virtual bool isFeasible(const des::IOrder& order, const ISimContext& context) const = 0;
+
+    // Round-trip energy estimate in Wh for executing the mission from
+    // `startLocation` and returning the robot to the dock. Used by the
+    // background-mission selector to budget against next-scheduled energy
+    // needs. Default: 0 (interrupt plugins typically don't drive).
+    virtual double estimateMissionEnergy(const des::IOrder& /*order*/,
+                                         const ISimContext& /*context*/,
+                                         const std::string& /*startLocation*/) const {
+        return 0.0;
+    }
+
+    // Round-trip duration in seconds: drive to mission location + execute +
+    // drive back to dock. Used by the background-mission selector's
+    // charge-time fallback (does the next scheduled mission's dispatch leave
+    // enough recharge window?). Default: 0.
+    virtual double estimateMissionDuration(const des::IOrder& /*order*/,
+                                           const ISimContext& /*context*/,
+                                           const std::string& /*startLocation*/) const {
+        return 0.0;
+    }
+
     virtual void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const = 0;
 };

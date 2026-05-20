@@ -74,19 +74,32 @@ public:
         return t ? t->time : 0;
     }
 
-    // Time at which the next scheduled mission (MissionDispatchEvent) will be
-    // pushed into MissionManager's pending queue. nullopt = no scheduled
-    // mission left in the queue.
-    std::optional<int> nextDispatchTime() const {
+    // Earliest queued event matching `type`, or nullptr if none. O(n) — uses
+    // a snapshot since std::priority_queue can't be iterated.
+    std::shared_ptr<IEvent> nextEvent(des::EventType type) const {
         auto snapshot = m_queue;
         while (!snapshot.empty()) {
             const auto& e = snapshot.top();
-            if (e->getType() == des::EventType::MISSION_DISPATCH) {
-                return e->time;
+            if (e->getType() == type) {
+                return e;
             }
             snapshot.pop();
         }
-        return std::nullopt;
+        return nullptr;
+    }
+
+    // Time of the earliest queued event matching `type`. nullopt = none.
+    std::optional<int> nextEventTime(des::EventType type) const {
+        auto e = nextEvent(type);
+        return e ? std::optional<int>(e->time) : std::nullopt;
+    }
+
+    // Convenience: next MissionDispatchEvent in the queue.
+    std::optional<int> nextDispatchTime() const {
+        return nextEventTime(des::EventType::MISSION_DISPATCH);
+    }
+    std::shared_ptr<IEvent> nextDispatchEvent() const {
+        return nextEvent(des::EventType::MISSION_DISPATCH);
     }
 
     void print() const {

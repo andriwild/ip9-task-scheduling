@@ -174,8 +174,26 @@ public:
         return m_missions.popBackground();
     }
 
+    bool removeBackgroundMission(int orderId) override {
+        return m_missions.removeBackground(orderId);
+    }
+
+    const std::vector<des::OrderPtr>& backgroundMissions() const override {
+        return m_missions.background();
+    }
+
+    des::OrderPtr acceptFeasibleBackgroundMission() override {
+        return m_missions.acceptFeasibleBackground(*this);
+    }
+
     std::optional<int> getNextScheduledDispatchTime() const override {
         return m_queue.nextDispatchTime();
+    }
+
+    des::OrderPtr peekNextScheduledOrder() const override;
+
+    std::optional<int> getSimulationEndTime() const override {
+        return m_queue.nextEventTime(des::EventType::SIMULATION_END);
     }
 
     void publishMission(const des::OrderPtr& order, const int time) override {

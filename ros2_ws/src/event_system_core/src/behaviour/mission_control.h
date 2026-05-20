@@ -8,6 +8,7 @@
 
 #include "../model/i_sim_context.h"
 #include "../model/event.h"
+#include "../model/robot.h"
 #include "../plugins/order_registry.h"
 
 class HasPendingMission final : public BT::ConditionNode {
@@ -126,14 +127,14 @@ public:
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
+    // Delegates selection + feasibility to MissionManager. FAILURE = no
+    // feasible mission, the outer BT falls through to charging/idle.
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        assert(ctx->hasBackgroundMission());
-        const auto order = ctx->popBackgroundMission();
-        RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"),
-                    "AcceptBackgroundMissionAction for order %d (type=%s)",
-                    order->id, order->type.c_str());
-        ctx->setOrderPtr(order);
+        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto order = ctx->acceptFeasibleBackgroundMission();
+        if (!order) {
+            return BT::NodeStatus::FAILURE;
+        }
         ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }

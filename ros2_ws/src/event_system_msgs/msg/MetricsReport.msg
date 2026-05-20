@@ -36,3 +36,5 @@ float32 energy_charging_ah
 
 # General
 float32 utilization
+float32 idle_percent
+float32 charging_percent

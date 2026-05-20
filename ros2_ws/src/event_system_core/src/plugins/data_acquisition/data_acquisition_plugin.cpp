@@ -53,6 +53,32 @@ bool DataAcquisition::isFeasible(const des::IOrder& order, const ISimContext& co
     return *o.deadline - driveTime >= context.getTime();
 }
 
+namespace {
+struct AcqTimings { double driveOut; double acqTime; double driveBack; };
+
+AcqTimings acqTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
+    const auto& o     = static_cast<const DataAcquisitionOrder&>(order);
+    const auto& sched = context.getScheduler();
+    const auto& cfg   = *context.getConfig();
+    return {
+        sched.robotDriveTime(startLocation, o.roomName),
+        cfg.dataAcquisitionDuration,
+        sched.robotDriveTime(o.roomName, cfg.dockLocation)
+    };
+}
+}
+
+double DataAcquisition::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t   = acqTimings(order, context, startLocation);
+    const auto& cfg = *context.getConfig();
+    return ((t.driveOut + t.driveBack) * cfg.energyConsumptionDrive + t.acqTime * cfg.energyConsumptionBase) / 3600.0;
+}
+
+double DataAcquisition::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t = acqTimings(order, context, startLocation);
+    return t.driveOut + t.acqTime + t.driveBack;
+}
+
 void DataAcquisition::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
     const auto& o = static_cast<const DataAcquisitionOrder&>(order);
     observer.publishMeeting(

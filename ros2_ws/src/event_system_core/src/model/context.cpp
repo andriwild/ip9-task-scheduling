@@ -3,6 +3,7 @@
 #include <utility>
 #include "../util/rnd.h"
 #include "../sim/scheduler.h"
+#include "event/mission_dispatch_event.h"
 
 SimulationContext::SimulationContext(
     EventQueue& queue,
@@ -53,6 +54,13 @@ void SimulationContext::resetContext(const int newTime) {
     m_missions.reset();
     m_personLocations.clear();
     resetRobot();
+}
+
+des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
+    auto event = m_queue.nextDispatchEvent();
+    if (!event) return nullptr;
+    auto dispatch = std::dynamic_pointer_cast<MissionDispatchEvent>(event);
+    return dispatch ? dispatch->orderPtr : nullptr;
 }
 
 double SimulationContext::getRndConversationTime() const {

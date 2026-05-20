@@ -1,5 +1,6 @@
 #include "clean_plugin.h"
 
+#include <cmath>
 #include <memory>
 
 #include "bt_nodes/clean.h"
@@ -52,6 +53,38 @@ bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& contex
     const double driveTime = context.getScheduler().robotDriveTime(
         context.getRobot()->getLocation(), o.roomName);
     return *o.deadline - driveTime >= context.getTime();
+}
+
+namespace {
+struct CleanTimings { double driveOut; double cleanTime; double driveBack; };
+
+CleanTimings cleanTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
+    const auto& o     = static_cast<const CleanOrder&>(order);
+    const auto& sched = context.getScheduler();
+    const auto& cfg   = *context.getConfig();
+
+    const double driveOut  = sched.robotDriveTime(startLocation, o.roomName);
+    const double driveBack = sched.robotDriveTime(o.roomName, cfg.dockLocation);
+
+    // Cleaning duration mirrors StartCleanEvent's formula.
+    const double roomArea       = context.getSearchArea(o.roomName);
+    const double broomFootprint = cfg.cleaningArea;
+    const double broomSide      = std::sqrt(broomFootprint);
+    const double steps          = (roomArea / broomFootprint) + 1;
+    const double cleanTime      = steps * (2.0 * broomSide / cfg.robotSpeed);
+    return {driveOut, cleanTime, driveBack};
+}
+}
+
+double CleanPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t   = cleanTimings(order, context, startLocation);
+    const auto& cfg = *context.getConfig();
+    return ((t.driveOut + t.driveBack) * cfg.energyConsumptionDrive + t.cleanTime * cfg.energyConsumptionBase) / 3600.0;
+}
+
+double CleanPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t = cleanTimings(order, context, startLocation);
+    return t.driveOut + t.cleanTime + t.driveBack;
 }
 
 void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

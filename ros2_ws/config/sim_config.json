@@ -20,7 +20,7 @@
     "energy_consumption_drive": 352.0,
     "full_battery_threshold": 100.0,
     "initial_battery_capacity": 10.0,
-    "low_battery_threshold": 18.0,
+    "low_battery_threshold": 30.0,
     "people_spawn_location": "IMVS_Entrance",
     "person_detection_range": 2.5,
     "robot_accompany_speed": 0.20000000298023224,

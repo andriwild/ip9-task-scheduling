@@ -101,6 +101,35 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
     return false;
 }
 
+namespace {
+struct AccompanyTimings { double meeting; double appointment; double driveBack; };
+
+AccompanyTimings accompanyTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
+    const auto& a     = static_cast<const AccompanyOrder&>(order);
+    const auto& sched = context.getScheduler();
+    const auto& cfg   = *context.getConfig();
+    return {
+        sched.pessimisticMeeting(a.personName, startLocation, a.roomName),
+        cfg.appointmentDuration,
+        sched.robotDriveTime(a.roomName, cfg.dockLocation)
+    };
+}
+}
+
+double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t   = accompanyTimings(order, context, startLocation);
+    const auto& cfg = *context.getConfig();
+    // Worst-case meeting (search + accompany) treated as driving for upper bound.
+    return (t.meeting * cfg.energyConsumptionDrive
+          + t.appointment * cfg.energyConsumptionBase
+          + t.driveBack   * cfg.energyConsumptionDrive) / 3600.0;
+}
+
+double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto t = accompanyTimings(order, context, startLocation);
+    return t.meeting + t.appointment + t.driveBack;
+}
+
 void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
     observer.publishMeeting(

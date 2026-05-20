@@ -124,9 +124,11 @@ void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsRepor
                            .arg(QString::number(msg->avg_lateness, 'f', 1));
     m_lblPerformance->setText(perfText);
 
-    QString moveText = QString("Distance: %1m\nUtilization: %2%")
+    QString moveText = QString("Distance: %1m\nUtilization: %2%\nIdle: %3%\nCharging: %4%")
                            .arg(QString::number(msg->total_distance, 'f', 2))
-                           .arg(QString::number(msg->utilization, 'f', 1));
+                           .arg(QString::number(msg->utilization, 'f', 1))
+                           .arg(QString::number(msg->idle_percent, 'f', 1))
+                           .arg(QString::number(msg->charging_percent, 'f', 1));
     m_lblMovement->setText(moveText);
 }
 

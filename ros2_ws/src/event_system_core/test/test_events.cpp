@@ -34,8 +34,10 @@ public:
     des::PersonLocationMap employees;
     std::map<std::string, std::string> personLocations;
     des::OrderList pendingMissions;
-    des::OrderList backgroundMissions;
+    des::OrderList m_backgroundMissions;
     std::optional<int> nextScheduledDispatchTime;
+    des::OrderPtr m_nextScheduledOrder;
+    std::optional<int> m_simulationEndTime;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
 
@@ -131,21 +133,38 @@ public:
     }
 
     void addBackgroundMission(const des::OrderPtr order) override {
-        backgroundMissions.push_back(order);
+        m_backgroundMissions.push_back(order);
     }
-    bool hasBackgroundMission() const override { return !backgroundMissions.empty(); }
+    bool hasBackgroundMission() const override { return !m_backgroundMissions.empty(); }
     des::OrderPtr peekBackgroundMission() override {
-        return backgroundMissions.empty() ? nullptr : backgroundMissions.front();
+        return m_backgroundMissions.empty() ? nullptr : m_backgroundMissions.front();
     }
     des::OrderPtr popBackgroundMission() override {
-        if (backgroundMissions.empty()) return nullptr;
-        auto front = backgroundMissions.front();
-        backgroundMissions.erase(backgroundMissions.begin());
+        if (m_backgroundMissions.empty()) return nullptr;
+        auto front = m_backgroundMissions.front();
+        m_backgroundMissions.erase(m_backgroundMissions.begin());
         return front;
+    }
+    bool removeBackgroundMission(int orderId) override {
+        auto it = std::find_if(m_backgroundMissions.begin(), m_backgroundMissions.end(),
+                               [orderId](const des::OrderPtr& o) { return o && o->id == orderId; });
+        if (it == m_backgroundMissions.end()) return false;
+        m_backgroundMissions.erase(it);
+        return true;
+    }
+    const std::vector<des::OrderPtr>& backgroundMissions() const override { return m_backgroundMissions; }
+    des::OrderPtr acceptFeasibleBackgroundMission() override {
+        if (m_backgroundMissions.empty()) return nullptr;
+        auto order = m_backgroundMissions.front();
+        m_backgroundMissions.erase(m_backgroundMissions.begin());
+        currentOrder = order;
+        return order;
     }
     std::optional<int> getNextScheduledDispatchTime() const override {
         return nextScheduledDispatchTime;
     }
+    des::OrderPtr peekNextScheduledOrder() const override { return m_nextScheduledOrder; }
+    std::optional<int> getSimulationEndTime() const override { return m_simulationEndTime; }
 
     void completeOrder(const des::OrderPtr& /*order*/) override {
         completeOrderCalled = true;
