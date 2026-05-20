@@ -15,6 +15,10 @@ class MissionManager {
     des::OrderPtr m_current = nullptr;
     std::queue<des::OrderPtr> m_pending;
 
+    // Background tasks ("egal wann"): dispatched opportunistically when no
+    // scheduled mission is pending. Populated once at scenario load.
+    std::vector<des::OrderPtr> m_background;
+
     // Active interrupts in chronological push order (back = most recent = current).
     // Deque (not stack) so we can remove mid-list completions when an interrupt with shorter
     // duration ends before one above it.
@@ -61,6 +65,32 @@ public:
         return appointment;
     }
 
+    void addBackground(const des::OrderPtr order) {
+        m_background.push_back(order);
+        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Background mission added - list size: %zu", m_background.size());
+    }
+
+    bool hasBackground() const {
+        return !m_background.empty();
+    }
+
+    des::OrderPtr peekBackground() {
+        if (m_background.empty()) { return nullptr; }
+        return m_background.front();
+    }
+
+    des::OrderPtr popBackground() {
+        if (m_background.empty()) { return nullptr; }
+        auto order = m_background.front();
+        m_background.erase(m_background.begin());
+        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Background mission popped - %zu remaining", m_background.size());
+        return order;
+    }
+
+    const std::vector<des::OrderPtr>& background() const {
+        return m_background;
+    }
+
     bool hasInterrupt() const {
         return !m_interrupts.empty();
     }
@@ -101,6 +131,7 @@ public:
     void reset() {
         m_current = nullptr;
         m_pending = std::queue<des::OrderPtr>();
+        m_background = std::vector<des::OrderPtr>();
         m_interrupts.clear();
         m_suspendedOrder = nullptr;
         m_suspendedState.reset();

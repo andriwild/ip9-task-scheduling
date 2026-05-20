@@ -624,6 +624,17 @@ void DesSwimlanePanel::onInitialize() {
         [this](const event_system_msgs::msg::TimelineReset::SharedPtr msg) {
             QMetaObject::invokeMethod(this, [this, msg]() { onReset(msg); });
         });
+
+    // /system_config is transient_local on the publisher side, so we get the
+    // last published value on subscribe and live updates on every config edit.
+    m_subConfig = m_node->create_subscription<event_system_msgs::msg::SystemConfig>(
+        "/system_config", rclcpp::QoS(1).transient_local(),
+        [this](const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
+            QMetaObject::invokeMethod(this, [this, msg]() {
+                m_lowThreshold = std::clamp(msg->low_battery_threshold / 100.0f, 0.0f, 1.0f);
+                scheduleRedraw();
+            });
+        });
 }
 
 void DesSwimlanePanel::onEvent(const event_system_msgs::msg::TimelineEvent::SharedPtr msg) {
@@ -774,6 +785,15 @@ void DesSwimlanePanel::rebuildFilterList() {
     // Only show mission lanes for execution modes that actually occurred
     std::unordered_set<quint8> seenModes;
     for (const auto& [id, mr] : m_meetings) seenModes.insert(mr.executionMode);
+    // Background missions don't publish a TimelineMeeting — their events arrive
+    // with a mission_id that has no matching meeting. Surface them as background.
+    for (const auto& e : m_events) {
+        if (isMissionEvent(e.type) && e.missionId >= 0
+            && m_meetings.find(e.missionId) == m_meetings.end()) {
+            seenModes.insert(kExecBackground);
+            break;
+        }
+    }
     // Stable order: Scheduled, Background, Interrupt
     if (seenModes.count(kExecScheduled))  add(kLaneMissionSched, missionLaneLabelFor(kExecScheduled));
     if (seenModes.count(kExecBackground)) add(kLaneMissionBg,    missionLaneLabelFor(kExecBackground));
@@ -856,6 +876,15 @@ void DesSwimlanePanel::redraw() {
     // Mission lanes split by execution mode (only show modes that occurred)
     std::unordered_set<quint8> seenModes;
     for (const auto& [id, mr] : m_meetings) seenModes.insert(mr.executionMode);
+    // Background missions don't publish a TimelineMeeting — their events arrive
+    // with a mission_id that has no matching meeting. Surface them as background.
+    for (const auto& e : m_events) {
+        if (isMissionEvent(e.type) && e.missionId >= 0
+            && m_meetings.find(e.missionId) == m_meetings.end()) {
+            seenModes.insert(kExecBackground);
+            break;
+        }
+    }
     if (seenModes.count(kExecScheduled))
         pushLane(kLaneMissionSched, missionLaneLabelFor(kExecScheduled), kLaneHeightMission);
     if (seenModes.count(kExecBackground))
@@ -1214,11 +1243,9 @@ void DesSwimlanePanel::redraw() {
         auto sorted = m_states;
         std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b){ return a.time < b.time; });
 
-        // Determine threshold relative to SoC scale (0..1)
-        float lowThr = 0.0f;
-        for (const auto& s : m_states) { lowThr = s.soc; break; }  // placeholder
-        // We do not stash threshold per-record; use a flat band at 20% as visual hint
-        lowThr = 0.2f;
+        // Threshold (0..1) comes from TimelineStateChange.low_threshold,
+        // populated in onStateChange.
+        const float lowThr = m_lowThreshold;
 
         const double topY    = lane->yTop + 6;
         const double botY    = lane->yTop + lane->height - 4;

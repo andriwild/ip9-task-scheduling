@@ -16,6 +16,8 @@
 
 void SimRunner::reloadSimulationData() {
     m_orders = loadOrders(m_config->appointmentsPath);
+    m_backgroundOrders = ConfigLoader::loadBackgroundOrders(m_config->appointmentsPath);
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu background orders", m_backgroundOrders.size());
     auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");

@@ -3,7 +3,6 @@
     "ad_hoc_generators": [
         {
             "type": "information",
-            "execution": "interrupt",
             "distribution": "exponential",
             "rate_per_hour": 5,
             "active_window": { "from": 28800, "to": 64800 },

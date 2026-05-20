@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <random>
 #include <string>
 
@@ -52,6 +53,13 @@ public:
     virtual bool hasPendingMission() const = 0;
     virtual des::OrderPtr nextPendingMission() = 0;
     virtual des::OrderPtr popPendingMission() = 0;
+    virtual void addBackgroundMission(const des::OrderPtr orderPtr) = 0;
+    virtual bool hasBackgroundMission() const = 0;
+    virtual des::OrderPtr peekBackgroundMission() = 0;
+    virtual des::OrderPtr popBackgroundMission() = 0;
+    // Time of the next MissionDispatchEvent in the event queue, i.e. when the
+    // next scheduled mission will become pending. nullopt = nothing scheduled.
+    virtual std::optional<int> getNextScheduledDispatchTime() const = 0;
     virtual void completeOrder(const des::OrderPtr& appt) = 0;
     virtual void publishMission(const des::OrderPtr& order, int time) = 0;
 

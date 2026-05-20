@@ -1,14 +1,13 @@
 {
-
     "orders": [],
-    "ad_hoc_generators": [
-        {
-            "type": "clean",
-            "execution": "background",
-            "distribution": "exponential",
-            "rate_per_hour": 0.5,
-            "active_window": { "from": 28800, "to": 64800 },
-            "params": { "roomName": "5.2B01" }
-        }
-    ]
+    "background": [
+        { "id": 100, "type": "clean",            "roomName": "5.2B01", "description": "Raum 5.2B01 reinigen" },
+        { "id": 101, "type": "data_acquisition", "roomName": "5.2B01", "description": "Foto 5.2B01" },
+        { "id": 102, "type": "clean",            "roomName": "5.2B03", "description": "Raum 5.2B03 reinigen" },
+        { "id": 103, "type": "data_acquisition", "roomName": "5.2B13", "description": "Foto 5.2B13" },
+        { "id": 104, "type": "clean",            "roomName": "5.2B15", "description": "Raum 5.2B15 reinigen" },
+        { "id": 105, "type": "data_acquisition", "roomName": "5.2A15", "description": "Foto 5.2A15" },
+        { "id": 106, "type": "clean",            "roomName": "5.2C07", "description": "Raum 5.2C07 reinigen" }
+    ],
+    "ad_hoc_generators": []
 }

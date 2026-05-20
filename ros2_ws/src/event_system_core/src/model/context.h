@@ -158,6 +158,26 @@ public:
         return m_missions.popPending();
     }
 
+    void addBackgroundMission(const des::OrderPtr orderPtr) override {
+        m_missions.addBackground(orderPtr);
+    }
+
+    bool hasBackgroundMission() const override {
+        return m_missions.hasBackground();
+    }
+
+    des::OrderPtr peekBackgroundMission() override {
+        return m_missions.peekBackground();
+    }
+
+    des::OrderPtr popBackgroundMission() override {
+        return m_missions.popBackground();
+    }
+
+    std::optional<int> getNextScheduledDispatchTime() const override {
+        return m_queue.nextDispatchTime();
+    }
+
     void publishMission(const des::OrderPtr& order, const int time) override {
         m_eventBus.notifyMissionPublished(order, time);
     }

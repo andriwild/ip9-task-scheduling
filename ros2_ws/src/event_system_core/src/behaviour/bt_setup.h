@@ -23,16 +23,23 @@ const std::string MISSION_CONTROL_ROUTINE = R"(
   <BehaviorTree ID="MissionControlRoutine">
     <Sequence name="Seq_HandleMissions">
       <IsIdle/>
-      <Sequence>
-        <HasPendingMission/>
-        <Fallback name="AcceptOrDeclineMission">
-          <Sequence name="AcceptMissionSequence">
-            <MissionFeasibilityCheck/>
-            <AcceptMissionAction/>
-          </Sequence>
-          <RejectMissionAction/>
-        </Fallback>
-      </Sequence>
+      <Inverter><IsMissionAssigned/></Inverter>
+      <Fallback name="Fallback_PendingOrBackground">
+        <Sequence name="Seq_HandlePending">
+          <HasPendingMission/>
+          <Fallback name="AcceptOrDeclineMission">
+            <Sequence name="AcceptMissionSequence">
+              <MissionFeasibilityCheck/>
+              <AcceptMissionAction/>
+            </Sequence>
+            <RejectMissionAction/>
+          </Fallback>
+        </Sequence>
+        <Sequence name="Seq_HandleBackground">
+          <HasBackgroundMission/>
+          <AcceptBackgroundMissionAction/>
+        </Sequence>
+      </Fallback>
     </Sequence>
   </BehaviorTree>
 )";
@@ -96,8 +103,11 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
 
     // mission control
     factory.registerNodeType<HasPendingMission>("HasPendingMission");
+    factory.registerNodeType<HasBackgroundMission>("HasBackgroundMission");
     factory.registerNodeType<IsRobotBusy>("IsRobotBusy");
+    factory.registerNodeType<IsMissionAssigned>("IsMissionAssigned");
     factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
+    factory.registerNodeType<AcceptBackgroundMissionAction>("AcceptBackgroundMissionAction");
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
     factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
     factory.registerNodeType<IsInterruptActive>("IsInterruptActive");

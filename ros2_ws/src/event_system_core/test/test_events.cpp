@@ -34,6 +34,8 @@ public:
     des::PersonLocationMap employees;
     std::map<std::string, std::string> personLocations;
     des::OrderList pendingMissions;
+    des::OrderList backgroundMissions;
+    std::optional<int> nextScheduledDispatchTime;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
 
@@ -126,6 +128,23 @@ public:
         auto front = pendingMissions.front();
         pendingMissions.erase(pendingMissions.begin());
         return front;
+    }
+
+    void addBackgroundMission(const des::OrderPtr order) override {
+        backgroundMissions.push_back(order);
+    }
+    bool hasBackgroundMission() const override { return !backgroundMissions.empty(); }
+    des::OrderPtr peekBackgroundMission() override {
+        return backgroundMissions.empty() ? nullptr : backgroundMissions.front();
+    }
+    des::OrderPtr popBackgroundMission() override {
+        if (backgroundMissions.empty()) return nullptr;
+        auto front = backgroundMissions.front();
+        backgroundMissions.erase(backgroundMissions.begin());
+        return front;
+    }
+    std::optional<int> getNextScheduledDispatchTime() const override {
+        return nextScheduledDispatchTime;
     }
 
     void completeOrder(const des::OrderPtr& /*order*/) override {

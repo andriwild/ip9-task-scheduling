@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <optional>
 
 #include "../model/event/base.h"
+#include "../util/types.h"
 
 class EventQueue {
     SortedEventQueue m_queue;
@@ -70,6 +72,21 @@ public:
     int getFirstEventTime() const {
         auto t = top();
         return t ? t->time : 0;
+    }
+
+    // Time at which the next scheduled mission (MissionDispatchEvent) will be
+    // pushed into MissionManager's pending queue. nullopt = no scheduled
+    // mission left in the queue.
+    std::optional<int> nextDispatchTime() const {
+        auto snapshot = m_queue;
+        while (!snapshot.empty()) {
+            const auto& e = snapshot.top();
+            if (e->getType() == des::EventType::MISSION_DISPATCH) {
+                return e->time;
+            }
+            snapshot.pop();
+        }
+        return std::nullopt;
     }
 
     void print() const {

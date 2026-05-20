@@ -46,10 +46,14 @@ public:
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
+    // SUCCESS while any order is assigned to the robot (PENDING or IN_PROGRESS).
+    // Single source of truth = MissionManager's current order, decoupled from
+    // robot-state. Plugins no longer need to set a "task-active" RobotState to
+    // get the ChargeRoutine short-circuit behavior.
     BT::NodeStatus tick() override {
         const auto ctx          = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool isTaskActive = ctx->getRobot()->isTaskActive();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - IsCharging"), "%d", isTaskActive);
+        const bool isTaskActive = ctx->getOrderPtr() != nullptr;
+        RCLCPP_DEBUG(rclcpp::get_logger("BT - ChargeRoutine"), "IsTaskActive: %d", isTaskActive);
         return isTaskActive? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
 };

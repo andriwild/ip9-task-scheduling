@@ -42,7 +42,6 @@ public:
     }
 
     bool isBusy() const;
-    bool isTaskActive() const;
     void updateConfig(const des::SimConfig& config);
 
     std::string getLocation() const { return m_currentLocation; };

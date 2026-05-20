@@ -16,9 +16,12 @@ const std::string DEFAULT_ORDER_FILE = "/home/andri/repos/ip9-task-scheduling/ro
 const std::string DEFAULT_EMPLOYEE_FILE    =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
 const std::string SIM_CONFIG_FILE          = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
+// Ad-hoc generators are reserved for interrupt tasks (e.g. information
+// requests). Background tasks must be specified as explicit orders in the
+// "orders" array of a scenario.
 struct AdHocGeneratorConfig {
     std::string type;
-    des::ExecutionMode execution;
+    des::ExecutionMode execution;   // always INTERRUPT
     des::DistributionType distribution;
     double ratePerSecond;     // <-- rate_per_hour / 3600
     int from;
@@ -45,6 +48,31 @@ public:
         return orders;
     };
 
+    // Background orders are tasks without a fixed time
+    // scheduler dispatches them opportunistically. Plugins build them via the
+    // same fromJson path as scheduled orders, but the "background" entries
+    // must not specify appointmentTime.
+    static des::OrderList loadBackgroundOrders(const std::string& filePath) {
+        auto json = getJson(filePath);
+        if (!json.has_value() || !json.value().contains("background")) {
+            return {};
+        }
+
+        des::OrderList orders;
+        for (const auto& j : json.value().at("background")) {
+            if (j.contains("appointmentTime")) {
+                throw std::runtime_error(
+                    "Background order (id=" + std::to_string(j.value("id", -1)) +
+                    ") must not specify appointmentTime. Move it to 'orders' if it needs a fixed time.");
+            }
+            const std::string& type = j.at("type").get_ref<const std::string&>();
+            auto order = OrderRegistry::instance().get(type).fromJson(j);
+            order->execution = des::ExecutionMode::BACKGROUND;
+            orders.push_back(order);
+        }
+        return orders;
+    }
+
     static std::optional<std::vector<AdHocGeneratorConfig>> loadAdHocGenerators(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -58,12 +86,23 @@ public:
         std::vector<AdHocGeneratorConfig> generators;
         for (const auto& j : json.value().at("ad_hoc_generators")) {
             const std::string& type                  = j.at("type").get_ref<const std::string&>();
-            const des::ExecutionMode& execution      = des::executionTypeFromString(j.value("execution",    "background"));
             const des::DistributionType distribution = des::distributionTypeFromString(j.value("distribution", "exponential"));
             const double ratePerHour                 = j.at("rate_per_hour").get<double>() / 3600.0;
             const int from                           = j.at("active_window").at("from").get<int>();
             const int to                             = j.at("active_window").at("to").get<int>();
             const nlohmann::json params              = j.at("params");
+
+            // Ad-hoc generators are interrupt-only. Background tasks belong in
+            // the "orders" array, not as generators.
+            if (j.contains("execution")) {
+                const std::string& exec = j.at("execution").get_ref<const std::string&>();
+                if (exec != "interrupt") {
+                    throw std::runtime_error(
+                        "Ad-hoc generator (type='" + type + "') has execution='" + exec +
+                        "'. Only 'interrupt' is supported; specify background tasks as explicit orders.");
+                }
+            }
+            const des::ExecutionMode execution = des::ExecutionMode::INTERRUPT;
 
             generators.push_back({type, execution, distribution, ratePerHour, from, to, params });
         }

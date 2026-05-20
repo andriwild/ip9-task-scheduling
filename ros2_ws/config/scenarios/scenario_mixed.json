@@ -9,20 +9,6 @@
             "description": "Dokument abholen"
         },
         {
-            "id": 1,
-            "type": "data_acquisition",
-            "roomName": "5.2B01",
-            "appointmentTime": 56000,
-            "description": "Foto machen"
-        },
-        {
-            "id": 2,
-            "type": "clean",
-            "roomName": "5.2B01",
-            "appointmentTime": 70000,
-            "description": "Raum reinigen"
-        },
-        {
             "id": 3,
             "type": "accompany",
             "personName": "Nina",
@@ -31,18 +17,13 @@
             "description": "Physio Therapie"
         }
     ],
+    "background": [
+        { "id": 100, "type": "data_acquisition", "roomName": "5.2B01", "description": "Foto machen" },
+        { "id": 101, "type": "clean",            "roomName": "5.2B01", "description": "Raum reinigen" }
+    ],
     "ad_hoc_generators": [
         {
-            "type": "clean",
-            "execution": "background",
-            "distribution": "exponential",
-            "rate_per_hour": 0.5,
-            "active_window": { "from": 28800, "to": 64800 },
-            "params": { "roomName": "5.2B01" }
-        },
-        {
             "type": "information",
-            "execution": "interrupt",
             "distribution": "exponential",
             "rate_per_hour": 5,
             "active_window": { "from": 28800, "to": 64800 },

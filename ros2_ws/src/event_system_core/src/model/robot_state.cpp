@@ -17,8 +17,12 @@ des::RobotStateType IdleState::getType() const {
     return des::RobotStateType::IDLE;
 }
 double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
-    auto energyConsumption = ctx.getConfig()->energyConsumptionBase - ctx.getConfig()->chargingRate;
-    return energyConsumption;
+
+    if(ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation()) {
+        // Robot at dock
+        return ctx.getConfig()->energyConsumptionBase - ctx.getConfig()->chargingRate;
+    }
+    return ctx.getConfig()->energyConsumptionBase; 
 }
 
 void ReturningState::enter(Robot& robot) {

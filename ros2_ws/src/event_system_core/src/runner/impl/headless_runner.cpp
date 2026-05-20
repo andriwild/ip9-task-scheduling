@@ -76,6 +76,9 @@ bool HeadlessRunner::loadNextBatch() {
     }
     m_orders = appts.value();
 
+    m_backgroundOrders = ConfigLoader::loadBackgroundOrders(path);
+    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu background orders", m_backgroundOrders.size());
+
     ConfigLoader::validateConfig(m_orders, m_allPeople, m_locationMap, "5.2B_Elevator");
 
     m_people = ConfigLoader::filterByAppointments(m_allPeople, m_orders);

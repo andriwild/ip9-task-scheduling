@@ -95,6 +95,7 @@ protected:
     std::shared_ptr<MetricsNode> m_metricsNode;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     des::OrderList m_orders;
+    des::OrderList m_backgroundOrders;
     std::optional<des::PersonList> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
@@ -130,6 +131,12 @@ protected:
         addEventsFromAdHocGenerators(m_config->appointmentsPath);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
+
+        // Background tasks live in the MissionManager's own queue, not in the
+        // event queue. Register them after resetContext so they survive resets.
+        for (const auto& order : m_backgroundOrders) {
+            m_ctx->addBackgroundMission(order);
+        }
 
         for (auto& p : m_people.value()) {
             m_ctx->setPersonLocation(p->firstName, "OUTDOOR");

@@ -15,6 +15,7 @@
 #include <rviz_common/panel.hpp>
 #include <vector>
 
+#include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/msg/timeline_event.hpp"
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
@@ -145,6 +146,9 @@ private:
     std::vector<EventRecord> m_events;
     std::vector<StateChangeRecord> m_states;
     std::map<int, MeetingRecord> m_meetings;  // by id, latest wins
+    // Battery low-threshold as 0..1 fraction (msg carries it in percent 0..100).
+    // Updated from every TimelineStateChange so config changes propagate.
+    float m_lowThreshold = 0.2f;
 
     // Widgets ---------------------------------------------------------------
     QGraphicsScene* m_scene = nullptr;
@@ -160,6 +164,7 @@ private:
     rclcpp::Subscription<event_system_msgs::msg::TimelineStateChange>::SharedPtr m_subStateChange;
     rclcpp::Subscription<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_subMeeting;
     rclcpp::Subscription<event_system_msgs::msg::TimelineReset>::SharedPtr m_subReset;
+    rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subConfig;
 
     // Range / view state ----------------------------------------------------
     int m_tMin = 0;
