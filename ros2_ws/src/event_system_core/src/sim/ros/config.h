@@ -32,7 +32,6 @@ public:
             RCLCPP_WARN(this->get_logger(), "Failed to load sim_config.json, using defaults.");
             m_currentConfig = std::make_shared<des::SimConfig>();
             m_currentConfig->robotSpeed = 1.0;
-            m_currentConfig->robotAccompanySpeed = 1.0;
             m_currentConfig->appointmentsPath = "appointments.json";
         }
         publishConfig();
@@ -60,11 +59,7 @@ private:
     ) { {
             auto config = des::SimConfig{
                 request->robot_speed,
-                request->robot_accompany_speed,
                 request->drive_time_std,
-                request->conversation_probability,
-                request->conversation_duration_std,
-                request->conversation_duration_mean,
                 request->time_buffer,
                 request->energy_consumption_drive,
                 request->energy_consumption_base,
@@ -82,7 +77,6 @@ private:
                 request->dock_location,
                 request->cache_enabled,
                 request->appointments_path,
-                request->appointment_duration,
                 request->people_spawn_location,
                 request->person_detection_range
             };
@@ -105,10 +99,6 @@ private:
             std::lock_guard lock(m_configMutex);
             msg.drive_time_std             = m_currentConfig->driveTimeStd;
             msg.robot_speed                = m_currentConfig->robotSpeed;
-            msg.robot_accompany_speed      = m_currentConfig->robotAccompanySpeed;
-            msg.conversation_probability   = m_currentConfig->conversationProbability;
-            msg.conversation_duration_std  = m_currentConfig->conversationDurationStd;
-            msg.conversation_duration_mean = m_currentConfig->conversationDurationMean;
             msg.time_buffer                = m_currentConfig->timeBuffer;
             msg.energy_consumption_drive   = m_currentConfig->energyConsumptionDrive;
             msg.energy_consumption_base    = m_currentConfig->energyConsumptionBase;
@@ -126,7 +116,6 @@ private:
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;
-            msg.appointment_duration       = m_currentConfig->appointmentDuration;
             msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
             msg.person_detection_range     = m_currentConfig->personDetectionRange;
             msg.sim_start_time             = m_currentConfig->simStartTime;

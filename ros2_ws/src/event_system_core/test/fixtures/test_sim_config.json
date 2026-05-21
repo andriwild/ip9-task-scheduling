@@ -1,10 +1,6 @@
 {
     "drive_time_std": 5.0,
     "robot_speed": 0.5,
-    "robot_accompany_speed": 0.3,
-    "conversation_probability": 0.5,
-    "conversation_duration_std": 10.0,
-    "conversation_duration_mean": 30.0,
     "timeBuffer": 60.0,
     "energy_consumption_drive": 0.1,
     "energy_consumption_base": 0.01,
@@ -22,5 +18,20 @@
     "dock_location": "IMVS_Dock",
     "cacheEnabled": false,
     "appointments_path": "test.json",
-    "appointment_duration": 1800.0
+    "accompany": {
+        "accompany_speed": 0.3,
+        "conversation_probability": 0.5,
+        "conversation_duration_mean": 30.0,
+        "conversation_duration_std": 10.0,
+        "appointment_duration": 1800.0
+    },
+    "clean": {
+        "cleaning_area": 0.09
+    },
+    "data_acquisition": {
+        "data_acquisition_duration": 120.0
+    },
+    "information": {
+        "information_duration": 30.0
+    }
 }

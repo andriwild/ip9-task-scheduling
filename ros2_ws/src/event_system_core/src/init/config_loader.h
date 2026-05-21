@@ -12,18 +12,19 @@
 #include "../plugins/order_registry.h"
 #include "../plugins/accompany/accompany_order.h"
 
+
 const std::string DEFAULT_ORDER_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
 const std::string DEFAULT_EMPLOYEE_FILE    =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
 const std::string SIM_CONFIG_FILE          = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
-// Ad-hoc generators are reserved for interrupt tasks (e.g. information
-// requests). Background tasks must be specified as explicit orders in the
-// "orders" array of a scenario.
-struct AdHocGeneratorConfig {
+constexpr int SIM_START_TIME = 25200;  // 07:00
+constexpr int SIM_END_TIME   = 68400;  // 19:00
+
+struct InterruptGeneratorConfig {
     std::string type;
     des::ExecutionMode execution;   // always INTERRUPT
     des::DistributionType distribution;
-    double ratePerSecond;     // <-- rate_per_hour / 3600
+    double ratePerSecond;     // rate_per_hour / 3600
     int from;
     int to;
     nlohmann::json params;
@@ -48,10 +49,8 @@ public:
         return orders;
     };
 
-    // Background orders are tasks without a fixed time
-    // scheduler dispatches them opportunistically. Plugins build them via the
-    // same fromJson path as scheduled orders, but the "background" entries
-    // must not specify appointmentTime.
+    // Background orders are tasks without a fixed time scheduler dispatches them opportunistically
+    // the "background" entries must not specify appointmentTime.
     static des::OrderList loadBackgroundOrders(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value() || !json.value().contains("background")) {
@@ -73,17 +72,17 @@ public:
         return orders;
     }
 
-    static std::optional<std::vector<AdHocGeneratorConfig>> loadAdHocGenerators(const std::string& filePath) {
+    static std::optional<std::vector<InterruptGeneratorConfig>> loadInterruptGenerators(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
             std::cout << "No scenario file found at " << filePath << " — skipping ad-hoc generators" << std::endl;
-            return std::vector<AdHocGeneratorConfig>{};
+            return std::vector<InterruptGeneratorConfig>{};
         }
         if (!json.value().contains("ad_hoc_generators")) {
-            return std::vector<AdHocGeneratorConfig>{};
+            return std::vector<InterruptGeneratorConfig>{};
         }
 
-        std::vector<AdHocGeneratorConfig> generators;
+        std::vector<InterruptGeneratorConfig> generators;
         for (const auto& j : json.value().at("ad_hoc_generators")) {
             const std::string& type                  = j.at("type").get_ref<const std::string&>();
             const des::DistributionType distribution = des::distributionTypeFromString(j.value("distribution", "exponential"));
@@ -92,14 +91,11 @@ public:
             const int to                             = j.at("active_window").at("to").get<int>();
             const nlohmann::json params              = j.at("params");
 
-            // Ad-hoc generators are interrupt-only. Background tasks belong in
-            // the "orders" array, not as generators.
             if (j.contains("execution")) {
                 const std::string& exec = j.at("execution").get_ref<const std::string&>();
                 if (exec != "interrupt") {
                     throw std::runtime_error(
-                        "Ad-hoc generator (type='" + type + "') has execution='" + exec +
-                        "'. Only 'interrupt' is supported; specify background tasks as explicit orders.");
+                        "Interrupt generator (type='" + type + "') has execution='" + exec);
                 }
             }
             const des::ExecutionMode execution = des::ExecutionMode::INTERRUPT;
@@ -156,10 +152,6 @@ public:
             des::SimConfig config;
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();
-            config.robotAccompanySpeed      = j.at("robot_accompany_speed").get<double>();
-            config.conversationProbability  = j.at("conversation_probability").get<double>();
-            config.conversationDurationStd  = j.at("conversation_duration_std").get<double>();
-            config.conversationDurationMean = j.at("conversation_duration_mean").get<double>();
             config.timeBuffer               = j.at("timeBuffer").get<double>();
             config.energyConsumptionDrive   = j.at("energy_consumption_drive").get<double>();
             config.energyConsumptionBase    = j.at("energy_consumption_base").get<double>();
@@ -182,14 +174,17 @@ public:
             } else {
                 config.appointmentsPath = "appointments.json";
             }
-            config.appointmentDuration = j.value("appointment_duration", 1800.0);
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personDetectionRange = j.value("person_detection_range", 5.0);
-            config.dataAcquisitionDuration = j.value("data_acquisition_duration", 120.0);
-            config.cleaningArea = j.value("cleaning_area", 0.09);
-            config.informationDuration = j.value("information_duration", 30.0);
-            config.simStartTime = j.value("sim_start_time", 25200);  // 07:00
-            config.simEndTime   = j.value("sim_end_time",   68400);  // 19:00
+            config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
+            config.simEndTime   = j.value("sim_end_time",   SIM_END_TIME);
+
+            // Per-plugin config sections live under their typeName() key, e.g.
+            // "accompany": {...}, "clean": {...}. Each plugin pulls its own
+            // sub-object; missing sections fall back to plugin defaults.
+            for (auto* plugin : OrderRegistry::instance().all()) {
+                plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
+            }
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
@@ -291,10 +286,6 @@ public:
         nlohmann::json j;
         j["drive_time_std"] = config->driveTimeStd;
         j["robot_speed"] = config->robotSpeed;
-        j["robot_accompany_speed"] = config->robotAccompanySpeed;
-        j["conversation_probability"] = config->conversationProbability;
-        j["conversation_duration_std"] = config->conversationDurationStd;
-        j["conversation_duration_mean"] = config->conversationDurationMean;
         j["timeBuffer"] = config->timeBuffer;
         j["energy_consumption_drive"] = config->energyConsumptionDrive;
         j["energy_consumption_base"] = config->energyConsumptionBase;
@@ -312,12 +303,18 @@ public:
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;
-        j["appointment_duration"] = config->appointmentDuration;
         j["people_spawn_location"] = config->peopleSpawnLocation;
         j["person_detection_range"] = config->personDetectionRange;
-        j["cleaning_area"] = config->cleaningArea;
         j["sim_start_time"] = config->simStartTime;
         j["sim_end_time"]   = config->simEndTime;
+
+        // each plugin serialises its own sub-object under
+        for (auto* plugin : OrderRegistry::instance().all()) {
+            auto sub = plugin->saveConfig();
+            if (!sub.empty()) {
+                j[plugin->typeName()] = std::move(sub);
+            }
+        }
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

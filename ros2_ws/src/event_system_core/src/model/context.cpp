@@ -63,15 +63,6 @@ des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
     return dispatch ? dispatch->orderPtr : nullptr;
 }
 
-double SimulationContext::getRndConversationTime() const {
-    const double conversationTime = rnd::normal(
-        m_rng,
-        getDefaultConversationTime(),
-        getConversationDurationStd()
-    );
-    return conversationTime < 1.0 ? 1.0 : conversationTime;
-}
-
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);

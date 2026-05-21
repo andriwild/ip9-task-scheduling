@@ -72,9 +72,8 @@ CleanTimings cleanTimings(const des::IOrder& order, const ISimContext& context, 
     const double driveOut  = sched.robotDriveTime(startLocation, o.roomName);
     const double driveBack = sched.robotDriveTime(o.roomName, cfg.dockLocation);
 
-    // Cleaning duration mirrors StartCleanEvent's formula.
     const double roomArea       = context.getSearchArea(o.roomName);
-    const double broomFootprint = cfg.cleaningArea;
+    const double broomFootprint = cleanConfig().cleaningArea;
     const double broomSide      = std::sqrt(broomFootprint);
     const double steps          = (roomArea / broomFootprint) + 1;
     const double cleanTime      = steps * (2.0 * broomSide / cfg.robotSpeed);

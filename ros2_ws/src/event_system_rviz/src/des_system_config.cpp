@@ -35,30 +35,8 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_robotSpeed->setSuffix(" m/s");
     addConfigItem(moveGroup, "Robot Speed", m_robotSpeed);
 
-    m_robotAccompanySpeed = new QDoubleSpinBox(); m_robotAccompanySpeed->setRange(0.0, 10.0), m_robotAccompanySpeed->setSingleStep(0.01);
-    m_robotAccompanySpeed->setSuffix(" m/s");
-    addConfigItem(moveGroup, "Accompany Speed", m_robotAccompanySpeed);
-
     m_driveTimeStd = new QDoubleSpinBox(); m_driveTimeStd->setRange(0.0, 10.0);
     addConfigItem(moveGroup, "Drive Time Std", m_driveTimeStd);
-
-    // Interaction
-    QTreeWidgetItem* interactionGroup = new QTreeWidgetItem(m_treeWidget);
-    interactionGroup->setText(0, "Interaction");
-
-    m_conversationProbability = new QDoubleSpinBox(); m_conversationProbability->setRange(0.0, 1.0);
-    addConfigItem(interactionGroup, "Conv Prob", m_conversationProbability);
-
-    m_conversationDurationMean = new QDoubleSpinBox(); m_conversationDurationMean->setRange(0.0, 200.0);
-    m_conversationDurationMean->setSuffix(" s");
-    addConfigItem(interactionGroup, "Conv Duration Mean", m_conversationDurationMean);
-
-    m_conversationDurationStd = new QDoubleSpinBox(); m_conversationDurationStd->setRange(0.0, 200.0);
-    addConfigItem(interactionGroup, "Conv Duration Std", m_conversationDurationStd);
-
-    m_appointmentDuration = new QDoubleSpinBox(); m_appointmentDuration->setRange(0.0, 7200.0); m_appointmentDuration->setSingleStep(60.0);
-    m_appointmentDuration->setSuffix(" s");
-    addConfigItem(interactionGroup, "Appointment Duration", m_appointmentDuration);
 
     // Energy & Docking
     QTreeWidgetItem* energyGroup = new QTreeWidgetItem(m_treeWidget);
@@ -224,10 +202,6 @@ void DesSystemConfig::onSetConfig() {
 
     request->drive_time_std = m_driveTimeStd->value();
     request->robot_speed = m_robotSpeed->value();
-    request->robot_accompany_speed = m_robotAccompanySpeed->value();
-    request->conversation_probability = m_conversationProbability->value();
-    request->conversation_duration_std = m_conversationDurationStd->value();
-    request->conversation_duration_mean = m_conversationDurationMean->value();
     request->time_buffer = m_timeBuffer->value();
     request->energy_consumption_drive = m_energyConsumptionDrive->value();
     request->energy_consumption_base = m_energyConsumptionIdle->value();
@@ -246,7 +220,6 @@ void DesSystemConfig::onSetConfig() {
     request->cache_enabled = m_cacheEnabled->isChecked();
     request->appointments_path = m_configFile.toStdString();
     request->employee_path = m_employeeFile.toStdString();
-    request->appointment_duration = m_appointmentDuration->value();
     request->people_spawn_location = m_peopleSpawnLocation->text().toStdString();
     request->person_detection_range = m_personDetectionRange->value();
     request->sim_start_time = QTime(0, 0).secsTo(m_simStartTime->time());
@@ -276,10 +249,6 @@ void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
 void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
     m_driveTimeStd->setValue(msg->drive_time_std);
     m_robotSpeed->setValue(msg->robot_speed);
-    m_robotAccompanySpeed->setValue(msg->robot_accompany_speed);
-    m_conversationProbability->setValue(msg->conversation_probability);
-    m_conversationDurationStd->setValue(msg->conversation_duration_std);
-    m_conversationDurationMean->setValue(msg->conversation_duration_mean);
     m_timeBuffer->setValue(msg->time_buffer);
     m_energyConsumptionDrive->setValue(msg->energy_consumption_drive);
     m_energyConsumptionIdle->setValue(msg->energy_consumption_base);
@@ -295,7 +264,6 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_arrivalDistribution->setCurrentText(QString::fromStdString(msg->arrival_distribution));
     m_departureDistribution->setCurrentText(QString::fromStdString(msg->departure_distribution));
     m_dockLocation->setText(QString::fromStdString(msg->dock_location));
-    m_appointmentDuration->setValue(msg->appointment_duration);
     m_peopleSpawnLocation->setText(QString::fromStdString(msg->people_spawn_location));
     m_personDetectionRange->setValue(msg->person_detection_range);
     m_cacheEnabled->setChecked(msg->cache_enabled);

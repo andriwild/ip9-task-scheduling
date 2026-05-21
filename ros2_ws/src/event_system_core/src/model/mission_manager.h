@@ -4,37 +4,27 @@
 #include <cassert>
 #include <deque>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/types.h"
+#include "../model/battery.hpp"
 #include "../model/robot.h"
 #include "../model/robot_state.h"
 #include "../model/i_sim_context.h"
 #include "../plugins/i_order.h"
 #include "../plugins/order_registry.h"
 
-// Battery voltage matches Battery::m_voltage; capacity (Ah) * voltage = Wh.
-constexpr double kBatteryVoltage = 12.0;
-// Reserve added on top of the next-scheduled energy estimate to absorb model
-// drift (path-planner variance, battery curve).
+// Headroom on top of the next-scheduled estimate — absorbs model drift.
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 
 class MissionManager {
     des::OrderPtr m_current = nullptr;
     std::queue<des::OrderPtr> m_pending;
-
-    // Background tasks ("egal wann"): dispatched opportunistically when no
-    // scheduled mission is pending. Populated once at scenario load.
     std::vector<des::OrderPtr> m_background;
-
-    // Active interrupts in chronological push order (back = most recent = current).
-    // Deque (not stack) so we can remove mid-list completions when an interrupt with shorter
-    // duration ends before one above it.
     std::deque<des::OrderPtr> m_interrupts;
 
-    // Snapshot of the mission displaced by the first interrupt push.
-    // Set only on the [empty -> non-empty] transition, restored on [non-empty -> empty].
     des::OrderPtr m_suspendedOrder = nullptr;
     std::unique_ptr<RobotState> m_suspendedState;
 
@@ -109,116 +99,102 @@ public:
         return m_background;
     }
 
-    // Pick the first background mission that is feasible — either directly
-    // (enough battery to do BG and still cover the next scheduled mission)
-    // or via the charge-time fallback (the gap between BG completion and the
-    // next scheduled dispatch is long enough to recharge the deficit).
-    // Removes the chosen mission from the queue and marks it as current.
-    //
-    // Selection strategy is intentionally simple (first-feasible); swap in
-    // closest / oldest / best-ratio here when more sophistication is needed.
-    des::OrderPtr acceptFeasibleBackground(const ISimContext& ctx,
-                                           double safetyMarginWh = kBackgroundEnergySafetyMarginWh) {
+    // First-feasible background mission. Two acceptance paths:
+    //   direct          — post-BG battery covers next-scheduled reserve.
+    //   charge-fallback — dock window before next dispatch refills the deficit.
+    des::OrderPtr acceptFeasibleBackground(
+        const ISimContext& ctx,
+        double safetyMarginWh = kBackgroundEnergySafetyMarginWh
+    ) {
         if (m_background.empty()) { return nullptr; }
 
-        const auto robot       = ctx.getRobot();
-        const auto batStats    = robot->m_bat->getStats();
-        const double currentWh = batStats.soc * batStats.capacity * kBatteryVoltage;
-        const double capacityWh = batStats.capacity * kBatteryVoltage;
+        const auto robot            = ctx.getRobot();
+        const auto batStats         = robot->m_bat->getStats();
+        const double currentWh      = batStats.soc * batStats.capacity * Battery::kVoltage;
+        const double capacityWh     = batStats.capacity * Battery::kVoltage;
+        const auto cfg              = ctx.getConfig();
         const std::string& startLoc = robot->getLocation();
-        const auto cfg = ctx.getConfig();
-        const std::string& dockLoc = cfg->dockLocation;
-        const int now              = ctx.getTime();
-        const double netChargeW    = cfg->chargingRate - cfg->energyConsumptionBase;
+        const std::string& dockLoc  = cfg->dockLocation;
+        const int now               = ctx.getTime();
+        const double netChargeW     = cfg->chargingRate - cfg->energyConsumptionBase;
 
-        // Reserve for next scheduled (assume robot dock-starts that mission).
         double reservedWh = 0.0;
-        auto next = ctx.peekNextScheduledOrder();
-        if (next) {
+        if (auto next = ctx.peekNextScheduledOrder()) {
             const auto& nextPlugin = OrderRegistry::instance().get(next->type);
             reservedWh = nextPlugin.estimateMissionEnergy(*next, ctx, dockLoc);
         }
         const double requiredWh = reservedWh + safetyMarginWh;
-        const auto nextDispatch = ctx.getNextScheduledDispatchTime();
-        const auto simEndTime   = ctx.getSimulationEndTime();
+        const auto nextDispatch  = ctx.getNextScheduledDispatchTime();
+        const auto simEndTime    = ctx.getSimulationEndTime();
 
-        for (auto it = m_background.begin(); it != m_background.end(); ++it) {
-            const auto& candidate = *it;
-            const auto& plugin    = OrderRegistry::instance().get(candidate->type);
+        struct Verdict { const char* mode; double bgEnergy; double bgDuration; };
+
+        auto evaluate = [&](const des::OrderPtr& candidate) -> std::optional<Verdict> {
+            const auto& plugin      = OrderRegistry::instance().get(candidate->type);
             const double bgEnergy   = plugin.estimateMissionEnergy(*candidate, ctx, startLoc);
             const double bgDuration = plugin.estimateMissionDuration(*candidate, ctx, startLoc);
             const double postBgWh   = currentWh - bgEnergy;
             const double finishTime = now + bgDuration;
 
-            // Time bound: a mission that wouldn't complete before the sim
-            // terminates should never start.
-            if (simEndTime && finishTime > *simEndTime) {
-                continue;
-            }
+            const bool fitsSimWindow = !simEndTime || finishTime <= *simEndTime;
+            const bool fitsDispatch  = !nextDispatch || finishTime <= *nextDispatch;
+            const bool aboveFloor    = postBgWh >= safetyMarginWh;
 
-            // Hard battery floor: the BG itself must not drain the battery
-            // below the safety margin, even when a long charge window would
-            // make the next-scheduled budget recoverable. Without this the
-            // charge-fallback path would happily accept missions that deplete
-            // the battery mid-execution.
-            if (postBgWh < safetyMarginWh) {
-                continue;
-            }
+            if (!fitsSimWindow || !fitsDispatch || !aboveFloor) { return std::nullopt; }
 
-            bool feasible = false;
-            const char* mode = "";
+            if (postBgWh >= requiredWh) { return Verdict{"direct", bgEnergy, bgDuration}; }
 
-            if (postBgWh >= requiredWh) {
-                feasible = true;
-                mode     = "direct";
-            } else if (nextDispatch && netChargeW > 0.0) {
-                // Charge-time fallback: how long does the robot have at the
-                // dock between BG completion and the next scheduled dispatch?
-                const double chargeWindow = static_cast<double>(*nextDispatch) - finishTime;
-                // Cap recovery target at full capacity (can't store more).
+            if (nextDispatch && netChargeW > 0.0) {
+                const double chargeWindow  = static_cast<double>(*nextDispatch) - finishTime;
                 const double recoverTarget = std::min(requiredWh, capacityWh);
                 const double deficitWh     = recoverTarget - postBgWh;
                 const double chargeNeeded  = (deficitWh * 3600.0) / netChargeW;
-                if (chargeWindow >= chargeNeeded) {
-                    feasible = true;
-                    mode     = "charge-fallback";
-                }
+                if (chargeWindow >= chargeNeeded) { return Verdict{"charge-fallback", bgEnergy, bgDuration}; }
             }
+            return std::nullopt;
+        };
 
-            if (feasible) {
-                RCLCPP_INFO(rclcpp::get_logger("MissionManager"),
-                            "Accept background %d (type=%s, est=%.1fWh, reserve=%.1fWh, battery=%.1fWh, mode=%s)",
-                            candidate->id, candidate->type.c_str(), bgEnergy, reservedWh, currentWh, mode);
-                auto accepted = candidate;
-                m_background.erase(it);
-                m_current = accepted;
-                return accepted;
-            }
+        std::optional<Verdict> verdict;
+        auto it = std::find_if(m_background.begin(), m_background.end(),
+            [&](const des::OrderPtr& c) {
+                verdict = evaluate(c);
+                return verdict.has_value();
+            });
+
+        if (it == m_background.end()) {
+            RCLCPP_INFO(rclcpp::get_logger("MissionManager"),
+                        "No feasible background mission (battery=%.1fWh, reserved=%.1fWh, safety=%.1fWh)",
+                        currentWh, reservedWh, safetyMarginWh);
+            return nullptr;
         }
 
+        const auto accepted = *it;
         RCLCPP_INFO(rclcpp::get_logger("MissionManager"),
-                    "No feasible background mission (battery=%.1fWh, reserved=%.1fWh, safety=%.1fWh)",
-                    currentWh, reservedWh, safetyMarginWh);
-        return nullptr;
+                    "Accept background %d (type=%s, est=%.1fWh, dur=%.0fs, reserve=%.1fWh, battery=%.1fWh, mode=%s)",
+                    accepted->id, accepted->type.c_str(),
+                    verdict->bgEnergy, verdict->bgDuration, reservedWh, currentWh, verdict->mode);
+        m_background.erase(it);
+        m_current = accepted;
+        return accepted;
     }
 
     bool hasInterrupt() const {
         return !m_interrupts.empty();
     }
 
+    // Only the first push snapshots; nested pushes reuse it (RobotState
+    // doesn't change between interrupts).
     void pushInterrupt(des::OrderPtr order, std::unique_ptr<RobotState> state) {
         if (m_interrupts.empty()) {
             m_suspendedOrder = m_current;
             m_suspendedState = std::move(state);
         }
-        // Nested pushes skip the state snapshot — interrupts don't change RobotState,
-        // so the snapshot from the first push is still valid.
         m_interrupts.push_back(order);
         m_current = std::move(order);
     }
 
-    // Removes completedOrder from the interrupt list. Returns the RobotState to restore
-    // if this was the LAST active interrupt (list now empty); nullptr otherwise.
+    // Returns the RobotState to restore only when the last interrupt pops.
+    // Don't resurrect a suspended order that completed mid-interrupt.
     std::unique_ptr<RobotState> popInterrupt(const des::OrderPtr& completedOrder) {
         auto it = std::find(m_interrupts.begin(), m_interrupts.end(), completedOrder);
         if (it != m_interrupts.end()) {
@@ -226,7 +202,6 @@ public:
         }
 
         if (m_interrupts.empty()) {
-            // Don't restore a suspended order that completed mid-interrupt.
             if (m_suspendedOrder && m_suspendedOrder->state != des::MissionState::COMPLETED) {
                 m_current = m_suspendedOrder;
             } else {

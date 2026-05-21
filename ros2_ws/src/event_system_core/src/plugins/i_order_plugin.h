@@ -28,13 +28,14 @@ public:
     virtual void registeredNodes(BT::BehaviorTreeFactory& factory) = 0;
     virtual std::string subtreeXml() const = 0;
     virtual des::OrderPtr fromJson(const nlohmann::json& j) const = 0;
+
+    virtual void loadConfig(const nlohmann::json& /*pluginCfg*/) {}
+    virtual nlohmann::json saveConfig() const { return nlohmann::json::object(); }
     virtual int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const = 0;
     virtual bool isFeasible(const des::IOrder& order, const ISimContext& context) const = 0;
 
     // Round-trip energy estimate in Wh for executing the mission from
-    // `startLocation` and returning the robot to the dock. Used by the
-    // background-mission selector to budget against next-scheduled energy
-    // needs. Default: 0 (interrupt plugins typically don't drive).
+    // `startLocation` and returning the robot to the dock
     virtual double estimateMissionEnergy(const des::IOrder& /*order*/,
                                          const ISimContext& /*context*/,
                                          const std::string& /*startLocation*/) const {
@@ -42,9 +43,7 @@ public:
     }
 
     // Round-trip duration in seconds: drive to mission location + execute +
-    // drive back to dock. Used by the background-mission selector's
-    // charge-time fallback (does the next scheduled mission's dispatch leave
-    // enough recharge window?). Default: 0.
+    // drive back to dock. 
     virtual double estimateMissionDuration(const des::IOrder& /*order*/,
                                            const ISimContext& /*context*/,
                                            const std::string& /*startLocation*/) const {

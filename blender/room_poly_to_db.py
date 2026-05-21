@@ -1,7 +1,6 @@
 import bpy
+import bmesh
 import re
-from mathutils import Vector
-from mathutils.geometry import intersect_point_tri_2d
 from sqlalchemy import create_engine, text
 
 # --- CONFIGURATION ---
@@ -29,17 +28,17 @@ def get_waypoints():
 
 
 def point_in_polygon(px, py, verts):
-    """Check if point (px, py) lies inside a polygon using triangle fan decomposition."""
+    """Ray-casting point-in-polygon test. Works for arbitrary (incl. concave) polygons."""
+    inside = False
     n = len(verts)
-    for i in range(1, n - 1):
-        if intersect_point_tri_2d(
-            Vector((px, py)),
-            Vector((verts[0][0], verts[0][1])),
-            Vector((verts[i][0], verts[i][1])),
-            Vector((verts[i + 1][0], verts[i + 1][1])),
-        ):
-            return True
-    return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = verts[i]
+        xj, yj = verts[j]
+        if ((yi > py) != (yj > py)) and (px < (xj - xi) * (py - yi) / (yj - yi) + xi):
+            inside = not inside
+        j = i
+    return inside
 
 
 def classify_room(name):
@@ -53,19 +52,69 @@ def classify_room(name):
     return "OTHER"
 
 
+def _signed_area_2d(pts):
+    n = len(pts)
+    a = 0.0
+    for i in range(n):
+        x1, y1 = pts[i]
+        x2, y2 = pts[(i + 1) % n]
+        a += x1 * y2 - x2 * y1
+    return a / 2.0
+
+
 def get_polygon_vertices(obj):
-    """Extract ordered 2D vertices from a mesh object's first polygon face."""
+    """Extract ordered 2D outer-boundary vertices from a mesh object.
+    Collects all boundary loops (handling holes / disjoint islands / multi-face meshes)
+    and returns the one with the largest absolute area (= outer contour)."""
     mesh = obj.data
     matrix = obj.matrix_world
 
     if not mesh.polygons:
         return None
 
-    verts = []
-    for i in mesh.polygons[0].vertices:
-        co = matrix @ mesh.vertices[i].co
-        verts.append((round(co.x, 2), round(co.y, 2)))
-    return verts
+    bm = bmesh.new()
+    try:
+        bm.from_mesh(mesh)
+        bm.transform(matrix)  # bake world transform into vertex coords
+
+        boundary_edges = set(e for e in bm.edges if len(e.link_faces) == 1)
+        if not boundary_edges:
+            return None
+
+        loops = []
+        unused = set(boundary_edges)
+        while unused:
+            seed = next(iter(unused))
+            loop_verts = []
+            current_edge = seed
+            current_vert = current_edge.verts[0]
+            while True:
+                unused.discard(current_edge)
+                loop_verts.append(current_vert)
+                next_vert = current_edge.other_vert(current_vert)
+                next_edge = None
+                for e in next_vert.link_edges:
+                    if e in boundary_edges and e is not current_edge and e in unused:
+                        next_edge = e
+                        break
+                if next_edge is None:
+                    break
+                current_edge = next_edge
+                current_vert = next_vert
+            if len(loop_verts) >= 3:
+                loops.append(loop_verts)
+
+        if not loops:
+            return None
+
+        # Pick the outer boundary: loop with the largest absolute area
+        def loop_area(loop):
+            return abs(_signed_area_2d([(v.co.x, v.co.y) for v in loop]))
+
+        outer = max(loops, key=loop_area)
+        return [(round(v.co.x, 2), round(v.co.y, 2)) for v in outer]
+    finally:
+        bm.free()
 
 
 def verts_to_wkt(verts):
@@ -122,6 +171,19 @@ else:
                 if not matched_name:
                     unmatched.append(obj.name)
                     print(f"  WARNING: {obj.name} contains no waypoint!")
+                    # Diagnostics: polygon bbox + 5 nearest waypoints w/ inside-flag
+                    xs = [x for x, _ in verts]
+                    ys = [y for _, y in verts]
+                    cx, cy = sum(xs) / len(xs), sum(ys) / len(ys)
+                    print(f"    bbox: x=[{min(xs):.2f},{max(xs):.2f}] y=[{min(ys):.2f},{max(ys):.2f}]  centroid=({cx:.2f},{cy:.2f})  vertices={len(verts)}")
+                    nearby = sorted(
+                        waypoints.items(),
+                        key=lambda kv: (kv[1][0] - cx) ** 2 + (kv[1][1] - cy) ** 2,
+                    )[:5]
+                    for wp_name, (wx, wy) in nearby:
+                        dist = ((wx - cx) ** 2 + (wy - cy) ** 2) ** 0.5
+                        inside = point_in_polygon(wx, wy, verts)
+                        print(f"    nearest wp: {wp_name:20} at ({wx:.2f},{wy:.2f})  dist={dist:.2f}  inside={inside}")
                     continue
 
                 if matched_name not in poi_ids:

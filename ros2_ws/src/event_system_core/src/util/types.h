@@ -87,11 +87,7 @@ inline ExecutionMode executionTypeFromString(const std::string& str) {
 
 struct SimConfig {
     double robotSpeed;
-    double robotAccompanySpeed;
     double driveTimeStd;
-    double conversationProbability;
-    double conversationDurationStd;
-    double conversationDurationMean;
     double timeBuffer;
     double energyConsumptionDrive;
     double energyConsumptionBase;
@@ -109,12 +105,8 @@ struct SimConfig {
     std::string dockLocation;
     bool cacheEnabled;
     std::string appointmentsPath;
-    double appointmentDuration = 1800;
     std::string peopleSpawnLocation;
     double personDetectionRange = 5.0;
-    double dataAcquisitionDuration = 120.0;
-    double cleaningArea = 0.09;
-    double informationDuration = 30.0;
     int simStartTime = 25200;  // 07:00
     int simEndTime   = 68400;  // 19:00
 
@@ -123,11 +115,7 @@ struct SimConfig {
         os << "\n"
            << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
         os << std::left << std::setw(W) << "robotSpeed" << ": " << config.robotSpeed << std::endl;
-        os << std::left << std::setw(W) << "robotAccompanySpeed" << ": " << config.robotAccompanySpeed << std::endl;
         os << std::left << std::setw(W) << "driveTimeStd" << ": " << config.driveTimeStd << std::endl;
-        os << std::left << std::setw(W) << "conversationProbability" << ": " << config.conversationProbability << std::endl;
-        os << std::left << std::setw(W) << "conversationDurationStd" << ": " << config.conversationDurationStd << std::endl;
-        os << std::left << std::setw(W) << "conversationDurationMean" << ": " << config.conversationDurationMean << std::endl;
         os << std::left << std::setw(W) << "timeBuffer" << ": " << config.timeBuffer << std::endl;
         os << std::left << std::setw(W) << "energyConsumptionDrive" << ": " << config.energyConsumptionDrive << std::endl;
         os << std::left << std::setw(W) << "energyConsumptionBase" << ": " << config.energyConsumptionBase << std::endl;
@@ -145,10 +133,8 @@ struct SimConfig {
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
-        os << std::left << std::setw(W) << "appointmentDuration" << ": " << config.appointmentDuration << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
-        os << std::left << std::setw(W) << "cleaningArea" << ": " << config.cleaningArea << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
         os << "----------------------------\n"

@@ -44,7 +44,7 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     const auto& personName = accompanyOrder.personName;
     if (ctx.hasEmployee(personName)) {
         auto person = ctx.getPersonByName(personName);
-        int endTime = ctx.getTime() + static_cast<int>(ctx.getConfig()->appointmentDuration);
+        int endTime = ctx.getTime() + static_cast<int>(accompanyConfig().appointmentDuration);
         ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
     }
 }
@@ -84,9 +84,39 @@ des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
     return o;
 }
 
+namespace {
+// Optimistic estimate: assume the person is in their *first* known room.
+// Used for feasibility checks where we don't want to over-reject missions
+// just because the search could in principle take longer.
+double optimisticMeeting(const Scheduler& sched, const std::string& personName, const std::string& startPos, const std::string& goalPos) {
+    const auto& rooms          = sched.employeeRooms(personName);
+    const auto employeeLoc     = rooms.front();
+    const double accompanySpd  = accompanyConfig().accompanySpeed;
+    const double searchTime    = sched.robotDriveTime(startPos, employeeLoc);
+    const double scanTime      = sched.getScanTime(employeeLoc);
+    const double accompanyTime = sched.getDriveTime(employeeLoc, goalPos, accompanySpd);
+    return searchTime + accompanyTime + scanTime;
+}
+
+// Pessimistic estimate: assume the search visits every known room before
+// finding the person. Used for dispatch scheduling so we leave enough lead time.
+double pessimisticMeeting(const Scheduler& sched, const std::string& personName, const std::string& startPos, const std::string& goalPos) {
+    const auto& rooms         = sched.employeeRooms(personName);
+    const double accompanySpd = accompanyConfig().accompanySpeed;
+    double searchTime = 0.0;
+    std::string currentPos = startPos;
+    for (const auto& location : rooms) {
+        searchTime += sched.robotDriveTime(currentPos, location);
+        currentPos = location;
+    }
+    const double accompanyTime = sched.getDriveTime(currentPos, goalPos, accompanySpd);
+    return searchTime + accompanyTime;
+}
+}
+
 int AccompanyOrderPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, const std::string& startPos) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
-    const double driveTime = s.pessimisticMeeting(a.personName, startPos, a.roomName);
+    const double driveTime = pessimisticMeeting(s, a.personName, startPos, a.roomName);
     return *a.deadline - static_cast<int>(driveTime) - s.timeBuffer();
 }
 
@@ -94,7 +124,7 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
     const auto& a = static_cast<const AccompanyOrder&>(order);
 
     const auto robotLocation = context.getRobot()->getLocation();
-    const double missionDuration = context.getScheduler().optimisticMeeting(a.personName, robotLocation, a.roomName);
+    const double missionDuration = optimisticMeeting(context.getScheduler(), a.personName, robotLocation, a.roomName);
     if (order.deadline.value() - missionDuration >= context.getTime()) {
         RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", order.id);
         return true;
@@ -111,8 +141,8 @@ AccompanyTimings accompanyTimings(const des::IOrder& order, const ISimContext& c
     const auto& sched = context.getScheduler();
     const auto& cfg   = *context.getConfig();
     return {
-        sched.pessimisticMeeting(a.personName, startLocation, a.roomName),
-        cfg.appointmentDuration,
+        pessimisticMeeting(sched, a.personName, startLocation, a.roomName),
+        accompanyConfig().appointmentDuration,
         sched.robotDriveTime(a.roomName, cfg.dockLocation)
     };
 }

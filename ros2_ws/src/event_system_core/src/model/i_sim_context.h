@@ -20,7 +20,6 @@ struct Journey {
 };
 
 // Interface for the simulation context used by events and BT nodes.
-// Separates the simulation API from setup/lifecycle concerns (reset, config, observers).
 class ISimContext {
 public:
     virtual ~ISimContext() = default;
@@ -60,18 +59,15 @@ public:
     virtual des::OrderPtr popBackgroundMission() = 0;
     virtual bool removeBackgroundMission(int orderId) = 0;
     virtual const std::vector<des::OrderPtr>& backgroundMissions() const = 0;
-    // Pick the first background mission whose energy estimate leaves enough
-    // budget for the next scheduled mission (see MissionManager). On success
-    // the order is removed from the queue and marked as current; nullptr =
-    // no feasible candidate.
     virtual des::OrderPtr acceptFeasibleBackgroundMission() = 0;
+
     // Time of the next MissionDispatchEvent in the event queue, i.e. when the
     // next scheduled mission will become pending. nullopt = nothing scheduled.
     virtual std::optional<int> getNextScheduledDispatchTime() const = 0;
+
     // OrderPtr of the next scheduled mission still queued, or nullptr.
     virtual des::OrderPtr peekNextScheduledOrder() const = 0;
-    // Time at which the simulation will terminate (next SimulationEndEvent in
-    // the queue). nullopt if not yet scheduled.
+
     virtual std::optional<int> getSimulationEndTime() const = 0;
     virtual void completeOrder(const des::OrderPtr& appt) = 0;
     virtual void publishMission(const des::OrderPtr& order, int time) = 0;
@@ -88,8 +84,6 @@ public:
 
     // Configuration accessors
     virtual std::shared_ptr<des::SimConfig> getConfig() const = 0;
-    virtual double getConversationProbability() const = 0;
-    virtual double getRndConversationTime() const = 0;
 
     // RNG access
     virtual std::mt19937& rng() const = 0;

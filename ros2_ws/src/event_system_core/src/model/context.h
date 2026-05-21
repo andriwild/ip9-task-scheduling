@@ -57,7 +57,6 @@ public:
 
     Journey scheduleArrival(const std::string& target) const override;
     void changeRobotState(std::unique_ptr<RobotState> newState) const override;
-    double getRndConversationTime() const override;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void resetContext(int newTime);
     void completeOrder(const des::OrderPtr& order) override;
@@ -256,9 +255,6 @@ public:
         m_eventBus.notifyMoved(m_currentTime, location, distance);
     }
 
-    double getConversationProbability() const override { return m_simConfig->conversationProbability; };
-    double getDefaultConversationTime() const { return m_simConfig->conversationDurationMean; };
-    double getConversationDurationStd() const { return m_simConfig->conversationDurationStd; };
     double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
 
 

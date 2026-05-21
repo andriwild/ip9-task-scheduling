@@ -4,6 +4,7 @@
 
 #include "../../model/i_sim_context.h"
 #include "../../model/robot.h"
+#include "accompany_plugin.h"
 
 void SearchState::enter(Robot& robot) {
     RobotState::enter(robot);
@@ -22,7 +23,7 @@ double SearchState::getEnergyConsumption(const ISimContext& ctx) const {
 void AccompanyState::enter(Robot& robot) {
     RobotState::enter(robot);
     RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Accompany");
-    robot.setSpeed(robot.getAccompanySpeed());
+    robot.setSpeed(accompanyConfig().accompanySpeed);
 }
 void AccompanyState::exit(Robot& robot) {
     RobotState::exit(robot);

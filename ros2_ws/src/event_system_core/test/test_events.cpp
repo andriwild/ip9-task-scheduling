@@ -45,14 +45,10 @@ public:
     MockSimContext() {
         simConfig = std::make_shared<des::SimConfig>();
         simConfig->robotSpeed = 1.0;
-        simConfig->robotAccompanySpeed = 0.5;
         simConfig->batteryCapacity = 100.0;
         simConfig->initialBatteryCapacity = 80.0;
         simConfig->lowBatteryThreshold = 20.0;
         simConfig->fullBatteryThreshold = 95.0;
-        simConfig->conversationProbability = 1.0;
-        simConfig->conversationDurationMean = 30.0;
-        simConfig->conversationDurationStd = 0.0;
         simConfig->driveTimeStd = 0.0;
         simConfig->timeBuffer = 60.0;
         simConfig->energyConsumptionDrive = 0.1;
@@ -183,8 +179,6 @@ public:
     }
 
     std::shared_ptr<des::SimConfig> getConfig() const override { return simConfig; }
-    double getConversationProbability() const override { return simConfig->conversationProbability; }
-    double getRndConversationTime() const override { return simConfig->conversationDurationMean; }
     std::mt19937& rng() const override { return m_rng; }
 
     std::string getPersonLocation(const std::string& name) const override {
@@ -200,6 +194,23 @@ static bool pluginsRegistered = [] {
     OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
     return true;
 }();
+
+// Set the (singleton) AccompanyOrderPlugin's config — conversation params and
+// related accompany-specific values live on the plugin now, not on SimConfig.
+// Tests call this directly to set up the scenario they need; deterministic
+// std=0 lets us assert on exact event times.
+static void setAccompanyConfig(double conversationProbability,
+                               double conversationDurationMean = 30.0,
+                               double conversationDurationStd  = 0.0) {
+    nlohmann::json j = {
+        {"accompany_speed",            0.5},
+        {"conversation_probability",   conversationProbability},
+        {"conversation_duration_mean", conversationDurationMean},
+        {"conversation_duration_std",  conversationDurationStd},
+        {"appointment_duration",       1800.0},
+    };
+    OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName).loadConfig(j);
+}
 
 static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
         int id,
@@ -341,7 +352,7 @@ TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
 TEST(EventExecute, StartFoundPersonConvPushesSuccessWithHighProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    ctx.simConfig->conversationProbability = 1.0;
+    setAccompanyConfig(/*conversationProbability=*/1.0);
 
     StartFoundPersonConversationEvent event(35000);
     event.execute(ctx);
@@ -355,7 +366,7 @@ TEST(EventExecute, StartFoundPersonConvPushesSuccessWithHighProbability) {
 TEST(EventExecute, StartFoundPersonConvPushesFailedWithZeroProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    ctx.simConfig->conversationProbability = 0.0;
+    setAccompanyConfig(/*conversationProbability=*/0.0);
 
     StartFoundPersonConversationEvent event(35000);
     event.execute(ctx);
@@ -368,7 +379,9 @@ TEST(EventExecute, StartFoundPersonConvPushesFailedWithZeroProbability) {
 TEST(EventExecute, StartFoundPersonConvEventTimeIncludesConversationDuration) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    ctx.simConfig->conversationDurationMean = 45.0;
+    setAccompanyConfig(/*conversationProbability=*/1.0,
+                       /*conversationDurationMean=*/45.0,
+                       /*conversationDurationStd=*/0.0);
 
     StartFoundPersonConversationEvent event(35000);
     event.execute(ctx);
@@ -382,7 +395,7 @@ TEST(EventExecute, StartFoundPersonConvEventTimeIncludesConversationDuration) {
 TEST(EventExecute, StartDropOffConvPushesSuccessWithHighProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    ctx.simConfig->conversationProbability = 1.0;
+    setAccompanyConfig(/*conversationProbability=*/1.0);
 
     StartDropOffConversationEvent event(35000);
     event.execute(ctx);
@@ -395,7 +408,7 @@ TEST(EventExecute, StartDropOffConvPushesSuccessWithHighProbability) {
 TEST(EventExecute, StartDropOffConvPushesFailedWithZeroProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    ctx.simConfig->conversationProbability = 0.0;
+    setAccompanyConfig(/*conversationProbability=*/0.0);
 
     StartDropOffConversationEvent event(35000);
     event.execute(ctx);

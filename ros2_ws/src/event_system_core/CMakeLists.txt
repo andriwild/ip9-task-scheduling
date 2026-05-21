@@ -83,6 +83,11 @@ if(BUILD_TESTING)
     test/test_config_loader.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
+    src/plugins/clean/clean_plugin.cpp
+    src/plugins/clean/states.cpp
+    src/plugins/data_acquisition/data_acquisition_plugin.cpp
+    src/plugins/data_acquisition/states.cpp
+    src/plugins/information/information_plugin.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
   )

@@ -7,6 +7,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "plugins/i_order.h"
+#include "plugins/clean/clean_plugin.h"
 #include "end_clean_event.h"
 
 class StartCleanEvent final : public IEvent {
@@ -21,7 +22,7 @@ public:
 
         const std::string robotLocation = ctx.getRobot()->getLocation();
         const double roomArea           = ctx.getSearchArea(robotLocation);
-        const double broomFootprint     = ctx.getConfig()->cleaningArea;
+        const double broomFootprint     = cleanConfig().cleaningArea;
         assert(broomFootprint > 0.0);
         const double broomSide  = std::sqrt(broomFootprint);
         const double steps      = (roomArea / broomFootprint) + 1;

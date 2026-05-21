@@ -3,6 +3,7 @@
 #include "model/event/base.h"
 #include "model/i_sim_context.h"
 #include "plugins/i_order.h"
+#include "plugins/information/information_plugin.h"
 #include "end_information_event.h"
 
 class StartInformationEvent final : public IEvent {
@@ -14,7 +15,7 @@ public:
     void execute(ISimContext& ctx) override {
         m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
-        const int duration = static_cast<int>(ctx.getConfig()->informationDuration);
+        const int duration = static_cast<int>(informationConfig().informationDuration);
         ctx.pushEvent(std::make_shared<EndInformationEvent>(this->time + duration, m_order));
     }
 

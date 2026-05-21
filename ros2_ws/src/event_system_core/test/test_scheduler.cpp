@@ -25,6 +25,23 @@ public:
     }
 };
 
+// Set the (singleton) AccompanyOrderPlugin's config — accompany_speed and
+// related params live on the plugin now, not on SimConfig.
+static void setAccompanyConfig(double accompanySpeed,
+                               double conversationProbability = 0.5,
+                               double conversationDurationMean = 30.0,
+                               double conversationDurationStd  = 0.0,
+                               double appointmentDuration      = 1800.0) {
+    nlohmann::json j = {
+        {"accompany_speed",            accompanySpeed},
+        {"conversation_probability",   conversationProbability},
+        {"conversation_duration_mean", conversationDurationMean},
+        {"conversation_duration_std",  conversationDurationStd},
+        {"appointment_duration",       appointmentDuration},
+    };
+    OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName).loadConfig(j);
+}
+
 class SchedulerTest : public ::testing::Test {
 protected:
     std::shared_ptr<MockPathPlanner> planner;
@@ -45,9 +62,11 @@ protected:
 
         config = std::make_shared<des::SimConfig>();
         config->robotSpeed = 1.0;
-        config->robotAccompanySpeed = 0.5;
         config->timeBuffer = 60.0;
         config->cacheEnabled = false;
+
+        // Accompany-specific params now live on the plugin.
+        setAccompanyConfig(/*accompanySpeed=*/0.5);
 
         auto max = std::make_shared<des::Person>();
         max->firstName = "Max";
@@ -59,7 +78,7 @@ protected:
         anna->roomLabels = {"Lab"};
         locations["Anna"] = anna;
 
-        // scanTime is part of optimisticMeeting; keep it zero for clean drive-time assertions.
+        // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
         searchAreas["Office"] = 0.0;
         searchAreas["Lab"] = 0.0;
 
@@ -96,42 +115,7 @@ protected:
     }
 };
 
-// --- optimisticMeeting ---
-
-TEST_F(SchedulerTest, OptimisticMeetingUsesFirstLocation) {
-    auto scheduler = makeScheduler();
-
-    // Max's first room is "Office". Dock->Office at speed 1.0 = 10s, Office->MeetingRoom at speed 0.5 = 40s
-    double result = scheduler->optimisticMeeting("Max", "Dock", "MeetingRoom");
-    EXPECT_DOUBLE_EQ(result, 10.0 / 1.0 + 20.0 / 0.5); // 10 + 40 = 50
-}
-
-TEST_F(SchedulerTest, OptimisticMeetingWithDifferentPerson) {
-    auto scheduler = makeScheduler();
-
-    // Anna's first room is "Lab". Dock->Lab at speed 1.0 = 12s, Lab->HallA at speed 0.5 = 16s
-    double result = scheduler->optimisticMeeting("Anna", "Dock", "HallA");
-    EXPECT_DOUBLE_EQ(result, 12.0 / 1.0 + 8.0 / 0.5); // 12 + 16 = 28
-}
-
-// --- pessimisticMeeting ---
-
-TEST_F(SchedulerTest, PessimisticMeetingSearchesAllLocations) {
-    // Give Anna multiple rooms for this test
-    locations["Anna"]->roomLabels = {"Lab", "Kitchen"};
-    auto scheduler = makeScheduler();
-
-    // Anna has rooms ["Lab", "Kitchen"]
-    // Dock->Lab at speed 1.0 = 12s, Lab->Kitchen at speed 1.0 = ?
-    planner->setDistance("Lab", "Kitchen", 7.0);
-
-    // searchTime = Dock->Lab (12/1.0) + Lab->Kitchen (7/1.0) = 19
-    // accompanyTime = Kitchen->HallA (18/0.5) = 36
-    double result = scheduler->pessimisticMeeting("Anna", "Dock", "HallA");
-    EXPECT_DOUBLE_EQ(result, 12.0 + 7.0 + 18.0 / 0.5); // 19 + 36 = 55
-}
-
-// --- simplePlan ---
+// --- simplePlan (exercises the plugin's pessimistic-meeting math) ---
 
 TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
     auto scheduler = makeScheduler();
@@ -188,14 +172,34 @@ TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
     EXPECT_TRUE(missions.empty());
 }
 
+TEST_F(SchedulerTest, PessimisticMeetingWithMultipleSearchLocations) {
+    // Give Anna multiple rooms — pessimistic search visits each in order.
+    locations["Anna"]->roomLabels = {"Lab", "Kitchen"};
+    planner->setDistance("Lab", "Kitchen", 7.0);
+    auto scheduler = makeScheduler();
+
+    // Anna has rooms ["Lab", "Kitchen"]
+    //   search Dock->Lab (12/1.0) = 12
+    //   search Lab->Kitchen (7/1.0) = 7
+    //   accompany Kitchen->HallA (18/0.5) = 36
+    // total = 55. startTime = 39600 - 55 - 60 = 39485
+    des::OrderList orders = { makeAccompanyOrder(1, "Anna", "HallA", 39600) };
+    auto missions = scheduler->simplePlan(orders, "Dock");
+    ASSERT_EQ(missions.size(), 1u);
+    EXPECT_EQ(missions[0]->time, 39485);
+}
+
 // --- Speed impact ---
 
 TEST_F(SchedulerTest, HigherSpeedReducesDriveTime) {
-    config->robotSpeed = 2.0;        // double speed
-    config->robotAccompanySpeed = 1.0;
+    config->robotSpeed = 2.0;        // double the base drive speed
+    setAccompanyConfig(/*accompanySpeed=*/1.0);
     auto scheduler = makeScheduler();
 
-    // Max: Dock->Office = 10/2.0 = 5s, Office->MeetingRoom = 20/1.0 = 20s
-    double result = scheduler->optimisticMeeting("Max", "Dock", "MeetingRoom");
-    EXPECT_DOUBLE_EQ(result, 5.0 + 20.0); // 25
+    // Max: pessimistic = Dock->Office (10/2.0 = 5) + Office->MeetingRoom (20/1.0 = 20) = 25
+    // startTime = 36000 - 25 - 60 = 35915
+    des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000) };
+    auto missions = scheduler->simplePlan(orders, "Dock");
+    ASSERT_EQ(missions.size(), 1u);
+    EXPECT_EQ(missions[0]->time, 35915);
 }

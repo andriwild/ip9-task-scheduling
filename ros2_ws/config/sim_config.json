@@ -1,5 +1,11 @@
 {
-    "appointment_duration": 1800.0,
+    "accompany": {
+        "accompany_speed": 0.20000000298023224,
+        "appointment_duration": 1800.0,
+        "conversation_duration_mean": 28.0,
+        "conversation_duration_std": 14.0,
+        "conversation_probability": 1.0
+    },
     "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_background.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
@@ -7,10 +13,12 @@
     "battery_capacity": 16.0,
     "cacheEnabled": true,
     "charging_rate": 500.0,
-    "cleaning_area": 0.09,
-    "conversation_duration_mean": 28.0,
-    "conversation_duration_std": 14.0,
-    "conversation_probability": 1.0,
+    "clean": {
+        "cleaning_area": 0.09
+    },
+    "data_acquisition": {
+        "data_acquisition_duration": 120.0
+    },
     "departure_distribution": "normal",
     "departure_mean": 61200.0,
     "departure_std": 3600.0,
@@ -19,13 +27,15 @@
     "energy_consumption_base": 200.0,
     "energy_consumption_drive": 352.0,
     "full_battery_threshold": 100.0,
+    "information": {
+        "information_duration": 30.0
+    },
     "initial_battery_capacity": 10.0,
-    "low_battery_threshold": 30.0,
+    "low_battery_threshold": 20.0,
     "people_spawn_location": "IMVS_Entrance",
     "person_detection_range": 2.5,
-    "robot_accompany_speed": 0.20000000298023224,
     "robot_speed": 0.30000001192092896,
-    "sim_end_time": 68400,
+    "sim_end_time": 75540,
     "sim_start_time": 25200,
-    "timeBuffer": 60.0
+    "timeBuffer": 0.0
 }

@@ -11,9 +11,9 @@ class Battery {
     double m_initialCapacity;     // Ah - on simulation start
     double m_lowBatteryThreshold; // %
     double m_fullBatteryThreshold; // %
-    double m_voltage = 12.0;
 
 public:
+    static constexpr double kVoltage = 12.0;
     explicit Battery(
         const double capacity,
         const double initialCapacity,
@@ -41,7 +41,7 @@ public:
         // Ah = (W * s) / (3600 * V)
         const int timeDelta = time - m_lastBalanceUpdate;
         m_lastBalanceUpdate = time;
-        const double capacityDiff = energyConsumption * timeDelta / (3600 * m_voltage);
+        const double capacityDiff = energyConsumption * timeDelta / (3600 * kVoltage);
         m_currentCapacity -= capacityDiff;
         
         //RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
@@ -86,7 +86,7 @@ public:
 
         const double capacityDiff = fullCapacity - m_currentCapacity; // Ah
         // Ah = (W * s) / (3600 * V) => s = (Ah * 3600 * V) / W
-        const double duration = (capacityDiff * 3600.0 * m_voltage) / chargingPowerWatts;
+        const double duration = (capacityDiff * 3600.0 * kVoltage) / chargingPowerWatts;
         RCLCPP_DEBUG(rclcpp::get_logger("Battery"), "Calculate time to full: %f", duration);
         return duration;
     }

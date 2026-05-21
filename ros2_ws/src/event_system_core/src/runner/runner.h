@@ -125,7 +125,7 @@ protected:
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
         }
 
-        addEventsFromAdHocGenerators(m_config->appointmentsPath);
+        addEventsFromInterruptGenerators(m_config->appointmentsPath);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
@@ -161,9 +161,9 @@ protected:
         return orders.value();
     }
 
-    void addEventsFromAdHocGenerators(const std::string& path) {
+    void addEventsFromInterruptGenerators(const std::string& path) {
         RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load ad-hoc generators: %s", path.c_str());
-        auto adHocGenerators = ConfigLoader::loadAdHocGenerators(path.c_str());
+        auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
         int eventId = 100000;
 
         for (const auto& gen : adHocGenerators.value()) {

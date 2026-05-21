@@ -98,13 +98,19 @@ protected:
 
         config = std::make_shared<des::SimConfig>();
         config->robotSpeed = 1.0;
-        config->robotAccompanySpeed = 0.5;
         config->timeBuffer = 60.0;
         config->cacheEnabled = false;
-        config->conversationProbability = 1.0;
-        config->conversationDurationMean = 30.0;
-        config->conversationDurationStd = 0.0;
         config->driveTimeStd = 0.0;
+
+        // Accompany-specific params live on the plugin now. Deterministic
+        // (std=0, probability=1.0) so the integration scenario is reproducible.
+        OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName).loadConfig(nlohmann::json{
+            {"accompany_speed",            0.5},
+            {"conversation_probability",   1.0},
+            {"conversation_duration_mean", 30.0},
+            {"conversation_duration_std",  0.0},
+            {"appointment_duration",       1800.0},
+        });
         config->energyConsumptionDrive = 0.1;
         config->energyConsumptionBase = 0.01;
         config->batteryCapacity = 100.0;

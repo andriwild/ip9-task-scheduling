@@ -7,6 +7,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "model/robot_state.h"
+#include "plugins/accompany/accompany_plugin.h"
 #include "plugins/accompany/states.h"
 #include "util/rnd.h"
 
@@ -16,8 +17,8 @@ public:
 
     void execute(ISimContext& ctx) override {
         assert(!ctx.getRobot()->isDriving());
-        double eventTime = this->time + ctx.getRndConversationTime();
-        if (rnd::uni(ctx.rng()) < ctx.getConversationProbability()) {
+        double eventTime = this->time + rndAccompanyConversationTime(ctx.rng());
+        if (rnd::uni(ctx.rng()) < accompanyConfig().conversationProbability) {
             ctx.pushEvent(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
         } else {
             ctx.pushEvent(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));

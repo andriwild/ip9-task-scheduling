@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../i_order_plugin.h"
+#include "../order_registry.h"
 #include "./data_acquisition_subtree.h"
 
 
@@ -11,11 +12,18 @@ class Scheduler;
 class ISimContext;
 class RosObserver;
 
+struct DataAcquisitionConfig {
+    double dataAcquisitionDuration = 120.0;
+};
+
 class DataAcquisition: public IOrderPlugin {
+    DataAcquisitionConfig m_config;
 public:
+    static constexpr auto kTypeName = "data_acquisition";
+
     explicit DataAcquisition() = default;
 
-    std::string typeName() const override { return "data_acquisition"; }
+    std::string typeName() const override { return kTypeName; }
     std::string rootSubtreeId() const override { return "DataAcquisitionRoutine"; }
     des::ExecutionMode executionMode() const override { return des::ExecutionMode::BACKGROUND; }
 
@@ -32,4 +40,18 @@ public:
     double estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
     double estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
+
+    const DataAcquisitionConfig& config() const { return m_config; }
+
+    void loadConfig(const nlohmann::json& j) override {
+        m_config.dataAcquisitionDuration = j.value("data_acquisition_duration", m_config.dataAcquisitionDuration);
+    }
+    nlohmann::json saveConfig() const override {
+        return { {"data_acquisition_duration", m_config.dataAcquisitionDuration} };
+    }
 };
+
+inline const DataAcquisitionConfig& dataAcquisitionConfig() {
+    return static_cast<const DataAcquisition&>(
+        OrderRegistry::instance().get(DataAcquisition::kTypeName)).config();
+}

@@ -37,10 +37,6 @@ protected:
     QTreeWidget* m_treeWidget;
     QDoubleSpinBox* m_driveTimeStd;
     QDoubleSpinBox* m_robotSpeed;
-    QDoubleSpinBox* m_robotAccompanySpeed;
-    QDoubleSpinBox* m_conversationProbability;
-    QDoubleSpinBox* m_conversationDurationStd;
-    QDoubleSpinBox* m_conversationDurationMean;
     QDoubleSpinBox* m_timeBuffer;
     QDoubleSpinBox* m_energyConsumptionDrive;
     QDoubleSpinBox* m_energyConsumptionIdle;
@@ -55,7 +51,6 @@ protected:
     QDoubleSpinBox* m_departureStd;
     QComboBox* m_arrivalDistribution;
     QComboBox* m_departureDistribution;
-    QDoubleSpinBox* m_appointmentDuration;
     QTimeEdit* m_simStartTime;
     QTimeEdit* m_simEndTime;
     QLineEdit* m_dockLocation;

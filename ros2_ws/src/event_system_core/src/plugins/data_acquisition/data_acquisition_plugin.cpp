@@ -67,7 +67,7 @@ AcqTimings acqTimings(const des::IOrder& order, const ISimContext& context, cons
     const auto& cfg   = *context.getConfig();
     return {
         sched.robotDriveTime(startLocation, o.roomName),
-        cfg.dataAcquisitionDuration,
+        dataAcquisitionConfig().dataAcquisitionDuration,
         sched.robotDriveTime(o.roomName, cfg.dockLocation)
     };
 }

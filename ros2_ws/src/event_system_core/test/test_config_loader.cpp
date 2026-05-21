@@ -6,6 +6,9 @@
 #include "../src/init/config_loader.h"
 #include "../src/plugins/accompany/accompany_order.h"
 #include "../src/plugins/accompany/accompany_plugin.h"
+#include "../src/plugins/clean/clean_plugin.h"
+#include "../src/plugins/data_acquisition/data_acquisition_plugin.h"
+#include "../src/plugins/information/information_plugin.h"
 #include "../src/plugins/order_registry.h"
 
 namespace {
@@ -28,12 +31,17 @@ std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
     return o;
 }
 
+// Register all plugins once so loadSimConfig/saveSimConfig iterate over the
+// full set (and the nested sub-objects round-trip cleanly).
 class PluginRegistry : public ::testing::Environment {
 public:
     void SetUp() override {
         static bool registered = false;
         if (!registered) {
             OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+            OrderRegistry::instance().registerPlugin(std::make_unique<CleanPlugin>());
+            OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
+            OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
             registered = true;
         }
     }
@@ -112,7 +120,6 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     ASSERT_TRUE(result.has_value());
 
     EXPECT_DOUBLE_EQ(result->robotSpeed, 0.5);
-    EXPECT_DOUBLE_EQ(result->robotAccompanySpeed, 0.3);
     EXPECT_DOUBLE_EQ(result->timeBuffer, 60.0);
     EXPECT_DOUBLE_EQ(result->batteryCapacity, 100.0);
     EXPECT_DOUBLE_EQ(result->initialBatteryCapacity, 80.0);
@@ -122,7 +129,16 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_EQ(result->dockLocation, "IMVS_Dock");
     EXPECT_FALSE(result->cacheEnabled);
     EXPECT_EQ(result->appointmentsPath, "test.json");
-    EXPECT_DOUBLE_EQ(result->appointmentDuration, 1800.0);
+
+    // Plugin-owned parameters live under their typeName() sub-object now.
+    EXPECT_DOUBLE_EQ(accompanyConfig().accompanySpeed, 0.3);
+    EXPECT_DOUBLE_EQ(accompanyConfig().conversationProbability, 0.5);
+    EXPECT_DOUBLE_EQ(accompanyConfig().conversationDurationMean, 30.0);
+    EXPECT_DOUBLE_EQ(accompanyConfig().conversationDurationStd, 10.0);
+    EXPECT_DOUBLE_EQ(accompanyConfig().appointmentDuration, 1800.0);
+    EXPECT_DOUBLE_EQ(cleanConfig().cleaningArea, 0.09);
+    EXPECT_DOUBLE_EQ(dataAcquisitionConfig().dataAcquisitionDuration, 120.0);
+    EXPECT_DOUBLE_EQ(informationConfig().informationDuration, 30.0);
 }
 
 TEST(ConfigLoaderSimConfig, DistributionTypesParsedCorrectly) {
@@ -146,6 +162,14 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     auto original = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(original.has_value());
 
+    // Snapshot plugin-owned values right after load — the plugins are
+    // singletons, so the second load below would overwrite them and we'd
+    // lose the "original" to compare against.
+    const auto accompanyOriginal       = accompanyConfig();
+    const auto cleanOriginal           = cleanConfig();
+    const auto dataAcquisitionOriginal = dataAcquisitionConfig();
+    const auto informationOriginal     = informationConfig();
+
     std::string tmpFile = "/tmp/test_sim_config_roundtrip.json";
     auto configPtr = std::make_shared<des::SimConfig>(*original);
     ASSERT_TRUE(ConfigLoader::saveSimConfig(tmpFile, configPtr));
@@ -154,7 +178,6 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     ASSERT_TRUE(reloaded.has_value());
 
     EXPECT_DOUBLE_EQ(original->robotSpeed, reloaded->robotSpeed);
-    EXPECT_DOUBLE_EQ(original->robotAccompanySpeed, reloaded->robotAccompanySpeed);
     EXPECT_DOUBLE_EQ(original->timeBuffer, reloaded->timeBuffer);
     EXPECT_DOUBLE_EQ(original->batteryCapacity, reloaded->batteryCapacity);
     EXPECT_DOUBLE_EQ(original->initialBatteryCapacity, reloaded->initialBatteryCapacity);
@@ -163,16 +186,22 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_DOUBLE_EQ(original->fullBatteryThreshold, reloaded->fullBatteryThreshold);
     EXPECT_DOUBLE_EQ(original->energyConsumptionDrive, reloaded->energyConsumptionDrive);
     EXPECT_DOUBLE_EQ(original->energyConsumptionBase, reloaded->energyConsumptionBase);
-    EXPECT_DOUBLE_EQ(original->conversationProbability, reloaded->conversationProbability);
-    EXPECT_DOUBLE_EQ(original->conversationDurationMean, reloaded->conversationDurationMean);
-    EXPECT_DOUBLE_EQ(original->conversationDurationStd, reloaded->conversationDurationStd);
     EXPECT_DOUBLE_EQ(original->driveTimeStd, reloaded->driveTimeStd);
     EXPECT_EQ(original->dockLocation, reloaded->dockLocation);
     EXPECT_EQ(original->cacheEnabled, reloaded->cacheEnabled);
     EXPECT_EQ(original->appointmentsPath, reloaded->appointmentsPath);
     EXPECT_EQ(original->arrivalDistribution, reloaded->arrivalDistribution);
     EXPECT_EQ(original->departureDistribution, reloaded->departureDistribution);
-    EXPECT_DOUBLE_EQ(original->appointmentDuration, reloaded->appointmentDuration);
+
+    // Plugin-owned values survive the round-trip too.
+    EXPECT_DOUBLE_EQ(accompanyOriginal.accompanySpeed,           accompanyConfig().accompanySpeed);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationProbability,  accompanyConfig().conversationProbability);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationMean, accompanyConfig().conversationDurationMean);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationStd,  accompanyConfig().conversationDurationStd);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.appointmentDuration,      accompanyConfig().appointmentDuration);
+    EXPECT_DOUBLE_EQ(cleanOriginal.cleaningArea,                 cleanConfig().cleaningArea);
+    EXPECT_DOUBLE_EQ(dataAcquisitionOriginal.dataAcquisitionDuration, dataAcquisitionConfig().dataAcquisitionDuration);
+    EXPECT_DOUBLE_EQ(informationOriginal.informationDuration,    informationConfig().informationDuration);
 
     std::filesystem::remove(tmpFile);
 }

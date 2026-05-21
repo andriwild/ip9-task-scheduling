@@ -9,12 +9,20 @@
             "description": "Dokument abholen"
         },
         {
-            "id": 3,
+            "id": 1,
             "type": "accompany",
             "personName": "Nina",
             "roomName": "5.2B18",
-            "appointmentTime": 56000,
+            "appointmentTime": 46000,
             "description": "Physio Therapie"
+        },
+        {
+            "id": 2,
+            "type": "accompany",
+            "personName": "Fred",
+            "roomName": "5.2D02",
+            "appointmentTime": 56000,
+            "description": "XBox Gamen"
         }
     ],
     "background": [

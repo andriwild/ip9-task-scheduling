@@ -13,7 +13,6 @@ class Robot {
     std::string m_targetLocation;
 
     double m_driveSpeed;
-    double m_accompanySpeed;
     double m_currentSpeed = 0;
 
     bool m_isDriving        = false;
@@ -30,7 +29,6 @@ public:
         : m_state(std::make_unique<IdleState>())
     {
         m_driveSpeed     = config->robotSpeed;
-        m_accompanySpeed = config->robotAccompanySpeed;
 
         m_bat = std::make_unique<Battery>(
             config->batteryCapacity,
@@ -98,12 +96,6 @@ public:
     void setSpeed(const double newSpeed) { 
         m_currentSpeed = newSpeed; 
         RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot speed set to: %.2f", newSpeed);
-    }
-
-    double getAccompanySpeed() const { return m_accompanySpeed; }
-    void setAccompanySpeed(const double speed) { 
-        m_accompanySpeed = speed; 
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot accompany speed set to: %.2f", speed);
     }
 
     double getDriveSpeed() const { return m_driveSpeed; }
