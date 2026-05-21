@@ -25,6 +25,8 @@ bool cache_enabled
 string appointments_path
 string employee_path
 float32 appointment_duration
+int32 sim_start_time
+int32 sim_end_time
 ---
 bool success
 string message

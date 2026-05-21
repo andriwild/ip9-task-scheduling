@@ -115,6 +115,8 @@ struct SimConfig {
     double dataAcquisitionDuration = 120.0;
     double cleaningArea = 0.09;
     double informationDuration = 30.0;
+    int simStartTime = 25200;  // 07:00
+    int simEndTime   = 68400;  // 19:00
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -147,19 +149,20 @@ struct SimConfig {
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "cleaningArea" << ": " << config.cleaningArea << std::endl;
+        os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
+        os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;
     }
 };
 
+// Structural categories of robot states — used for BT control flow
 enum class RobotStateType {
     IDLE,
-    ACCOMPANY,
-    SEARCHING,
+    MISSION,
     CHARGING,
-    CONVERSATE,
-    RETURNING // drive back to dock
+    RETURNING
 };
 
 enum class Result {

@@ -82,6 +82,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_config_loader
     test/test_config_loader.cpp
     src/plugins/accompany/accompany_plugin.cpp
+    src/plugins/accompany/states.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
   )
@@ -104,6 +105,7 @@ if(BUILD_TESTING)
     src/model/robot.cpp
     src/model/robot_state.cpp
     src/plugins/accompany/accompany_plugin.cpp
+    src/plugins/accompany/states.cpp
   )
   ament_target_dependencies(test_scheduler rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_scheduler PRIVATE
@@ -116,6 +118,7 @@ if(BUILD_TESTING)
     src/model/robot.cpp
     src/model/robot_state.cpp
     src/plugins/accompany/accompany_plugin.cpp
+    src/plugins/accompany/states.cpp
   )
   ament_target_dependencies(test_events rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_events PRIVATE
@@ -129,6 +132,7 @@ if(BUILD_TESTING)
     src/model/robot_state.cpp
     src/model/context.cpp
     src/plugins/accompany/accompany_plugin.cpp
+    src/plugins/accompany/states.cpp
   )
   target_link_libraries(test_integration nlohmann_json::nlohmann_json)
   ament_target_dependencies(test_integration rclcpp behaviortree_cpp event_system_msgs)

@@ -110,21 +110,18 @@ protected:
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
         m_eventQueue.extend(createMissionQueue(m_config, m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
-        int firstEventTime = m_eventQueue.getFirstEventTime() - ONE_HOUR;
-        int lastEventTime  = m_eventQueue.getLastEventTime();
+        // Sim window comes straight from the config (configurable from the
+        // System Config panel). No more juggling with sampled departure
+        // times — anything past simEndTime is simply not part of the run.
+        const int simStartTime = m_config->simStartTime;
+        const int simEndTime   = m_config->simEndTime;
+        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Sim window: %d → %d", simStartTime, simEndTime);
 
-        auto latest = std::max_element(m_people.value().begin(), m_people.value().end(),
-            [](const auto& a, const auto& b) { return a->departureTime < b->departureTime; });
-        int lastDepartureTime = (*latest)->departureTime;
-
-        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Event time range from %d to %d", firstEventTime, lastEventTime);
-
-        int simEndTime = std::max(lastEventTime, lastDepartureTime) + ONE_HOUR;
-        m_eventQueue.push(std::make_shared<SimulationStartEvent>(firstEventTime));
+        m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));
         m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
 
         for (auto& p : m_people.value()) {
-            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(firstEventTime, p));
+            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simStartTime, p));
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
         }
 
@@ -136,6 +133,17 @@ protected:
         // event queue. Register them after resetContext so they survive resets.
         for (const auto& order : m_backgroundOrders) {
             m_ctx->addBackgroundMission(order);
+        }
+
+        // Tell observers (metrics) about every order known at setup time so
+        // totals are known regardless of whether each mission ever fires.
+        // Interrupts are generated lazily and register themselves in
+        // OrderArrivalEvent.
+        for (const auto& order : m_orders) {
+            m_ctx->publishMissionRegistered(order);
+        }
+        for (const auto& order : m_backgroundOrders) {
+            m_ctx->publishMissionRegistered(order);
         }
 
         for (auto& p : m_people.value()) {

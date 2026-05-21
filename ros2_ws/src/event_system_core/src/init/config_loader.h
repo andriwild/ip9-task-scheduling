@@ -188,6 +188,8 @@ public:
             config.dataAcquisitionDuration = j.value("data_acquisition_duration", 120.0);
             config.cleaningArea = j.value("cleaning_area", 0.09);
             config.informationDuration = j.value("information_duration", 30.0);
+            config.simStartTime = j.value("sim_start_time", 25200);  // 07:00
+            config.simEndTime   = j.value("sim_end_time",   68400);  // 19:00
             return config;
         } catch (const nlohmann::json::type_error& e) {
             std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
@@ -314,6 +316,8 @@ public:
         j["people_spawn_location"] = config->peopleSpawnLocation;
         j["person_detection_range"] = config->personDetectionRange;
         j["cleaning_area"] = config->cleaningArea;
+        j["sim_start_time"] = config->simStartTime;
+        j["sim_end_time"]   = config->simEndTime;
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

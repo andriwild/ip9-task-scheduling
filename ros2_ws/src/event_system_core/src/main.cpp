@@ -11,7 +11,7 @@
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
 
-const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/";
+const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/test/";
 
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;
@@ -74,23 +74,34 @@ int main(const int argc, char *argv[]) {
                     app->enterPause();
                     break;
 
-                case SystemState::Request::RUN:
-                    if (!app->m_eventQueue.empty()) {
-                        const auto e = app->m_eventQueue.top();
-                        app->m_eventQueue.pop();
-                        app->m_ctx->advanceTime(e->time);
-                        e->execute(*app->m_ctx);
-                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-                    } else {
-                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete. Event Queue empty.");
+                case SystemState::Request::RUN: {
+                    auto handleSimComplete = [&] {
+                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete.");
                         if (headless) {
                             auto* headlessApp = static_cast<HeadlessRunner*>(app.get());
                             headlessApp->onSimulationComplete();
                         } else {
                             app->enterPause();
                         }
+                    };
+                    if (app->m_eventQueue.empty()) {
+                        handleSimComplete();
+                        break;
+                    }
+                    const auto e = app->m_eventQueue.top();
+                    app->m_eventQueue.pop();
+                    app->m_ctx->advanceTime(e->time);
+                    e->execute(*app->m_ctx);
+                    RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+                    if (e->getType() == des::EventType::SIMULATION_END) {
+                        // SimulationEnd is the hard stop. Any siblings at the same
+                        // sim time would otherwise still execute and trigger fresh
+                        // BT work (e.g. accepting another background mission).
+                        app->m_eventQueue.clear();
+                        handleSimComplete();
                     }
                     break;
+                }
                 default:
                         RCLCPP_WARN(rclcpp::get_logger("main"), "Unrecognized Simulation State!");
                     break;
