@@ -16,6 +16,7 @@ public:
 
     void execute(ISimContext& ctx) override {
         ctx.publishMission(m_order, time);
+        ctx.publishMissionRegistered(m_order);
         switch (m_order->execution) {
             case des::ExecutionMode::BACKGROUND:
             case des::ExecutionMode::SCHEDULED:

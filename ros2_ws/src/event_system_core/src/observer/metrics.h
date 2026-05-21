@@ -1,39 +1,50 @@
 #pragma once
 
+#include <map>
+#include <string>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../observer/observer.h"
 #include "event_system_msgs/msg/metrics_report.hpp"
 
 class MetricsNode final : public rclcpp::Node, public IObserver {
-    int searchTime            = 0;
-    int accompanyTime         = 0;
-    int idleTime              = 0;
+    // Per-state-name buckets — populated dynamically as states show up via
+    // TimelineStateChange's name field. Plugin-owned states (e.g. "clean",
+    // "acquire") slot in automatically without code changes here.
+    std::map<std::string, int>    timePerStateName;
+    std::map<std::string, double> energyPerStateName;
+    // Aggregated by structural category so we can compute the high-level
+    // idle/charging/utilization percentages regardless of plugin states.
+    std::map<des::RobotStateType, int>    timePerCategory;
+    std::map<des::RobotStateType, double> energyPerCategory;
+
+    // Mission stats are tracked per-execution-mode so the report can show
+    // scheduled, background, and interrupt missions in separate sections —
+    // each kind has a different notion of "success" (scheduled cares about
+    // lateness, background cares about completion ratio, interrupt about
+    // arrival count).
+    struct MissionStats {
+        int registered  = 0;  // queued / loaded into the sim
+        int onTime      = 0;  // COMPLETED + timeDiff <= 0
+        int late        = 0;  // COMPLETED + timeDiff > 0
+        int failed      = 0;
+        int cancelled   = 0;
+        int rejected    = 0;
+    };
+    std::map<des::ExecutionMode, MissionStats> missionsByMode;
+
     int moveTime              = 0;
-    int talkTime              = 0;
-    int chargingTime          = 0;
-    int returningTime         = 0;
     int lastTimeStateChanged  = 0;
     int lastTimeMoved         = 0;
+    // Lateness aggregates only make sense for scheduled missions (deadlines).
     int accMissionToLateTime  = 0;
     int accMissionToEarlyTime = 0;
-    int nMissionCompleted     = 0;
-    int nMissionFailed        = 0;
-    int nMissionCompletedLate = 0;
-    int nMissionCanceled      = 0;
-    int nMissionRejected      = 0;
     int minLateness           = 0;
     int maxLateness           = 0;
     bool hasLateMission       = false;
     double movedDistance      = 0.0;
     double lastSoc            = -1.0;
     double batteryCapacity    = 0.0;
-    double energyIdle         = 0.0;
-    double energySearching    = 0.0;
-    double energyAccompany    = 0.0;
-    double energyTalk         = 0.0;
-    double energyCharging     = 0.0;
-    double energyReturning    = 0.0;
     bool wasDriving           = false;
     // Mission-active time tracking — robot is "working" while any mission is
     // in flight (regardless of robot-state). Depth counter handles nested
@@ -42,7 +53,11 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     int missionActiveTime  = 0;
     int missionActiveStart = -1;
     int missionActiveDepth = 0;
-    des::RobotStateType lastState;
+    // Most recently seen state, kept verbatim so we can attribute the next
+    // elapsed slice on the next transition.
+    bool hasLastState = false;
+    des::RobotStateType lastCategory{};
+    std::string lastStateName;
 
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
 
@@ -57,38 +72,28 @@ public:
     }
 
     void clear() {
-        searchTime            = 0;
-        accompanyTime         = 0;
-        idleTime              = 0;
+        timePerStateName.clear();
+        energyPerStateName.clear();
+        timePerCategory.clear();
+        energyPerCategory.clear();
         moveTime              = 0;
-        talkTime              = 0;
-        chargingTime          = 0;
-        returningTime         = 0;
         lastTimeStateChanged  = 0;
         lastTimeMoved         = 0;
         accMissionToLateTime  = 0;
         accMissionToEarlyTime = 0;
-        nMissionCompleted     = 0;
-        nMissionFailed        = 0;
-        nMissionCompletedLate = 0;
-        nMissionCanceled      = 0;
-        nMissionRejected      = 0;
         minLateness           = 0;
         maxLateness           = 0;
         hasLateMission        = false;
+        missionsByMode.clear();
         movedDistance         = 0.0;
         lastSoc               = -1.0;
         batteryCapacity       = 0.0;
-        energyIdle            = 0.0;
-        energySearching       = 0.0;
-        energyAccompany       = 0.0;
-        energyTalk            = 0.0;
-        energyCharging        = 0.0;
-        energyReturning       = 0.0;
         wasDriving            = false;
         missionActiveTime     = 0;
         missionActiveStart    = -1;
         missionActiveDepth    = 0;
+        hasLastState          = false;
+        lastStateName.clear();
     }
 
 
@@ -122,7 +127,7 @@ public:
         }
     };
 
-    void onStateChanged(const int time, const des::RobotStateType& newState, des::BatteryProps batStats) override {
+    void onStateChanged(const int time, const des::RobotStateType& newState, const std::string& newName, des::BatteryProps batStats) override {
         const int passedTime = time - lastTimeStateChanged;
 
         if (lastSoc < 0.0) {
@@ -130,66 +135,46 @@ public:
         }
         const double consumedAh = (lastSoc < 0.0) ? 0.0 : (lastSoc - batStats.soc) * batteryCapacity;
 
-        switch (lastState) {
-            case des::RobotStateType::CHARGING:
-                chargingTime += passedTime;
-                energyCharging += -consumedAh;
-                break;
-            case des::RobotStateType::ACCOMPANY:
-                accompanyTime += passedTime;
-                energyAccompany += consumedAh;
-                break;
-            case des::RobotStateType::SEARCHING:
-                searchTime += passedTime;
-                energySearching += consumedAh;
-                break;
-            case des::RobotStateType::IDLE:
-                idleTime += passedTime;
-                energyIdle += consumedAh;
-                break;
-            case des::RobotStateType::CONVERSATE:
-                talkTime += passedTime;
-                energyTalk += consumedAh;
-                break;
-            case des::RobotStateType::RETURNING:
-                returningTime += passedTime;
-                energyReturning += consumedAh;
-                break;
+        if (hasLastState) {
+            timePerStateName[lastStateName]   += passedTime;
+            energyPerStateName[lastStateName] += consumedAh;
+            timePerCategory[lastCategory]     += passedTime;
+            energyPerCategory[lastCategory]   += consumedAh;
         }
-        lastSoc = batStats.soc;
-        lastState = newState;
+        lastSoc              = batStats.soc;
+        lastCategory         = newState;
+        lastStateName        = newName;
+        hasLastState         = true;
         lastTimeStateChanged = time;
     }
 
-    void onMissionComplete(int /*time*/, const des::MissionState& state, const int timeDiff) override {
+    void onMissionRegistered(const des::OrderPtr& order) override {
+        if (!order) return;
+        missionsByMode[order->execution].registered++;
+    }
+
+    void onMissionComplete(int /*time*/, const des::MissionState& state, const int timeDiff, des::ExecutionMode execution) override {
+        auto& s = missionsByMode[execution];
         switch (state) {
             case des::MissionState::COMPLETED:
                 // timeDiff > 0 = strictly late. timeDiff == 0 covers both
                 // "exactly on deadline" (scheduled) and "no deadline at all"
-                // (background, where context maps missing deadline to now),
-                // both of which count as successful on-time completions.
+                // (background/interrupt where context maps missing deadline to now).
                 if (timeDiff > 0) {
-                    nMissionCompletedLate++;
+                    s.late++;
                     accMissionToLateTime += timeDiff;
                     if (!hasLateMission || timeDiff < minLateness) minLateness = timeDiff;
                     if (!hasLateMission || timeDiff > maxLateness) maxLateness = timeDiff;
                     hasLateMission = true;
                 } else {
-                    nMissionCompleted++;
+                    s.onTime++;
                     accMissionToEarlyTime += timeDiff;
                 }
                 break;
-            case des::MissionState::CANCELLED:
-                nMissionCanceled++;
-                break;
-            case des::MissionState::FAILED:
-                nMissionFailed++;
-                break;
-            case des::MissionState::REJECTED:
-                nMissionRejected++;
-                break;
-            default:
-                break;
+            case des::MissionState::CANCELLED: s.cancelled++; break;
+            case des::MissionState::FAILED:    s.failed++;    break;
+            case des::MissionState::REJECTED:  s.rejected++;  break;
+            default: break;
         }
     }
 
@@ -200,50 +185,75 @@ public:
     void publishReport() {
         auto msg = event_system_msgs::msg::MetricsReport();
 
-        msg.idle_time          = idleTime;
+        // Named buckets — pull what the existing msg explicitly tracks.
+        auto timeFor   = [&](const std::string& n) { auto it = timePerStateName.find(n);   return it == timePerStateName.end()   ? 0    : it->second; };
+        auto energyFor = [&](const std::string& n) { auto it = energyPerStateName.find(n); return it == energyPerStateName.end() ? 0.0  : it->second; };
+
+        msg.idle_time          = timeFor("idle");
         msg.moving_time        = moveTime;
-        msg.searching_time     = searchTime;
-        msg.accompany_time     = accompanyTime;
-        msg.charging_time      = chargingTime;
-        msg.talk_time          = talkTime;
-        msg.total_missions     = nMissionCompleted + nMissionCompletedLate + nMissionFailed + nMissionCanceled + nMissionRejected;
-        msg.missions_on_time   = nMissionCompleted;
-        msg.missions_late      = nMissionCompletedLate;
-        msg.missions_failed    = nMissionFailed;
-        msg.missions_cancelled = nMissionCanceled;
-        msg.missions_rejected  = nMissionRejected;
+        msg.searching_time     = timeFor("search");
+        msg.accompany_time     = timeFor("accompany");
+        msg.charging_time      = timeFor("charging");
+        msg.talk_time          = timeFor("conversate");
 
-        msg.avg_early_arrival = (nMissionCompleted > 0) ? (float)accMissionToEarlyTime / nMissionCompleted : 0.0f;
-        msg.avg_lateness = (nMissionCompletedLate > 0) ? (float)accMissionToLateTime / nMissionCompletedLate : 0.0f;
-        msg.min_lateness = hasLateMission ? minLateness : 0;
-        msg.max_lateness = hasLateMission ? maxLateness : 0;
+        auto stats = [&](des::ExecutionMode m) -> MissionStats {
+            auto it = missionsByMode.find(m);
+            return it == missionsByMode.end() ? MissionStats{} : it->second;
+        };
+        const auto sched  = stats(des::ExecutionMode::SCHEDULED);
+        const auto bg     = stats(des::ExecutionMode::BACKGROUND);
+        const auto intr   = stats(des::ExecutionMode::INTERRUPT);
 
-        msg.rejected_rate = (msg.total_missions > 0) ? static_cast<float>(nMissionRejected) / msg.total_missions : 0.0f;
+        msg.scheduled_total     = sched.registered;
+        msg.scheduled_on_time   = sched.onTime;
+        msg.scheduled_late      = sched.late;
+        msg.scheduled_failed    = sched.failed;
+        msg.scheduled_cancelled = sched.cancelled;
+        msg.scheduled_rejected  = sched.rejected;
 
-        msg.energy_idle_ah       = static_cast<float>(energyIdle);
-        msg.energy_searching_ah  = static_cast<float>(energySearching);
-        msg.energy_accompany_ah  = static_cast<float>(energyAccompany);
-        msg.energy_talk_ah       = static_cast<float>(energyTalk);
-        msg.energy_charging_ah   = static_cast<float>(energyCharging);
-        msg.energy_total_consumed_ah = static_cast<float>(energyIdle + energySearching + energyAccompany + energyTalk + energyReturning);
+        msg.background_total     = bg.registered;
+        msg.background_completed = bg.onTime + bg.late;
+        msg.background_failed    = bg.failed;
+        msg.background_cancelled = bg.cancelled;
+
+        msg.interrupt_total     = intr.registered;
+        msg.interrupt_completed = intr.onTime + intr.late;
+
+        // Lateness aggregates apply to scheduled (only those have deadlines).
+        msg.avg_early_arrival = (sched.onTime > 0) ? (float)accMissionToEarlyTime / sched.onTime : 0.0f;
+        msg.avg_lateness      = (sched.late > 0)   ? (float)accMissionToLateTime  / sched.late   : 0.0f;
+        msg.min_lateness      = hasLateMission ? minLateness : 0;
+        msg.max_lateness      = hasLateMission ? maxLateness : 0;
+
+        const int schedTotal = sched.registered;
+        msg.rejected_rate = (schedTotal > 0) ? static_cast<float>(sched.rejected) / schedTotal : 0.0f;
+
+        msg.energy_idle_ah       = static_cast<float>(energyFor("idle"));
+        msg.energy_searching_ah  = static_cast<float>(energyFor("search"));
+        msg.energy_accompany_ah  = static_cast<float>(energyFor("accompany"));
+        msg.energy_talk_ah       = static_cast<float>(energyFor("conversate"));
+        msg.energy_charging_ah   = static_cast<float>(energyFor("charging"));
+        double energyTotal = 0.0;
+        for (const auto& [_, e] : energyPerStateName) energyTotal += e;
+        msg.energy_total_consumed_ah = static_cast<float>(energyTotal);
 
         msg.total_distance = static_cast<float>(movedDistance);
 
-        // State buckets cover every simulated second exactly once (each
-        // onStateChange attributes elapsed time to the prior state), so their
-        // sum is the true total observation window.
-        const auto totalTime = static_cast<double>(
-            accompanyTime + searchTime + idleTime + chargingTime + talkTime + returningTime);
+        // Total observed sim time = sum of all named-state buckets (each
+        // simulated second is attributed to exactly one state).
+        double totalTime = 0.0;
+        for (const auto& [_, t] : timePerStateName) totalTime += t;
         if (totalTime > 0) {
+            const int idleCat     = timePerCategory[des::RobotStateType::IDLE];
+            const int chargingCat = timePerCategory[des::RobotStateType::CHARGING];
             msg.utilization      = static_cast<float>(missionActiveTime / totalTime * 100.0);
-            msg.idle_percent     = static_cast<float>(idleTime           / totalTime * 100.0);
-            msg.charging_percent = static_cast<float>(chargingTime       / totalTime * 100.0);
+            msg.idle_percent     = static_cast<float>(idleCat           / totalTime * 100.0);
+            msg.charging_percent = static_cast<float>(chargingCat       / totalTime * 100.0);
         } else {
             msg.utilization      = 0.0f;
             msg.idle_percent     = 0.0f;
             msg.charging_percent = 0.0f;
         }
-
 
         RCLCPP_INFO(rclcpp::get_logger("Metrics"), "Publish Metrics");
         m_publisher->publish(msg);

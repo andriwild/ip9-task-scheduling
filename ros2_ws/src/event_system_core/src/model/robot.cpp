@@ -8,13 +8,11 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
 }
 
 bool Robot::isBusy() const {
-    return m_state->getType() == des::RobotStateType::SEARCHING
-        || m_state->getType() == des::RobotStateType::ACCOMPANY
-        || m_state->getType() == des::RobotStateType::CONVERSATE
-        || m_state->getType() == des::RobotStateType::CHARGING
-        || m_state->getType() == des::RobotStateType::RETURNING
-        // limitation: we cannot stop driving between two locations -> driving without a job is busy
-        || isDriving();
+    const auto type = m_state->getType();
+    // Anything that isn't IDLE is "busy" in the sense that it shouldn't be
+    // interrupted by another idle-tier action. Also driving without a state
+    // counts as busy (no way to stop mid-segment).
+    return type != des::RobotStateType::IDLE || isDriving();
 }
 
 void Robot::updateConfig(const des::SimConfig& config) {

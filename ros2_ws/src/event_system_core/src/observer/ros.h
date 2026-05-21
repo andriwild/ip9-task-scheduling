@@ -37,10 +37,11 @@ public:
         m_pubEvent->publish(msg);
     };
 
-    void onStateChanged(const int time, const des::RobotStateType& type, const des::BatteryProps batStats) override {
+    void onStateChanged(const int time, const des::RobotStateType& type, const std::string& name, const des::BatteryProps batStats) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
         msg.time          = time;
         msg.state         = static_cast<int>(type);
+        msg.name          = name;
         msg.soc           = batStats.soc;
         msg.capacity      = batStats.capacity;
         msg.low_threshold = batStats.lowThreshold;

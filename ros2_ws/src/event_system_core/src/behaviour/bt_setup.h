@@ -145,10 +145,17 @@ inline std::string buildXml() {
             <Inverter><IsInterruptActive/></Inverter>
             <Fallback>
     )";
+    bool anyInterruptPlugin = false;
     for (auto* plugin : OrderRegistry::instance().all()) {
         if (plugin->executionMode() == des::ExecutionMode::INTERRUPT) {
             xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
+            anyInterruptPlugin = true;
         }
+    }
+    // BTCPP rejects empty <Fallback>; keep one no-op child so the XML stays
+    // valid in setups (esp. tests) that register only scheduled plugins.
+    if (!anyInterruptPlugin) {
+        xml += "<AlwaysFailure/>\n";
     }
     xml += R"(
             </Fallback>

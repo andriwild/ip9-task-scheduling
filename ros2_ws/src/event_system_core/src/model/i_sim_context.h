@@ -75,6 +75,7 @@ public:
     virtual std::optional<int> getSimulationEndTime() const = 0;
     virtual void completeOrder(const des::OrderPtr& appt) = 0;
     virtual void publishMission(const des::OrderPtr& order, int time) = 0;
+    virtual void publishMissionRegistered(const des::OrderPtr& order) = 0;
 
     // Employee data
     virtual bool hasEmployee(const std::string& person) const = 0;

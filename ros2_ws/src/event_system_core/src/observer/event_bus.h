@@ -33,15 +33,21 @@ public:
         }
     }
 
-    void notifyStateChanged(int time, des::RobotStateType newState, des::BatteryProps batStats) const {
+    void notifyStateChanged(int time, des::RobotStateType newState, const std::string& name, des::BatteryProps batStats) const {
         for (const auto& obs : m_observers) {
-            obs->onStateChanged(time, newState, batStats);
+            obs->onStateChanged(time, newState, name, batStats);
         }
     }
 
-    void notifyMissionComplete(int time, const des::MissionState& state, int timeDiff) const {
+    void notifyMissionComplete(int time, const des::MissionState& state, int timeDiff, des::ExecutionMode execution) const {
         for (const auto& obs : m_observers) {
-            obs->onMissionComplete(time, state, timeDiff);
+            obs->onMissionComplete(time, state, timeDiff, execution);
+        }
+    }
+
+    void notifyMissionRegistered(const des::OrderPtr& order) const {
+        for (const auto& obs : m_observers) {
+            obs->onMissionRegistered(order);
         }
     }
 

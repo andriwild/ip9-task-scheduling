@@ -43,7 +43,7 @@ void SimulationContext::completeOrder(const des::OrderPtr& order) {
     assert(order != nullptr);
     const int deadline = order->deadline.value_or(m_currentTime);
     const int timeDiff = m_currentTime - deadline;
-    notifyMissionComplete(order->state, timeDiff);
+    notifyMissionComplete(order->state, timeDiff, order->execution);
     if (m_missions.getCurrent() == order) {
         m_missions.setCurrent(nullptr);
     }
@@ -80,5 +80,5 @@ void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConf
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
     m_robot->changeState(std::move(newState));
-    notifyRobotStateChanged(m_robot->getState()->getType());
+    notifyRobotStateChanged();
 }

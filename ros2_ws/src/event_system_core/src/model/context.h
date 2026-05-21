@@ -200,6 +200,10 @@ public:
         m_eventBus.notifyMissionPublished(order, time);
     }
 
+    void publishMissionRegistered(const des::OrderPtr& order) override {
+        m_eventBus.notifyMissionRegistered(order);
+    }
+
     void advanceTime(const int newTime) {
         assert(newTime >= m_currentTime);
         m_robot->m_bat->updateBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
@@ -222,16 +226,17 @@ public:
         m_eventBus.clear();
     }
 
-    void notifyMissionComplete(const des::MissionState& state, const int timeDiff) const {
-        m_eventBus.notifyMissionComplete(m_currentTime, state, timeDiff);
+    void notifyMissionComplete(const des::MissionState& state, const int timeDiff, const des::ExecutionMode execution) const {
+        m_eventBus.notifyMissionComplete(m_currentTime, state, timeDiff, execution);
     }
 
-    void notifyRobotStateChanged(const des::RobotStateType newState) const {
-        m_eventBus.notifyStateChanged(m_currentTime, newState, m_robot->m_bat->getStats());
+    void notifyRobotStateChanged() const {
+        const auto* state = m_robot->getState();
+        m_eventBus.notifyStateChanged(m_currentTime, state->getType(), state->getName(), m_robot->m_bat->getStats());
     }
 
     void notifyBatteryChanged() const override {
-        notifyRobotStateChanged(m_robot->getState()->getType());
+        notifyRobotStateChanged();
     }
 
     void notifyEvent(const IEvent& event) const override {
@@ -260,7 +265,7 @@ public:
     void pushInterrupt(const des::OrderPtr& order) override {
         auto savedState = m_robot->getState()->clone();
         m_missions.pushInterrupt(order, std::move(savedState));
-        notifyRobotStateChanged(m_robot->getState()->getType());
+        notifyRobotStateChanged();
     }
 
     void popInterrupt(const des::OrderPtr& completedOrder) override {
