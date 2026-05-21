@@ -10,6 +10,7 @@
 #include "../src/model/robot_state.h"
 #include "../src/plugins/accompany/accompany_order.h"
 #include "../src/plugins/accompany/accompany_plugin.h"
+#include "../src/plugins/accompany/states.h"
 #include "../src/plugins/order_registry.h"
 #include "../src/plugins/accompany/events/abort_search_event.h"
 #include "../src/plugins/accompany/events/start_accompany_event.h"
@@ -171,6 +172,7 @@ public:
     }
 
     void publishMission(const des::OrderPtr& /*order*/, int /*time*/) override {}
+    void publishMissionRegistered(const des::OrderPtr& /*order*/) override {}
 
     bool hasEmployee(const std::string& person) const override {
         return employees.contains(person);
@@ -285,7 +287,7 @@ TEST(EventExecute, MissionStartSetsSearchState) {
     MissionStartEvent event(35000, order);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::SEARCHING);
+    EXPECT_EQ(ctx.robot->getState()->getName(), "search");
     EXPECT_EQ(ctx.tickCount, 1);
 
     // Verify SearchState has the correct locations
@@ -325,7 +327,7 @@ TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
     StartAccompanyEvent event(35500, order);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::ACCOMPANY);
+    EXPECT_EQ(ctx.robot->getState()->getName(), "accompany");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::START_DRIVE);
     // Verify the drive target is the appointment room
@@ -344,7 +346,7 @@ TEST(EventExecute, StartFoundPersonConvPushesSuccessWithHighProbability) {
     StartFoundPersonConversationEvent event(35000);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::CONVERSATE);
+    EXPECT_EQ(ctx.robot->getState()->getName(), "conversate");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     // Verify it's the Success variant by checking getName()
     EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
@@ -385,7 +387,7 @@ TEST(EventExecute, StartDropOffConvPushesSuccessWithHighProbability) {
     StartDropOffConversationEvent event(35000);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::CONVERSATE);
+    EXPECT_EQ(ctx.robot->getState()->getName(), "conversate");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
 }

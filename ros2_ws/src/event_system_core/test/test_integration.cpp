@@ -11,6 +11,7 @@
 #include "../src/sim/scheduler.h"
 #include "../src/plugins/accompany/accompany_order.h"
 #include "../src/plugins/accompany/accompany_plugin.h"
+#include "../src/plugins/accompany/states.h"
 #include "../src/plugins/order_registry.h"
 
 class MockPathPlanner : public IPathPlanner {
@@ -32,7 +33,10 @@ public:
 class TrackingObserver : public IObserver {
 public:
     std::vector<std::pair<int, des::EventType>> events;
-    std::vector<std::pair<int, des::RobotStateType>> stateChanges;
+    // Each state-change carries both the structural category and the
+    // plugin-supplied name so tests can assert either dimension.
+    struct StateChange { int time; des::RobotStateType type; std::string name; };
+    std::vector<StateChange> stateChanges;
     std::vector<std::pair<int, des::MissionState>> missionCompletions;
     std::vector<std::pair<int, std::string>> moves;
 
@@ -42,11 +46,11 @@ public:
         events.emplace_back(time, type);
     }
 
-    void onStateChanged(int time, const des::RobotStateType& type, des::BatteryProps) override {
-        stateChanges.emplace_back(time, type);
+    void onStateChanged(int time, const des::RobotStateType& type, const std::string& name, des::BatteryProps) override {
+        stateChanges.push_back({time, type, name});
     }
 
-    void onMissionComplete(int time, const des::MissionState& state, int) override {
+    void onMissionComplete(int time, const des::MissionState& state, int, des::ExecutionMode) override {
         missionCompletions.emplace_back(time, state);
     }
 
@@ -217,12 +221,12 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     // Verify: multiple events were processed
     EXPECT_GT(observer->events.size(), 5u);
 
-    // Verify: state changes include SEARCHING and ACCOMPANY phases
+    // Verify: state changes include search, accompany and conversate phases
     bool hasSearch = false, hasAccompany = false, hasConversate = false;
-    for (const auto& [time, state] : observer->stateChanges) {
-        if (state == des::RobotStateType::SEARCHING) hasSearch = true;
-        if (state == des::RobotStateType::ACCOMPANY) hasAccompany = true;
-        if (state == des::RobotStateType::CONVERSATE) hasConversate = true;
+    for (const auto& sc : observer->stateChanges) {
+        if (sc.name == "search")     hasSearch = true;
+        if (sc.name == "accompany")  hasAccompany = true;
+        if (sc.name == "conversate") hasConversate = true;
     }
     EXPECT_TRUE(hasSearch);
     EXPECT_TRUE(hasAccompany);
@@ -396,17 +400,19 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
 
-    // Step 3: MissionDispatch
+    // Step 3: MissionDispatch — order moves into the pending queue but stays
+    // PENDING; the IN_PROGRESS transition happens in the plugin's StartXxxEvent
+    // (accompany has no such event so it goes straight from PENDING to COMPLETED).
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_DISPATCH);
-    EXPECT_EQ(order->state, des::MissionState::IN_PROGRESS);
+    EXPECT_EQ(order->state, des::MissionState::PENDING);
 
     // Step 4: MissionStart -> Robot enters SearchState
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_START);
-    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "search");
 
     // Step 5: ScanAera at Dock
     e = step(*ctx);
@@ -432,7 +438,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
     EXPECT_FALSE(ctx->getRobot()->isDriving());
-    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::SEARCHING);
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "search");
 
     // Step 9: ScanAera at Office
     e = step(*ctx);
@@ -449,7 +455,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::START_FOUND_PERSON_CONV);
-    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
 
     // Step 12: FoundPersonConversationComplete
     e = step(*ctx);
@@ -461,7 +467,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::START_ACCOMPANY);
-    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::ACCOMPANY);
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "accompany");
 
     // Steps 14-15: PersonAccompanyDeparture + StartDrive (same time, order not guaranteed)
     {
@@ -486,7 +492,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getRobot()->getLocation(), "MeetingRoom");
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getPersonLocation("Max"), "MeetingRoom");
-    EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::CONVERSATE);
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
 
     // Steps 17-18: PersonAccompanyArrived + StartDropOffConversation
     {
@@ -546,12 +552,12 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
 
     // Verify key state transitions happened in correct order
     bool foundSearch = false, foundAccompany = false, foundComplete = false;
-    for (const auto& [time, state] : observer->stateChanges) {
-        if (!foundSearch && state == des::RobotStateType::SEARCHING) foundSearch = true;
-        if (foundSearch && !foundAccompany && state == des::RobotStateType::ACCOMPANY) foundAccompany = true;
-        if (foundAccompany && !foundComplete && state == des::RobotStateType::IDLE) foundComplete = true;
+    for (const auto& sc : observer->stateChanges) {
+        if (!foundSearch && sc.name == "search") foundSearch = true;
+        if (foundSearch && !foundAccompany && sc.name == "accompany") foundAccompany = true;
+        if (foundAccompany && !foundComplete && sc.type == des::RobotStateType::IDLE) foundComplete = true;
     }
-    EXPECT_TRUE(foundSearch) << "Missing SEARCHING state";
-    EXPECT_TRUE(foundAccompany) << "Missing ACCOMPANY state after SEARCHING";
-    EXPECT_TRUE(foundComplete) << "Missing final IDLE state after ACCOMPANY";
+    EXPECT_TRUE(foundSearch) << "Missing search state";
+    EXPECT_TRUE(foundAccompany) << "Missing accompany state after search";
+    EXPECT_TRUE(foundComplete) << "Missing final IDLE state after accompany";
 }
