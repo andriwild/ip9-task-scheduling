@@ -8,7 +8,9 @@
 #include "events/appointment_end_event.h"
 #include "sim/scheduler.h"
 #include "model/i_sim_context.h"
+#include "model/robot.h"
 #include "observer/ros.h"
+#include "states.h"
 
 void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     // search
@@ -59,7 +61,7 @@ void AccompanyOrderPlugin::onStartDriveEvent(ISimContext& ctx, des::IOrder& orde
 
 void AccompanyOrderPlugin::onStopDriveEvent(ISimContext& ctx, des::IOrder& order) {
     auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx.getOrderPtr());
-    if (ctx.getRobot()->getStateType() == des::RobotStateType::ACCOMPANY && accompany) {
+    if (dynamic_cast<AccompanyState*>(ctx.getRobot()->getState()) != nullptr && accompany) {
         const auto& personName = accompany->personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);

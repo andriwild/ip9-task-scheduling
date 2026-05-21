@@ -8,6 +8,7 @@
 #include "model/robot.h"
 #include "observer/ros.h"
 #include "data_acquisition_order.h"
+#include "states.h"
 
 void DataAcquisition::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsAtTargetLocation>("IsAtTargetLocation");
@@ -15,9 +16,13 @@ void DataAcquisition::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<ExecuteAcquisition>("ExecuteAcquisition");
 }
 
-void DataAcquisition::onMissionStart(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void DataAcquisition::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
+    ctx.changeRobotState(std::make_unique<AcquireState>());
+}
 
-void DataAcquisition::onMissionEnd(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void DataAcquisition::onMissionEnd(ISimContext& ctx, des::IOrder& /*order*/) {
+    ctx.changeRobotState(std::make_unique<IdleState>());
+}
 
 void DataAcquisition::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
 

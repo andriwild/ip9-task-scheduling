@@ -8,6 +8,7 @@
 
 #include "model/i_sim_context.h"
 #include "model/robot_state.h"
+#include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
 #include "model/event.h"
 
@@ -19,7 +20,7 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool isConversating = ctx->getRobot()->getStateType() == des::RobotStateType::CONVERSATE;
+        const bool isConversating = dynamic_cast<ConversateState*>(ctx->getRobot()->getState()) != nullptr;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsConversating: %d", isConversating);
         if (isConversating) {
             return BT::NodeStatus::SUCCESS;

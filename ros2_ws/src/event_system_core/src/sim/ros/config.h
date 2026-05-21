@@ -86,6 +86,8 @@ private:
                 request->people_spawn_location,
                 request->person_detection_range
             };
+            config.simStartTime = request->sim_start_time;
+            config.simEndTime   = request->sim_end_time;
             std::lock_guard lock(m_configMutex);
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
@@ -127,6 +129,8 @@ private:
             msg.appointment_duration       = m_currentConfig->appointmentDuration;
             msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
             msg.person_detection_range     = m_currentConfig->personDetectionRange;
+            msg.sim_start_time             = m_currentConfig->simStartTime;
+            msg.sim_end_time               = m_currentConfig->simEndTime;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

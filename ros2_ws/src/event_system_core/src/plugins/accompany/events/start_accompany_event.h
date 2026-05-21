@@ -6,6 +6,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot_state.h"
 #include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/states.h"
 
 class StartAccompanyEvent final : public IEvent {
     des::OrderPtr m_order;

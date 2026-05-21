@@ -9,6 +9,7 @@
 #include "model/robot.h"
 #include "observer/ros.h"
 #include "clean_order.h"
+#include "states.h"
 #include "util/types.h"
 
 void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
@@ -17,9 +18,14 @@ void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<ExecuteClean>("ExecuteClean");
 }
 
-void CleanPlugin::onMissionStart(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void CleanPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
+    ctx.changeRobotState(std::make_unique<CleanState>());
+}
 
-void CleanPlugin::onMissionEnd(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& /*order*/) {
+    // Hand back to IDLE so ChargeRoutine / next mission pickup can take over.
+    ctx.changeRobotState(std::make_unique<IdleState>());
+}
 
 void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
 

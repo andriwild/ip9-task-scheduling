@@ -13,6 +13,7 @@
 #include "model/event.h"
 #include "util/rnd.h"
 #include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_found_person_conversation_event.h"
 #include "plugins/accompany/events/scan_aera.h"
 #include "plugins/accompany/events/abort_search_event.h"
@@ -25,7 +26,8 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool isSearching = !ctx->getRobot()->isDriving() && ctx->getRobot()->getStateType() == des::RobotStateType::SEARCHING;
+        const bool isSearching = !ctx->getRobot()->isDriving()
+            && dynamic_cast<SearchState*>(ctx->getRobot()->getState()) != nullptr;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "IsSearching: %d", isSearching);
         return isSearching ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }

@@ -10,6 +10,7 @@
 #include "model/robot.h"
 #include "model/i_sim_context.h"
 #include "model/robot_state.h"
+#include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_drop_off_conversation_event.h"
 
 
@@ -23,7 +24,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const bool isArrived = ctx->getRobot()->getLocation() == ctx->getRobot()->getTargetLocation();
-        const bool isAccompany = ctx->getRobot()->getStateType() == des::RobotStateType::ACCOMPANY;
+        const bool isAccompany = dynamic_cast<AccompanyState*>(ctx->getRobot()->getState()) != nullptr;
         RCLCPP_DEBUG(rclcpp::get_logger("BT - AccompanyRoutine"), "IsAccompany: %d (arrived: %d)", isAccompany, isArrived);
         if (isAccompany && isArrived) {
             return BT::NodeStatus::SUCCESS;
