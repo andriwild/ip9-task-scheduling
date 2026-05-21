@@ -56,6 +56,8 @@ protected:
     QComboBox* m_arrivalDistribution;
     QComboBox* m_departureDistribution;
     QDoubleSpinBox* m_appointmentDuration;
+    QTimeEdit* m_simStartTime;
+    QTimeEdit* m_simEndTime;
     QLineEdit* m_dockLocation;
     QLineEdit* m_peopleSpawnLocation;
     QDoubleSpinBox* m_personDetectionRange;

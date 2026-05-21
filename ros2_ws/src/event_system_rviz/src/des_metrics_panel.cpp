@@ -12,16 +12,21 @@ namespace des_metrics_panel {
 DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     auto mainLayout = new QVBoxLayout(this);
 
+    // Pie chart visualises scheduled missions only — one slice per terminal
+    // state. Slice indices follow the order below.
     m_missionSeries = new QtCharts::QPieSeries();
     m_missionSeries->setHoleSize(0.35);
     m_missionSeries->append("On Time", 1);
     m_missionSeries->append("Late", 1);
     m_missionSeries->append("Failed", 1);
+    m_missionSeries->append("Cancelled", 1);
+    m_missionSeries->append("Rejected", 1);
 
     m_missionSeries->slices().at(0)->setColor(Qt::green);
-    m_missionSeries->slices().at(0)->setLabelVisible(true);
     m_missionSeries->slices().at(1)->setColor(QColor(255, 165, 0));
     m_missionSeries->slices().at(2)->setColor(Qt::red);
+    m_missionSeries->slices().at(3)->setColor(QColor(150, 150, 150));
+    m_missionSeries->slices().at(4)->setColor(QColor(140, 80, 160));
 
     auto chart = new QtCharts::QChart();
     chart->addSeries(m_missionSeries);
@@ -40,7 +45,7 @@ DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     grid->addWidget(new QLabel("<b>Robot State:</b>"), 0, 0);
     grid->addWidget(m_lblRobotState, 1, 0);
 
-    m_lblMissionStats = new QLabel("Total: 0\nOn Time: 0\nLate: 0\nFailed: 0\nCancelled: 0\nRejected: 0");
+    m_lblMissionStats = new QLabel("Background: 0/0 (—)\nInterrupt: 0");
     grid->addWidget(new QLabel("<b>Missions:</b>"), 0, 1);
     grid->addWidget(m_lblMissionStats, 1, 1);
 
@@ -91,16 +96,17 @@ void DesMetricsPanel::onReset(const event_system_msgs::msg::TimelineReset::Share
 }
 
 void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsReport::SharedPtr msg) {
-    // Indices: 0=OnTime, 1=Late, 2=Failed
-    m_missionSeries->slices().at(0)->setValue(msg->missions_on_time);
-    m_missionSeries->slices().at(0)->setLabel(QString("On Time: %1").arg(msg->missions_on_time));
-
-    m_missionSeries->slices().at(1)->setValue(msg->missions_late);
-    m_missionSeries->slices().at(1)->setLabel(QString("Late: %1").arg(msg->missions_late));
-
-    int notSuccess = msg->missions_failed + msg->missions_cancelled + msg->missions_rejected;
-    m_missionSeries->slices().at(2)->setValue(notSuccess);  // Merging for "Not Success" logic
-    m_missionSeries->slices().at(2)->setLabel(QString("Failed/Rejected: %1").arg(notSuccess));
+    // Pie chart — one slice per scheduled mission terminal state.
+    auto setSlice = [&](int idx, const char* label, int value) {
+        m_missionSeries->slices().at(idx)->setValue(value);
+        m_missionSeries->slices().at(idx)->setLabel(QString("%1: %2").arg(label).arg(value));
+        m_missionSeries->slices().at(idx)->setLabelVisible(value > 0);
+    };
+    setSlice(0, "On Time",   msg->scheduled_on_time);
+    setSlice(1, "Late",      msg->scheduled_late);
+    setSlice(2, "Failed",    msg->scheduled_failed);
+    setSlice(3, "Cancelled", msg->scheduled_cancelled);
+    setSlice(4, "Rejected",  msg->scheduled_rejected);
 
     QString stateText = QString("Idle: %1\nMoving: %2\nSearching: %3\nAccompany: %4\nCharging: %5")
                             .arg(fmtTime(msg->idle_time))
@@ -110,13 +116,14 @@ void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsRepor
                             .arg(fmtTime(msg->charging_time));
     m_lblRobotState->setText(stateText);
 
-    QString missionText = QString("Total: %1\nOn Time: %2\nLate: %3\nFailed: %4\nCancelled: %5\nRejected: %6")
-                              .arg(msg->total_missions)
-                              .arg(msg->missions_on_time)
-                              .arg(msg->missions_late)
-                              .arg(msg->missions_failed)
-                              .arg(msg->missions_cancelled)
-                              .arg(msg->missions_rejected);
+    const QString bgPercent = msg->background_total > 0
+        ? QString::number(100.0 * msg->background_completed / msg->background_total, 'f', 0) + "%"
+        : "—";
+    QString missionText = QString("Background: %1/%2 (%3)\nInterrupt: %4")
+                              .arg(msg->background_completed)
+                              .arg(msg->background_total)
+                              .arg(bgPercent)
+                              .arg(msg->interrupt_total);
     m_lblMissionStats->setText(missionText);
 
     QString perfText = QString("Avg Early: %1s\nAvg Late: %2s")

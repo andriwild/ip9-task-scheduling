@@ -75,22 +75,25 @@ inline QColor getEventColor(des::EventType type) {
 }
 
 
-inline RobotStateMeta getMeta(int type) {
-    switch (static_cast<des::RobotStateType>(type)) {
+// Look up rendering metadata. `name` (plugin-supplied) wins when set so each
+// mission flavour stays distinct on the timeline; the structural category is
+// the fallback when no name is known (e.g. legacy/unknown messages).
+// Keep this palette in sync with des_swimlane_panel.cpp::stateColor.
+inline RobotStateMeta getMeta(int category, const std::string& name = "") {
+    if (name == "search")     return {4, QColor(255, 100, 100), "Searching"};
+    if (name == "conversate") return {5, QColor(180, 130, 220), "Conversation"};
+    if (name == "accompany")  return {2, QColor(100, 180, 255), "Accompany"};
+    if (name == "clean")      return {7, QColor(240, 150, 200), "Cleaning"};
+    if (name == "acquire")    return {8, QColor(220, 180, 100), "Acquiring"};
+    switch (static_cast<des::RobotStateType>(category)) {
         case des::RobotStateType::IDLE:
             return {0, QColor(200, 200, 200), "Idle"};
-        case des::RobotStateType::SEARCHING:
-            return {4, QColor(255, 100, 100), "Searching"};
-        case des::RobotStateType::CONVERSATE:
-            return {5, QColor(180, 130, 220), "Conversation"};
-        case des::RobotStateType::ACCOMPANY:
-            return {2, QColor(100, 180, 255), "Accompany"};
-        // case des::RobotStateType::MOVING:
-        //     return {1, QColor(80, 200, 120), "Moving"};
         case des::RobotStateType::CHARGING:
             return {3, QColor(255, 210, 50), "Charging"};
         case des::RobotStateType::RETURNING:
             return {6, QColor(120, 200, 160), "Returning"};
+        case des::RobotStateType::MISSION:
+            return {9, QColor(170, 170, 220), "Mission"};
         default: return {-1, Qt::gray, "Unknown"};
     }
 }

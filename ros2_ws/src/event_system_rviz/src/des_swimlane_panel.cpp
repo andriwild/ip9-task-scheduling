@@ -77,17 +77,23 @@ QColor laneBg(int row) {
     return (row % 2 == 0) ? QColor(245, 245, 248) : QColor(232, 234, 238);
 }
 
-// Colors aligned with event_system_rviz/timeline/timeline_types.hpp (DesTimelinePanel)
-QColor stateColor(quint8 s) {
+// Keep this palette in sync with event_system_rviz/timeline/timeline_types.hpp
+// (DesTimelinePanel) so swimlane and old timeline render the same colors.
+QColor stateColor(quint8 category, const QString& name) {
     using SC = event_system_msgs::msg::TimelineStateChange;
-    switch (s) {
-        case SC::IDLE:       return QColor(200, 200, 200);
-        case SC::SEARCHING:  return QColor(255, 100, 100);
-        case SC::CONVERSATE: return QColor(180, 130, 220);
-        case SC::ACCOMPANY:  return QColor(100, 180, 255);
-        case SC::CHARGING:   return QColor(255, 210, 50);
-        case SC::RETURNING:  return QColor(120, 200, 160);
-        default:             return Qt::gray;
+    // Color by plugin-supplied name first so per-mission flavours stay
+    // distinct on the timeline; fall back to the structural category.
+    if (name == "search")     return QColor(255, 100, 100);
+    if (name == "conversate") return QColor(180, 130, 220);
+    if (name == "accompany")  return QColor(100, 180, 255);
+    if (name == "clean")      return QColor(240, 150, 200);
+    if (name == "acquire")    return QColor(220, 180, 100);
+    switch (category) {
+        case SC::IDLE:      return QColor(200, 200, 200);
+        case SC::CHARGING:  return QColor(255, 210, 50);
+        case SC::RETURNING: return QColor(120, 200, 160);
+        case SC::MISSION:   return QColor(170, 170, 220);  // unknown plugin
+        default:            return Qt::gray;
     }
 }
 
@@ -654,7 +660,7 @@ void DesSwimlanePanel::onEvent(const event_system_msgs::msg::TimelineEvent::Shar
 }
 
 void DesSwimlanePanel::onStateChange(const event_system_msgs::msg::TimelineStateChange::SharedPtr msg) {
-    m_states.push_back({ msg->time, msg->state, msg->soc });
+    m_states.push_back({ msg->time, msg->state, QString::fromStdString(msg->name), msg->soc });
     m_tMin = std::min(m_tMin, msg->time);
     m_tMax = std::max(m_tMax, msg->time);
     scheduleRedraw();
@@ -752,11 +758,9 @@ QString DesSwimlanePanel::stateName(quint8 s) {
     using SC = event_system_msgs::msg::TimelineStateChange;
     switch (s) {
         case SC::IDLE:       return "Idle";
-        case SC::ACCOMPANY:  return "Accompany";
-        case SC::SEARCHING:  return "Searching";
         case SC::CHARGING:   return "Charging";
-        case SC::CONVERSATE: return "Conversate";
         case SC::RETURNING:  return "Returning";
+        case SC::MISSION:    return "Mission";
         default:             return "Unknown";
     }
 }
@@ -1227,14 +1231,16 @@ void DesSwimlanePanel::redraw() {
             if (t1 <= t0) continue;
             double x0 = timeToX(t0);
             double x1 = timeToX(t1);
-            QColor c = stateColor(sorted[i].state);
+            QColor c = stateColor(sorted[i].state, sorted[i].name);
             QPen pen(c.darker(140));
             pen.setCosmetic(true);
             auto* seg = m_scene->addRect(x0, lane->yTop + 4, std::max(2.0, x1 - x0), lane->height - 8,
                                          pen, QBrush(c));
             seg->setZValue(2);
+            // Prefer the plugin-supplied name; fall back to the structural category.
+            const QString label = sorted[i].name.isEmpty() ? stateName(sorted[i].state) : sorted[i].name;
             seg->setToolTip(QString("<b>%1</b><br>%2 → %3")
-                                .arg(stateName(sorted[i].state), humanTime(t0), humanTime(t1)));
+                                .arg(label, humanTime(t0), humanTime(t1)));
         }
     }
 
