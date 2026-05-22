@@ -5,6 +5,7 @@
 
 #include "robot_state.h"
 #include "battery.hpp"
+#include "event/base.h"
 
 class Robot {
     std::string m_dockLocation = "IMVS_Dock";
@@ -20,6 +21,12 @@ class Robot {
     bool m_isScanning       = false;
     bool m_chargingRequired = false;
     bool m_isPersonVisible  = false;
+
+    // Event that will complete the robot's current activity (StopDrive while
+    // driving, BatteryFull while charging, End*Event while executing a
+    // mission). Interrupts shift this single event by their duration to pause
+    // the activity — see Context::pushInterrupt.
+    std::weak_ptr<IEvent> m_inFlightEvent;
 
 public:
     bool m_batteryFullEventScheduled = false;
@@ -105,8 +112,12 @@ public:
     }
 
     std::string getIdleLocation() const { return m_dockLocation; }
-    void setIdleLocation(const std::string &location) { 
-        m_dockLocation = location; 
+    void setIdleLocation(const std::string &location) {
+        m_dockLocation = location;
         RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot idle/dock location set to: %s", location.c_str());
     }
+
+    std::weak_ptr<IEvent> inFlight() const { return m_inFlightEvent; }
+    void setInFlight(const std::shared_ptr<IEvent>& event) { m_inFlightEvent = event; }
+    void clearInFlight() { m_inFlightEvent.reset(); }
 };

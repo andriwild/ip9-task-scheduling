@@ -144,3 +144,46 @@ TEST_F(EventQueueTest, ManyEventsOrderedCorrectly) {
         queue.pop();
     }
 }
+
+// --- reschedule ---
+
+TEST_F(EventQueueTest, RescheduleShiftsToLaterTime) {
+    auto a = makeEvent(100);
+    auto b = makeEvent(200);
+    auto c = makeEvent(300);
+    queue.push(a);
+    queue.push(b);
+    queue.push(c);
+
+    // Shift the middle event past c — heap order must reflect that.
+    EXPECT_TRUE(queue.reschedule(b, 400));
+
+    EXPECT_EQ(queue.top()->time, 100); queue.pop();
+    EXPECT_EQ(queue.top()->time, 300); queue.pop();
+    EXPECT_EQ(queue.top()->time, 400);
+}
+
+TEST_F(EventQueueTest, RescheduleShiftsToEarlierTime) {
+    auto a = makeEvent(100);
+    auto b = makeEvent(500);
+    queue.push(a);
+    queue.push(b);
+
+    // Pulling b in front of a must rebuild the heap correctly.
+    EXPECT_TRUE(queue.reschedule(b, 50));
+    EXPECT_EQ(queue.top()->time, 50);
+}
+
+TEST_F(EventQueueTest, RescheduleReturnsFalseForUnknownEvent) {
+    queue.push(makeEvent(100));
+    auto stranger = makeEvent(999);
+    EXPECT_FALSE(queue.reschedule(stranger, 50));
+    EXPECT_EQ(queue.top()->time, 100);
+}
+
+TEST_F(EventQueueTest, RescheduleUpdatesLastEventTime) {
+    auto e = makeEvent(100);
+    queue.push(e);
+    queue.reschedule(e, 999);
+    EXPECT_EQ(queue.getLastEventTime(), 999);
+}

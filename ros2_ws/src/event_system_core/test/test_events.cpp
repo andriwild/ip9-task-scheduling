@@ -66,6 +66,12 @@ public:
         pushedEvents.push_back(event);
     }
 
+    void startActivity(const std::shared_ptr<IEvent>& event) override {
+        // Mock treats startActivity as a regular push — in-flight tracking
+        // isn't exercised by unit-level event tests.
+        pushedEvents.push_back(event);
+    }
+
     void tickBT() override { tickCount++; }
 
     void setBTBlackboard(const std::string& key, const std::string& value) override {

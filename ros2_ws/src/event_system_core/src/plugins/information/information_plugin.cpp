@@ -32,6 +32,10 @@ bool InformationPlugin::isFeasible(const des::IOrder& /*order*/, const ISimConte
     return true;
 }
 
+double InformationPlugin::estimateMissionDuration(const des::IOrder& /*order*/, const ISimContext& /*context*/, const std::string& /*startLocation*/) const {
+    return informationConfig().informationDuration;
+}
+
 void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
     observer.publishMeeting(
         order.id,

@@ -1,68 +1,88 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <optional>
+#include <rclcpp/rclcpp.hpp>
 
 #include "../model/event/base.h"
 #include "../util/types.h"
 
 class EventQueue {
-    SortedEventQueue m_queue;
+    // Vector-backed min-heap (earliest time on top). We don't use
+    // std::priority_queue here because reschedule() needs to find and
+    // re-prioritise an arbitrary entry — only possible with direct vector access.
+    EventList m_heap;
+    EventComparator m_cmp;
     int m_lastEventTime = 0;
 
+    void heapPush(const std::shared_ptr<IEvent>& event) {
+        m_heap.push_back(event);
+        std::push_heap(m_heap.begin(), m_heap.end(), m_cmp);
+        if (event->time > m_lastEventTime) {
+            m_lastEventTime = event->time;
+        }
+    }
 
 public:
     explicit EventQueue() = default;
 
     void extend(SortedEventQueue queue) {
         while(!queue.empty()){
-            auto item = queue.top();
-            if (item->time > m_lastEventTime) {
-                m_lastEventTime = item->time;
-            }
-            m_queue.push(std::move(item));
+            heapPush(queue.top());
             queue.pop();
         }
     }
 
     void extend(std::vector<std::shared_ptr<IEvent>> events) {
         for (const auto& event: events) {
-            if (event->time > m_lastEventTime) {
-                m_lastEventTime = event->time;
-            }
-            m_queue.push(std::move(event));
+            heapPush(event);
         }
     }
 
-    bool empty() const { return m_queue.empty(); }
+    bool empty() const { return m_heap.empty(); }
 
-    [[nodiscard]] size_t size() const { return m_queue.size(); }
+    [[nodiscard]] size_t size() const { return m_heap.size(); }
 
     void push(const std::shared_ptr<IEvent>& event) {
-        if (event->time > m_lastEventTime) {
-            m_lastEventTime = event->time;
-        }
-        m_queue.push(event);
+        heapPush(event);
     }
 
     void pop() {
-        if(!m_queue.empty()) {
-            m_queue.pop();
-
-            if (m_queue.empty()){
-                m_lastEventTime = 0;
-            }
+        if (m_heap.empty()) { return; }
+        std::pop_heap(m_heap.begin(), m_heap.end(), m_cmp);
+        m_heap.pop_back();
+        if (m_heap.empty()) {
+            m_lastEventTime = 0;
         }
     }
 
     std::shared_ptr<IEvent> top() const {
-        return m_queue.empty() ? nullptr : m_queue.top();
+        return m_heap.empty() ? nullptr : m_heap.front();
     }
 
     void clear() {
-        while(!m_queue.empty()) {
-            m_queue.pop();
+        m_heap.clear();
+        m_lastEventTime = 0;
+    }
+
+    // Shifts `event`'s time to `newTime` and re-heaps. Returns false if the
+    // event isn't in the queue (already popped, never pushed). Used by the
+    // interrupt-shift mechanism — the robot's in-flight commitment gets
+    // pushed back by the interrupt duration.
+    bool reschedule(const std::shared_ptr<IEvent>& event, int newTime) {
+        auto it = std::find(m_heap.begin(), m_heap.end(), event);
+        if (it == m_heap.end()) { return false; }
+        const int oldTime = (*it)->time;
+        (*it)->time = newTime;
+        std::make_heap(m_heap.begin(), m_heap.end(), m_cmp);
+        if (newTime > m_lastEventTime) {
+            m_lastEventTime = newTime;
         }
+        RCLCPP_DEBUG(rclcpp::get_logger("EventQueue"),
+                     "Reschedule '%s': %d → %d (Δ%+d)",
+                     event->getName().c_str(), oldTime, newTime, newTime - oldTime);
+        return true;
     }
 
     int getLastEventTime() const {
@@ -74,18 +94,14 @@ public:
         return t ? t->time : 0;
     }
 
-    // Earliest queued event matching `type`, or nullptr if none. O(n) — uses
-    // a snapshot since std::priority_queue can't be iterated.
+    // Earliest queued event matching `type`, or nullptr if none. O(n).
     std::shared_ptr<IEvent> nextEvent(des::EventType type) const {
-        auto snapshot = m_queue;
-        while (!snapshot.empty()) {
-            const auto& e = snapshot.top();
-            if (e->getType() == type) {
-                return e;
-            }
-            snapshot.pop();
+        std::shared_ptr<IEvent> best;
+        for (const auto& e : m_heap) {
+            if (e->getType() != type) { continue; }
+            if (!best || e->time < best->time) { best = e; }
         }
-        return nullptr;
+        return best;
     }
 
     // Time of the earliest queued event matching `type`. nullopt = none.
@@ -103,11 +119,11 @@ public:
     }
 
     void print() const {
-        auto queue = m_queue;
-        while (!queue.empty()) {
-            std::cout << queue.top()->time  << ": " << static_cast<int>(queue.top()->getType()) << " - " << queue.top()->getName() << std::endl;
-            queue.pop();
+        auto copy = m_heap;
+        std::sort(copy.begin(), copy.end(),
+                  [](const auto& a, const auto& b) { return a->time < b->time; });
+        for (const auto& e : copy) {
+            std::cout << e->time << ": " << static_cast<int>(e->getType()) << " - " << e->getName() << std::endl;
         }
     }
-
 };

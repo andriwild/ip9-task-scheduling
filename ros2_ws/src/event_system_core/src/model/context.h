@@ -74,6 +74,11 @@ public:
         m_queue.push(event);
     }
 
+    void startActivity(const std::shared_ptr<IEvent>& endEvent) override {
+        m_robot->setInFlight(endEvent);
+        m_queue.push(endEvent);
+    }
+
     void extendEvents(const SortedEventQueue& events) {
         m_queue.extend(events);
     }
@@ -133,7 +138,14 @@ public:
         m_missions.setCurrent(orderPtr);
     }
 
+    // Returns the "active" order — the interrupt at the top of the stack when
+    // one is running, otherwise the main mission. Plugin BT-nodes and events
+    // implicitly target whatever this returns (IsActiveOrderType, onMissionEnd, etc.),
+    // so during an interrupt they correctly operate on the interrupt.
     des::OrderPtr getOrderPtr() const override {
+        if (auto interrupt = m_missions.activeInterrupt()) {
+            return interrupt;
+        }
         return m_missions.getCurrent();
     }
 
@@ -258,19 +270,45 @@ public:
     double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
 
 
+    // Interrupts run as a discrete time slice inside the simulation: the
+    // robot's currently committed activity-end event (if any) is pushed back
+    // by the interrupt's duration, so the interrupted activity resumes
+    // naturally after the interrupt completes. RobotState is not snapshotted —
+    // interrupt plugins must not mutate it (BT-only orchestration).
+    // Energy during the interrupt still bills the pre-interrupt RobotState;
+    // acceptable for short interrupts (~30s), TODO for longer ones.
     void pushInterrupt(const des::OrderPtr& order) override {
-        auto savedState = m_robot->getState()->clone();
-        m_missions.pushInterrupt(order, std::move(savedState));
+        m_missions.pushInterrupt(order);
+        const auto& plugin = OrderRegistry::instance().get(order->type);
+        const int duration = static_cast<int>(plugin.estimateMissionDuration(*order, *this, m_robot->getLocation()));
+
+        if (auto e = m_robot->inFlight().lock()) {
+            const int oldTime = e->time;
+            const int newTime = oldTime + duration;
+            m_queue.reschedule(e, newTime);
+            RCLCPP_INFO(rclcpp::get_logger("Interrupt"),
+                        "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d",
+                        order->id, order->type.c_str(), duration, m_currentTime,
+                        e->getName().c_str(), oldTime, newTime);
+        } else {
+            RCLCPP_INFO(rclcpp::get_logger("Interrupt"),
+                        "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift",
+                        order->id, order->type.c_str(), duration, m_currentTime);
+        }
         notifyRobotStateChanged();
     }
 
     void popInterrupt(const des::OrderPtr& completedOrder) override {
-        auto restoredState = m_missions.popInterrupt(completedOrder);
-        if (restoredState) {
-            // Last interrupt — restore pre-interrupt state.
-            changeRobotState(std::move(restoredState));
+        const bool wasLast = m_missions.popInterrupt(completedOrder);
+        if (wasLast) {
+            RCLCPP_INFO(rclcpp::get_logger("Interrupt"),
+                        "Pop %d (type=%s) at t=%d — stack empty, resuming main mission",
+                        completedOrder->id, completedOrder->type.c_str(), m_currentTime);
+        } else {
+            RCLCPP_INFO(rclcpp::get_logger("Interrupt"),
+                        "Pop %d (type=%s) at t=%d — nested interrupt still active",
+                        completedOrder->id, completedOrder->type.c_str(), m_currentTime);
         }
-        // Otherwise: more interrupts active, RobotState unchanged.
     }
 
     bool hasActiveInterrupt() const override {

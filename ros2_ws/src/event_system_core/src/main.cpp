@@ -67,6 +67,9 @@ int main(const int argc, char *argv[]) {
                         app->m_eventQueue.pop();
                         app->m_ctx->advanceTime(e->time);
                         e->execute(*app->m_ctx);
+                        if (app->m_ctx->getRobot()->inFlight().lock() == e) {
+                            app->m_ctx->getRobot()->clearInFlight();
+                        }
                         RCLCPP_INFO(rclcpp::get_logger("main"), "-> [STEP] Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     } else {
                         RCLCPP_DEBUG(rclcpp::get_logger("main"), "Step: Event Queue empty.");
@@ -92,6 +95,11 @@ int main(const int argc, char *argv[]) {
                     app->m_eventQueue.pop();
                     app->m_ctx->advanceTime(e->time);
                     e->execute(*app->m_ctx);
+                    // A fired activity-end event releases the robot's commitment so
+                    // future interrupts have nothing to shift until the next startActivity.
+                    if (app->m_ctx->getRobot()->inFlight().lock() == e) {
+                        app->m_ctx->getRobot()->clearInFlight();
+                    }
                     RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     if (e->getType() == des::EventType::SIMULATION_END) {
                         // SimulationEnd is the hard stop. Any siblings at the same

@@ -28,7 +28,7 @@ public:
             auto person = ctx.getPersonByName(personName);
             person->busy = true;
         } else if (this->m_remainigSearchTime > 0) {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, m_order, personPresent, 0));
+            ctx.startActivity(std::make_shared<ScanComplete>(this->time + this->m_remainigSearchTime, m_order, personPresent, 0));
             return;
         }
         ctx.notifyEvent(*this);

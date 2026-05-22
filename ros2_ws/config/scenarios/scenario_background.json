@@ -25,6 +25,16 @@
             "description": "XBox Gamen"
         }
     ],
+
+    "ad_hoc_generators": [
+        {
+            "type": "information",
+            "distribution": "exponential",
+            "rate_per_hour": 1,
+            "active_window": { "from": 28800, "to": 64800 },
+            "params": { "description": "Frage zum nächsten Zug" }
+        }
+    ],
     "background": [
         { "id": 100, "type": "data_acquisition", "roomName": "5.2B01",            "description": "Foto 5.2B01" },
         { "id": 101, "type": "clean",            "roomName": "5.2B13",            "description": "Reinigen 5.2B13" },

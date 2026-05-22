@@ -19,9 +19,9 @@ public:
         assert(!ctx.getRobot()->isDriving());
         auto eventTime = this->time + rndAccompanyConversationTime(ctx.rng());
         if (rnd::uni(ctx.rng()) < accompanyConfig().conversationProbability) {
-            ctx.pushEvent(std::make_shared<SuccessFoundPersonConversationCompleteEvent>(eventTime));
+            ctx.startActivity(std::make_shared<SuccessFoundPersonConversationCompleteEvent>(eventTime));
         } else {
-            ctx.pushEvent(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
+            ctx.startActivity(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
         }
         ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
         ctx.notifyEvent(*this);

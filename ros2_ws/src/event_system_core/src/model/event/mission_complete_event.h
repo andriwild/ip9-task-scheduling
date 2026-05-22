@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <rclcpp/rclcpp.hpp>
 
 #include "base.h"
 #include "../../plugins/order_registry.h"
@@ -17,9 +18,14 @@ public:
 
     void execute(ISimContext& ctx) override {
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
+        const char* execStr = orderPtr->execution == des::ExecutionMode::INTERRUPT  ? "interrupt"
+                            : orderPtr->execution == des::ExecutionMode::SCHEDULED  ? "scheduled"
+                            :                                                          "background";
+        RCLCPP_INFO(rclcpp::get_logger("MissionComplete"),
+                    "id=%d type=%s state=%s exec=%s — onMissionEnd",
+                    orderPtr->id, orderPtr->type.c_str(),
+                    des::missionStateStr(orderPtr->state).c_str(), execStr);
         plugin.onMissionEnd(ctx, *orderPtr);
-        // popInterrupt is done in EndXxxEvent for INTERRUPT plugins so the subsequent
-        // tickBT sees the correct m_current.
         if (orderPtr->execution != des::ExecutionMode::INTERRUPT) {
             ctx.completeOrder(this->orderPtr);
         }

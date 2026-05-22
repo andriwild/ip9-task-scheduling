@@ -29,7 +29,7 @@ public:
         const int cleanTime     = static_cast<int>(steps * (2.0 * broomSide / ctx.getConfig()->robotSpeed));
         assert(cleanTime > 0);
 
-        ctx.pushEvent(std::make_shared<EndCleanEvent>(this->time + cleanTime, m_order));
+        ctx.startActivity(std::make_shared<EndCleanEvent>(this->time + cleanTime, m_order));
     }
 
     std::string getName() const override { return "Start Clean"; }

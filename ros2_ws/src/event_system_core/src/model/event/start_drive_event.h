@@ -22,10 +22,10 @@ public:
         ctx.getRobot()->setCharging(false);
 
         if (ctx.getRobot()->getLocation() == location) {
-            ctx.pushEvent(std::make_shared<StopDriveEvent>(time, location, 0));
+            ctx.startActivity(std::make_shared<StopDriveEvent>(time, location, 0));
         }
         auto [duration, distance] = ctx.scheduleArrival(location);
-        ctx.pushEvent(std::make_shared<StopDriveEvent>(static_cast<int>(time + duration), location, distance));
+        ctx.startActivity(std::make_shared<StopDriveEvent>(static_cast<int>(time + duration), location, distance));
         ctx.getRobot()->setDriving(true);
         ctx.getRobot()->setTargetLocation(location);
 

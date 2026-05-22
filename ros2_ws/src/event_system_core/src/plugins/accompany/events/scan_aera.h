@@ -33,9 +33,9 @@ public:
         const int foundAt = rnd::uni(ctx.rng(), 1, scanTime);
 
         if (personPresent) {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + foundAt, m_order, personPresent, scanTime - foundAt));
+            ctx.startActivity(std::make_shared<ScanComplete>(this->time + foundAt, m_order, personPresent, scanTime - foundAt));
         } else {
-            ctx.pushEvent(std::make_shared<ScanComplete>(this->time + scanTime, m_order, personPresent, 0));
+            ctx.startActivity(std::make_shared<ScanComplete>(this->time + scanTime, m_order, personPresent, 0));
         }
     }
 

@@ -117,3 +117,49 @@ TEST_F(MissionManagerTest, ResetThenReuseWorks) {
     manager.addPending(makeOrder(100, "AnotherPerson"));
     EXPECT_TRUE(manager.hasPending());
 }
+
+// --- Interrupts ---
+
+TEST_F(MissionManagerTest, InitialHasNoInterrupt) {
+    EXPECT_FALSE(manager.hasInterrupt());
+    EXPECT_EQ(manager.activeInterrupt(), nullptr);
+}
+
+TEST_F(MissionManagerTest, PushInterruptDoesNotOverwriteCurrent) {
+    auto main = makeOrder(1, "Max");
+    auto interrupt = makeOrder(99, "Info");
+    manager.setCurrent(main);
+
+    manager.pushInterrupt(interrupt);
+
+    EXPECT_TRUE(manager.hasInterrupt());
+    EXPECT_EQ(manager.activeInterrupt(), interrupt);
+    // m_current keeps the suspended mission — no snapshot/restore dance.
+    EXPECT_EQ(manager.getCurrent(), main);
+}
+
+TEST_F(MissionManagerTest, PopLastInterruptReturnsTrue) {
+    auto interrupt = makeOrder(99, "Info");
+    manager.pushInterrupt(interrupt);
+
+    EXPECT_TRUE(manager.popInterrupt(interrupt));
+    EXPECT_FALSE(manager.hasInterrupt());
+}
+
+TEST_F(MissionManagerTest, PopNonLastInterruptReturnsFalse) {
+    auto i1 = makeOrder(91, "Info1");
+    auto i2 = makeOrder(92, "Info2");
+    manager.pushInterrupt(i1);
+    manager.pushInterrupt(i2);
+
+    EXPECT_FALSE(manager.popInterrupt(i2));
+    EXPECT_TRUE(manager.hasInterrupt());
+    EXPECT_EQ(manager.activeInterrupt(), i1);
+    EXPECT_TRUE(manager.popInterrupt(i1));
+}
+
+TEST_F(MissionManagerTest, ResetClearsInterrupts) {
+    manager.pushInterrupt(makeOrder(99, "Info"));
+    manager.reset();
+    EXPECT_FALSE(manager.hasInterrupt());
+}

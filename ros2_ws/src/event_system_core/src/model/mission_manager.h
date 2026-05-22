@@ -25,9 +25,6 @@ class MissionManager {
     std::vector<des::OrderPtr> m_background;
     std::deque<des::OrderPtr> m_interrupts;
 
-    des::OrderPtr m_suspendedOrder = nullptr;
-    std::unique_ptr<RobotState> m_suspendedState;
-
 public:
     void setCurrent(const des::OrderPtr order) {
         m_current = order;
@@ -102,6 +99,8 @@ public:
     // First-feasible background mission. Two acceptance paths:
     //   direct          — post-BG battery covers next-scheduled reserve.
     //   charge-fallback — dock window before next dispatch refills the deficit.
+    //
+    //   TODO: refactor
     des::OrderPtr acceptFeasibleBackground(
         const ISimContext& ctx,
         double safetyMarginWh = kBackgroundEnergySafetyMarginWh
@@ -182,36 +181,23 @@ public:
         return !m_interrupts.empty();
     }
 
-    // Only the first push snapshots; nested pushes reuse it (RobotState
-    // doesn't change between interrupts).
-    void pushInterrupt(des::OrderPtr order, std::unique_ptr<RobotState> state) {
-        if (m_interrupts.empty()) {
-            m_suspendedOrder = m_current;
-            m_suspendedState = std::move(state);
-        }
+    // The previously running mission stays in m_current; the BT-routes via
+    // hasInterrupt() to the interrupt subtree without overwriting m_current.
+    void pushInterrupt(const des::OrderPtr& order) {
         m_interrupts.push_back(order);
-        m_current = std::move(order);
     }
 
-    // Returns the RobotState to restore only when the last interrupt pops.
-    // Don't resurrect a suspended order that completed mid-interrupt.
-    std::unique_ptr<RobotState> popInterrupt(const des::OrderPtr& completedOrder) {
+    // Returns true if this was the last interrupt on the stack.
+    bool popInterrupt(const des::OrderPtr& completedOrder) {
         auto it = std::find(m_interrupts.begin(), m_interrupts.end(), completedOrder);
         if (it != m_interrupts.end()) {
             m_interrupts.erase(it);
         }
+        return m_interrupts.empty();
+    }
 
-        if (m_interrupts.empty()) {
-            if (m_suspendedOrder && m_suspendedOrder->state != des::MissionState::COMPLETED) {
-                m_current = m_suspendedOrder;
-            } else {
-                m_current = nullptr;
-            }
-            m_suspendedOrder = nullptr;
-            return std::move(m_suspendedState);
-        }
-        m_current = m_interrupts.back();
-        return nullptr;
+    des::OrderPtr activeInterrupt() const {
+        return m_interrupts.empty() ? nullptr : m_interrupts.back();
     }
 
     void reset() {
@@ -219,7 +205,5 @@ public:
         m_pending = std::queue<des::OrderPtr>();
         m_background = std::vector<des::OrderPtr>();
         m_interrupts.clear();
-        m_suspendedOrder = nullptr;
-        m_suspendedState.reset();
     }
 };

@@ -25,7 +25,7 @@
         {
             "type": "information",
             "distribution": "exponential",
-            "rate_per_hour": 5,
+            "rate_per_hour": 1,
             "active_window": { "from": 28800, "to": 64800 },
             "params": { "description": "Frage zum nächsten Zug" }
         }

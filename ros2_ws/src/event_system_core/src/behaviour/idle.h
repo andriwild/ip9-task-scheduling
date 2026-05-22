@@ -53,7 +53,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
-            RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "Docking check: already at dock");
+            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Docking: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
         // If the robot is already driving back, do nothing — the in-flight StopDriveEvent
@@ -61,7 +61,9 @@ public:
         if (!ctx->getRobot()->isDriving()) {
             ctx->changeRobotState(std::make_unique<ReturningState>());
             ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
-            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock, start driving to dock");
+            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
+        } else {
+            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Already driving back to dock");
         }
         return BT::NodeStatus::FAILURE;
     }

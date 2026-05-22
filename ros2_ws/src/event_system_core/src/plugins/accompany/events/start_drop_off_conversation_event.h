@@ -19,9 +19,9 @@ public:
         assert(!ctx.getRobot()->isDriving());
         double eventTime = this->time + rndAccompanyConversationTime(ctx.rng());
         if (rnd::uni(ctx.rng()) < accompanyConfig().conversationProbability) {
-            ctx.pushEvent(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
+            ctx.startActivity(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
         } else {
-            ctx.pushEvent(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));
+            ctx.startActivity(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));
         }
         ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
         ctx.notifyEvent(*this);

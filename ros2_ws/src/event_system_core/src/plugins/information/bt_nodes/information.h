@@ -28,12 +28,12 @@ private:
         if (!order) return BT::NodeStatus::FAILURE;
 
         if (order->state == des::MissionState::PENDING) {
-            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: start (order id=%d)", order->id);
+            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: start (order id=%d type=%s)", order->id, order->type.c_str());
             ctx->pushEvent(std::make_shared<StartInformationEvent>(ctx->getTime(), order));
             return BT::NodeStatus::RUNNING;
         }
         if (order->state == des::MissionState::COMPLETED) {
-            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: done (order id=%d)", order->id);
+            RCLCPP_INFO(rclcpp::get_logger("BT - Information"), "ExecuteInformation: done (order id=%d type=%s)", order->id, order->type.c_str());
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;

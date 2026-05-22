@@ -16,7 +16,7 @@ public:
         m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
         const int duration = static_cast<int>(dataAcquisitionConfig().dataAcquisitionDuration);
-        ctx.pushEvent(std::make_shared<EndAcquisitionEvent>(this->time + duration, m_order));
+        ctx.startActivity(std::make_shared<EndAcquisitionEvent>(this->time + duration, m_order));
     }
 
     std::string getName() const override { return "Start Acquisition"; }
