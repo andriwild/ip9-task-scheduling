@@ -274,9 +274,9 @@ public:
     double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
 
 
-    void pushInterrupt(const des::OrderPtr& order) override {
+    bool pushInterrupt(const des::OrderPtr& order) override {
         if (!m_missionManager.pushInterrupt(order)) {
-            return;
+            return false;
         }
 
         // Snapshots robot state, shifts the in-flight activity-end event by the interrupt's duration
@@ -310,6 +310,7 @@ public:
 
         m_interruptSnapshot = std::move(snap);
         plugin.onMissionStart(*this, *order);
+        return true;
     }
 
     void popInterrupt(const des::OrderPtr& completedOrder) override {

@@ -4,6 +4,7 @@
 #include "model/i_sim_context.h"
 #include "plugins/i_order.h"
 #include "plugins/information/information_plugin.h"
+#include "util/rnd.h"
 #include "end_information_event.h"
 
 class StartInformationEvent final : public IEvent {
@@ -15,7 +16,9 @@ public:
     void execute(ISimContext& ctx) override {
         m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
-        const int duration = static_cast<int>(informationConfig().informationDuration);
+        const auto& cfg = informationConfig();
+        const double sampled = rnd::normal(ctx.rng(), cfg.informationDuration, cfg.informationDurationStd);
+        const int duration = static_cast<int>(sampled < 1.0 ? 1.0 : sampled);
         ctx.pushEvent(std::make_shared<EndInformationEvent>(this->time + duration, m_order));
     }
 

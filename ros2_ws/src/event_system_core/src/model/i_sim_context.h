@@ -94,7 +94,7 @@ public:
     virtual std::mt19937& rng() const = 0;
 
     // Interrupts
-    virtual void pushInterrupt(const des::OrderPtr& order) = 0;
+    virtual bool pushInterrupt(const des::OrderPtr& order) = 0;
     virtual void popInterrupt(const des::OrderPtr& completedOrder) = 0;
     virtual bool hasActiveInterrupt() const = 0;
 };

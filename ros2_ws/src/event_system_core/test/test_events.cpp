@@ -102,7 +102,7 @@ public:
 
     void notifyBatteryChanged() const override {}
 
-    void pushInterrupt(const des::OrderPtr& /*order*/) override {}
+    bool pushInterrupt(const des::OrderPtr& /*order*/) override { return true; }
     void popInterrupt(const des::OrderPtr& /*completedOrder*/) override {}
     bool hasActiveInterrupt() const override { return false; }
 

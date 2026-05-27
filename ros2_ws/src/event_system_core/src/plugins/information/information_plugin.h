@@ -12,7 +12,8 @@ class ISimContext;
 class RosObserver;
 
 struct InformationConfig {
-    double informationDuration = 30.0;
+    double informationDuration = 60.0;
+    double informationDurationStd = 10.0;
 };
 
 class InformationPlugin : public IOrderPlugin {
@@ -42,10 +43,14 @@ public:
     const InformationConfig& config() const { return m_config; }
 
     void loadConfig(const nlohmann::json& j) override {
-        m_config.informationDuration = j.value("information_duration", m_config.informationDuration);
+        m_config.informationDuration    = j.value("information_duration",     m_config.informationDuration);
+        m_config.informationDurationStd = j.value("information_duration_std", m_config.informationDurationStd);
     }
     nlohmann::json saveConfig() const override {
-        return { {"information_duration", m_config.informationDuration} };
+        return {
+            {"information_duration",     m_config.informationDuration},
+            {"information_duration_std", m_config.informationDurationStd},
+        };
     }
 };
 

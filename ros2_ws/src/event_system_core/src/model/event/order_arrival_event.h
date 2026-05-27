@@ -4,6 +4,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "base.h"
+#include "mission_complete_event.h"
 #include "../i_sim_context.h"
 #include "../../plugins/i_order.h"
 #include "../../util/types.h"
@@ -23,7 +24,10 @@ public:
                 ctx.addPendingMission(m_order);
                 break;
             case des::ExecutionMode::INTERRUPT:
-                ctx.pushInterrupt(m_order);
+                if (!ctx.pushInterrupt(m_order)) {
+                    m_order->state = des::MissionState::REJECTED;
+                    ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
+                }
                 break;
         }
         ctx.notifyEvent(*this);
