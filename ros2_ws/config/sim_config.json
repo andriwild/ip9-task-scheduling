@@ -6,7 +6,7 @@
         "conversation_duration_std": 14.0,
         "conversation_probability": 1.0
     },
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/scenario_background.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/mixed.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -35,7 +35,7 @@
     "people_spawn_location": "IMVS_Entrance",
     "person_detection_range": 2.5,
     "robot_speed": 0.30000001192092896,
-    "sim_end_time": 75540,
+    "sim_end_time": 68400,
     "sim_start_time": 25200,
     "timeBuffer": 0.0
 }

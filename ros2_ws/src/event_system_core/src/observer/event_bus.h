@@ -5,6 +5,7 @@
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "observer.h"
 
 class EventBus {
@@ -12,7 +13,7 @@ class EventBus {
 
 public:
     void addObserver(const std::shared_ptr<IObserver>& observer) {
-        RCLCPP_INFO(rclcpp::get_logger("EventBus"), "Observer added: %s", observer->getName().c_str());
+        DES_LOG_INFO(rclcpp::get_logger("des.event_bus"), "Observer added: %s", observer->getName().c_str());
         m_observers.emplace_back(observer);
     }
 

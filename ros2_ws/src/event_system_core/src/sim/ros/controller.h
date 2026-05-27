@@ -50,9 +50,6 @@ private:
         case SystemState::Request::RESET:
             response->message = "Reset";
             break;
-        case SystemState::Request::STEP:
-            response->message = "Step";
-            break;
         default:
             response->success = false;
             response->message = "failed";

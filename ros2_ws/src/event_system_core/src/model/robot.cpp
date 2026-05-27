@@ -1,4 +1,5 @@
 #include "robot.h"
+#include "../util/log.h"
 #include "robot_state.h"
 
 void Robot::changeState(std::unique_ptr<RobotState> newState) {
@@ -9,12 +10,11 @@ void Robot::changeState(std::unique_ptr<RobotState> newState) {
 
 bool Robot::isBusy() const {
     const auto type = m_state->getType();
-    // Anything that isn't IDLE is "busy" in the sense that it shouldn't be interrupted by a background mission
     return type != des::RobotStateType::IDLE || isDriving();
 }
 
 void Robot::updateConfig(const des::SimConfig& config) {
-    RCLCPP_INFO(rclcpp::get_logger("Robot"), "Robot: Updating configuration");
+    DES_LOG_INFO(rclcpp::get_logger("des.robot"), "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);
     m_dockLocation = config.dockLocation;
     m_bat->updateConfig(

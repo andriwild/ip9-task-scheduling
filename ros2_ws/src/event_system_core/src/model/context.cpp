@@ -1,4 +1,5 @@
 #include "context.h"
+#include "../util/log.h"
 
 #include <utility>
 #include "../util/rnd.h"
@@ -20,7 +21,7 @@ SimulationContext::SimulationContext(
     , m_searchAreas(std::move(searchAreas))
 {
     m_robot = std::make_unique<Robot>(m_simConfig);
-    RCLCPP_INFO(rclcpp::get_logger("Context"), "Simulation Context created!");
+    DES_LOG_INFO(rclcpp::get_logger("des.context"), "Simulation Context created!");
 }
 
 Journey SimulationContext::scheduleArrival(const std::string& target) const {
@@ -44,14 +45,16 @@ void SimulationContext::completeOrder(const des::OrderPtr& order) {
     const int deadline = order->deadline.value_or(m_currentTime);
     const int timeDiff = m_currentTime - deadline;
     notifyMissionComplete(order->state, timeDiff, order->execution);
-    if (m_missions.getCurrent() == order) {
-        m_missions.setCurrent(nullptr);
+    if (m_missionManager.getCurrent() == order) {
+        m_missionManager.setCurrent(nullptr);
     }
 }
 
 void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
-    m_missions.reset();
+    des::log::setSimTime(newTime);
+    m_missionManager.reset();
+    m_interruptSnapshot.reset();
     m_personLocations.clear();
     resetRobot();
 }
@@ -66,7 +69,7 @@ des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("Context"), *m_simConfig);
+    DES_LOG_INFO_STREAM(rclcpp::get_logger("des.context"), *m_simConfig);
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {

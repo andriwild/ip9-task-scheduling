@@ -2,12 +2,13 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "i_sim_context.h"
 #include "robot.h"
 
 void IdleState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Idle");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Idle");
     robot.setSpeed(robot.getDriveSpeed());
 }
 void IdleState::exit(Robot& robot) {
@@ -23,7 +24,7 @@ double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
 
 void ReturningState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Returning");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Returning");
     robot.setSpeed(robot.getDriveSpeed());
 }
 void ReturningState::exit(Robot& robot) { RobotState::exit(robot); }
@@ -35,7 +36,7 @@ double ReturningState::getEnergyConsumption(const ISimContext& ctx) const {
 
 void ChargeState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Charge");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Charge");
 }
 void ChargeState::exit(Robot& robot) {
     RobotState::exit(robot);

@@ -138,7 +138,9 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
         if (elevatorIt != p.roomLabels.end()) {
             ctx.setPersonLocation(p.firstName, *elevatorIt);
         }
-        ctx.pushEvent(std::make_shared<PersonDepartureEvent>(p.departureTime, this->person));
+        // Sample can land before now (busy stretch overran scheduled departure) — clamp.
+        const int departAt = std::max(p.departureTime, this->time);
+        ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
     } else {
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
     }

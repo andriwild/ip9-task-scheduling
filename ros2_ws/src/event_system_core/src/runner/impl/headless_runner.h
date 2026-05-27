@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "../../util/log.h"
 #include <queue>
 #include <string>
 #include <vector>
@@ -47,8 +48,8 @@ public:
 
     static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
         rclcpp::init(argc, argv);
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "\n----- Descrete Event Sytem: Headless Mode -----");
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "C++ Version: %ld", __cplusplus);
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "\n----- Descrete Event Sytem: Headless Mode -----");
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
 
         auto runner = std::make_unique<HeadlessRunner>();
         for (int i = 1; i < argc; ++i) {

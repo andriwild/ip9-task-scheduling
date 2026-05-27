@@ -1,6 +1,5 @@
 #pragma once
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -8,6 +7,7 @@
 #include <set>
 #include <vector>
 
+#include "../util/log.h"
 #include "../util/types.h"
 #include "../plugins/order_registry.h"
 #include "../plugins/accompany/accompany_order.h"
@@ -36,7 +36,7 @@ public:
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            std::cout << "Use default appointment config file: " << DEFAULT_ORDER_FILE << std::endl;
+            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Use default appointment config file: %s", DEFAULT_ORDER_FILE.c_str());
             json = getJson(DEFAULT_ORDER_FILE);
             assert(json.has_value());
         }
@@ -75,7 +75,7 @@ public:
     static std::optional<std::vector<InterruptGeneratorConfig>> loadInterruptGenerators(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            std::cout << "No scenario file found at " << filePath << " — skipping ad-hoc generators" << std::endl;
+            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "No scenario file found at %s — skipping ad-hoc generators", filePath.c_str());
             return std::vector<InterruptGeneratorConfig>{};
         }
         if (!json.value().contains("ad_hoc_generators")) {
@@ -128,13 +128,13 @@ public:
                 p.transitionMatrix = item.at("transitionMatrix").get<std::vector<std::vector<double>>>();
 
                 if (p.transitionMatrix.size() != p.roomLabels.size()) {
-                    std::cerr << "Warnung: Matrix-Dimension passt nicht zu roomLabels für " << p.firstName << std::endl;
+                    DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Matrix dimension does not match roomLabels for %s", p.firstName.c_str());
                 }
 
                 employees.push_back(std::make_shared<des::Person>(std::move(p)));
             }
         } catch (const nlohmann::json::exception& e) {
-            std::cerr << "JSON Parsing Error: " << e.what() << std::endl;
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "JSON Parsing Error: %s", e.what());
             return std::nullopt;
         }
 
@@ -187,7 +187,7 @@ public:
             }
             return config;
         } catch (const nlohmann::json::type_error& e) {
-            std::cerr << "Failed to parse sim config json: " << filePath << std::endl;
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Failed to parse sim config json: %s", filePath.c_str());
             return std::nullopt;
         }
     }
@@ -318,7 +318,7 @@ public:
 
         std::ofstream file(filePath);
         if (!file.is_open()) {
-            std::cerr << "Could not write to file: " << filePath << std::endl;
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not write to file: %s", filePath.c_str());
             return false;
         }
         file << std::setw(4) << j << std::endl;
@@ -330,7 +330,7 @@ private:
         // open file
         std::ifstream file(filePath);
         if (!file.is_open()) {
-            std::cerr << "Could not read file from path: " << filePath << std::endl;
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not read file from path: %s", filePath.c_str());
             return std::nullopt;
         }
 
@@ -339,7 +339,7 @@ private:
         try {
             file >> json;
         } catch (const nlohmann::json::parse_error& e) {
-            std::cerr << "Could not parse json file: " << filePath << std::endl;
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not parse json file: %s", filePath.c_str());
             return std::nullopt;
         }
         return json;

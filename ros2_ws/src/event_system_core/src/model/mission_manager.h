@@ -2,12 +2,12 @@
 
 #include <algorithm>
 #include <cassert>
-#include <deque>
 #include <memory>
 #include <optional>
 #include <queue>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "../util/types.h"
 #include "../model/battery.hpp"
 #include "../model/robot.h"
@@ -16,17 +16,21 @@
 #include "../plugins/i_order.h"
 #include "../plugins/order_registry.h"
 
-// Headroom on top of the next-scheduled estimate — absorbs model drift.
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 
 class MissionManager {
     des::OrderPtr m_current = nullptr;
-    std::queue<des::OrderPtr> m_pending;
+    std::queue<des::OrderPtr> m_pending; // scheduled mission dispatches
     std::vector<des::OrderPtr> m_background;
-    std::deque<des::OrderPtr> m_interrupts;
+    des::OrderPtr m_interrupt = nullptr;
 
 public:
     void setCurrent(const des::OrderPtr order) {
+        if (order) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Current mission set: %d (type=%s)", order->id, order->type.c_str());
+        } else if (m_current) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Current mission cleared (was %d)", m_current->id);
+        }
         m_current = order;
     }
 
@@ -36,12 +40,17 @@ public:
 
     void updateState(const des::MissionState& newState) {
         assert(m_current != nullptr);
+        DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"),
+                     "Mission %d (type=%s) state: %s -> %s",
+                     m_current->id, m_current->type.c_str(),
+                     des::missionStateStr(m_current->state).c_str(),
+                     des::missionStateStr(newState).c_str());
         m_current->state = newState;
     }
 
     void addPending(const des::OrderPtr order) {
         m_pending.push(order);
-        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Mission added to pending list - queue size: %zu", m_pending.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Mission added to pending list - queue size: %zu", m_pending.size());
     }
 
     bool hasPending() const {
@@ -57,13 +66,13 @@ public:
         if (m_pending.empty()) { return nullptr; }
         auto appointment = m_pending.front();
         m_pending.pop();
-        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Mission removed from pending list - %zu remaining", m_pending.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Mission removed from pending list - %zu remaining", m_pending.size());
         return appointment;
     }
 
     void addBackground(const des::OrderPtr order) {
         m_background.push_back(order);
-        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Background mission added - list size: %zu", m_background.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Background mission added - list size: %zu", m_background.size());
     }
 
     bool hasBackground() const {
@@ -79,7 +88,7 @@ public:
         if (m_background.empty()) { return nullptr; }
         auto order = m_background.front();
         m_background.erase(m_background.begin());
-        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Background mission popped - %zu remaining", m_background.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Background mission popped - %zu remaining", m_background.size());
         return order;
     }
 
@@ -88,7 +97,7 @@ public:
                                [orderId](const des::OrderPtr& o) { return o && o->id == orderId; });
         if (it == m_background.end()) { return false; }
         m_background.erase(it);
-        RCLCPP_DEBUG(rclcpp::get_logger("MissionManager"), "Background mission %d removed - %zu remaining", orderId, m_background.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission_manager"), "Background mission %d removed - %zu remaining", orderId, m_background.size());
         return true;
     }
 
@@ -117,93 +126,115 @@ public:
         const int now               = ctx.getTime();
         const double netChargeW     = cfg->chargingRate - cfg->energyConsumptionBase;
 
+        // get estimated energy of the next scheduled mission
+        // this energy must be available after a bg mission is executed
         double reservedWh = 0.0;
         if (auto next = ctx.peekNextScheduledOrder()) {
             const auto& nextPlugin = OrderRegistry::instance().get(next->type);
             reservedWh = nextPlugin.estimateMissionEnergy(*next, ctx, dockLoc);
         }
-        const double requiredWh = reservedWh + safetyMarginWh;
+
+        const double requiredWh  = reservedWh + safetyMarginWh;
         const auto nextDispatch  = ctx.getNextScheduledDispatchTime();
         const auto simEndTime    = ctx.getSimulationEndTime();
 
-        struct Verdict { const char* mode; double bgEnergy; double bgDuration; };
+        struct Result { const char* mode; double bgEnergy; double bgDuration; };
 
-        auto evaluate = [&](const des::OrderPtr& candidate) -> std::optional<Verdict> {
+        auto evaluate = [&](const des::OrderPtr& candidate) -> std::optional<Result> {
             const auto& plugin      = OrderRegistry::instance().get(candidate->type);
             const double bgEnergy   = plugin.estimateMissionEnergy(*candidate, ctx, startLoc);
             const double bgDuration = plugin.estimateMissionDuration(*candidate, ctx, startLoc);
+            
+            // remaining energy and time after executing bg mission
             const double postBgWh   = currentWh - bgEnergy;
             const double finishTime = now + bgDuration;
 
+            // check timing constraints (fits the mission into the timing slot)
             const bool fitsSimWindow = !simEndTime || finishTime <= *simEndTime;
             const bool fitsDispatch  = !nextDispatch || finishTime <= *nextDispatch;
             const bool aboveFloor    = postBgWh >= safetyMarginWh;
 
-            if (!fitsSimWindow || !fitsDispatch || !aboveFloor) { return std::nullopt; }
+            if (!fitsSimWindow || !fitsDispatch || !aboveFloor) { 
+                return std::nullopt; 
+            }
 
-            if (postBgWh >= requiredWh) { return Verdict{"direct", bgEnergy, bgDuration}; }
+            if (postBgWh >= requiredWh) { 
+                return Result{"direct", bgEnergy, bgDuration}; 
+            }
 
+            // after executing the bg mission, check if enough time is available to refill the battery before scheduled mission
             if (nextDispatch && netChargeW > 0.0) {
                 const double chargeWindow  = static_cast<double>(*nextDispatch) - finishTime;
                 const double recoverTarget = std::min(requiredWh, capacityWh);
                 const double deficitWh     = recoverTarget - postBgWh;
                 const double chargeNeeded  = (deficitWh * 3600.0) / netChargeW;
-                if (chargeWindow >= chargeNeeded) { return Verdict{"charge-fallback", bgEnergy, bgDuration}; }
+                if (chargeWindow >= chargeNeeded) { return Result{"charge-fallback", bgEnergy, bgDuration}; }
             }
             return std::nullopt;
         };
 
-        std::optional<Verdict> verdict;
+        // simple approach to find first feasible bg mission
+        std::optional<Result> result;
         auto it = std::find_if(m_background.begin(), m_background.end(),
             [&](const des::OrderPtr& c) {
-                verdict = evaluate(c);
-                return verdict.has_value();
+                result = evaluate(c);
+                return result.has_value();
             });
 
         if (it == m_background.end()) {
-            RCLCPP_INFO(rclcpp::get_logger("MissionManager"),
+            DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"),
                         "No feasible background mission (battery=%.1fWh, reserved=%.1fWh, safety=%.1fWh)",
                         currentWh, reservedWh, safetyMarginWh);
             return nullptr;
         }
 
         const auto accepted = *it;
-        RCLCPP_INFO(rclcpp::get_logger("MissionManager"),
+        DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"),
                     "Accept background %d (type=%s, est=%.1fWh, dur=%.0fs, reserve=%.1fWh, battery=%.1fWh, mode=%s)",
                     accepted->id, accepted->type.c_str(),
-                    verdict->bgEnergy, verdict->bgDuration, reservedWh, currentWh, verdict->mode);
+                    result->bgEnergy, result->bgDuration, reservedWh, currentWh, result->mode);
         m_background.erase(it);
         m_current = accepted;
         return accepted;
     }
 
     bool hasInterrupt() const {
-        return !m_interrupts.empty();
+        return m_interrupt != nullptr;
     }
 
-    // The previously running mission stays in m_current; the BT-routes via
-    // hasInterrupt() to the interrupt subtree without overwriting m_current.
-    void pushInterrupt(const des::OrderPtr& order) {
-        m_interrupts.push_back(order);
-    }
-
-    // Returns true if this was the last interrupt on the stack.
-    bool popInterrupt(const des::OrderPtr& completedOrder) {
-        auto it = std::find(m_interrupts.begin(), m_interrupts.end(), completedOrder);
-        if (it != m_interrupts.end()) {
-            m_interrupts.erase(it);
+    bool pushInterrupt(const des::OrderPtr& order) {
+        if (m_interrupt) {
+            DES_LOG_WARN(rclcpp::get_logger("des.mission_manager"), "Interrupt %d (type=%s) rejected — interrupt %d already active", order->id, order->type.c_str(), m_interrupt->id);
+            return false;
         }
-        return m_interrupts.empty();
+        m_interrupt = order;
+        if (m_current) {
+            DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"), "Interrupt %d (type=%s) accepted — preempting mission %d", order->id, order->type.c_str(), m_current->id);
+        } else {
+            DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"), "Interrupt %d (type=%s) accepted — preempting none", order->id, order->type.c_str());
+        }
+        return true;
+    }
+
+    void popInterrupt(const des::OrderPtr& completedOrder) {
+        if (m_interrupt == completedOrder) {
+            DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"), "Interrupt %d (type=%s) popped", completedOrder->id, completedOrder->type.c_str());
+            m_interrupt = nullptr;
+        } else {
+            DES_LOG_WARN(rclcpp::get_logger("des.mission_manager"), "popInterrupt: order %d not active", completedOrder->id); }
     }
 
     des::OrderPtr activeInterrupt() const {
-        return m_interrupts.empty() ? nullptr : m_interrupts.back();
+        return m_interrupt;
     }
 
     void reset() {
+        DES_LOG_INFO(rclcpp::get_logger("des.mission_manager"),
+                     "Reset (pending=%zu, background=%zu, interrupt=%s cleared)",
+                     m_pending.size(), m_background.size(), m_interrupt ? "yes" : "no");
         m_current = nullptr;
         m_pending = std::queue<des::OrderPtr>();
         m_background = std::vector<des::OrderPtr>();
-        m_interrupts.clear();
+        m_interrupt = nullptr;
     }
 };

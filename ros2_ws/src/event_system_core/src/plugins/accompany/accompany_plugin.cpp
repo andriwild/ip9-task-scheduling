@@ -1,4 +1,5 @@
 #include "accompany_plugin.h"
+#include "../../util/log.h"
 
 #include <memory>
 
@@ -98,8 +99,9 @@ double optimisticMeeting(const Scheduler& sched, const std::string& personName, 
     return searchTime + accompanyTime + scanTime;
 }
 
-// Pessimistic estimate: assume the search visits every known room before
-// finding the person. Used for dispatch scheduling so we leave enough lead time.
+// Pessimistic estimate: assume the search visits AND scans every known room
+// before finding the person in the last one. Used for dispatch scheduling so
+// we leave enough lead time.
 double pessimisticMeeting(const Scheduler& sched, const std::string& personName, const std::string& startPos, const std::string& goalPos) {
     const auto& rooms         = sched.employeeRooms(personName);
     const double accompanySpd = accompanyConfig().accompanySpeed;
@@ -107,6 +109,7 @@ double pessimisticMeeting(const Scheduler& sched, const std::string& personName,
     std::string currentPos = startPos;
     for (const auto& location : rooms) {
         searchTime += sched.robotDriveTime(currentPos, location);
+        searchTime += sched.getScanTime(location);
         currentPos = location;
     }
     const double accompanyTime = sched.getDriveTime(currentPos, goalPos, accompanySpd);
@@ -125,11 +128,16 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
 
     const auto robotLocation = context.getRobot()->getLocation();
     const double missionDuration = optimisticMeeting(context.getScheduler(), a.personName, robotLocation, a.roomName);
-    if (order.deadline.value() - missionDuration >= context.getTime()) {
-        RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is feasible", order.id);
+    const int slack = static_cast<int>(order.deadline.value() - missionDuration - context.getTime());
+    if (slack >= 0) {
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
         return true;
     }
-    RCLCPP_DEBUG(rclcpp::get_logger("Context"), "Mission %u is NOT feasible", order.id);
+    DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany"),
+                 "Mission %u (%s -> %s) infeasible: deadline %d, optimistic mission %.0fs from %s, now %d → slack %ds",
+                 order.id, a.personName.c_str(), a.roomName.c_str(),
+                 *order.deadline, missionDuration, robotLocation.c_str(),
+                 context.getTime(), slack);
     return false;
 }
 
@@ -169,7 +177,9 @@ void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTi
         startTime,
         a.deadline.value_or(0),
         static_cast<int>(a.state),
+        kTypeName,
         a.personName,
+        a.roomName,
         a.description,
         static_cast<int>(a.execution));
 }

@@ -1,0 +1,61 @@
+{
+    "orders": [
+        { "id":  0, "type": "accompany", "personName": "Max",   "roomName": "IMVS_Printer",       "appointmentTime": 32400, "description": "Dokument abholen" },
+        { "id":  1, "type": "accompany", "personName": "Leo",   "roomName": "5.2D02",             "appointmentTime": 34200, "description": "Meeting" },
+        { "id":  2, "type": "accompany", "personName": "Anna",  "roomName": "5.2B18",             "appointmentTime": 36000, "description": "Physio Therapie" },
+        { "id":  3, "type": "accompany", "personName": "Fred",  "roomName": "5.2A15",             "appointmentTime": 37800, "description": "Lab Besuch" },
+
+        { "id":  4, "type": "accompany", "personName": "Julia", "roomName": "5.2C_Working_Space", "appointmentTime": 48600, "description": "Workshop" },
+        { "id":  5, "type": "accompany", "personName": "Sara",  "roomName": "5.2D_Open_Zone",     "appointmentTime": 50400, "description": "Kaffeepause" },
+        { "id":  6, "type": "accompany", "personName": "Tom",   "roomName": "5.2B31",             "appointmentTime": 52200, "description": "Besprechung" },
+        { "id":  7, "type": "accompany", "personName": "Nina",  "roomName": "5.2B53",             "appointmentTime": 54000, "description": "Termin" }
+    ],
+    "background": [
+        { "id": 100, "type": "data_acquisition", "roomName": "5.2A10",            "description": "Foto 5.2A10" },
+        { "id": 101, "type": "data_acquisition", "roomName": "5.2A13",            "description": "Foto 5.2A13" },
+        { "id": 102, "type": "data_acquisition", "roomName": "5.2A15",            "description": "Foto 5.2A15" },
+        { "id": 103, "type": "data_acquisition", "roomName": "5.2B01",            "description": "Foto 5.2B01" },
+        { "id": 104, "type": "data_acquisition", "roomName": "5.2B03",            "description": "Foto 5.2B03" },
+        { "id": 105, "type": "data_acquisition", "roomName": "5.2B10",            "description": "Foto 5.2B10" },
+        { "id": 106, "type": "data_acquisition", "roomName": "5.2B13",            "description": "Foto 5.2B13" },
+        { "id": 107, "type": "data_acquisition", "roomName": "5.2B15",            "description": "Foto 5.2B15" },
+        { "id": 108, "type": "data_acquisition", "roomName": "5.2B17",            "description": "Foto 5.2B17" },
+        { "id": 109, "type": "data_acquisition", "roomName": "5.2B18",            "description": "Foto 5.2B18" },
+        { "id": 110, "type": "data_acquisition", "roomName": "5.2B31",            "description": "Foto 5.2B31" },
+        { "id": 111, "type": "data_acquisition", "roomName": "5.2B53",            "description": "Foto 5.2B53" },
+        { "id": 112, "type": "data_acquisition", "roomName": "5.2B_Toilet_M",     "description": "Foto WC M" },
+        { "id": 113, "type": "data_acquisition", "roomName": "5.2B_Toilet_W",     "description": "Foto WC W" },
+        { "id": 114, "type": "data_acquisition", "roomName": "5.2C07",            "description": "Foto 5.2C07" },
+        { "id": 115, "type": "data_acquisition", "roomName": "5.2C_Working_Space","description": "Foto Working Space" },
+        { "id": 116, "type": "data_acquisition", "roomName": "5.2D02",            "description": "Foto 5.2D02" },
+        { "id": 117, "type": "data_acquisition", "roomName": "5.2D_Open_Zone",    "description": "Foto Open Zone" },
+
+        { "id": 200, "type": "clean",            "roomName": "5.2A10",            "description": "Reinigen 5.2A10" },
+        { "id": 201, "type": "clean",            "roomName": "5.2A13",            "description": "Reinigen 5.2A13" },
+        { "id": 202, "type": "clean",            "roomName": "5.2A15",            "description": "Reinigen 5.2A15" },
+        { "id": 203, "type": "clean",            "roomName": "5.2B01",            "description": "Reinigen 5.2B01" },
+        { "id": 204, "type": "clean",            "roomName": "5.2B03",            "description": "Reinigen 5.2B03" },
+        { "id": 205, "type": "clean",            "roomName": "5.2B10",            "description": "Reinigen 5.2B10" },
+        { "id": 206, "type": "clean",            "roomName": "5.2B13",            "description": "Reinigen 5.2B13" },
+        { "id": 207, "type": "clean",            "roomName": "5.2B15",            "description": "Reinigen 5.2B15" },
+        { "id": 208, "type": "clean",            "roomName": "5.2B17",            "description": "Reinigen 5.2B17" },
+        { "id": 209, "type": "clean",            "roomName": "5.2B18",            "description": "Reinigen 5.2B18" },
+        { "id": 210, "type": "clean",            "roomName": "5.2B31",            "description": "Reinigen 5.2B31" },
+        { "id": 211, "type": "clean",            "roomName": "5.2B53",            "description": "Reinigen 5.2B53" },
+        { "id": 212, "type": "clean",            "roomName": "5.2B_Toilet_M",     "description": "Reinigen WC M" },
+        { "id": 213, "type": "clean",            "roomName": "5.2B_Toilet_W",     "description": "Reinigen WC W" },
+        { "id": 214, "type": "clean",            "roomName": "5.2C07",            "description": "Reinigen 5.2C07" },
+        { "id": 215, "type": "clean",            "roomName": "5.2C_Working_Space","description": "Reinigen Working Space" },
+        { "id": 216, "type": "clean",            "roomName": "5.2D02",            "description": "Reinigen 5.2D02" },
+        { "id": 217, "type": "clean",            "roomName": "5.2D_Open_Zone",    "description": "Reinigen Open Zone" }
+    ],
+    "ad_hoc_generators": [
+        {
+            "type": "information",
+            "distribution": "exponential",
+            "rate_per_hour": 2,
+            "active_window": { "from": 28800, "to": 64800 },
+            "params": { "description": "Frage zum nächsten Zug" }
+        }
+    ]
+}

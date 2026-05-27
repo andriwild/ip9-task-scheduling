@@ -5,12 +5,17 @@
 #include "bt_nodes/information.h"
 #include "observer/ros.h"
 #include "information_order.h"
+#include "states.h"
 
 void InformationPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<ExecuteInformation>("ExecuteInformation");
 }
 
-void InformationPlugin::onMissionStart(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void InformationPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
+    ctx.changeRobotState(std::make_unique<InformationState>());
+}
+
+// pre-interrupt state is restored by popInterrupt
 void InformationPlugin::onMissionEnd(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
 void InformationPlugin::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
 void InformationPlugin::onStopDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
@@ -42,7 +47,9 @@ void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime,
         startTime,
         startTime,
         static_cast<int>(order.state),
-        "Information",
+        kTypeName,
+        "",
+        "",
         order.description,
         static_cast<int>(order.execution));
 }

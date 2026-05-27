@@ -1,6 +1,7 @@
 #pragma once
 
 #include <behaviortree_cpp/basic_types.h>
+#include "../util/log.h"
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/condition_node.h>
@@ -22,7 +23,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const bool isIdle = ctx->getRobot()->getStateType() == des::RobotStateType::IDLE;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "IsIdle: %d", isIdle);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "IsIdle: %d", isIdle);
         if (isIdle) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -53,7 +54,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
-            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Docking: already at dock");
+            DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Docking: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
         // If the robot is already driving back, do nothing — the in-flight StopDriveEvent
@@ -61,9 +62,9 @@ public:
         if (!ctx->getRobot()->isDriving()) {
             ctx->changeRobotState(std::make_unique<ReturningState>());
             ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
-            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
+            DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
         } else {
-            RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Already driving back to dock");
+            DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Already driving back to dock");
         }
         return BT::NodeStatus::FAILURE;
     }
@@ -79,7 +80,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
         ctx->changeRobotState(std::make_unique<IdleState>());
-        RCLCPP_INFO(rclcpp::get_logger("BT - IdleRoutine"), "Enter Idle");
+        DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Enter Idle");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -93,7 +94,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool hasPending = ctx->hasPendingMission();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - IdleRoutine"), "HasPendingMissionIdle: %d", hasPending);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "HasPendingMissionIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }

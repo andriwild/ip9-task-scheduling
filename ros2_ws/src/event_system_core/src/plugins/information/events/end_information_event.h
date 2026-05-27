@@ -14,8 +14,6 @@ public:
     void execute(ISimContext& ctx) override {
         m_order->state = des::MissionState::COMPLETED;
         ctx.notifyEvent(*this);
-        // Pop the interrupt stack BEFORE tickBT — otherwise IdleRoutine in MainStrategy
-        // misfires (sees m_current=interrupt, no plugin matches, pushes spurious drive-to-dock).
         ctx.popInterrupt(m_order);
         ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
         ctx.tickBT();

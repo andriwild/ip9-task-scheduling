@@ -3,6 +3,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "robot_state.h"
 #include "battery.hpp"
 #include "event/base.h"
@@ -22,10 +23,6 @@ class Robot {
     bool m_chargingRequired = false;
     bool m_isPersonVisible  = false;
 
-    // Event that will complete the robot's current activity (StopDrive while
-    // driving, BatteryFull while charging, End*Event while executing a
-    // mission). Interrupts shift this single event by their duration to pause
-    // the activity — see Context::pushInterrupt.
     std::weak_ptr<IEvent> m_inFlightEvent;
 
 public:
@@ -55,13 +52,13 @@ public:
         if (m_currentLocation == getIdleLocation()) {
            m_isCharging = true;
         }
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot location set to: %s", location.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot location set to: %s", location.c_str());
     }
 
     std::string getTargetLocation() const { return m_targetLocation; }
     void setTargetLocation(const std::string &location) { 
         m_targetLocation = location; 
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot target location set to: %s", location.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot target location set to: %s", location.c_str());
     }
 
     void changeState(std::unique_ptr<RobotState> newState);
@@ -90,7 +87,7 @@ public:
         if (m_bat->isBatteryLow()) {
             m_chargingRequired = true;
         }
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot charging required: %d", m_chargingRequired);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot charging required: %d", m_chargingRequired);
         return m_chargingRequired;
     }
     void setChargingRequired(const bool isChargingRequired) { 
@@ -102,19 +99,19 @@ public:
     double getCurrentSpeed() const { return m_currentSpeed; }
     void setSpeed(const double newSpeed) { 
         m_currentSpeed = newSpeed; 
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot speed set to: %.2f", newSpeed);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot speed set to: %.2f", newSpeed);
     }
 
     double getDriveSpeed() const { return m_driveSpeed; }
     void setDriveSpeed(const double speed) { 
         m_driveSpeed = speed; 
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot drive speed set to: %.2f", speed);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot drive speed set to: %.2f", speed);
     }
 
     std::string getIdleLocation() const { return m_dockLocation; }
     void setIdleLocation(const std::string &location) {
         m_dockLocation = location;
-        RCLCPP_DEBUG(rclcpp::get_logger("Robot"), "Robot idle/dock location set to: %s", location.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot idle/dock location set to: %s", location.c_str());
     }
 
     std::weak_ptr<IEvent> inFlight() const { return m_inFlightEvent; }

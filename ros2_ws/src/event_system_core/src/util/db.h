@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
+#include "../util/log.h"
 #include <utility>
 
 #include "types.h"
@@ -53,7 +54,7 @@ public:
         m_db.setPassword(m_pw.data());
 
         if (!m_db.open()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "cant open db connection to %s [ %s, %s ]", m_dbName.c_str(), m_user.c_str(), m_pw.c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "cant open db connection to %s [ %s, %s ]", m_dbName.c_str(), m_user.c_str(), m_pw.c_str());
             return false;
         }
         return true;
@@ -61,13 +62,13 @@ public:
 
     std::optional<std::vector<des::Location>> waypoints() {
         if (!m_db.isOpen() && !m_db.open()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         std::vector<des::Location> locations;
         QSqlQuery query;
         if (!query.exec("SELECT name, ST_X(coordinate), ST_Y(coordinate), yaw FROM points_of_interest")) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Query failed: %s", query.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         while (query.next()) {
@@ -84,17 +85,17 @@ public:
 
     std::optional<des::Person> personByName(const std::string& firstName, const std::string& lastName) {
         if (!m_db.open()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database not connected");
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
             return std::nullopt;
         }
-        RCLCPP_INFO(rclcpp::get_logger("DBClient"), "personByName");
+        DES_LOG_INFO(rclcpp::get_logger("des.io.db"), "personByName");
         QSqlQuery query;
         query.prepare("SELECT * FROM people WHERE first_name = :firstName AND last_name = :lastName");
         query.bindValue(":firstName", QString::fromStdString(firstName));
         query.bindValue(":lastName", QString::fromStdString(lastName));
 
         if (!query.exec()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "personByName Query error: %s %s", firstName.c_str(), lastName.c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "personByName Query error: %s %s", firstName.c_str(), lastName.c_str());
             return std::nullopt;
         }
 
@@ -114,7 +115,7 @@ public:
 
     std::optional<double> areaByName(const std::string& zoneName) {
         if (!m_db.open()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database not connected");
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
             return std::nullopt;
         }
         QSqlQuery query;
@@ -122,7 +123,7 @@ public:
         query.bindValue(":zoneName", QString::fromStdString(zoneName));
 
         if (!query.exec()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "areaByName Query error: %s", zoneName.c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "areaByName Query error: %s", zoneName.c_str());
             return std::nullopt;
         }
 
@@ -134,12 +135,12 @@ public:
 
     std::optional<std::map<std::string, double>> allAreas() {
         if (!m_db.isOpen() && !m_db.open()) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         QSqlQuery query;
         if (!query.exec("SELECT name, ST_Area(polygon) FROM search_zones")) {
-            RCLCPP_ERROR(rclcpp::get_logger("DBClient"), "allAreas Query failed: %s", query.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allAreas Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         std::map<std::string, double> areas;

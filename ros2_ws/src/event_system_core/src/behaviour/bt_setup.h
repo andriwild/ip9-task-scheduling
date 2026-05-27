@@ -1,9 +1,9 @@
 #pragma once
 
 #include <fstream>
-#include <iostream>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
 
@@ -139,11 +139,13 @@ inline std::string buildXml() {
     xml += MISSION_CONTROL_ROUTINE;
     xml += IDLE_ROUTINE;
 
+    // Reactive on both layers: IsInterruptActive must re-tick every cycle so a
+    // running interrupt plugin gets halted as soon as the stack drains.
     xml += R"(
         <BehaviorTree ID="InterruptRoutine">
-          <Fallback>
+          <ReactiveFallback>
             <Inverter><IsInterruptActive/></Inverter>
-            <Fallback>
+            <ReactiveFallback>
     )";
     bool anyInterruptPlugin = false;
     for (auto* plugin : OrderRegistry::instance().all()) {
@@ -152,14 +154,12 @@ inline std::string buildXml() {
             anyInterruptPlugin = true;
         }
     }
-    // BTCPP rejects empty <Fallback>; keep one no-op child so the XML stays
-    // valid in setups (esp. tests) that register only scheduled plugins.
     if (!anyInterruptPlugin) {
-        xml += "<AlwaysFailure/>\n";
+        xml += "<AlwaysFailure/>\n";  // BTCPP rejects empty Fallback
     }
     xml += R"(
-            </Fallback>
-          </Fallback>
+            </ReactiveFallback>
+          </ReactiveFallback>
         </BehaviorTree>
     )";
 
@@ -172,7 +172,7 @@ inline std::string buildXml() {
 }
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> ctx) {
-    RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Create Behaviour Tree");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Create Behaviour Tree");
     BT::BehaviorTreeFactory factory;
 
     registerCoreNodes(factory);
@@ -194,10 +194,10 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
         if (file.is_open()) {
             file << xml_full_tree;
             file.close();
-            std::cout << "BehaviorTree and model written to file: " << TREE_FILE << std::endl;
+            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "BehaviorTree and model written to file: %s", TREE_FILE.c_str());
         }
     }
 
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Behaviour Tree created");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Behaviour Tree created");
     return tree;
 }

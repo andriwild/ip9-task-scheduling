@@ -23,7 +23,6 @@ void CleanPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
 }
 
 void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& /*order*/) {
-    // Hand back to IDLE so ChargeRoutine / next mission pickup can take over.
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
@@ -58,7 +57,15 @@ bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& contex
     }
     const double driveTime = context.getScheduler().robotDriveTime(
         context.getRobot()->getLocation(), o.roomName);
-    return *o.deadline - driveTime >= context.getTime();
+    const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
+    if (slack < 0) {
+        DES_LOG_WARN(rclcpp::get_logger("des.plugin.clean"),
+                     "Mission %d infeasible: deadline %d, driveTime %.0fs from %s, now %d → slack %ds",
+                     o.id, *o.deadline, driveTime, context.getRobot()->getLocation().c_str(),
+                     context.getTime(), slack);
+        return false;
+    }
+    return true;
 }
 
 namespace {
@@ -99,7 +106,9 @@ void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosOb
         startTime,
         o.deadline.value_or(startTime),
         static_cast<int>(o.state),
-        "Clean",
+        kTypeName,
+        "",
+        o.roomName,
         o.description,
         static_cast<int>(o.execution));
 }

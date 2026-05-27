@@ -55,7 +55,15 @@ bool DataAcquisition::isFeasible(const des::IOrder& order, const ISimContext& co
     }
     const double driveTime = context.getScheduler().robotDriveTime(
         context.getRobot()->getLocation(), o.roomName);
-    return *o.deadline - driveTime >= context.getTime();
+    const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
+    if (slack < 0) {
+        DES_LOG_WARN(rclcpp::get_logger("des.plugin.data_acquisition"),
+                     "Mission %d infeasible: deadline %d, driveTime %.0fs from %s, now %d → slack %ds",
+                     o.id, *o.deadline, driveTime, context.getRobot()->getLocation().c_str(),
+                     context.getTime(), slack);
+        return false;
+    }
+    return true;
 }
 
 namespace {
@@ -91,7 +99,9 @@ void DataAcquisition::publishTimeline(const des::IOrder& order, int startTime, R
         startTime,
         o.deadline.value_or(startTime),
         static_cast<int>(o.state),
-        "DataAcquisition",
+        kTypeName,
+        "",
+        o.roomName,
         o.description,
         static_cast<int>(o.execution));
 }

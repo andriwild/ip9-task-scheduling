@@ -1,6 +1,7 @@
 #pragma once
 
 #include <behaviortree_cpp/bt_factory.h>
+#include "../../../util/log.h"
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/action_node.h>
@@ -21,7 +22,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool isConversating = dynamic_cast<ConversateState*>(ctx->getRobot()->getState()) != nullptr;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsConversating: %d", isConversating);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsConversating: %d", isConversating);
         if (isConversating) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -39,7 +40,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
         if (convResult == des::Result::RUNNING) {
             return BT::NodeStatus::FAILURE;
         }
@@ -57,7 +58,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
         if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -74,7 +75,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Start Accompany Action");
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -91,7 +92,7 @@ public:
         const auto convState = dynamic_cast<ConversateState*>(currentState);
         
         const bool isFoundPerson = convState && convState->conversationType == ConversateState::Type::FOUND_PERSON;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsFoundPersonConversation: %d", isFoundPerson);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsFoundPersonConversation: %d", isFoundPerson);
         if (isFoundPerson) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -111,7 +112,7 @@ public:
         const auto convState = dynamic_cast<ConversateState*>(currentState);
 
         const bool isDropOff = convState && convState->conversationType == ConversateState::Type::DROP_OFF;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - ConversateRoutine"), "IsDropOffConversation: %d", isDropOff);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsDropOffConversation: %d", isDropOff);
         if (isDropOff) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -136,7 +137,7 @@ public:
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
         ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        RCLCPP_INFO(rclcpp::get_logger("BT - ConversateRoutine"), "Complete Mission Action");
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "Complete Mission Action");
         
         return BT::NodeStatus::SUCCESS;
     }

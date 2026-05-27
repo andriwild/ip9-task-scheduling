@@ -8,6 +8,7 @@
 #include <map>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "../model/event.h"
 #include "../sim/i_path_planner.h"
 #include "../plugins/order_registry.h"
@@ -42,7 +43,7 @@ public:
     }
 
     std::vector<std::shared_ptr<MissionDispatchEvent>> simplePlan(des::OrderList& orders, const std::string& startPos) {
-        RCLCPP_DEBUG(rclcpp::get_logger("Scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
         std::vector<std::shared_ptr<MissionDispatchEvent>> events;
 
         for (const auto& order : orders) {
@@ -71,7 +72,7 @@ public:
     [[nodiscard]] double getScanTime(const std::string& area) const {
         auto it = m_searchAreas.find(area);
         if (it == m_searchAreas.end()) {
-            RCLCPP_WARN(rclcpp::get_logger("Scheduler"), "Search area not found for '%s', defaulting to 1.0", area.c_str());
+            DES_LOG_WARN(rclcpp::get_logger("des.scheduler"), "Search area not found for '%s', defaulting to 1.0", area.c_str());
             return 1.0;
         }
         return it->second;

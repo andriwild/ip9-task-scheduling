@@ -1,6 +1,7 @@
 #pragma once
 
 #include <behaviortree_cpp/bt_factory.h>
+#include "../util/log.h"
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/action_node.h>
@@ -21,7 +22,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool hasPending = ctx->hasPendingMission();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "HasPendingMission: %d", hasPending);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasPendingMission: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
@@ -37,7 +38,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx    = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool isBusy = ctx->getRobot()->isBusy();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsRobotBusy: %d", isBusy);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsRobotBusy: %d", isBusy);
         if (isBusy) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -59,7 +60,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx      = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool assigned = ctx->getOrderPtr() != nullptr;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "IsMissionAssigned: %d", assigned);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsMissionAssigned: %d", assigned);
         return assigned ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -75,7 +76,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->hasPendingMission());
         const auto order = ctx->popPendingMission();
-        RCLCPP_INFO(rclcpp::get_logger("BT - MissionControlRoutine"), "AcceptMissionAction for order %d (type=%s)",
+        DES_LOG_INFO(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
         // PENDING -> IN_PROGRESS transition happens in the plugin's StartXxxEvent,
@@ -95,10 +96,12 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        RCLCPP_WARN(rclcpp::get_logger("BT - MissionControlRoutine"), "RejectMissionAction");
 
         assert(ctx->hasPendingMission());
         const auto order = ctx->popPendingMission();
+        DES_LOG_WARN(rclcpp::get_logger("des.bt.mission_control"),
+                     "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
+                     order->id, order->type.c_str());
         order->state     = des::MissionState::REJECTED;
         ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
@@ -115,7 +118,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx     = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool hasBg   = ctx->hasBackgroundMission();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "HasBackgroundMission: %d", hasBg);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasBackgroundMission: %d", hasBg);
         return hasBg ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -135,6 +138,7 @@ public:
         if (!order) {
             return BT::NodeStatus::FAILURE;
         }
+        ctx->publishMission(order, ctx->getTime());
         ctx->pushEvent(std::make_shared<MissionStartEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }
@@ -153,7 +157,7 @@ public:
         const auto order = ctx->nextPendingMission();
         const auto& plugin = OrderRegistry::instance().get(order->type);
         const bool isFeasible  = plugin.isFeasible(*order, *ctx);
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - MissionControlRoutine"), "MissionFeasibilityCheck: %d", isFeasible);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "MissionFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;
         }

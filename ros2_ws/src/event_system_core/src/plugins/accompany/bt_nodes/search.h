@@ -1,6 +1,7 @@
 #pragma once
 
 #include <behaviortree_cpp/bt_factory.h>
+#include "../../../util/log.h"
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <behaviortree_cpp/basic_types.h>
@@ -28,7 +29,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool isSearching = !ctx->getRobot()->isDriving()
             && dynamic_cast<SearchState*>(ctx->getRobot()->getState()) != nullptr;
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "IsSearching: %d", isSearching);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "IsSearching: %d", isSearching);
         return isSearching ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -43,7 +44,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool isScanning = ctx->getRobot()->isScanning();
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "IsScanning: %d", isScanning);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "IsScanning: %d", isScanning);
         return isScanning ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -83,7 +84,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "Start Accompany Conversation");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Start Accompany Conversation");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -101,11 +102,11 @@ public:
         const auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
-            RCLCPP_WARN(rclcpp::get_logger("BT - SearchRoutine"), "HasNextLocation: List empty!");
+            DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: List empty!");
             ctx->updateOrderState(des::MissionState::FAILED);
             return BT::NodeStatus::FAILURE;
         }
-        RCLCPP_INFO(rclcpp::get_logger("BT - SearchRoutine"), "HasNextLocation: %zu locations remaining", ss->locations.size());
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: %zu locations remaining", ss->locations.size());
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -122,7 +123,7 @@ public:
         const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - SearchRoutine"), "MoveToNextLocation: %s", nextLocation.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "MoveToNextLocation: %s", nextLocation.c_str());
         ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), nextLocation));
         return BT::NodeStatus::SUCCESS;
     }
@@ -137,7 +138,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        RCLCPP_WARN(rclcpp::get_logger("BT - SearchRoutine"), "Abort Search!");
+        DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.search"), "Abort Search!");
         return BT::NodeStatus::SUCCESS;
     }
 };

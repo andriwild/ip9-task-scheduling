@@ -6,6 +6,7 @@
 #include <memory>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include "../../util/log.h"
 #include <thread>
 #include <utility>
 
@@ -17,7 +18,7 @@
 void SimRunner::reloadSimulationData() {
     m_orders = loadOrders(m_config->appointmentsPath);
     m_backgroundOrders = ConfigLoader::loadBackgroundOrders(m_config->appointmentsPath);
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu background orders", m_backgroundOrders.size());
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background orders", m_backgroundOrders.size());
     auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
@@ -26,7 +27,7 @@ void SimRunner::reloadSimulationData() {
     ConfigLoader::validateConfig(m_orders, allPeople.value(), m_locationMap, "5.2B_Elevator");
 
     m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_orders);
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees", m_people.value().size(), allPeople.value().size());
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu of %zu employees", m_people.value().size(), allPeople.value().size());
 
     m_employeeLocations.clear();
     for (const auto& p: m_people.value()) {
@@ -60,26 +61,25 @@ void SimRunner::reset() {
     reloadSimulationData();
     buildSimulation();
 
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "System Reset Complete");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "System Reset Complete");
 }
 
 void SimRunner::setupApplication(const std::string& /*path*/) {
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
     m_config = m_systemConfigNode->getConfig();
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
     buildSimulation();
 
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Complete!");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");
 }
 
 void SimRunner::updateConfig(std::shared_ptr<des::SimConfig> config) {
     m_config = std::move(config);
     m_ctx->setConfig(m_config);
-    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("des_application"), *m_config.get());
+    DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), *m_config.get());
 }
-
 
 void SimRunner::updateConfig() {
     if (m_systemConfigNode->isConfigDirty()) {
@@ -90,10 +90,9 @@ void SimRunner::updateConfig() {
 
 void SimRunner::enterPause() const {
     m_controllerNode->currentState.store(SystemState::Request::PAUSE);
-    RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Simulation loop paused");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Simulation loop paused");
 }
 
 int SimRunner::loadAppState() const {
-    const auto state = m_controllerNode->currentState.load();
-    return state;
+    return m_controllerNode->currentState.load();
 }

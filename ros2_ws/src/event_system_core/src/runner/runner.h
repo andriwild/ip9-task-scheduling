@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "../util/log.h"
 
 #include "../model/context.h"
 #include "../model/event.h"
@@ -21,8 +22,7 @@ const std::string DB_PASSWORD = "wsr_password";
 
 class IAppRunner {
 public:
-    IAppRunner() : m_db({DB_USER, DB_PASSWORD}) {
-    };
+    IAppRunner() : m_db({DB_USER, DB_PASSWORD}) {};
 
     virtual ~IAppRunner() = default;
 
@@ -42,7 +42,7 @@ public:
         Scheduler& scheduler,
         std::string idleLocation
     ) {
-        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Start filling event queue");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Start filling event queue");
         SortedEventQueue queue;
 
         const auto missions = scheduler.simplePlan(orders, idleLocation);
@@ -52,7 +52,7 @@ public:
             mission->time = mission->time - buffer;
             queue.push(mission);
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
         return queue;
     }
 
@@ -110,12 +110,9 @@ protected:
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
         m_eventQueue.extend(createMissionQueue(m_config, m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
-        // Sim window comes straight from the config (configurable from the
-        // System Config panel). No more juggling with sampled departure
-        // times — anything past simEndTime is simply not part of the run.
         const int simStartTime = m_config->simStartTime;
         const int simEndTime   = m_config->simEndTime;
-        RCLCPP_DEBUG(rclcpp::get_logger("des_application"), "Sim window: %d → %d", simStartTime, simEndTime);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Sim window: %d → %d", simStartTime, simEndTime);
 
         m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));
         m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
@@ -129,16 +126,11 @@ protected:
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
-        // Background tasks live in the MissionManager's own queue, not in the
-        // event queue. Register them after resetContext so they survive resets.
+        // Background tasks live in the MissionManager's own queue not in the event queue
         for (const auto& order : m_backgroundOrders) {
             m_ctx->addBackgroundMission(order);
         }
 
-        // Tell observers (metrics) about every order known at setup time so
-        // totals are known regardless of whether each mission ever fires.
-        // Interrupts are generated lazily and register themselves in
-        // OrderArrivalEvent.
         for (const auto& order : m_orders) {
             m_ctx->publishMissionRegistered(order);
         }
@@ -152,17 +144,17 @@ protected:
     }
 
     static des::OrderList loadOrders(const std::string& path) {
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load orders: %s", path.c_str());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load orders: %s", path.c_str());
         const auto orders = ConfigLoader::loadOrderConfig(path.c_str());
         if (!orders.has_value()) {
             throw std::runtime_error("Could not load orders from file");
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu orders", orders.value().size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu orders", orders.value().size());
         return orders.value();
     }
 
     void addEventsFromInterruptGenerators(const std::string& path) {
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Load ad-hoc generators: %s", path.c_str());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load ad-hoc generators: %s", path.c_str());
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
         int eventId = 100000;
 
@@ -183,7 +175,7 @@ protected:
                 }
             }
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
     des::SearchAreaMap loadSearchAreas() {
@@ -191,7 +183,7 @@ protected:
         if (!areas.has_value()) {
             throw std::runtime_error("Could not load search areas from DB");
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu search areas", areas.value().size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu search areas", areas.value().size());
         return areas.value();
     }
 
@@ -203,9 +195,9 @@ protected:
         std::map<std::string, des::Point> locationMap;
         for (const auto& poi : pois.value()) {
             locationMap[poi.m_name] = poi.m_p;
-            RCLCPP_DEBUG_STREAM(rclcpp::get_logger("des_application"), poi);
+            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), poi);
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu points of interest", locationMap.size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", locationMap.size());
         return locationMap;
     }
 
@@ -216,7 +208,7 @@ protected:
         if (!m_plannerNode->isReady()) {
             throw std::runtime_error("Nav2 Planner initialization failed");
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Planner ready");
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Planner ready");
 
         m_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
         m_rosThread = std::thread([this, nodes] {
@@ -228,7 +220,7 @@ protected:
                 m_executor->remove_node(node);
             }
         });
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Launched all ROS Nodes");
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Launched all ROS Nodes");
     }
 
 };

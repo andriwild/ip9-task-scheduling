@@ -1,4 +1,5 @@
 #include "headless_runner.h"
+#include "../../util/log.h"
 #include <memory>
 #include <filesystem>
 #include "../../behaviour/bt_setup.h"
@@ -6,7 +7,7 @@
 #include "../../model/event_queue.h"
 
 void HeadlessRunner::setupApplication(const std::string& path) {
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Application...");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
         throw std::runtime_error("Appointment path does not exist or is not a directory: " + path);
@@ -41,12 +42,12 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     m_ctx->addObserver(m_metricsNode);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Rounds: %d, Files per round: %zu",
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Rounds: %d, Files per round: %zu",
                 m_totalRounds, m_orderFilePaths.size());
 
     loadNextBatch();
 
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Setup Complete!");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");
 }
 
 bool HeadlessRunner::loadNextBatch() {
@@ -55,7 +56,7 @@ bool HeadlessRunner::loadNextBatch() {
         if (m_currentRound >= m_totalRounds) {
             return false;
         }
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "Starting round %d/%d",
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Starting round %d/%d",
                     m_currentRound + 1, m_totalRounds);
         rebuildFileQueue();
     }
@@ -66,23 +67,23 @@ bool HeadlessRunner::loadNextBatch() {
 
     auto path = m_orderFiles.front();
     m_orderFiles.pop();
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Loading batch: %s (round %d/%d)",
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loading batch: %s (round %d/%d)",
                 path.c_str(), m_currentRound + 1, m_totalRounds);
 
     auto appts = ConfigLoader::loadOrderConfig(path);
     if (!appts.has_value()) {
-        RCLCPP_ERROR(rclcpp::get_logger("des_application"), "Failed to load appointments from: %s", path.c_str());
+        DES_LOG_ERROR(rclcpp::get_logger("des.runner"), "Failed to load appointments from: %s", path.c_str());
         return loadNextBatch();
     }
     m_orders = appts.value();
 
     m_backgroundOrders = ConfigLoader::loadBackgroundOrders(path);
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Successful loaded %zu background orders", m_backgroundOrders.size());
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background orders", m_backgroundOrders.size());
 
     ConfigLoader::validateConfig(m_orders, m_allPeople, m_locationMap, "5.2B_Elevator");
 
     m_people = ConfigLoader::filterByAppointments(m_allPeople, m_orders);
-    RCLCPP_INFO(rclcpp::get_logger("des_application"), "Simulating %zu of %zu employees",
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu of %zu employees",
                 m_people.value().size(), m_allPeople.size());
 
     populateEventQueue();

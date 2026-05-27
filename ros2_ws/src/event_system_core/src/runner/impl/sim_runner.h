@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "../../util/log.h"
 #include <thread>
 #include <vector>
 
@@ -32,8 +33,8 @@ public:
 
     static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
         rclcpp::init(argc, argv);
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "\n----- Descrete Event Sytem -----");
-        RCLCPP_INFO(rclcpp::get_logger("des_application"), "C++ Version: %ld", __cplusplus);
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "\n----- Descrete Event Sytem -----");
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
         return std::make_unique<SimRunner>();
     }
 

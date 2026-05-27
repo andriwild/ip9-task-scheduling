@@ -5,23 +5,18 @@
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "../model/event/base.h"
 #include "../util/types.h"
 
 class EventQueue {
-    // Vector-backed min-heap (earliest time on top). We don't use
-    // std::priority_queue here because reschedule() needs to find and
-    // re-prioritise an arbitrary entry — only possible with direct vector access.
+    // Vector-backed min-heap (earliest time on top)
     EventList m_heap;
     EventComparator m_cmp;
-    int m_lastEventTime = 0;
 
     void heapPush(const std::shared_ptr<IEvent>& event) {
         m_heap.push_back(event);
         std::push_heap(m_heap.begin(), m_heap.end(), m_cmp);
-        if (event->time > m_lastEventTime) {
-            m_lastEventTime = event->time;
-        }
     }
 
 public:
@@ -52,9 +47,6 @@ public:
         if (m_heap.empty()) { return; }
         std::pop_heap(m_heap.begin(), m_heap.end(), m_cmp);
         m_heap.pop_back();
-        if (m_heap.empty()) {
-            m_lastEventTime = 0;
-        }
     }
 
     std::shared_ptr<IEvent> top() const {
@@ -63,30 +55,21 @@ public:
 
     void clear() {
         m_heap.clear();
-        m_lastEventTime = 0;
     }
 
     // Shifts `event`'s time to `newTime` and re-heaps. Returns false if the
-    // event isn't in the queue (already popped, never pushed). Used by the
-    // interrupt-shift mechanism — the robot's in-flight commitment gets
-    // pushed back by the interrupt duration.
+    // event isn't in the queue (already popped, never pushed)
     bool reschedule(const std::shared_ptr<IEvent>& event, int newTime) {
         auto it = std::find(m_heap.begin(), m_heap.end(), event);
-        if (it == m_heap.end()) { return false; }
-        const int oldTime = (*it)->time;
-        (*it)->time = newTime;
-        std::make_heap(m_heap.begin(), m_heap.end(), m_cmp);
-        if (newTime > m_lastEventTime) {
-            m_lastEventTime = newTime;
+        if (it == m_heap.end()) {
+            return false;
         }
-        RCLCPP_DEBUG(rclcpp::get_logger("EventQueue"),
-                     "Reschedule '%s': %d → %d (Δ%+d)",
+        const int oldTime = (*it)->time;
+        (*it)->time = newTime; // shift to new time
+        std::make_heap(m_heap.begin(), m_heap.end(), m_cmp);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.event_queue"), "Reschedule '%s': %d → %d (delta%+d)",
                      event->getName().c_str(), oldTime, newTime, newTime - oldTime);
         return true;
-    }
-
-    int getLastEventTime() const {
-        return m_lastEventTime;
     }
 
     int getFirstEventTime() const {
@@ -94,26 +77,31 @@ public:
         return t ? t->time : 0;
     }
 
-    // Earliest queued event matching `type`, or nullptr if none. O(n).
+    // Earliest queued event matching `type`, or nullptr if none.
     std::shared_ptr<IEvent> nextEvent(des::EventType type) const {
-        std::shared_ptr<IEvent> best;
+        std::shared_ptr<IEvent> next;
         for (const auto& e : m_heap) {
-            if (e->getType() != type) { continue; }
-            if (!best || e->time < best->time) { best = e; }
+            if (e->getType() != type) {
+                continue;
+            }
+            if (!next || e->time < next->time) {
+                next = e;
+            }
         }
-        return best;
+        return next;
     }
 
-    // Time of the earliest queued event matching `type`. nullopt = none.
+    // Time of the earliest queued event matching `type`
     std::optional<int> nextEventTime(des::EventType type) const {
         auto e = nextEvent(type);
         return e ? std::optional<int>(e->time) : std::nullopt;
     }
 
-    // Convenience: next MissionDispatchEvent in the queue.
+    // Convenience: next MissionDispatchEvent in the queue
     std::optional<int> nextDispatchTime() const {
         return nextEventTime(des::EventType::MISSION_DISPATCH);
     }
+
     std::shared_ptr<IEvent> nextDispatchEvent() const {
         return nextEvent(des::EventType::MISSION_DISPATCH);
     }
@@ -123,7 +111,7 @@ public:
         std::sort(copy.begin(), copy.end(),
                   [](const auto& a, const auto& b) { return a->time < b->time; });
         for (const auto& e : copy) {
-            std::cout << e->time << ": " << static_cast<int>(e->getType()) << " - " << e->getName() << std::endl;
+            DES_LOG_INFO(rclcpp::get_logger("des.event_queue"), "%d: %d - %s", e->time, static_cast<int>(e->getType()), e->getName().c_str());
         }
     }
 };

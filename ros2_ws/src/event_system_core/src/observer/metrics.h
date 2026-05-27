@@ -4,25 +4,16 @@
 #include <string>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../util/log.h"
 #include "../observer/observer.h"
 #include "event_system_msgs/msg/metrics_report.hpp"
 
 class MetricsNode final : public rclcpp::Node, public IObserver {
-    // Per-state-name buckets — populated dynamically as states show up via
-    // TimelineStateChange's name field. Plugin-owned states (e.g. "clean",
-    // "acquire") slot in automatically without code changes here.
     std::map<std::string, int>    timePerStateName;
     std::map<std::string, double> energyPerStateName;
-    // Aggregated by structural category so we can compute the high-level
-    // idle/charging/utilization percentages regardless of plugin states.
     std::map<des::RobotStateType, int>    timePerCategory;
     std::map<des::RobotStateType, double> energyPerCategory;
 
-    // Mission stats are tracked per-execution-mode so the report can show
-    // scheduled, background, and interrupt missions in separate sections —
-    // each kind has a different notion of "success" (scheduled cares about
-    // lateness, background cares about completion ratio, interrupt about
-    // arrival count).
     struct MissionStats {
         int registered  = 0;  // queued / loaded into the sim
         int onTime      = 0;  // COMPLETED + timeDiff <= 0
@@ -46,13 +37,6 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     double lastSoc            = -1.0;
     double batteryCapacity    = 0.0;
     bool wasDriving           = false;
-    // Mission-active time tracking — robot is "working" while any mission is
-    // in flight (regardless of robot-state). Depth counter handles nested
-    // interrupts; RejectMission completes without a prior Start so we guard
-    // against going below zero.
-    int missionActiveTime  = 0;
-    int missionActiveStart = -1;
-    int missionActiveDepth = 0;
     // Most recently seen state, kept verbatim so we can attribute the next
     // elapsed slice on the next transition.
     bool hasLastState = false;
@@ -89,9 +73,6 @@ public:
         lastSoc               = -1.0;
         batteryCapacity       = 0.0;
         wasDriving            = false;
-        missionActiveTime     = 0;
-        missionActiveStart    = -1;
-        missionActiveDepth    = 0;
         hasLastState          = false;
         lastStateName.clear();
     }
@@ -104,22 +85,6 @@ public:
         } else if(!isDriving && wasDriving){
            moveTime += time - lastTimeMoved;
             wasDriving = false;
-        }
-
-        if (type == des::EventType::MISSION_START) {
-            if (missionActiveDepth == 0) {
-                missionActiveStart = time;
-            }
-            missionActiveDepth++;
-        } else if (type == des::EventType::MISSION_COMPLETE) {
-            // Reject-path completes without a prior MissionStart; guard the depth.
-            if (missionActiveDepth > 0) {
-                missionActiveDepth--;
-                if (missionActiveDepth == 0 && missionActiveStart >= 0) {
-                    missionActiveTime += time - missionActiveStart;
-                    missionActiveStart = -1;
-                }
-            }
         }
 
         if(type == des::EventType::SIMULATION_END){
@@ -157,9 +122,6 @@ public:
         auto& s = missionsByMode[execution];
         switch (state) {
             case des::MissionState::COMPLETED:
-                // timeDiff > 0 = strictly late. timeDiff == 0 covers both
-                // "exactly on deadline" (scheduled) and "no deadline at all"
-                // (background/interrupt where context maps missing deadline to now).
                 if (timeDiff > 0) {
                     s.late++;
                     accMissionToLateTime += timeDiff;
@@ -185,7 +147,6 @@ public:
     void publishReport() {
         auto msg = event_system_msgs::msg::MetricsReport();
 
-        // Named buckets — pull what the existing msg explicitly tracks.
         auto timeFor   = [&](const std::string& n) { auto it = timePerStateName.find(n);   return it == timePerStateName.end()   ? 0    : it->second; };
         auto energyFor = [&](const std::string& n) { auto it = energyPerStateName.find(n); return it == energyPerStateName.end() ? 0.0  : it->second; };
 
@@ -239,23 +200,26 @@ public:
 
         msg.total_distance = static_cast<float>(movedDistance);
 
-        // Total observed sim time = sum of all named-state buckets (each
-        // simulated second is attributed to exactly one state).
+        // Total observed sim time = sum of all named-state buckets
         double totalTime = 0.0;
         for (const auto& [_, t] : timePerStateName) totalTime += t;
         if (totalTime > 0) {
-            const int idleCat     = timePerCategory[des::RobotStateType::IDLE];
-            const int chargingCat = timePerCategory[des::RobotStateType::CHARGING];
-            msg.utilization      = static_cast<float>(missionActiveTime / totalTime * 100.0);
-            msg.idle_percent     = static_cast<float>(idleCat           / totalTime * 100.0);
-            msg.charging_percent = static_cast<float>(chargingCat       / totalTime * 100.0);
+            const int missionCat   = timePerCategory[des::RobotStateType::MISSION];
+            const int idleCat      = timePerCategory[des::RobotStateType::IDLE];
+            const int chargingCat  = timePerCategory[des::RobotStateType::CHARGING];
+            const int returningCat = timePerCategory[des::RobotStateType::RETURNING];
+            msg.utilization       = static_cast<float>(missionCat   / totalTime * 100.0);
+            msg.idle_percent      = static_cast<float>(idleCat      / totalTime * 100.0);
+            msg.charging_percent  = static_cast<float>(chargingCat  / totalTime * 100.0);
+            msg.returning_percent = static_cast<float>(returningCat / totalTime * 100.0);
         } else {
-            msg.utilization      = 0.0f;
-            msg.idle_percent     = 0.0f;
-            msg.charging_percent = 0.0f;
+            msg.utilization       = 0.0f;
+            msg.idle_percent      = 0.0f;
+            msg.charging_percent  = 0.0f;
+            msg.returning_percent = 0.0f;
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("Metrics"), "Publish Metrics");
+        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Publish Metrics");
         m_publisher->publish(msg);
         clear();
     }

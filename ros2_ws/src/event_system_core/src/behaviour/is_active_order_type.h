@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include "../util/log.h"
 #include <behaviortree_cpp/basic_types.h>
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/bt_factory.h>
@@ -24,7 +25,7 @@ public:
         const auto order = ctx->getOrderPtr();
         if (!order) return BT::NodeStatus::FAILURE;
 
-        RCLCPP_DEBUG(rclcpp::get_logger("BT - IsActiveOrderType"), "Check order type: %s", inputType->c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.is_active_order_type"), "Check order type: %s", inputType->c_str());
         if (inputType.has_value() && inputType.value() == order->type) {
             return BT::NodeStatus::SUCCESS;
         }

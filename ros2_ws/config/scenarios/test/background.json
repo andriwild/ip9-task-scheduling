@@ -1,0 +1,54 @@
+{
+    "orders": [
+        {
+            "id": 0,
+            "type": "accompany",
+            "personName": "Max",
+            "roomName": "IMVS_Printer",
+            "appointmentTime": 36000,
+            "description": "Dokument abholen"
+        },
+        {
+            "id": 3,
+            "type": "accompany",
+            "personName": "Nina",
+            "roomName": "5.2B18",
+            "appointmentTime": 56000,
+            "description": "Physio Therapie"
+        }
+    ],
+    "background": [
+        { "id": 100, "type": "data_acquisition", "roomName": "5.2B01",            "description": "Foto 5.2B01" },
+        { "id": 101, "type": "clean",            "roomName": "5.2B13",            "description": "Reinigen 5.2B13" },
+        { "id": 102, "type": "clean",            "roomName": "5.2B15",            "description": "Reinigen 5.2B15" },
+        { "id": 103, "type": "clean",            "roomName": "5.2B17",            "description": "Reinigen 5.2B17" },
+        { "id": 104, "type": "clean",            "roomName": "5.2B18",            "description": "Reinigen 5.2B18" },
+        { "id": 105, "type": "clean",            "roomName": "5.2B31",            "description": "Reinigen 5.2B31" },
+        { "id": 106, "type": "clean",            "roomName": "5.2B53",            "description": "Reinigen 5.2B53" },
+        { "id": 107, "type": "clean",            "roomName": "5.2B_Toilet_M",     "description": "Reinigen WC M" },
+        { "id": 108, "type": "clean",            "roomName": "5.2B_Toilet_W",     "description": "Reinigen WC W" },
+        { "id": 109, "type": "data_acquisition", "roomName": "5.2B03",            "description": "Foto 5.2B03" },
+        { "id": 110, "type": "data_acquisition", "roomName": "5.2B10",            "description": "Foto 5.2B10" },
+        { "id": 111, "type": "data_acquisition", "roomName": "5.2B13",            "description": "Foto 5.2B13" },
+        { "id": 112, "type": "clean",            "roomName": "5.2A10",            "description": "Reinigen 5.2A10" },
+        { "id": 113, "type": "clean",            "roomName": "5.2A13",            "description": "Reinigen 5.2A13" },
+        { "id": 114, "type": "clean",            "roomName": "5.2A15",            "description": "Reinigen 5.2A15" },
+        { "id": 115, "type": "clean",            "roomName": "5.2C07",            "description": "Reinigen 5.2C07" },
+        { "id": 116, "type": "clean",            "roomName": "5.2C_Working_Space","description": "Reinigen Working Space" },
+        { "id": 117, "type": "clean",            "roomName": "5.2D02",            "description": "Reinigen 5.2D02" },
+        { "id": 118, "type": "clean",            "roomName": "5.2D_Open_Zone",    "description": "Reinigen Open Zone" },
+        { "id": 119, "type": "data_acquisition", "roomName": "5.2A15",            "description": "Foto 5.2A15" },
+        { "id": 120, "type": "data_acquisition", "roomName": "5.2D02",            "description": "Foto 5.2D02" },
+        { "id": 121, "type": "data_acquisition", "roomName": "5.2C_Working_Space","description": "Foto Working Space" },
+        { "id": 122, "type": "clean",            "roomName": "5.2B01",            "description": "Reinigen 5.2B01" },
+        { "id": 123, "type": "clean",            "roomName": "5.2B03",            "description": "Reinigen 5.2B03" },
+        { "id": 124, "type": "clean",            "roomName": "5.2B10",            "description": "Reinigen 5.2B10" },
+        { "id": 125, "type": "clean",            "roomName": "5.2B18",            "description": "Reinigen 5.2B18" },
+        { "id": 126, "type": "clean",            "roomName": "5.2C07",            "description": "Reinigen 5.2C07" },
+        { "id": 127, "type": "clean",            "roomName": "5.2A15",            "description": "Reinigen 5.2A15" },
+        { "id": 128, "type": "clean",            "roomName": "5.2D_Open_Zone",    "description": "Reinigen Open Zone" },
+        { "id": 129, "type": "clean",            "roomName": "5.2B15",            "description": "Reinigen 5.2B15" },
+        { "id": 130, "type": "clean",            "roomName": "5.2B03",            "description": "Reinigen 5.2B03" },
+        { "id": 131, "type": "clean",            "roomName": "5.2B10",            "description": "Reinigen 5.2B10" }
+    ]
+}

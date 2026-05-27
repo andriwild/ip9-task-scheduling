@@ -10,6 +10,7 @@
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
+#include "util/log.h"
 
 const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/test/";
 
@@ -38,11 +39,13 @@ int main(const int argc, char *argv[]) {
         app = SimRunner::create(argc, argv);
         app->setupApplication("");
     }
+
+    des::log::installOutputHandler();  // after rclcpp::init() from create()
     
 
     bool running = true;
     auto sim_loop = [&] {
-        RCLCPP_INFO(rclcpp::get_logger("main"), "Start Simulation Loop (Headless Mode: %d)", headless);
+        DES_LOG_INFO(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
         app->m_eventQueue.print();
         while (running && rclcpp::ok()) {
             app->updateConfig();
@@ -61,25 +64,9 @@ int main(const int argc, char *argv[]) {
                     running = false;
                     break;
 
-                case SystemState::Request::STEP:
-                    if (!app->m_eventQueue.empty()) {
-                        const auto e = app->m_eventQueue.top();
-                        app->m_eventQueue.pop();
-                        app->m_ctx->advanceTime(e->time);
-                        e->execute(*app->m_ctx);
-                        if (app->m_ctx->getRobot()->inFlight().lock() == e) {
-                            app->m_ctx->getRobot()->clearInFlight();
-                        }
-                        RCLCPP_INFO(rclcpp::get_logger("main"), "-> [STEP] Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-                    } else {
-                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Step: Event Queue empty.");
-                    }
-                    app->enterPause();
-                    break;
-
                 case SystemState::Request::RUN: {
                     auto handleSimComplete = [&] {
-                        RCLCPP_DEBUG(rclcpp::get_logger("main"), "Simulation complete.");
+                        DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Simulation complete.");
                         if (headless) {
                             auto* headlessApp = static_cast<HeadlessRunner*>(app.get());
                             headlessApp->onSimulationComplete();
@@ -94,28 +81,20 @@ int main(const int argc, char *argv[]) {
                     const auto e = app->m_eventQueue.top();
                     app->m_eventQueue.pop();
                     app->m_ctx->advanceTime(e->time);
-                    e->execute(*app->m_ctx);
-                    // A fired activity-end event releases the robot's commitment so
-                    // future interrupts have nothing to shift until the next startActivity.
-                    if (app->m_ctx->getRobot()->inFlight().lock() == e) {
-                        app->m_ctx->getRobot()->clearInFlight();
-                    }
-                    RCLCPP_INFO(rclcpp::get_logger("main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+                    app->m_ctx->executeEvent(e);
+                    DES_LOG_INFO(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     if (e->getType() == des::EventType::SIMULATION_END) {
-                        // SimulationEnd is the hard stop. Any siblings at the same
-                        // sim time would otherwise still execute and trigger fresh
-                        // BT work (e.g. accepting another background mission).
                         app->m_eventQueue.clear();
                         handleSimComplete();
                     }
                     break;
                 }
                 default:
-                        RCLCPP_WARN(rclcpp::get_logger("main"), "Unrecognized Simulation State!");
+                        DES_LOG_WARN(rclcpp::get_logger("des.main"), "Unrecognized Simulation State!");
                     break;
             }
         }
-        RCLCPP_INFO(rclcpp::get_logger("main"), "Simulation complete");
+        DES_LOG_INFO(rclcpp::get_logger("des.main"), "Simulation complete");
     };
 
     std::thread t(sim_loop); 

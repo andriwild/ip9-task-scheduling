@@ -2,13 +2,14 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include "../../util/log.h"
 #include "../../model/i_sim_context.h"
 #include "../../model/robot.h"
 #include "accompany_plugin.h"
 
 void SearchState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Search");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Search");
     robot.setSpeed(robot.getDriveSpeed());
 }
 void SearchState::exit(Robot& robot) {
@@ -22,7 +23,7 @@ double SearchState::getEnergyConsumption(const ISimContext& ctx) const {
 
 void AccompanyState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Accompany");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Accompany");
     robot.setSpeed(accompanyConfig().accompanySpeed);
 }
 void AccompanyState::exit(Robot& robot) {
@@ -36,7 +37,7 @@ double AccompanyState::getEnergyConsumption(const ISimContext& ctx) const {
 
 void ConversateState::enter(Robot& robot) {
     RobotState::enter(robot);
-    RCLCPP_DEBUG(rclcpp::get_logger("State"), "Enter Conversate");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Conversate");
     robot.setSpeed(robot.getDriveSpeed());
 }
 double ConversateState::getEnergyConsumption(const ISimContext& ctx) const {

@@ -66,7 +66,9 @@ public:
                         const int startTime,
                         const int scheduledTime,
                         const int state,
-                        const std::string& primaryLabel,
+                        const std::string& orderType,
+                        const std::string& personName,
+                        const std::string& roomName,
                         const std::string& description,
                         const int executionMode) {
         auto msg = event_system_msgs::msg::TimelineMeeting();
@@ -74,7 +76,9 @@ public:
         msg.id               = id;
         msg.appointment_time = scheduledTime;
         msg.mission_state    = state;
-        msg.person_name      = primaryLabel;
+        msg.order_type       = orderType;
+        msg.person_name      = personName;
+        msg.room_name        = roomName;
         msg.description      = description;
         msg.execution_mode   = static_cast<uint8_t>(executionMode);
         m_pubMeeting->publish(msg);

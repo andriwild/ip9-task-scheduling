@@ -3,6 +3,7 @@
 #include <format>
 #include <rclcpp/rclcpp.hpp>
 
+#include "../../util/log.h"
 #include "base.h"
 #include "../../plugins/order_registry.h"
 #include "../i_sim_context.h"
@@ -18,13 +19,18 @@ public:
 
     void execute(ISimContext& ctx) override {
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
-        const char* execStr = orderPtr->execution == des::ExecutionMode::INTERRUPT  ? "interrupt"
-                            : orderPtr->execution == des::ExecutionMode::SCHEDULED  ? "scheduled"
-                            :                                                          "background";
-        RCLCPP_INFO(rclcpp::get_logger("MissionComplete"),
+
+        std::string execStr;
+        switch (orderPtr->execution) {
+            case des::ExecutionMode::SCHEDULED:  execStr = "scheduled"; break;
+            case des::ExecutionMode::BACKGROUND: execStr = "background"; break;
+            case des::ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
+        };
+
+        DES_LOG_INFO(rclcpp::get_logger("des.event.mission_complete"),
                     "id=%d type=%s state=%s exec=%s — onMissionEnd",
                     orderPtr->id, orderPtr->type.c_str(),
-                    des::missionStateStr(orderPtr->state).c_str(), execStr);
+                    des::missionStateStr(orderPtr->state).c_str(), execStr.c_str());
         plugin.onMissionEnd(ctx, *orderPtr);
         if (orderPtr->execution != des::ExecutionMode::INTERRUPT) {
             ctx.completeOrder(this->orderPtr);
