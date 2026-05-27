@@ -130,7 +130,7 @@ TEST_F(MissionManagerTest, PushInterruptDoesNotOverwriteCurrent) {
     auto interrupt = makeOrder(99, "Info");
     manager.setCurrent(main);
 
-    manager.pushInterrupt(interrupt);
+    EXPECT_TRUE(manager.pushInterrupt(interrupt));
 
     EXPECT_TRUE(manager.hasInterrupt());
     EXPECT_EQ(manager.activeInterrupt(), interrupt);
@@ -138,24 +138,22 @@ TEST_F(MissionManagerTest, PushInterruptDoesNotOverwriteCurrent) {
     EXPECT_EQ(manager.getCurrent(), main);
 }
 
-TEST_F(MissionManagerTest, PopLastInterruptReturnsTrue) {
+TEST_F(MissionManagerTest, PopClearsActiveInterrupt) {
     auto interrupt = makeOrder(99, "Info");
     manager.pushInterrupt(interrupt);
 
-    EXPECT_TRUE(manager.popInterrupt(interrupt));
+    manager.popInterrupt(interrupt);
     EXPECT_FALSE(manager.hasInterrupt());
+    EXPECT_EQ(manager.activeInterrupt(), nullptr);
 }
 
-TEST_F(MissionManagerTest, PopNonLastInterruptReturnsFalse) {
-    auto i1 = makeOrder(91, "Info1");
-    auto i2 = makeOrder(92, "Info2");
-    manager.pushInterrupt(i1);
-    manager.pushInterrupt(i2);
+TEST_F(MissionManagerTest, PushInterruptRejectedWhenAlreadyActive) {
+    auto first  = makeOrder(91, "Info1");
+    auto second = makeOrder(92, "Info2");
 
-    EXPECT_FALSE(manager.popInterrupt(i2));
-    EXPECT_TRUE(manager.hasInterrupt());
-    EXPECT_EQ(manager.activeInterrupt(), i1);
-    EXPECT_TRUE(manager.popInterrupt(i1));
+    EXPECT_TRUE(manager.pushInterrupt(first));
+    EXPECT_FALSE(manager.pushInterrupt(second));
+    EXPECT_EQ(manager.activeInterrupt(), first);
 }
 
 TEST_F(MissionManagerTest, ResetClearsInterrupts) {

@@ -79,8 +79,9 @@ protected:
         locations["Anna"] = anna;
 
         // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
-        searchAreas["Office"] = 0.0;
-        searchAreas["Lab"] = 0.0;
+        searchAreas["Office"]  = 0.0;
+        searchAreas["Lab"]     = 0.0;
+        searchAreas["Kitchen"] = 0.0;
 
         // Dock -> Office = 10m, Office -> MeetingRoom = 20m
         planner->setDistance("Dock", "Office", 10.0);
