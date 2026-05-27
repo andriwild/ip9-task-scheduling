@@ -47,6 +47,7 @@ struct MeetingRecord {
     quint8 missionState;
     int appointmentTime;
     int startTime;
+    QString orderType;
     QString personName;
     QString roomName;
     QString description;

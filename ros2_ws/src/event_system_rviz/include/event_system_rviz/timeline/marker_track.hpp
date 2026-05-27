@@ -59,9 +59,11 @@ public:
             );
             rect->setZValue(Z_PLAN_LINE);
 
+            const std::string parens = !appt.primaryLabel.empty() ? appt.primaryLabel : appt.orderType;
             const QString labelText = QString::fromStdString(
-                std::format("Mission {}: {} ({})", appt.id, appt.description, appt.primaryLabel)
-                );
+                parens.empty()
+                    ? std::format("Mission {}: {}", appt.id, appt.description)
+                    : std::format("Mission {}: {} ({})", appt.id, appt.description, parens));
             drawMeetingMarker(scene, appt.scheduledTime, labelText, yAxis, tf);
         }
 

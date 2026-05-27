@@ -20,6 +20,7 @@ struct VisualAppointment {
     int id;
     int scheduledTime;
     int startTime;
+    std::string orderType;
     std::string primaryLabel;
     std::string description;
 };

@@ -8,6 +8,7 @@ uint8 CANCELLED = 4
 uint8 mission_state
 int32 appointment_time
 int32 start_time
+string order_type
 string person_name
 string room_name
 string description

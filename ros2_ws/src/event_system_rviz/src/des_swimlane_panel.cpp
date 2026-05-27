@@ -672,6 +672,7 @@ void DesSwimlanePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::
         msg->mission_state,
         msg->appointment_time,
         msg->start_time,
+        QString::fromStdString(msg->order_type),
         QString::fromStdString(msg->person_name),
         QString::fromStdString(msg->room_name),
         QString::fromStdString(msg->description),
@@ -1065,19 +1066,19 @@ void DesSwimlanePanel::redraw() {
                 int deadline = -1;
                 quint8 mode = kExecBackground;
                 if (auto mIt = m_meetings.find(id); mIt != m_meetings.end()) {
-                    mode = mIt->second.executionMode;
+                    const auto& mr = mIt->second;
+                    mode = mr.executionMode;
                     const char* modeLabel =
                         (mode == kExecScheduled) ? "Scheduled" :
                         (mode == kExecInterrupt) ? "Interrupt" : "Background";
                     tooltip += QString("Mode: %1<br>").arg(modeLabel);
-                    if (!mIt->second.personName.isEmpty() || !mIt->second.roomName.isEmpty()) {
-                        tooltip += QString("Person: %1<br>Room: %2<br>")
-                                       .arg(mIt->second.personName, mIt->second.roomName);
-                    }
+                    if (!mr.orderType.isEmpty())   tooltip += QString("Type: %1<br>").arg(mr.orderType);
+                    if (!mr.personName.isEmpty())  tooltip += QString("Person: %1<br>").arg(mr.personName);
+                    if (!mr.roomName.isEmpty())    tooltip += QString("Room: %1<br>").arg(mr.roomName);
+                    if (!mr.description.isEmpty()) tooltip += QString("Description: %1<br>").arg(mr.description);
                     // Real deadline = appointmentTime distinct from startTime
-                    if (mIt->second.appointmentTime > 0
-                        && mIt->second.appointmentTime != mIt->second.startTime) {
-                        deadline = mIt->second.appointmentTime;
+                    if (mr.appointmentTime > 0 && mr.appointmentTime != mr.startTime) {
+                        deadline = mr.appointmentTime;
                     }
                 }
                 if (!stateStr.isEmpty()) tooltip += QString("State: %1<br>").arg(stateStr);

@@ -65,6 +65,7 @@ void DesTimelinePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::
     appt.id            = msg->id;
     appt.scheduledTime = msg->appointment_time;
     appt.startTime     = msg->start_time;
+    appt.orderType     = msg->order_type;
     appt.primaryLabel  = msg->person_name;
     appt.description   = msg->description;
 

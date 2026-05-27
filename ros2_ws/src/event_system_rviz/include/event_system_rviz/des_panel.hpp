@@ -28,13 +28,11 @@ protected:
     QPushButton* m_btnRun;
     QPushButton* m_btnPause;
     QPushButton* m_btnReset;
-    QPushButton* m_btnStep;
 
 private Q_SLOTS:
     void btnRunClick();
     void btnPauseClick();
     void btnResetClick();
-    void btnStepClick();
     void onServiceResponse(ServiceResponseFuture future);
 };
 
