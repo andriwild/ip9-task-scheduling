@@ -13,9 +13,9 @@
 #include "../plugins/accompany/accompany_order.h"
 
 
-const std::string DEFAULT_ORDER_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
-const std::string DEFAULT_EMPLOYEE_FILE    =  "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
-const std::string SIM_CONFIG_FILE          = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
+const std::string DEFAULT_ORDER_FILE    = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
+const std::string DEFAULT_EMPLOYEE_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
+const std::string SIM_CONFIG_FILE       = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
 constexpr int SIM_END_TIME   = 68400;  // 19:00
@@ -325,7 +325,6 @@ public:
         return true;
     }
 
-private:
     static std::optional<nlohmann::json> getJson(const std::string& filePath) {
         // open file
         std::ifstream file(filePath);

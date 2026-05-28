@@ -1,0 +1,126 @@
+#pragma once
+
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+
+#include "db.h"
+#include "init/config_loader.h"
+#include "sim/ros/path_node.h"
+
+const std::string DIST_MAT_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/dist_mat.json";
+constexpr float DIST_SENTINEL = -1.0f;
+
+// Symmetric N x N path-distance cache between all waypoints.
+//
+// Cells:
+//   mat[i][i] == 0                   — diagonal
+//   mat[i][j] >  0                   — cached path distance (metres, Nav2 GridBased)
+//   mat[i][j] == DIST_SENTINEL (-1)  — not yet computed OR unreachable
+//   mat[i][j] == mat[j][i]           — symmetric (planner is called only for i<j)
+//
+// Persistence: serialised to DIST_MAT_FILE as {"mat": [[...]], "names": [...]}.
+// The names array invalidates the cache if waypoints are added/removed/reordered
+// in the DB — a mismatch triggers a full recompute. Sentinel cells let an
+// interrupted run resume without redoing finished entries.
+
+using Mat = std::vector<std::vector<float>>;
+
+class DistMat {
+    DBClient& m_db;
+
+    static bool namesMatch(const nlohmann::json& j, const std::vector<des::Location>& points) {
+        if (!j.contains("names")) {
+            return false;
+        }
+        const auto& names = j.at("names");
+        if (!names.is_array() || names.size() != points.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < points.size(); ++i) {
+            if (names.at(i).get<std::string>() != points.at(i).m_name) return false;
+        }
+        return true;
+    }
+
+public:
+    explicit DistMat(DBClient& db): m_db(db) {}
+
+    static bool saveMat(const Mat& mat, const std::vector<des::Location>& points) {
+        nlohmann::json j;
+        j["mat"] = mat;
+        std::vector<std::string> names;
+        names.reserve(points.size());
+        for (const auto& p : points) {
+            names.push_back(p.m_name);
+        }
+        j["names"] = names;
+
+        std::ofstream file(DIST_MAT_FILE);
+        if (!file.is_open()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.dist_mat"), "Could not write distance matrix to: %s", DIST_MAT_FILE.c_str());
+            return false;
+        }
+        file << std::setw(4) << j << std::endl;
+        return true;
+    }
+
+    Mat getMat(std::shared_ptr<PathPlannerNode> planner) {
+        DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "--- DISTANCE MATRIX ---");
+
+        auto pointsOpt = m_db.waypoints();
+        assert(pointsOpt.has_value());
+
+        const auto points = pointsOpt.value();
+        const size_t nPoints = points.size();
+
+        // Load cached matrix if file exists and waypoint set (names+order) still matches.
+        Mat mat;
+        if (std::filesystem::exists(DIST_MAT_FILE)) {
+            auto json = ConfigLoader::getJson(DIST_MAT_FILE);
+            if (json.has_value() && json.value().contains("mat") && namesMatch(json.value(), points)) {
+                mat = json.value().at("mat").get<Mat>();
+                DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "Loaded cached distance matrix (%zu x %zu)", mat.size(), mat.empty() ? 0 : mat.front().size());
+            } else {
+                DES_LOG_WARN(rclcpp::get_logger("des.dist_mat"), "Cached distance matrix does not match current waypoints — recomputing");
+            }
+        }
+
+        // Ensure mat is nPoints x nPoints, filled with sentinel where unknown, 0 on diagonal.
+        mat.resize(nPoints, std::vector<float>(nPoints, DIST_SENTINEL));
+        for (auto& row : mat) {
+            row.resize(nPoints, DIST_SENTINEL);
+        }
+        for (size_t i = 0; i < nPoints; ++i) {
+            mat[i][i] = 0.0f;
+        }
+
+        // Fill upper triangle, mirror to lower
+        for (size_t i = 0; i < nPoints; ++i) {
+            bool rowDirty = false;
+            for (size_t j = i + 1; j < nPoints; ++j) {
+
+                // Only calc if a sentinel is present
+                if (mat[i][j] < 0.0f) {
+                    const auto& p1 = points.at(i);
+                    const auto& p2 = points.at(j);
+                    DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "mat calc (%zu, %zu) %s | %s", i, j, p1.m_name.c_str(), p2.m_name.c_str());
+
+                    auto d = planner->calcDistance(p1.m_name, p2.m_name, false);
+                    assert(d.has_value());
+
+                    mat[i][j] = static_cast<float>(d.value());
+                    mat[j][i] = mat[i][j];
+                    rowDirty = true;
+                }
+            }
+            if (rowDirty) {
+                saveMat(mat, points);
+            }
+        }
+
+        DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "Distance matrix ready (%zu x %zu)", nPoints, nPoints);
+        return mat;
+    }
+};

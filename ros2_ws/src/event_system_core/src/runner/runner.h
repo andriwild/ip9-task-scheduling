@@ -14,6 +14,7 @@
 #include "../util/types.h"
 #include "../sim/scheduler.h"
 #include "../plugins/order_registry.h"
+#include "util/dist_mat.h"
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
@@ -221,6 +222,9 @@ protected:
             }
         });
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Launched all ROS Nodes");
+
+        DistMat distMat(m_db);
+        distMat.getMat(m_plannerNode);
     }
 
 };
