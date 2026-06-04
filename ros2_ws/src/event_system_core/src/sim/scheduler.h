@@ -17,7 +17,7 @@ class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<IPathPlanner> m_plannerNode;
     const std::map<std::string, std::shared_ptr<des::Person>>& m_locations;
-    const des::SearchAreaMap& m_searchAreas;
+    const des::LocationMap& m_locationMap;
     std::string m_startPosition = "IMVS_Dock";
 
 public:
@@ -26,12 +26,12 @@ public:
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<IPathPlanner> &plannerNode,
         const std::map<std::string, std::shared_ptr<des::Person>>& locations,
-        const des::SearchAreaMap& searchAreas
+        const des::LocationMap& locationMap
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
         , m_locations(locations)
-        , m_searchAreas(searchAreas)
+        , m_locationMap(locationMap)
     {}
 
     std::string startPos() const {
@@ -70,12 +70,12 @@ public:
 
     // Time it takes to scan the given area in seconds
     [[nodiscard]] double getScanTime(const std::string& area) const {
-        auto it = m_searchAreas.find(area);
-        if (it == m_searchAreas.end()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.scheduler"), "Search area not found for '%s', defaulting to 1.0", area.c_str());
+        auto it = m_locationMap.find(area);
+        if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.scheduler"), "Location area not found for '%s', defaulting to 1.0", area.c_str());
             return 1.0;
         }
-        return it->second;
+        return it->second.m_area.value();
     }
 
     // Room labels for a given employee

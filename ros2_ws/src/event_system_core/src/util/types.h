@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -39,11 +40,13 @@ struct Segment {
 struct Location {
     std::string m_name;
     Point m_p;
+    std::optional<double> m_area;
 
-    explicit Location(const std::string& name, const Point p) : m_name(name), m_p(p) {}
+    explicit Location(const std::string& name, const Point p, const std::optional<double> area = std::nullopt) : m_name(name), m_p(p), m_area(area) {}
 
     friend std::ostream& operator<<(std::ostream& os, const Location& l) {
         os << l.m_name << l.m_p;
+        if (l.m_area) os << " area=" << *l.m_area;
         return os;
     }
 };
@@ -220,8 +223,7 @@ struct BatteryProps {
 
 using PersonList        = std::vector<std::shared_ptr<Person>>;
 using PersonLocationMap = std::map<std::string, std::shared_ptr<Person>>;
-using SearchAreaMap     = std::map<std::string, double>;
-using LocationMap       = std::map<std::string, Point>;
+using LocationMap       = std::map<std::string, Location>;  // name -> coordinates + optional area
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
     const int hours   = static_cast<int>(sec / 3600.0);

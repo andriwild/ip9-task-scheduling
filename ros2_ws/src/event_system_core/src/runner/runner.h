@@ -89,8 +89,7 @@ public:
     }
 
 protected:
-    std::map<std::string, des::Point> m_locationMap;
-    des::SearchAreaMap m_searchAreaMap;
+    des::LocationMap m_locationMap;
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<PathPlannerNode> m_plannerNode;
     std::shared_ptr<MetricsNode> m_metricsNode;
@@ -179,26 +178,36 @@ protected:
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
-    des::SearchAreaMap loadSearchAreas() {
-        const auto areas = m_db.allAreas();
-        if (!areas.has_value()) {
-            throw std::runtime_error("Could not load search areas from DB");
-        }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu search areas", areas.value().size());
-        return areas.value();
-    }
-
-    std::map<std::string, des::Point> loadPointsOfInterest() {
+    des::LocationMap loadLocations() {
         const auto pois = m_db.waypoints();
         if (!pois.has_value()) {
             throw std::runtime_error("Could not load points of interest from DB");
         }
-        std::map<std::string, des::Point> locationMap;
+        des::LocationMap locationMap;
         for (const auto& poi : pois.value()) {
-            locationMap[poi.m_name] = poi.m_p;
-            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), poi);
+            locationMap.emplace(poi.m_name, poi);
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", locationMap.size());
+
+        const auto areas = m_db.allAreas();
+        if (!areas.has_value()) {
+            throw std::runtime_error("Could not load location areas from DB");
+        }
+        size_t matched = 0;
+        for (const auto& [name, area] : areas.value()) {
+            const auto it = locationMap.find(name);
+            if (it == locationMap.end()) {
+                DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; area dropped", name.c_str());
+                continue;
+            }
+            it->second.m_area = area;
+            ++matched;
+        }
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu areas into locations", matched, areas.value().size());
+
+        for (const auto& [_, loc] : locationMap) {
+            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
+        }
         return locationMap;
     }
 

@@ -13,16 +13,26 @@ constexpr float DIST_SENTINEL = -1.0f;
 
 // Symmetric N x N path-distance cache between all waypoints.
 //
-// Cells:
-//   mat[i][i] == 0                   — diagonal
-//   mat[i][j] >  0                   — cached path distance (metres, Nav2 GridBased)
-//   mat[i][j] == DIST_SENTINEL (-1)  — not yet computed OR unreachable
-//   mat[i][j] == mat[j][i]           — symmetric (planner is called only for i<j)
+// mat[i][i] == 0                   — diagonal
+// mat[i][j] >  0                   — cached path distance (metres, Nav2)
+// mat[i][j] == DIST_SENTINEL (-1)  — not yet computed OR unreachable
+// mat[i][j] == mat[j][i]           — symmetric (planner is called only for i<j)
 //
-// Persistence: serialised to DIST_MAT_FILE as {"mat": [[...]], "names": [...]}.
-// The names array invalidates the cache if waypoints are added/removed/reordered
-// in the DB — a mismatch triggers a full recompute. Sentinel cells let an
-// interrupted run resume without redoing finished entries.
+// Persistence: serialised to DIST_MAT_FILE as
+//   {
+//     "mat":       [[...], [...], ...],          // N x N distances
+//     "names":     ["wp_a", "wp_b", ...],        // index → waypoint name
+//     "locations": [{"x":.., "y":.., "yaw":..}, ...]  // index → world pose
+//   }
+//
+// The names array (and only the names) invalidates the cache: a mismatch in
+// size/order triggers a full recompute. Sentinel cells let an interrupted run
+// resume without redoing finished entries.
+//
+// "locations" is metadata for downstream consumers (algorithm development,
+// visualisation tools, sanity checks) — it does NOT participate in cache
+// validity. Older cached files without "locations" stay valid; the next
+// successful save upgrades them in place.
 
 using Mat = std::vector<std::vector<float>>;
 
@@ -50,12 +60,20 @@ public:
     static bool saveMat(const Mat& mat, const std::vector<des::Location>& points) {
         nlohmann::json j;
         j["mat"] = mat;
+
         std::vector<std::string> names;
         names.reserve(points.size());
+        nlohmann::json locations = nlohmann::json::array();
         for (const auto& p : points) {
             names.push_back(p.m_name);
+            locations.push_back({
+                {"x",   p.m_p.m_x},
+                {"y",   p.m_p.m_y},
+                {"yaw", p.m_p.m_yaw},
+            });
         }
-        j["names"] = names;
+        j["names"]     = names;
+        j["locations"] = locations;
 
         std::ofstream file(DIST_MAT_FILE);
         if (!file.is_open()) {
@@ -77,11 +95,15 @@ public:
 
         // Load cached matrix if file exists and waypoint set (names+order) still matches.
         Mat mat;
+        bool needsUpgrade = false;
         if (std::filesystem::exists(DIST_MAT_FILE)) {
             auto json = ConfigLoader::getJson(DIST_MAT_FILE);
             if (json.has_value() && json.value().contains("mat") && namesMatch(json.value(), points)) {
                 mat = json.value().at("mat").get<Mat>();
                 DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "Loaded cached distance matrix (%zu x %zu)", mat.size(), mat.empty() ? 0 : mat.front().size());
+                // Older cache files predate the "locations" field — upgrade in place
+                // without recomputing any distances.
+                needsUpgrade = !json.value().contains("locations");
             } else {
                 DES_LOG_WARN(rclcpp::get_logger("des.dist_mat"), "Cached distance matrix does not match current waypoints — recomputing");
             }
@@ -94,6 +116,13 @@ public:
         }
         for (size_t i = 0; i < nPoints; ++i) {
             mat[i][i] = 0.0f;
+        }
+
+        // One-time rewrite to attach the new locations metadata. Distances are
+        // unchanged, so no waypoint pair is recomputed.
+        if (needsUpgrade) {
+            DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "Upgrading cache file with waypoint locations (no recompute)");
+            saveMat(mat, points);
         }
 
         // Fill upper triangle, mirror to lower

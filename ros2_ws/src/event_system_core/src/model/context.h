@@ -44,14 +44,14 @@ public:
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
-    des::SearchAreaMap m_searchAreas;
+    des::LocationMap m_locationMap;
 
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
         std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
-        des::SearchAreaMap searchAreas 
+        des::LocationMap locationMap
     );
 
     Scheduler& getScheduler() { return *m_scheduler; }
@@ -131,13 +131,13 @@ public:
         m_personLocations[name] = room;
     }
 
-    double getSearchArea(const std::string& name) const override {
-        auto it = m_searchAreas.find(name);
-        if (it == m_searchAreas.end()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.context"), "Search area not found for '%s', defaulting to 1.0", name.c_str());
+    double getLocationArea(const std::string& name) const override {
+        auto it = m_locationMap.find(name);
+        if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.context"), "Location area not found for '%s', defaulting to 1.0", name.c_str());
             return 1.0;
         }
-        return it->second;
+        return it->second.m_area.value();
     }
 
     // Mission management (delegated to MissionManager)

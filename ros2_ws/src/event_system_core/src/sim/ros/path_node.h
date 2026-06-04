@@ -33,7 +33,7 @@ public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode(std::map<std::string, des::Point> locationMap):
+    PathPlannerNode(des::LocationMap locationMap):
         Node("event_system_planner_node"),
         m_locationMap(std::move(locationMap)) 
     {
@@ -113,8 +113,8 @@ public:
             return std::nullopt;
         }
 
-        SimplePose start{fromIt->second.m_x, fromIt->second.m_y, 0.0};
-        SimplePose goal{toIt->second.m_x, toIt->second.m_y, 0.0};
+        SimplePose start{fromIt->second.m_p.m_x, fromIt->second.m_p.m_y, 0.0};
+        SimplePose goal{toIt->second.m_p.m_x, toIt->second.m_p.m_y, 0.0};
 
         auto result = serviceRequest(start, goal);
 
@@ -166,5 +166,5 @@ private:
     std::condition_variable m_cv;
     bool m_resultReady{false};
     PathResult m_currentResult{false, 0.0};
-    std::map<std::string, des::Point> m_locationMap;
+    des::LocationMap m_locationMap;
 };

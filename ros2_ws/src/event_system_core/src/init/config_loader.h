@@ -214,7 +214,7 @@ public:
     static void validateConfig(
         const des::OrderList& orders,
         const des::PersonList& employees,
-        const std::map<std::string, des::Point>& locationMap,
+        const des::LocationMap& locationMap,
         const std::string& arrivalLocation
     ) {
         std::vector<std::string> errors;

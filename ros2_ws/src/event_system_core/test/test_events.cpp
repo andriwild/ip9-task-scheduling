@@ -193,7 +193,7 @@ public:
     void setPersonLocation(const std::string& name, const std::string& room) override {
         personLocations[name] = room;
     }
-    double getSearchArea(const std::string& /*name*/) const override { return 0.0; }
+    double getLocationArea(const std::string& /*name*/) const override { return 0.0; }
 };
 
 static bool pluginsRegistered = [] {

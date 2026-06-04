@@ -255,11 +255,11 @@ TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
     ASSERT_TRUE(employees.has_value());
     ASSERT_TRUE(orders.has_value());
 
-    std::map<std::string, des::Point> locationMap;
-    locationMap["5.2B03"] = des::Point(0, 0, 0);
-    locationMap["5.2B01"] = des::Point(1, 1, 0);
-    locationMap["5.2B10"] = des::Point(2, 2, 0);
-    locationMap["5.2B_Elevator"] = des::Point(3, 3, 0);
+    des::LocationMap locationMap;
+    locationMap.emplace("5.2B03", des::Location("5.2B03", des::Point(0, 0, 0)));
+    locationMap.emplace("5.2B01", des::Location("5.2B01", des::Point(1, 1, 0)));
+    locationMap.emplace("5.2B10", des::Location("5.2B10", des::Point(2, 2, 0)));
+    locationMap.emplace("5.2B_Elevator", des::Location("5.2B_Elevator", des::Point(3, 3, 0)));
 
     EXPECT_NO_THROW(ConfigLoader::validateConfig(*orders, *employees, locationMap, "5.2B_Elevator"));
 }
@@ -274,8 +274,8 @@ TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
 
     des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomA") };
 
-    std::map<std::string, des::Point> locationMap;
-    locationMap["RoomA"] = des::Point(0, 0, 0);
+    des::LocationMap locationMap;
+    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
 
     EXPECT_THROW(ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"), std::runtime_error);
 }
@@ -288,8 +288,8 @@ TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
 
     des::OrderList orders = { makeAccompanyOrder("Max", "NonexistentRoom") };
 
-    std::map<std::string, des::Point> locationMap;
-    locationMap["RoomA"] = des::Point(0, 0, 0);
+    des::LocationMap locationMap;
+    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
 
     EXPECT_THROW(
         ConfigLoader::validateConfig(orders, {emp}, locationMap, "RoomA"),
@@ -303,9 +303,9 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
     emp->roomLabels = {"RoomA", "RoomB"};
     emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
 
-    std::map<std::string, des::Point> locationMap;
-    locationMap["RoomA"] = des::Point(0, 0, 0);
-    locationMap["RoomB"] = des::Point(1, 1, 0);
+    des::LocationMap locationMap;
+    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
+    locationMap.emplace("RoomB", des::Location("RoomB", des::Point(1, 1, 0)));
 
     EXPECT_THROW(
         ConfigLoader::validateConfig({}, {emp}, locationMap, "RoomA"),

@@ -81,7 +81,7 @@ protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
     des::PersonLocationMap employeeLocations;
-    des::SearchAreaMap searchAreas;
+    des::LocationMap locationMap;
     std::shared_ptr<TrackingObserver> observer;
 
     static void SetUpTestSuite() {
@@ -125,10 +125,10 @@ protected:
         planner->setDistance("Office", "MeetingRoom", 20.0);
         planner->setDistance("IMVS_Dock", "MeetingRoom", 25.0);
 
-        // Search area sizes so ScanAera produces a non-zero scanTime
-        searchAreas["IMVS_Dock"] = 50.0;
-        searchAreas["Office"] = 50.0;
-        searchAreas["MeetingRoom"] = 50.0;
+        // Location areas so ScanAera produces a non-zero scanTime
+        locationMap.emplace("IMVS_Dock", des::Location("IMVS_Dock", {}, 50.0));
+        locationMap.emplace("Office", des::Location("Office", {}, 50.0));
+        locationMap.emplace("MeetingRoom", des::Location("MeetingRoom", {}, 50.0));
 
         // Employee
         auto max = std::make_shared<des::Person>();
@@ -192,7 +192,7 @@ TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
 
 TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -241,7 +241,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 
 TEST_F(IntegrationTest, EventLoopDrainsQueue) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -259,7 +259,7 @@ TEST_F(IntegrationTest, EventLoopDrainsQueue) {
 
 TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -288,7 +288,7 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
 
 TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -320,7 +320,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -348,7 +348,7 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
 
 TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -370,7 +370,7 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
 
 TEST_F(IntegrationTest, StepByStepSingleMission) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employeeLocations, searchAreas
+        eventQueue, config, planner, employeeLocations, locationMap
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));

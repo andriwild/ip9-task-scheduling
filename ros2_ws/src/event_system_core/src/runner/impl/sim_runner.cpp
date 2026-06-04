@@ -41,7 +41,7 @@ void SimRunner::rebuildEventQueue() {
 
 void SimRunner::buildSimulation() {
     m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue, m_config, m_plannerNode, m_employeeLocations, m_searchAreaMap
+        m_eventQueue, m_config, m_plannerNode, m_employeeLocations, m_locationMap
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);

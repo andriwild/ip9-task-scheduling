@@ -21,7 +21,7 @@ public:
         ctx.notifyEvent(*this);
 
         const std::string robotLocation = ctx.getRobot()->getLocation();
-        const double roomArea           = ctx.getSearchArea(robotLocation);
+        const double roomArea           = ctx.getLocationArea(robotLocation);
         const double broomFootprint     = cleanConfig().cleaningArea;
         assert(broomFootprint > 0.0);
         const double broomSide  = std::sqrt(broomFootprint);

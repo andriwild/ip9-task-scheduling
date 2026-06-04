@@ -24,7 +24,7 @@ public:
         const std::string personLocation = ctx.getPersonLocation(personName);
         const std::string robotLocation  = ctx.getRobot()->getLocation();
         const bool personPresent = robotLocation == personLocation;
-        const double areaToSearch = ctx.getSearchArea(robotLocation);
+        const double areaToSearch = ctx.getLocationArea(robotLocation);
         const double fieldOfView  = ctx.getConfig()->personDetectionRange * ctx.getConfig()->personDetectionRange;
         assert(fieldOfView != 0);
         const double steps = (areaToSearch / fieldOfView) + 1;

@@ -47,7 +47,7 @@ protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
     des::PersonLocationMap locations;
-    des::SearchAreaMap searchAreas;
+    des::LocationMap locationMap;
 
     static void SetUpTestSuite() {
         static bool registered = false;
@@ -79,9 +79,9 @@ protected:
         locations["Anna"] = anna;
 
         // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
-        searchAreas["Office"]  = 0.0;
-        searchAreas["Lab"]     = 0.0;
-        searchAreas["Kitchen"] = 0.0;
+        locationMap.emplace("Office", des::Location("Office", {}, 0.0));
+        locationMap.emplace("Lab", des::Location("Lab", {}, 0.0));
+        locationMap.emplace("Kitchen", des::Location("Kitchen", {}, 0.0));
 
         // Dock -> Office = 10m, Office -> MeetingRoom = 20m
         planner->setDistance("Dock", "Office", 10.0);
@@ -96,7 +96,7 @@ protected:
     }
 
     std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, locations, searchAreas);
+        return std::make_unique<Scheduler>(config, planner, locations, locationMap);
     }
 
     static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(

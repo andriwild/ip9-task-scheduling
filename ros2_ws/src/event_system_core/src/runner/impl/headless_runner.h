@@ -26,8 +26,7 @@ class HeadlessRunner final : public IAppRunner {
 
 public:
     explicit HeadlessRunner() {
-        m_locationMap   = loadPointsOfInterest();
-        m_searchAreaMap = loadSearchAreas();
+        m_locationMap = loadLocations();
 
         m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
         m_metricsNode = std::make_shared<MetricsNode>();

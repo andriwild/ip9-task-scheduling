@@ -55,8 +55,7 @@ bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& contex
     if (!o.deadline.has_value()) {
         return true;
     }
-    const double driveTime = context.getScheduler().robotDriveTime(
-        context.getRobot()->getLocation(), o.roomName);
+    const double driveTime = context.getScheduler().robotDriveTime(context.getRobot()->getLocation(), o.roomName);
     const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
     if (slack < 0) {
         DES_LOG_WARN(rclcpp::get_logger("des.plugin.clean"),
@@ -79,7 +78,7 @@ CleanTimings cleanTimings(const des::IOrder& order, const ISimContext& context, 
     const double driveOut  = sched.robotDriveTime(startLocation, o.roomName);
     const double driveBack = sched.robotDriveTime(o.roomName, cfg.dockLocation);
 
-    const double roomArea       = context.getSearchArea(o.roomName);
+    const double roomArea       = context.getLocationArea(o.roomName);
     const double broomFootprint = cleanConfig().cleaningArea;
     const double broomSide      = std::sqrt(broomFootprint);
     const double steps          = (roomArea / broomFootprint) + 1;
