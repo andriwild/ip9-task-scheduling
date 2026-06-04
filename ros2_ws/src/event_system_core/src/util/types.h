@@ -112,6 +112,7 @@ struct SimConfig {
     double personDetectionRange = 5.0;
     int simStartTime = 25200;  // 07:00
     int simEndTime   = 68400;  // 19:00
+    bool useDistanceMatrix = false;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -140,6 +141,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
+        os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;

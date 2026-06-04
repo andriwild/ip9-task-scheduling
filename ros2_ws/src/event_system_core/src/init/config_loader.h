@@ -16,6 +16,10 @@
 const std::string DEFAULT_ORDER_FILE    = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
 const std::string DEFAULT_EMPLOYEE_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
 const std::string SIM_CONFIG_FILE       = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
+// Generated building snapshot: names + distance matrix + waypoint coords + areas.
+// Built offline from the DB + Nav2 planner (see build_snapshot.sh); the running
+// sim reads building geometry from here and never touches the DB.
+const std::string BUILDING_FILE         = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
 constexpr int SIM_END_TIME   = 68400;  // 19:00
@@ -178,6 +182,7 @@ public:
             config.personDetectionRange = j.value("person_detection_range", 5.0);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simEndTime   = j.value("sim_end_time",   SIM_END_TIME);
+            config.useDistanceMatrix = j.value("use_distance_matrix", false);
 
             // Per-plugin config sections live under their typeName() key, e.g.
             // "accompany": {...}, "clean": {...}. Each plugin pulls its own
@@ -307,6 +312,7 @@ public:
         j["person_detection_range"] = config->personDetectionRange;
         j["sim_start_time"] = config->simStartTime;
         j["sim_end_time"]   = config->simEndTime;
+        j["use_distance_matrix"] = config->useDistanceMatrix;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
@@ -342,5 +348,55 @@ public:
             return std::nullopt;
         }
         return json;
+    }
+
+    // Loads the building snapshot into a name -> Location map (coords + optional
+    // area). Index i of "names"/"locations"/"areas" refers to the same waypoint.
+    // The distance matrix ("mat") is left in the file for offline algorithms; the
+    // runtime sim resolves distances via the planner, so it is not loaded here.
+    static std::optional<des::LocationMap> loadBuildingSnapshot(const std::string& filePath) {
+        const auto json = getJson(filePath);
+        if (!json.has_value()) {
+            return std::nullopt;
+        }
+        const auto& j = json.value();
+        if (!j.contains("names") || !j.contains("locations")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s missing 'names'/'locations'", filePath.c_str());
+            return std::nullopt;
+        }
+
+        const auto& names = j.at("names");
+        const auto& locs  = j.at("locations");
+        const bool hasAreas = j.contains("areas");
+
+        des::LocationMap map;
+        for (size_t i = 0; i < names.size() && i < locs.size(); ++i) {
+            const std::string name = names.at(i).get<std::string>();
+            const auto& l = locs.at(i);
+            const des::Point p{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) };
+
+            std::optional<double> area;
+            if (hasAreas && i < j.at("areas").size() && !j.at("areas").at(i).is_null()) {
+                area = j.at("areas").at(i).get<double>();
+            }
+            map.emplace(name, des::Location(name, p, area));
+        }
+        return map;
+    }
+
+    static std::optional<std::pair<std::vector<std::string>, std::vector<std::vector<float>>>>
+    loadDistanceMatrix(const std::string& filePath) {
+        const auto json = getJson(filePath);
+        if (!json.has_value()) {
+            return std::nullopt;
+        }
+        const auto& j = json.value();
+        if (!j.contains("names") || !j.contains("mat")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s missing 'names'/'mat'", filePath.c_str());
+            return std::nullopt;
+        }
+        return std::make_pair(
+            j.at("names").get<std::vector<std::string>>(),
+            j.at("mat").get<std::vector<std::vector<float>>>());
     }
 };

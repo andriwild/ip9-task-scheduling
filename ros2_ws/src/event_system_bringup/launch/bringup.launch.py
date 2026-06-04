@@ -3,7 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
-from launch.conditions import UnlessCondition
+from launch.conditions import IfCondition
 
 def generate_launch_description():
 
@@ -18,8 +18,8 @@ def generate_launch_description():
     mode = LaunchConfiguration("mode", default="full")
     rounds = LaunchConfiguration("rounds", default="1")
 
-    # Condition to check if mode is "headless"
-    is_headless_mode = launch.substitutions.PythonExpression(["'", mode, "' == 'headless'"])
+    # RViz only in the interactive full mode (not headless, not the build tool).
+    is_full_mode = launch.substitutions.PythonExpression(["'", mode, "' == 'full'"])
 
     return LaunchDescription([
         DeclareLaunchArgument("use_sim_time", default_value=use_sim_time),
@@ -32,14 +32,14 @@ def generate_launch_description():
                               description="Override level for des.io.* (default: log_level)"),
         DeclareLaunchArgument("queue_log_level",  default_value=queue_log_level,
                               description="Override level for des.event_queue (default: log_level). Set to DEBUG to see push/pop traffic."),
-        DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full or headless"),
+        DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless or build"),
         DeclareLaunchArgument("rounds", default_value=rounds, description="Number of rounds in headless mode"),
 
         Node(
             package='rviz2',
             executable='rviz2',
             output='screen',
-            condition=UnlessCondition(is_headless_mode),
+            condition=IfCondition(is_full_mode),
             parameters=[{
                 'use_sim_time': use_sim_time,
             }]

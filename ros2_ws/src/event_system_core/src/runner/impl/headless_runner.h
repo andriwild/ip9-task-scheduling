@@ -28,10 +28,12 @@ public:
     explicit HeadlessRunner() {
         m_locationMap = loadLocations();
 
-        m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
+        createPlanner();
         m_metricsNode = std::make_shared<MetricsNode>();
 
-        IAppRunner::initROS({ m_plannerNode, m_metricsNode });
+        std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_metricsNode };
+        if (m_plannerNode) nodes.push_back(m_plannerNode);
+        IAppRunner::initROS(nodes);
     }
 
     ~HeadlessRunner() override {

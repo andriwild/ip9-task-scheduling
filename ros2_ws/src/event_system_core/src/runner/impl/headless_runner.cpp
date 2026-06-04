@@ -28,7 +28,7 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
-        m_plannerNode,
+        m_planner,
         m_employeeLocations,
         m_locationMap
     );

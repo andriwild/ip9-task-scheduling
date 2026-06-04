@@ -20,12 +20,14 @@ public:
     explicit SimRunner() {
         m_locationMap = loadLocations();
 
-        m_plannerNode      = std::make_shared<PathPlannerNode>(m_locationMap);
+        createPlanner();
         m_controllerNode   = std::make_shared<ControllerNode>();
         m_systemConfigNode = std::make_shared<ConfigNode>();
         m_metricsNode      = std::make_shared<MetricsNode>();
 
-        IAppRunner::initROS({ m_plannerNode, m_controllerNode, m_systemConfigNode, m_metricsNode });
+        std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_controllerNode, m_systemConfigNode, m_metricsNode };
+        if (m_plannerNode) nodes.push_back(m_plannerNode);
+        IAppRunner::initROS(nodes);
     }
 
     ~SimRunner() override { SimRunner::shutdown(); }

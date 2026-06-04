@@ -10,6 +10,7 @@
 #include "runner/runner.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
+#include "runner/impl/snapshot_builder.h"
 #include "util/log.h"
 
 const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/test/";
@@ -22,14 +23,25 @@ int main(const int argc, char *argv[]) {
     OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
 
     // ros parameter requires searching the flag (stability)
-    bool headless = false;
-    for (int i = 1; i < argc; ++i) {
+    std::string mode = "full";
+    for (int i = 1; i + 1 < argc; ++i) {
         if (std::string(argv[i]) == "--mode") {
-            if (i + 1 < argc && std::string(argv[i+1]) == "headless") {
-                headless = true;
-            }
+            mode = argv[i + 1];
         }
     }
+
+    // Offline building-snapshot generation: build the JSON from DB + Nav2, exit.
+    if (mode == "build") {
+        rclcpp::init(argc, argv);
+        des::log::installOutputHandler();
+        DES_LOG_INFO(rclcpp::get_logger("des.main"), "\n----- Building Snapshot Generation -----");
+        SnapshotBuilder builder;
+        const int rc = builder.run();
+        rclcpp::shutdown();
+        return rc;
+    }
+
+    const bool headless = (mode == "headless");
 
     // Initialize application runner
     if (headless) {

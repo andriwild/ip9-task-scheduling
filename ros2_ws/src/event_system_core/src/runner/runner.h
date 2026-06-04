@@ -6,6 +6,7 @@
 #include "../model/context.h"
 #include "../model/event.h"
 #include "../sim/ros/path_node.h"
+#include "../sim/matrix_planner.h"
 #include "../util/db.h"
 #include "../init/config_loader.h"
 #include "../observer/ros.h"
@@ -14,12 +15,47 @@
 #include "../util/types.h"
 #include "../sim/scheduler.h"
 #include "../plugins/order_registry.h"
-#include "util/dist_mat.h"
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
 const std::string DB_USER = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
+
+// DB view of the building (points_of_interest + search_zone areas), merged by
+// name. Only the offline snapshot builder uses this; the running sim reads the
+// generated snapshot via ConfigLoader::loadBuildingSnapshot instead.
+inline des::LocationMap loadLocationsFromDB(DBClient& db) {
+    const auto pois = db.waypoints();
+    if (!pois.has_value()) {
+        throw std::runtime_error("Could not load points of interest from DB");
+    }
+    des::LocationMap locationMap;
+    for (const auto& poi : pois.value()) {
+        locationMap.emplace(poi.m_name, poi);
+    }
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", locationMap.size());
+
+    const auto areas = db.allAreas();
+    if (!areas.has_value()) {
+        throw std::runtime_error("Could not load location areas from DB");
+    }
+    size_t matched = 0;
+    for (const auto& [name, area] : areas.value()) {
+        const auto it = locationMap.find(name);
+        if (it == locationMap.end()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; area dropped", name.c_str());
+            continue;
+        }
+        it->second.m_area = area;
+        ++matched;
+    }
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu areas into locations", matched, areas.value().size());
+
+    for (const auto& [_, loc] : locationMap) {
+        DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
+    }
+    return locationMap;
+}
 
 class IAppRunner {
 public:
@@ -91,8 +127,27 @@ public:
 protected:
     des::LocationMap m_locationMap;
     std::shared_ptr<des::SimConfig> m_config;
-    std::shared_ptr<PathPlannerNode> m_plannerNode;
+    std::shared_ptr<IPathPlanner> m_planner;
+    std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     std::shared_ptr<MetricsNode> m_metricsNode;
+
+    // Picks the distance source per sim_config.json: the Nav2 PathPlannerNode
+    // (also registered as a ROS node) or the offline matrix from BUILDING_FILE.
+    void createPlanner() {
+        const bool useMatrix = ConfigLoader::loadSimConfig().value_or(des::SimConfig{}).useDistanceMatrix;
+        if (useMatrix) {
+            auto data = ConfigLoader::loadDistanceMatrix(BUILDING_FILE);
+            if (!data.has_value()) {
+                throw std::runtime_error("use_distance_matrix=true but no matrix in " + BUILDING_FILE);
+            }
+            m_planner = std::make_shared<MatrixPlanner>(std::move(data->first), std::move(data->second));
+            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: matrix (%s)", BUILDING_FILE.c_str());
+        } else {
+            m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
+            m_planner = m_plannerNode;
+            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: Nav2 planner");
+        }
+    }
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     des::OrderList m_orders;
     des::OrderList m_backgroundOrders;
@@ -178,47 +233,27 @@ protected:
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
+    // Runtime building geometry comes from the generated snapshot, not the DB.
     des::LocationMap loadLocations() {
-        const auto pois = m_db.waypoints();
-        if (!pois.has_value()) {
-            throw std::runtime_error("Could not load points of interest from DB");
+        auto map = ConfigLoader::loadBuildingSnapshot(BUILDING_FILE);
+        if (!map.has_value()) {
+            throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE +
+                                     ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
         }
-        des::LocationMap locationMap;
-        for (const auto& poi : pois.value()) {
-            locationMap.emplace(poi.m_name, poi);
-        }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", locationMap.size());
-
-        const auto areas = m_db.allAreas();
-        if (!areas.has_value()) {
-            throw std::runtime_error("Could not load location areas from DB");
-        }
-        size_t matched = 0;
-        for (const auto& [name, area] : areas.value()) {
-            const auto it = locationMap.find(name);
-            if (it == locationMap.end()) {
-                DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; area dropped", name.c_str());
-                continue;
-            }
-            it->second.m_area = area;
-            ++matched;
-        }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu areas into locations", matched, areas.value().size());
-
-        for (const auto& [_, loc] : locationMap) {
-            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
-        }
-        return locationMap;
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu locations from building snapshot", map.value().size());
+        return map.value();
     }
 
     virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {
         // leads to spam messages on lower logger level
         rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);
 
-        if (!m_plannerNode->isReady()) {
-            throw std::runtime_error("Nav2 Planner initialization failed");
+        if (m_plannerNode) {
+            if (!m_plannerNode->isReady()) {
+                throw std::runtime_error("Nav2 Planner initialization failed");
+            }
+            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Planner ready");
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Planner ready");
 
         m_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
         m_rosThread = std::thread([this, nodes] {
@@ -231,9 +266,6 @@ protected:
             }
         });
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Launched all ROS Nodes");
-
-        DistMat distMat(m_db);
-        distMat.getMat(m_plannerNode);
     }
 
 };
