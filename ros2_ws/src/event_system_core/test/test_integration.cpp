@@ -315,7 +315,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
     EXPECT_EQ(ctx->getRobot()->getLocation(), config->dockLocation);
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getOrderPtr(), nullptr);
-    EXPECT_FALSE(ctx->hasPendingMission());
+    EXPECT_FALSE(ctx->hasScheduledMission());
 }
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {

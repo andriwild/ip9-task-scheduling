@@ -45,16 +45,19 @@ void SimulationContext::completeOrder(const des::OrderPtr& order) {
     const int deadline = order->deadline.value_or(m_currentTime);
     const int timeDiff = m_currentTime - deadline;
     notifyMissionComplete(order->state, timeDiff, order->execution);
-    if (m_missionManager.getCurrent() == order) {
-        m_missionManager.setCurrent(nullptr);
+    if (m_currentMission == order) {
+        setOrderPtr(nullptr);
     }
 }
 
 void SimulationContext::resetContext(const int newTime) {
     m_currentTime = newTime;
     des::log::setSimTime(newTime);
-    m_missionManager.reset();
-    m_interruptSnapshot.reset();
+    DES_LOG_INFO(rclcpp::get_logger("des.context.mission"), "Reset (pending=%zu, background=%zu, interrupt=%s cleared)", m_scheduledMissions.size(), m_backgroundMissions.size(), m_interruptMission.has() ? "yes" : "no");
+    m_currentMission = nullptr;
+    m_scheduledMissions.clear();
+    m_backgroundMissions.clear();
+    m_interruptMission.clear();
     m_personLocations.clear();
     resetRobot();
 }

@@ -118,17 +118,17 @@ public:
         if (currentOrder) currentOrder->state = newState;
     }
 
-    void addPendingMission(const des::OrderPtr order) override {
+    void addScheduledMission(const des::OrderPtr order) override {
         pendingMissions.push_back(order);
     }
 
-    bool hasPendingMission() const override { return !pendingMissions.empty(); }
+    bool hasScheduledMission() const override { return !pendingMissions.empty(); }
 
-    des::OrderPtr nextPendingMission() override {
+    des::OrderPtr nextScheduledMission() override {
         return pendingMissions.empty() ? nullptr : pendingMissions.front();
     }
 
-    des::OrderPtr popPendingMission() override {
+    des::OrderPtr popScheduledMission() override {
         if (pendingMissions.empty()) return nullptr;
         auto front = pendingMissions.front();
         pendingMissions.erase(pendingMissions.begin());
@@ -139,23 +139,6 @@ public:
         m_backgroundMissions.push_back(order);
     }
     bool hasBackgroundMission() const override { return !m_backgroundMissions.empty(); }
-    des::OrderPtr peekBackgroundMission() override {
-        return m_backgroundMissions.empty() ? nullptr : m_backgroundMissions.front();
-    }
-    des::OrderPtr popBackgroundMission() override {
-        if (m_backgroundMissions.empty()) return nullptr;
-        auto front = m_backgroundMissions.front();
-        m_backgroundMissions.erase(m_backgroundMissions.begin());
-        return front;
-    }
-    bool removeBackgroundMission(int orderId) override {
-        auto it = std::find_if(m_backgroundMissions.begin(), m_backgroundMissions.end(),
-                               [orderId](const des::OrderPtr& o) { return o && o->id == orderId; });
-        if (it == m_backgroundMissions.end()) return false;
-        m_backgroundMissions.erase(it);
-        return true;
-    }
-    const std::vector<des::OrderPtr>& backgroundMissions() const override { return m_backgroundMissions; }
     des::OrderPtr acceptFeasibleBackgroundMission() override {
         if (m_backgroundMissions.empty()) return nullptr;
         auto order = m_backgroundMissions.front();

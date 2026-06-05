@@ -19,7 +19,7 @@ public:
 
     void execute(ISimContext& ctx) override {
         ctx.publishMission(this->orderPtr, time);
-        ctx.addPendingMission(this->orderPtr);
+        ctx.addScheduledMission(this->orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }

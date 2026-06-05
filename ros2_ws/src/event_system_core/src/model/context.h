@@ -9,7 +9,9 @@
 #include <random>
 #include <rclcpp/rclcpp.hpp>
 
-#include "mission_manager.h"
+#include "mission/scheduled_mission_queue.h"
+#include "mission/background_mission_pool.h"
+#include "mission/interrupt_mission_slot.h"
 #include "robot.h"
 #include "robot_state.h"
 #include "../observer/event_bus.h"
@@ -24,18 +26,15 @@ class SimulationContext : public ISimContext {
     int m_currentTime {};
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
-    MissionManager m_missionManager;
+    des::OrderPtr m_currentMission = nullptr;
+    ScheduledMissionQueue m_scheduledMissions;
+    BackgroundMissionPool m_backgroundMissions;
+    InterruptMissionSlot m_interruptMission;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     std::map<std::string, std::string> m_personLocations;
     std::unique_ptr<Scheduler> m_scheduler;
-
-    struct InterruptSnapshot {
-        std::unique_ptr<RobotState> state;
-        bool wasDriving = false;
-    };
-    std::optional<InterruptSnapshot> m_interruptSnapshot;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
@@ -94,7 +93,6 @@ public:
         }
     }
 
-
     void printEventQueue() const { m_queue.print(); }
 
     // Behaviour tree access
@@ -140,64 +138,61 @@ public:
         return it->second.m_area.value();
     }
 
-    // Mission management (delegated to MissionManager)
+    // Mission management — current mission plus the three mission channels.
     void setOrderPtr(const des::OrderPtr& orderPtr) override {
-        m_missionManager.setCurrent(orderPtr);
+        if (orderPtr) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission set: %d (type=%s)", orderPtr->id, orderPtr->type.c_str());
+        } else if (m_currentMission) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission cleared (was %d)", m_currentMission->id);
+        }
+        m_currentMission = orderPtr;
     }
 
     des::OrderPtr getOrderPtr() const override {
-        if (auto interrupt = m_missionManager.activeInterrupt()) {
+        if (auto interrupt = m_interruptMission.active()) {
             return interrupt;
         }
-        return m_missionManager.getCurrent();
+        return m_currentMission;
     }
 
     void updateOrderState(const des::MissionState& newState) override {
-        m_missionManager.updateState(newState);
+        assert(m_currentMission != nullptr);
+        DES_LOG_INFO(rclcpp::get_logger("des.context.mission"),
+                     "Mission %d (type=%s) state: %s -> %s",
+                     m_currentMission->id, m_currentMission->type.c_str(),
+                     des::missionStateStr(m_currentMission->state).c_str(),
+                     des::missionStateStr(newState).c_str());
+        m_currentMission->state = newState;
     }
 
-    void addPendingMission(const des::OrderPtr orderPtr) override {
-        m_missionManager.addPending(orderPtr);
+    void addScheduledMission(const des::OrderPtr orderPtr) override {
+        m_scheduledMissions.add(orderPtr);
     }
 
-    bool hasPendingMission() const override {
-        return m_missionManager.hasPending();
+    bool hasScheduledMission() const override {
+        return m_scheduledMissions.has();
     }
 
-    des::OrderPtr nextPendingMission() override {
-        return m_missionManager.peekPending();
+    des::OrderPtr nextScheduledMission() override {
+        return m_scheduledMissions.peek();
     }
 
-    des::OrderPtr popPendingMission() override {
-        return m_missionManager.popPending();
+    des::OrderPtr popScheduledMission() override {
+        return m_scheduledMissions.pop();
     }
 
     void addBackgroundMission(const des::OrderPtr orderPtr) override {
-        m_missionManager.addBackground(orderPtr);
+        m_backgroundMissions.add(orderPtr);
     }
 
     bool hasBackgroundMission() const override {
-        return m_missionManager.hasBackground();
-    }
-
-    des::OrderPtr peekBackgroundMission() override {
-        return m_missionManager.peekBackground();
-    }
-
-    des::OrderPtr popBackgroundMission() override {
-        return m_missionManager.popBackground();
-    }
-
-    bool removeBackgroundMission(int orderId) override {
-        return m_missionManager.removeBackground(orderId);
-    }
-
-    const std::vector<des::OrderPtr>& backgroundMissions() const override {
-        return m_missionManager.background();
+        return m_backgroundMissions.has();
     }
 
     des::OrderPtr acceptFeasibleBackgroundMission() override {
-        return m_missionManager.acceptFeasibleBackground(*this);
+        const auto accepted = m_backgroundMissions.acceptFeasible(*this);
+        if (accepted) { m_currentMission = accepted; }
+        return accepted;
     }
 
     std::optional<int> getNextScheduledDispatchTime() const override {
@@ -257,7 +252,7 @@ public:
     void notifyEvent(const IEvent& event) const override {
         int missionId = event.getMissionId();
         if (missionId < 0) {
-            if (const auto current = m_missionManager.getCurrent()) {
+            if (const auto current = m_currentMission) {
                 missionId = current->id;
             }
         }
@@ -276,14 +271,13 @@ public:
 
     bool pushInterrupt(const des::OrderPtr& order) override {
         assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
-        if (!m_missionManager.pushInterrupt(order)) {
+        if (!m_interruptMission.push(order, m_currentMission)) {
             return false;
         }
 
         // Snapshots robot state, shifts the in-flight activity-end event by the interrupt's duration
-        InterruptSnapshot snap;
-        snap.state = m_robot->getState()->clone();
-        snap.wasDriving = m_robot->isDriving();
+        auto suspendedState = m_robot->getState()->clone();
+        const bool wasDriving = m_robot->isDriving();
 
         auto& plugin = OrderRegistry::instance().get(order->type);
         const int duration = static_cast<int>(plugin.estimateMissionDuration(*order, *this, m_robot->getLocation()));
@@ -302,26 +296,24 @@ public:
                         order->id, order->type.c_str(), duration, m_currentTime);
         }
 
-        if (snap.wasDriving) {
+        if (wasDriving) {
             m_robot->setDriving(false);
             m_eventBus.notifyEvent(m_currentTime, des::EventType::STOP_DRIVE,
                                    "Drive paused: " + m_robot->getLocation(),
                                    false, m_robot->isCharging(), "", order->id);
         }
 
-        m_interruptSnapshot = std::move(snap);
+        m_interruptMission.suspend(std::move(suspendedState), wasDriving);
         plugin.onMissionStart(*this, *order);
         return true;
     }
 
     void popInterrupt(const des::OrderPtr& completedOrder) override {
-        m_missionManager.popInterrupt(completedOrder);
+        m_interruptMission.pop(completedOrder);
         bool resumeDrive = false;
-        if (m_interruptSnapshot) {
-            auto snap = std::move(*m_interruptSnapshot);
-            m_interruptSnapshot.reset();
-            changeRobotState(std::move(snap.state));
-            resumeDrive = snap.wasDriving;
+        if (auto snap = m_interruptMission.takeSuspended()) {
+            changeRobotState(std::move(snap->state));
+            resumeDrive = snap->wasDriving;
         }
         if (resumeDrive) {
             m_robot->setDriving(true);
@@ -335,7 +327,7 @@ public:
     }
 
     bool hasActiveInterrupt() const override {
-        return m_missionManager.hasInterrupt();
+        return m_interruptMission.has();
     }
 
 };

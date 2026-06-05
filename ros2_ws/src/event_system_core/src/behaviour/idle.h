@@ -93,7 +93,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool hasPending = ctx->hasPendingMission();
+        const bool hasPending = ctx->hasScheduledMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "HasPendingMissionIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;

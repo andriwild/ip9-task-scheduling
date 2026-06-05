@@ -48,7 +48,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     // SUCCESS while any order is assigned to the robot (PENDING or IN_PROGRESS).
-    // Single source of truth = MissionManager's current order, decoupled from
+    // Single source of truth = the context's current order, decoupled from
     // robot-state. Plugins no longer need to set a "task-active" RobotState to
     // get the ChargeRoutine short-circuit behavior.
     BT::NodeStatus tick() override {

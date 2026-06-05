@@ -88,7 +88,7 @@ CleanTimings cleanTimings(const des::IOrder& order, const ISimContext& context, 
 }
 
 double CleanPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t   = cleanTimings(order, context, startLocation);
+    const auto t    = cleanTimings(order, context, startLocation);
     const auto& cfg = *context.getConfig();
     return ((t.driveOut + t.driveBack) * cfg.energyConsumptionDrive + t.cleanTime * cfg.energyConsumptionBase) / 3600.0;
 }

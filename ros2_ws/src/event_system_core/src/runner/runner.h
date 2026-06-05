@@ -176,7 +176,7 @@ protected:
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
-        // Background tasks live in the MissionManager's own queue not in the event queue
+        // Background tasks live in the background mission pool, not in the event queue
         for (const auto& order : m_backgroundOrders) {
             m_ctx->addBackgroundMission(order);
         }

@@ -21,7 +21,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        const bool hasPending = ctx->hasPendingMission();
+        const bool hasPending = ctx->hasScheduledMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasPendingMission: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
@@ -74,8 +74,8 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        assert(ctx->hasPendingMission());
-        const auto order = ctx->popPendingMission();
+        assert(ctx->hasScheduledMission());
+        const auto order = ctx->popScheduledMission();
         DES_LOG_INFO(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
@@ -97,8 +97,8 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        assert(ctx->hasPendingMission());
-        const auto order = ctx->popPendingMission();
+        assert(ctx->hasScheduledMission());
+        const auto order = ctx->popScheduledMission();
         DES_LOG_WARN(rclcpp::get_logger("des.bt.mission_control"),
                      "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
                      order->id, order->type.c_str());
@@ -130,7 +130,7 @@ public:
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
-    // Delegates selection + feasibility to MissionManager. FAILURE = no
+    // Delegates selection + feasibility to the background mission pool. FAILURE = no
     // feasible mission, the outer BT falls through to charging/idle.
     BT::NodeStatus tick() override {
         const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
@@ -154,7 +154,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
-        const auto order = ctx->nextPendingMission();
+        const auto order = ctx->nextScheduledMission();
         const auto& plugin = OrderRegistry::instance().get(order->type);
         const bool isFeasible  = plugin.isFeasible(*order, *ctx);
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "MissionFeasibilityCheck: %d", isFeasible);

@@ -4,7 +4,6 @@
 #include <optional>
 #include <random>
 #include <string>
-#include <vector>
 
 #include "robot_state.h"
 #include "../util/types.h"
@@ -54,17 +53,12 @@ public:
     virtual void setOrderPtr(const des::OrderPtr& orderPtr) = 0;
     virtual des::OrderPtr getOrderPtr() const = 0;
     virtual void updateOrderState(const des::MissionState& newState) = 0;
-    virtual void addPendingMission(const des::OrderPtr orderPtr) = 0;
-    virtual bool hasPendingMission() const = 0;
-    virtual des::OrderPtr nextPendingMission() = 0;
-    virtual des::OrderPtr popPendingMission() = 0;
-    virtual void addBackgroundMission(const des::OrderPtr orderPtr) = 0;
-    virtual bool hasBackgroundMission() const = 0;
-    virtual des::OrderPtr peekBackgroundMission() = 0;
-    virtual des::OrderPtr popBackgroundMission() = 0;
-    virtual bool removeBackgroundMission(int orderId) = 0;
-    virtual const std::vector<des::OrderPtr>& backgroundMissions() const = 0;
-    virtual des::OrderPtr acceptFeasibleBackgroundMission() = 0;
+
+    // scheduled
+    virtual void addScheduledMission(const des::OrderPtr orderPtr) = 0;
+    virtual bool hasScheduledMission() const = 0;
+    virtual des::OrderPtr nextScheduledMission() = 0;
+    virtual des::OrderPtr popScheduledMission() = 0;
 
     // Time of the next MissionDispatchEvent in the event queue, i.e. when the
     // next scheduled mission will become pending. nullopt = nothing scheduled.
@@ -72,6 +66,12 @@ public:
 
     // OrderPtr of the next scheduled mission still queued, or nullptr.
     virtual des::OrderPtr peekNextScheduledOrder() const = 0;
+
+
+    // background
+    virtual void addBackgroundMission(const des::OrderPtr orderPtr) = 0;
+    virtual bool hasBackgroundMission() const = 0;
+    virtual des::OrderPtr acceptFeasibleBackgroundMission() = 0;
 
     virtual std::optional<int> getSimulationEndTime() const = 0;
     virtual void completeOrder(const des::OrderPtr& appt) = 0;

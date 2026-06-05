@@ -1,163 +1,133 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "../src/model/mission_manager.h"
+#include "../src/model/mission/scheduled_mission_queue.h"
+#include "../src/model/mission/interrupt_mission_slot.h"
 #include "../src/plugins/accompany/accompany_order.h"
 
-class MissionManagerTest : public ::testing::Test {
-protected:
-    MissionManager manager;
+static std::shared_ptr<AccompanyOrder> makeOrder(int id, const std::string& person) {
+    auto order = std::make_shared<AccompanyOrder>();
+    order->id = id;
+    order->type = "accompany";
+    order->personName = person;
+    order->roomName = "Room" + std::to_string(id);
+    order->deadline = 1000 * id;
+    order->description = "Test " + std::to_string(id);
+    return order;
+}
 
-    static std::shared_ptr<AccompanyOrder> makeOrder(int id, const std::string& person) {
-        auto order = std::make_shared<AccompanyOrder>();
-        order->id = id;
-        order->type = "accompany";
-        order->personName = person;
-        order->roomName = "Room" + std::to_string(id);
-        order->deadline = 1000 * id;
-        order->description = "Test " + std::to_string(id);
-        return order;
-    }
+// --- ScheduledMissionQueue ---
+
+class ScheduledMissionQueueTest : public ::testing::Test {
+protected:
+    ScheduledMissionQueue queue;
 };
 
-TEST_F(MissionManagerTest, InitialStateHasNoCurrent) {
-    EXPECT_EQ(manager.getCurrent(), nullptr);
+TEST_F(ScheduledMissionQueueTest, InitialStateIsEmpty) {
+    EXPECT_FALSE(queue.has());
+    EXPECT_EQ(queue.peek(), nullptr);
+    EXPECT_EQ(queue.pop(), nullptr);
+    EXPECT_EQ(queue.size(), 0u);
 }
 
-TEST_F(MissionManagerTest, InitialStateHasNoPending) {
-    EXPECT_FALSE(manager.hasPending());
-    EXPECT_EQ(manager.peekPending(), nullptr);
-    EXPECT_EQ(manager.popPending(), nullptr);
-}
-
-TEST_F(MissionManagerTest, SetAndGetCurrent) {
-    auto order = makeOrder(1, "Max");
-    manager.setCurrent(order);
-    EXPECT_EQ(manager.getCurrent(), order);
-    EXPECT_EQ(std::dynamic_pointer_cast<AccompanyOrder>(manager.getCurrent())->personName, "Max");
-}
-
-TEST_F(MissionManagerTest, OverwriteCurrent) {
-    manager.setCurrent(makeOrder(1, "Max"));
-    auto second = makeOrder(2, "Anna");
-    manager.setCurrent(second);
-    EXPECT_EQ(std::dynamic_pointer_cast<AccompanyOrder>(manager.getCurrent())->personName, "Anna");
-}
-
-TEST_F(MissionManagerTest, UpdateStateOnCurrent) {
-    auto order = makeOrder(1, "Max");
-    manager.setCurrent(order);
-
-    manager.updateState(des::MissionState::IN_PROGRESS);
-    EXPECT_EQ(manager.getCurrent()->state, des::MissionState::IN_PROGRESS);
-
-    manager.updateState(des::MissionState::COMPLETED);
-    EXPECT_EQ(manager.getCurrent()->state, des::MissionState::COMPLETED);
-}
-
-TEST_F(MissionManagerTest, AddAndPopPending) {
+TEST_F(ScheduledMissionQueueTest, AddAndPop) {
     auto a1 = makeOrder(1, "Max");
     auto a2 = makeOrder(2, "Anna");
 
-    manager.addPending(a1);
-    manager.addPending(a2);
+    queue.add(a1);
+    queue.add(a2);
 
-    EXPECT_TRUE(manager.hasPending());
-    EXPECT_EQ(manager.peekPending(), a1);
+    EXPECT_TRUE(queue.has());
+    EXPECT_EQ(queue.size(), 2u);
+    EXPECT_EQ(queue.peek(), a1);
 
-    auto popped = manager.popPending();
+    auto popped = queue.pop();
     EXPECT_EQ(popped, a1);
-    EXPECT_EQ(manager.peekPending(), a2);
+    EXPECT_EQ(queue.peek(), a2);
 
-    popped = manager.popPending();
+    popped = queue.pop();
     EXPECT_EQ(popped, a2);
-    EXPECT_FALSE(manager.hasPending());
+    EXPECT_FALSE(queue.has());
 }
 
-TEST_F(MissionManagerTest, PendingIsFIFO) {
+TEST_F(ScheduledMissionQueueTest, IsFIFO) {
     for (int i = 0; i < 5; ++i) {
-        manager.addPending(makeOrder(i, "Person" + std::to_string(i)));
+        queue.add(makeOrder(i, "Person" + std::to_string(i)));
     }
 
     for (int i = 0; i < 5; ++i) {
-        auto popped = manager.popPending();
+        auto popped = queue.pop();
         EXPECT_EQ(popped->id, i);
     }
 }
 
-TEST_F(MissionManagerTest, PeekDoesNotRemove) {
-    manager.addPending(makeOrder(1, "Max"));
+TEST_F(ScheduledMissionQueueTest, PeekDoesNotRemove) {
+    queue.add(makeOrder(1, "Max"));
 
-    auto peeked1 = manager.peekPending();
-    auto peeked2 = manager.peekPending();
+    auto peeked1 = queue.peek();
+    auto peeked2 = queue.peek();
     EXPECT_EQ(peeked1, peeked2);
-    EXPECT_TRUE(manager.hasPending());
+    EXPECT_TRUE(queue.has());
 }
 
-TEST_F(MissionManagerTest, ResetClearsEverything) {
-    manager.setCurrent(makeOrder(1, "Max"));
-    manager.addPending(makeOrder(2, "Anna"));
-    manager.addPending(makeOrder(3, "Leo"));
+TEST_F(ScheduledMissionQueueTest, ClearEmptiesQueue) {
+    queue.add(makeOrder(1, "Max"));
+    queue.add(makeOrder(2, "Anna"));
 
-    manager.reset();
+    queue.clear();
 
-    EXPECT_EQ(manager.getCurrent(), nullptr);
-    EXPECT_FALSE(manager.hasPending());
-    EXPECT_EQ(manager.popPending(), nullptr);
+    EXPECT_FALSE(queue.has());
+    EXPECT_EQ(queue.size(), 0u);
+    EXPECT_EQ(queue.pop(), nullptr);
 }
 
-TEST_F(MissionManagerTest, ResetThenReuseWorks) {
-    manager.setCurrent(makeOrder(1, "Max"));
-    manager.reset();
+// --- InterruptMissionSlot ---
 
-    auto order = makeOrder(99, "NewPerson");
-    manager.setCurrent(order);
-    EXPECT_EQ(manager.getCurrent()->id, 99);
+class InterruptMissionSlotTest : public ::testing::Test {
+protected:
+    InterruptMissionSlot slot;
+};
 
-    manager.addPending(makeOrder(100, "AnotherPerson"));
-    EXPECT_TRUE(manager.hasPending());
+TEST_F(InterruptMissionSlotTest, InitialStateIsEmpty) {
+    EXPECT_FALSE(slot.has());
+    EXPECT_EQ(slot.active(), nullptr);
 }
 
-// --- Interrupts ---
-
-TEST_F(MissionManagerTest, InitialHasNoInterrupt) {
-    EXPECT_FALSE(manager.hasInterrupt());
-    EXPECT_EQ(manager.activeInterrupt(), nullptr);
-}
-
-TEST_F(MissionManagerTest, PushInterruptDoesNotOverwriteCurrent) {
-    auto main = makeOrder(1, "Max");
+TEST_F(InterruptMissionSlotTest, PushStoresInterrupt) {
+    auto current   = makeOrder(1, "Max");
     auto interrupt = makeOrder(99, "Info");
-    manager.setCurrent(main);
 
-    EXPECT_TRUE(manager.pushInterrupt(interrupt));
-
-    EXPECT_TRUE(manager.hasInterrupt());
-    EXPECT_EQ(manager.activeInterrupt(), interrupt);
-    // m_current keeps the suspended mission — no snapshot/restore dance.
-    EXPECT_EQ(manager.getCurrent(), main);
+    EXPECT_TRUE(slot.push(interrupt, current));
+    EXPECT_TRUE(slot.has());
+    EXPECT_EQ(slot.active(), interrupt);
 }
 
-TEST_F(MissionManagerTest, PopClearsActiveInterrupt) {
+TEST_F(InterruptMissionSlotTest, PushWithoutCurrentIsAllowed) {
     auto interrupt = makeOrder(99, "Info");
-    manager.pushInterrupt(interrupt);
-
-    manager.popInterrupt(interrupt);
-    EXPECT_FALSE(manager.hasInterrupt());
-    EXPECT_EQ(manager.activeInterrupt(), nullptr);
+    EXPECT_TRUE(slot.push(interrupt, nullptr));
+    EXPECT_EQ(slot.active(), interrupt);
 }
 
-TEST_F(MissionManagerTest, PushInterruptRejectedWhenAlreadyActive) {
+TEST_F(InterruptMissionSlotTest, PopClearsActiveInterrupt) {
+    auto interrupt = makeOrder(99, "Info");
+    slot.push(interrupt, nullptr);
+
+    slot.pop(interrupt);
+    EXPECT_FALSE(slot.has());
+    EXPECT_EQ(slot.active(), nullptr);
+}
+
+TEST_F(InterruptMissionSlotTest, PushRejectedWhenAlreadyActive) {
     auto first  = makeOrder(91, "Info1");
     auto second = makeOrder(92, "Info2");
 
-    EXPECT_TRUE(manager.pushInterrupt(first));
-    EXPECT_FALSE(manager.pushInterrupt(second));
-    EXPECT_EQ(manager.activeInterrupt(), first);
+    EXPECT_TRUE(slot.push(first, nullptr));
+    EXPECT_FALSE(slot.push(second, nullptr));
+    EXPECT_EQ(slot.active(), first);
 }
 
-TEST_F(MissionManagerTest, ResetClearsInterrupts) {
-    manager.pushInterrupt(makeOrder(99, "Info"));
-    manager.reset();
-    EXPECT_FALSE(manager.hasInterrupt());
+TEST_F(InterruptMissionSlotTest, ClearRemovesInterrupt) {
+    slot.push(makeOrder(99, "Info"), nullptr);
+    slot.clear();
+    EXPECT_FALSE(slot.has());
 }

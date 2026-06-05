@@ -21,7 +21,7 @@ public:
         switch (m_order->execution) {
             case des::ExecutionMode::BACKGROUND:
             case des::ExecutionMode::SCHEDULED:
-                ctx.addPendingMission(m_order);
+                ctx.addScheduledMission(m_order);
                 break;
             case des::ExecutionMode::INTERRUPT:
                 if (!ctx.pushInterrupt(m_order)) {
