@@ -18,12 +18,9 @@
 
 class MetricsNode;
 const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
-const std::string DB_USER = "wsr_user";
+const std::string DB_USER     = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
 
-// DB view of the building (points_of_interest + search_zone areas), merged by
-// name. Only the offline snapshot builder uses this; the running sim reads the
-// generated snapshot via ConfigLoader::loadBuildingSnapshot instead.
 inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     const auto pois = db.waypoints();
     if (!pois.has_value()) {
@@ -131,8 +128,6 @@ protected:
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     std::shared_ptr<MetricsNode> m_metricsNode;
 
-    // Picks the distance source per sim_config.json: the Nav2 PathPlannerNode
-    // (also registered as a ROS node) or the offline matrix from BUILDING_FILE.
     void createPlanner() {
         const bool useMatrix = ConfigLoader::loadSimConfig().value_or(des::SimConfig{}).useDistanceMatrix;
         if (useMatrix) {

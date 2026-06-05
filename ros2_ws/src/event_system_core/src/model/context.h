@@ -275,6 +275,7 @@ public:
 
 
     bool pushInterrupt(const des::OrderPtr& order) override {
+        assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
         if (!m_missionManager.pushInterrupt(order)) {
             return false;
         }

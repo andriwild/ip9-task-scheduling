@@ -108,7 +108,7 @@ int HeadlessRunner::loadAppState() const {
 }
 
 void HeadlessRunner::reset() {
-    // not needed — batch sequencing handled by loadNextBatch()
+    // not needed in headless mode
 }
 
 void HeadlessRunner::enterPause() const {
