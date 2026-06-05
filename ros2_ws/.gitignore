@@ -8,3 +8,4 @@ build
 ./ros2_ws/.vscode
 bt_config.xml
 CLAUDE.md
+**/__pycache__
