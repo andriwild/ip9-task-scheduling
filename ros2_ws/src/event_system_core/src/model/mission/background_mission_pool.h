@@ -1,9 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
+#include <climits>
 #include <cstddef>
 #include <optional>
+#include <queue>
 #include <string>
+#include <utility>
 #include <vector>
 #include <rclcpp/rclcpp.hpp>
 
@@ -13,12 +17,17 @@
 #include "../battery.hpp"
 #include "../robot.h"
 #include "../i_sim_context.h"
+#include "../../algo/op_instance_builder.h"
 
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
+constexpr int kGraspIterations = 200;
+constexpr float kGraspAlpha    = 0.3f;
+constexpr int kGraspSeed       = 42;
 
 // Pool of opportunistic background missions executed to fill idle time.
 class BackgroundMissionPool {
     std::vector<des::OrderPtr> m_missions;
+    std::queue<des::OrderPtr> m_pending;
 
 public:
     void add(const des::OrderPtr& order) {
@@ -36,27 +45,28 @@ public:
 
     void clear() {
         m_missions.clear();
+        m_pending = {};
     }
 
-    // First-feasible background mission. Two acceptance paths:
-    //   direct          — post-BG battery covers next-scheduled reserve.
-    //   charge-fallback — dock window before next dispatch refills the deficit.
-    //
-    //   Budget calculation:
-    //   - Time:
-    //      - until start of next scheduled mission
-    //      - until start of next scheduled mission minus charge time
-    //  - Energy:
-    //      - rest of battery
-    //      - rest of battery minus energy used by next scheduled mission
-    //
-    //   On success the accepted mission is removed from the pool and returned.
-    //   TODO: refactor
-    des::OrderPtr acceptFeasible(
+    bool hasPlanned() const {
+        return !m_pending.empty();
+    }
+
+    // Next mission of the current plan; also removed from the pool.
+    des::OrderPtr popPlanned() {
+        if (m_pending.empty()) { return nullptr; }
+        const auto order = m_pending.front();
+        m_pending.pop();
+        std::erase(m_missions, order);
+        return order;
+    }
+
+    void plan(
         const ISimContext& ctx,
         double safetyMarginWh = kBackgroundEnergySafetyMarginWh
     ) {
-        if (m_missions.empty()) { return nullptr; }
+        m_pending = {};
+        if (m_missions.empty()) { return; }
 
         const auto robot            = ctx.getRobot();
         const auto batStats         = robot->m_bat->getStats();
@@ -68,74 +78,64 @@ public:
         const int now               = ctx.getTime();
         const double netChargeW     = cfg->chargingRate - cfg->energyConsumptionBase;
 
-        // get estimated energy of the next scheduled mission
-        // this energy must be available after a bg mission is executed
-        double reservedWh = 0.0;
+        // tour ends where the next scheduled mission starts; reserve is computed
+        // from there so the endSocMin check matches the actual handover point.
+        std::string endLoc = dockLoc;
+        double reservedWh  = 0.0;
         if (auto next = ctx.peekNextScheduledOrder()) {
             const auto& nextPlugin = OrderRegistry::instance().get(next->type);
-            reservedWh = nextPlugin.estimateMissionEnergy(*next, ctx, dockLoc);
+            endLoc     = nextPlugin.targetLocation(*next).value_or(dockLoc);
+            reservedWh = nextPlugin.estimateMissionEnergy(*next, ctx, endLoc);
         }
 
-        const double requiredWh  = reservedWh + safetyMarginWh;
-        const auto nextDispatch  = ctx.getNextScheduledDispatchTime();
-        const auto simEndTime    = ctx.getSimulationEndTime();
+        // energy budget [Wh]: spendable on background before hitting the next-mission reserve.
+        // requiredWh = energy the next scheduled mission needs + safety floor.
+        const double requiredWh   = reservedWh + safetyMarginWh;
+        const double energyBudget = currentWh - requiredWh;
 
-        struct Result { const char* mode; double bgEnergy; double bgDuration; };
+        // time budget [s]: until the next hard stop (next dispatch or sim end).
+        const auto nextDispatch = ctx.getNextScheduledDispatchTime();
+        const auto simEndTime   = ctx.getSimulationEndTime();
+        assert((nextDispatch.has_value() || simEndTime.has_value()) && "No end time (Simlation | Dispatch)");
+        const int timeBudget    = std::min(nextDispatch.value_or(INT_MAX), simEndTime.value_or(INT_MAX)) - now;
 
-        auto evaluate = [&](const des::OrderPtr& candidate) -> std::optional<Result> {
-            const auto& plugin      = OrderRegistry::instance().get(candidate->type);
-            const double bgEnergy   = plugin.estimateMissionEnergy(*candidate, ctx, startLoc);
-            const double bgDuration = plugin.estimateMissionDuration(*candidate, ctx, startLoc);
+        if (timeBudget <= 0) { return; }
 
-            // remaining energy and time after executing bg mission
-            const double postBgWh   = currentWh - bgEnergy;
-            const double finishTime = now + bgDuration;
+        // netChargeW <= 0: charging never pays off, price stations out of the tour
+        const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : 1e9f;
 
-            // check timing constraints (fits the mission into the timing slot)
-            const bool fitsSimWindow = !simEndTime || finishTime <= *simEndTime;
-            const bool fitsDispatch  = !nextDispatch || finishTime <= *nextDispatch;
-            const bool aboveFloor    = postBgWh >= safetyMarginWh;
-
-            if (!fitsSimWindow || !fitsDispatch || !aboveFloor) {
-                return std::nullopt;
-            }
-
-            if (postBgWh >= requiredWh) {
-                return Result{"direct", bgEnergy, bgDuration};
-            }
-
-            // after executing the bg mission, check if enough time is available to refill the battery before scheduled mission
-            if (nextDispatch && netChargeW > 0.0) {
-                const double chargeWindow  = static_cast<double>(*nextDispatch) - finishTime;
-                const double recoverTarget = std::min(requiredWh, capacityWh);
-                const double deficitWh     = recoverTarget - postBgWh;
-                const double chargeNeeded  = (deficitWh * 3600.0) / netChargeW;
-                if (chargeWindow >= chargeNeeded) { return Result{"charge-fallback", bgEnergy, bgDuration}; }
-            }
-            return std::nullopt;
+        const OpBudgets budgets {
+            .timeBudget      = static_cast<float>(timeBudget),
+            .energyBudget    = static_cast<float>(std::max(energyBudget, 1e-3)),
+            .initialSoc      = static_cast<float>(currentWh),
+            .endSocMin       = static_cast<float>(requiredWh),
+            .maxEnergy       = static_cast<float>(cfg->fullBatteryThreshold / 100.0 * capacityWh),
+            .chargeTimePerWh = chargeTimePerWh,
         };
 
-        // simple approach to find first feasible bg mission
-        std::optional<Result> result;
-        auto it = std::find_if(m_missions.begin(), m_missions.end(),
-            [&](const des::OrderPtr& c) {
-                result = evaluate(c);
-                return result.has_value();
-            });
-
-        if (it == m_missions.end()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.mission.background"),
-                        "No feasible background mission (battery=%.1fWh, reserved=%.1fWh, safety=%.1fWh)",
-                        currentWh, reservedWh, safetyMarginWh);
-            return nullptr;
+        const auto problem = buildOpInstance(ctx, m_missions, startLoc, endLoc, budgets);
+        if (!problem) {
+            DES_LOG_INFO(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
+            return;
         }
 
-        const auto accepted = *it;
+        const auto route = problem->instance.grasp(kGraspIterations, kGraspAlpha, kGraspSeed);
+
+        int chargeStops = 0;
+        for (const int idx : route) {
+            if (const auto& order = problem->orderByNode[idx]) {
+                m_pending.push(order);
+                auto it = std::find(m_missions.begin(), m_missions.end(), order);
+                if(it != m_missions.end()) {
+                    m_missions.erase(it);
+                }
+            } else {
+                ++chargeStops;
+            }
+        }
+
         DES_LOG_INFO(rclcpp::get_logger("des.mission.background"),
-                    "Accept background %d (type=%s, est=%.1fWh, dur=%.0fs, reserve=%.1fWh, battery=%.1fWh, mode=%s)",
-                    accepted->id, accepted->type.c_str(),
-                    result->bgEnergy, result->bgDuration, reservedWh, currentWh, result->mode);
-        m_missions.erase(it);
-        return accepted;
+                    "Planned %zu/%zu background missions (%d charge stops, time=%ds, energy=%.1fWh, reserve=%.1fWh)",
+                    m_pending.size(), m_missions.size(), chargeStops, timeBudget, energyBudget, requiredWh);
     }
 };

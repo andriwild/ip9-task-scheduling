@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <nlohmann/json.hpp>
 
@@ -33,6 +34,24 @@ public:
     virtual nlohmann::json saveConfig() const { return nlohmann::json::object(); }
     virtual int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const = 0;
     virtual bool isFeasible(const des::IOrder& order, const ISimContext& context) const = 0;
+
+    // Waypoint the mission is executed at, used for route planning.
+    // nullopt = mission has no single target and cannot be routed.
+    virtual std::optional<std::string> targetLocation(const des::IOrder& /*order*/) const {
+        return std::nullopt;
+    }
+
+    // On-site execution time in seconds — no drive legs.
+    virtual double estimateServiceDuration(const des::IOrder& /*order*/,
+                                           const ISimContext& /*context*/) const {
+        return 0.0;
+    }
+
+    // On-site execution energy in Wh — no drive legs.
+    virtual double estimateServiceEnergy(const des::IOrder& /*order*/,
+                                         const ISimContext& /*context*/) const {
+        return 0.0;
+    }
 
     // Round-trip energy estimate in Wh for executing the mission from
     // `startLocation` and returning the robot to the dock

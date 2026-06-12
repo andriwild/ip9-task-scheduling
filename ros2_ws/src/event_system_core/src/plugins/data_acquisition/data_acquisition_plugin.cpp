@@ -66,30 +66,16 @@ bool DataAcquisition::isFeasible(const des::IOrder& order, const ISimContext& co
     return true;
 }
 
-namespace {
-struct AcqTimings { double driveOut; double acqTime; double driveBack; };
-
-AcqTimings acqTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
-    const auto& o     = static_cast<const DataAcquisitionOrder&>(order);
-    const auto& sched = context.getScheduler();
-    const auto& cfg   = *context.getConfig();
-    return {
-        sched.robotDriveTime(startLocation, o.roomName),
-        dataAcquisitionConfig().dataAcquisitionDuration,
-        sched.robotDriveTime(o.roomName, cfg.dockLocation)
-    };
-}
+std::optional<std::string> DataAcquisition::targetLocation(const des::IOrder& order) const {
+    return static_cast<const DataAcquisitionOrder&>(order).roomName;
 }
 
-double DataAcquisition::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t   = acqTimings(order, context, startLocation);
-    const auto& cfg = *context.getConfig();
-    return ((t.driveOut + t.driveBack) * cfg.energyConsumptionDrive + t.acqTime * cfg.energyConsumptionBase) / 3600.0;
+double DataAcquisition::estimateServiceDuration(const des::IOrder& /*order*/, const ISimContext& /*context*/) const {
+    return m_config.dataAcquisitionDuration;
 }
 
-double DataAcquisition::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t = acqTimings(order, context, startLocation);
-    return t.driveOut + t.acqTime + t.driveBack;
+double DataAcquisition::estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const {
+    return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
 }
 
 void DataAcquisition::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

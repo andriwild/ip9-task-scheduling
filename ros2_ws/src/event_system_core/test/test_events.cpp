@@ -92,6 +92,11 @@ public:
         return {10.0, 5.0};
     }
 
+    double mockDistance = 5.0;
+    std::optional<double> getDistance(const std::string& /*from*/, const std::string& /*to*/) const override {
+        return mockDistance;
+    }
+
     const Scheduler& getScheduler() const override {
         throw std::runtime_error("MockSimContext::getScheduler not implemented");
     }

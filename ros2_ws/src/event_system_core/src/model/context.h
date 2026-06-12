@@ -55,7 +55,7 @@ public:
 
     Scheduler& getScheduler() { return *m_scheduler; }
 
-    const Scheduler& getScheduler() const { return *m_scheduler; }
+    const Scheduler& getScheduler() const override { return *m_scheduler; }
 
     void resetRobot() {
         m_robot.reset();
@@ -63,6 +63,11 @@ public:
     }
 
     Journey scheduleArrival(const std::string& target) const override;
+
+    std::optional<double> getDistance(const std::string& from, const std::string& to) const override {
+        return m_plannerNode->calcDistance(from, to, m_simConfig->cacheEnabled);
+    }
+
     void changeRobotState(std::unique_ptr<RobotState> newState) const override;
     void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
     void resetContext(int newTime);
@@ -157,11 +162,7 @@ public:
 
     void updateOrderState(const des::MissionState& newState) override {
         assert(m_currentMission != nullptr);
-        DES_LOG_INFO(rclcpp::get_logger("des.context.mission"),
-                     "Mission %d (type=%s) state: %s -> %s",
-                     m_currentMission->id, m_currentMission->type.c_str(),
-                     des::missionStateStr(m_currentMission->state).c_str(),
-                     des::missionStateStr(newState).c_str());
+        DES_LOG_INFO(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_currentMission->id, m_currentMission->type.c_str(), des::missionStateStr(m_currentMission->state).c_str(), des::missionStateStr(newState).c_str());
         m_currentMission->state = newState;
     }
 
@@ -190,7 +191,11 @@ public:
     }
 
     des::OrderPtr acceptFeasibleBackgroundMission() override {
-        const auto accepted = m_backgroundMissions.acceptFeasible(*this);
+        if(!m_backgroundMissions.hasPlanned()) {
+            m_backgroundMissions.plan(*this);
+        }
+        auto accepted  = m_backgroundMissions.popPlanned();
+        // const auto accepted = m_backgroundMissions.acceptFeasible(*this);
         if (accepted) { m_currentMission = accepted; }
         return accepted;
     }
@@ -256,9 +261,7 @@ public:
                 missionId = current->id;
             }
         }
-        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(),
-                               m_robot->isDriving(), m_robot->isCharging(),
-                               event.getColor(), missionId);
+        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), missionId);
     }
 
     void robotMoved(const std::string& location, const double distance = 0) const override {
@@ -286,21 +289,14 @@ public:
             const int oldTime = e->time;
             const int newTime = oldTime + duration;
             m_queue.reschedule(e, newTime);
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"),
-                        "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d",
-                        order->id, order->type.c_str(), duration, m_currentTime,
-                        e->getName().c_str(), oldTime, newTime);
+            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, m_currentTime, e->getName().c_str(), oldTime, newTime);
         } else {
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"),
-                        "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift",
-                        order->id, order->type.c_str(), duration, m_currentTime);
+            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, m_currentTime); 
         }
 
         if (wasDriving) {
             m_robot->setDriving(false);
-            m_eventBus.notifyEvent(m_currentTime, des::EventType::STOP_DRIVE,
-                                   "Drive paused: " + m_robot->getLocation(),
-                                   false, m_robot->isCharging(), "", order->id);
+            m_eventBus.notifyEvent(m_currentTime, des::EventType::STOP_DRIVE, "Drive paused: " + m_robot->getLocation(), false, m_robot->isCharging(), "", order->id); 
         }
 
         m_interruptMission.suspend(std::move(suspendedState), wasDriving);
@@ -317,13 +313,9 @@ public:
         }
         if (resumeDrive) {
             m_robot->setDriving(true);
-            m_eventBus.notifyEvent(m_currentTime, des::EventType::START_DRIVE,
-                                   "Drive resumed: " + m_robot->getTargetLocation(),
-                                   true, m_robot->isCharging(), "", -1);
+            m_eventBus.notifyEvent(m_currentTime, des::EventType::START_DRIVE, "Drive resumed: " + m_robot->getTargetLocation(), true, m_robot->isCharging(), "", -1);
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"),
-                    "Pop %d (type=%s) at t=%d — resuming main mission",
-                    completedOrder->id, completedOrder->type.c_str(), m_currentTime);
+        DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), m_currentTime);
     }
 
     bool hasActiveInterrupt() const override {

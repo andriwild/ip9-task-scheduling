@@ -8,7 +8,6 @@
 
 #include "i_path_planner.h"
 
-// Answers distance queries from a precomputed matrix instead of Nav2. No ROS.
 class MatrixPlanner : public IPathPlanner {
     std::vector<std::vector<float>> m_mat;
     std::unordered_map<std::string, int> m_index;

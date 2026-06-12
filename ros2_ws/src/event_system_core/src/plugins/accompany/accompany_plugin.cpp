@@ -141,6 +141,10 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
     return false;
 }
 
+std::optional<std::string> AccompanyOrderPlugin::targetLocation(const des::IOrder& order) const {
+    return static_cast<const AccompanyOrder&>(order).roomName;
+}
+
 namespace {
 struct AccompanyTimings { double meeting; double appointment; double driveBack; };
 
@@ -163,11 +167,6 @@ double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, con
     return (t.meeting * cfg.energyConsumptionDrive
           + t.appointment * cfg.energyConsumptionBase
           + t.driveBack   * cfg.energyConsumptionDrive) / 3600.0;
-}
-
-double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t = accompanyTimings(order, context, startLocation);
-    return t.meeting + t.appointment + t.driveBack;
 }
 
 void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

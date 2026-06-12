@@ -67,35 +67,22 @@ bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& contex
     return true;
 }
 
-namespace {
-struct CleanTimings { double driveOut; double cleanTime; double driveBack; };
-
-CleanTimings cleanTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
-    const auto& o     = static_cast<const CleanOrder&>(order);
-    const auto& sched = context.getScheduler();
-    const auto& cfg   = *context.getConfig();
-
-    const double driveOut  = sched.robotDriveTime(startLocation, o.roomName);
-    const double driveBack = sched.robotDriveTime(o.roomName, cfg.dockLocation);
-
-    const double roomArea       = context.getLocationArea(o.roomName);
-    const double broomFootprint = cleanConfig().cleaningArea;
-    const double broomSide      = std::sqrt(broomFootprint);
-    const double steps          = (roomArea / broomFootprint) + 1;
-    const double cleanTime      = steps * (2.0 * broomSide / cfg.robotSpeed);
-    return {driveOut, cleanTime, driveBack};
-}
+std::optional<std::string> CleanPlugin::targetLocation(const des::IOrder& order) const {
+    return static_cast<const CleanOrder&>(order).roomName;
 }
 
-double CleanPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t    = cleanTimings(order, context, startLocation);
+double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const {
+    const auto& o = static_cast<const CleanOrder&>(order);
     const auto& cfg = *context.getConfig();
-    return ((t.driveOut + t.driveBack) * cfg.energyConsumptionDrive + t.cleanTime * cfg.energyConsumptionBase) / 3600.0;
+
+    const double roomArea  = context.getLocationArea(o.roomName);
+    const double broomSide = std::sqrt(m_config.cleaningArea);
+    const double steps     = (roomArea / m_config.cleaningArea) + 1;
+    return steps * (2.0 * broomSide / cfg.robotSpeed);
 }
 
-double CleanPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t = cleanTimings(order, context, startLocation);
-    return t.driveOut + t.cleanTime + t.driveBack;
+double CleanPlugin::estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const {
+    return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
 }
 
 void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

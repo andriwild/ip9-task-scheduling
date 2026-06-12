@@ -37,8 +37,9 @@ public:
     des::OrderPtr fromJson(const nlohmann::json& j) const override;
     int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
-    double estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
-    double estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
+    std::optional<std::string> targetLocation(const des::IOrder& order) const override;
+    double estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const override;
+    double estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 
     const CleanConfig& config() const { return m_config; }

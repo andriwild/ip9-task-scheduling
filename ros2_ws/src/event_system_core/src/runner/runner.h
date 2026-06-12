@@ -232,8 +232,7 @@ protected:
     des::LocationMap loadLocations() {
         auto map = ConfigLoader::loadBuildingSnapshot(BUILDING_FILE);
         if (!map.has_value()) {
-            throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE +
-                                     ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
+            throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE + ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu locations from building snapshot", map.value().size());
         return map.value();

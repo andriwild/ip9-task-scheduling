@@ -27,10 +27,7 @@ public:
             case des::ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
         };
 
-        DES_LOG_INFO(rclcpp::get_logger("des.event.mission_complete"),
-                    "id=%d type=%s state=%s exec=%s — onMissionEnd",
-                    orderPtr->id, orderPtr->type.c_str(),
-                    des::missionStateStr(orderPtr->state).c_str(), execStr.c_str());
+        DES_LOG_INFO(rclcpp::get_logger("des.event.mission_complete"), "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), des::missionStateStr(orderPtr->state).c_str(), execStr.c_str());
         plugin.onMissionEnd(ctx, *orderPtr);
         if (orderPtr->execution != des::ExecutionMode::INTERRUPT) {
             ctx.completeOrder(this->orderPtr);
