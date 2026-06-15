@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <utility>
 
 #include "base.h"
@@ -18,7 +17,6 @@ public:
     {}
 
     void execute(ISimContext& ctx) override {
-        assert(!ctx.getRobot()->isDriving());
         ctx.getRobot()->setCharging(false);
 
         if (ctx.getRobot()->getLocation() == location) {
@@ -42,3 +40,16 @@ public:
     std::string getName() const override { return "Departing: " + location; }
     des::EventType getType() const override { return des::EventType::START_DRIVE; }
 };
+
+// Idempotent drive request: marks the robot driving and enqueues the StartDriveEvent.
+// A second call while a drive is already pending is a no-op, so repeated BT ticks
+// within the same simulation instant cannot enqueue duplicate drives.
+inline void requestDrive(ISimContext& ctx, const std::string& target) {
+    const auto robot = ctx.getRobot();
+    if (robot->isDriving()) {
+        return;
+    }
+    robot->setDriving(true);
+    robot->setTargetLocation(target);
+    ctx.pushEvent(std::make_shared<StartDriveEvent>(ctx.getTime(), target));
+}

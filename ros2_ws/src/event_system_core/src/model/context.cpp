@@ -48,6 +48,7 @@ void SimulationContext::completeOrder(const des::OrderPtr& order) {
         const int timeDiff = m_currentTime - deadline;
         notifyMissionComplete(order->state, timeDiff, order->execution);
     }
+
     if (m_currentMission == order) {
         setOrderPtr(nullptr);
     }

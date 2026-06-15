@@ -41,7 +41,7 @@ public:
         }
         const auto& order = static_cast<CleanOrder&>(*ctx->getOrderPtr());
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"), "CleanGoToLocation: -> %s", order.roomName.c_str());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), order.roomName));
+        requestDrive(*ctx, order.roomName);
         return BT::NodeStatus::RUNNING;
     }
 

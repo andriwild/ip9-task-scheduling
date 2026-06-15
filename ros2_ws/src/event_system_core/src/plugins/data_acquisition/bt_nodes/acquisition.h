@@ -41,7 +41,7 @@ public:
         }
         const auto& order = static_cast<DataAcquisitionOrder&>(*ctx->getOrderPtr());
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "GoToLocation: -> %s", order.roomName.c_str());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), order.roomName));
+        requestDrive(*ctx, order.roomName);
         return BT::NodeStatus::RUNNING;
     }
 

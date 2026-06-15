@@ -61,7 +61,7 @@ public:
         // will trigger the next tick.
         if (!ctx->getRobot()->isDriving()) {
             ctx->changeRobotState(std::make_unique<ReturningState>());
-            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
+            requestDrive(*ctx, ctx->getRobot()->getIdleLocation());
             DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
         } else {
             DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Already driving back to dock");

@@ -39,7 +39,7 @@ public:
         }
         const auto dock = ctx->getRobot()->getIdleLocation();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionGoToDock: -> %s", dock.c_str());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), dock));
+        requestDrive(*ctx, dock);
         return BT::NodeStatus::RUNNING;
     }
 

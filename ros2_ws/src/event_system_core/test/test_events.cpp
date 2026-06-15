@@ -529,6 +529,45 @@ TEST(EventExecute, StartDriveToSameLocationPushesImmediateStop) {
     EXPECT_TRUE(hasImmediateStop);
 }
 
+// --- requestDrive (idempotent drive scheduling) ---
+
+TEST(RequestDrive, DuplicateRequestInSameInstantEnqueuesSingleDrive) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(false);
+
+    // Two BT ticks at the same instant both request a drive before the first
+    // StartDriveEvent executes. The second must be a no-op (the root-cause fix).
+    requestDrive(ctx, "Office");
+    requestDrive(ctx, "Office");
+
+    int startDrives = 0;
+    for (const auto& e : ctx.pushedEvents) {
+        if (e->getType() == des::EventType::START_DRIVE) {
+            startDrives++;
+        }
+    }
+    EXPECT_EQ(startDrives, 1);
+    EXPECT_TRUE(ctx.robot->isDriving());
+    EXPECT_EQ(ctx.robot->getTargetLocation(), "Office");
+}
+
+TEST(RequestDrive, RequestAfterArrivalEnqueuesAgain) {
+    MockSimContext ctx;
+    ctx.robot->setDriving(false);
+
+    requestDrive(ctx, "Office");
+    ctx.robot->setDriving(false);  // StopDrive arrived -> driving cleared
+    requestDrive(ctx, "Lab");
+
+    int startDrives = 0;
+    for (const auto& e : ctx.pushedEvents) {
+        if (e->getType() == des::EventType::START_DRIVE) {
+            startDrives++;
+        }
+    }
+    EXPECT_EQ(startDrives, 2);
+}
+
 // --- StopDriveEvent ---
 
 TEST(EventExecute, StopDriveMovesRobotAndSetsDrivingFalse) {

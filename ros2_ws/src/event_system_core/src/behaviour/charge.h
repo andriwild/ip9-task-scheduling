@@ -76,7 +76,7 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
         if (!ctx->getRobot()->isDriving()) {
-            ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), ctx->getRobot()->getIdleLocation()));
+            requestDrive(*ctx, ctx->getRobot()->getIdleLocation());
             DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Not at dock, start driving to dock");
         }
         return BT::NodeStatus::FAILURE;

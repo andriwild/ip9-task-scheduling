@@ -124,7 +124,7 @@ public:
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "MoveToNextLocation: %s", nextLocation.c_str());
-        ctx->pushEvent(std::make_shared<StartDriveEvent>(ctx->getTime(), nextLocation));
+        requestDrive(*ctx, nextLocation);
         return BT::NodeStatus::SUCCESS;
     }
 };

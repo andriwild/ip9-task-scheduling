@@ -23,7 +23,7 @@ public:
             ctx.pushEvent(std::make_shared<PersonAccompanyDepartureEvent>(time, person, currentRoom));
         }
         ctx.changeRobotState(std::make_unique<AccompanyState>());
-        ctx.pushEvent(std::make_shared<StartDriveEvent>(time, accompany.roomName));
+        requestDrive(ctx, accompany.roomName);
         ctx.notifyEvent(*this);
     }
 
