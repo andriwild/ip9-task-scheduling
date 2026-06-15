@@ -193,7 +193,9 @@ enum class EventType : int {
     CLEAN = 27,
     ORDER_ARRIVAL = 28,
     INFORMATION_START = 29,
-    INFORMATION = 30
+    INFORMATION = 30,
+    CHARGE_MISSION_START = 31,
+    CHARGE_MISSION = 32
 };
 
 enum MissionState {

@@ -37,6 +37,9 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         m_orderFilePaths.push_back(entry.path());
     }
     std::sort(m_orderFilePaths.begin(), m_orderFilePaths.end());
+    if (m_orderFilePaths.empty()) {
+        throw std::runtime_error("No order files found in: " + path);
+    }
     rebuildFileQueue();
 
     m_ctx->addObserver(m_metricsNode);

@@ -5,6 +5,7 @@
 #include "../util/rnd.h"
 #include "../sim/scheduler.h"
 #include "event/mission_dispatch_event.h"
+#include "../plugins/charge/charge_order.h"
 
 SimulationContext::SimulationContext(
     EventQueue& queue,
@@ -42,9 +43,11 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
 
 void SimulationContext::completeOrder(const des::OrderPtr& order) {
     assert(order != nullptr);
-    const int deadline = order->deadline.value_or(m_currentTime);
-    const int timeDiff = m_currentTime - deadline;
-    notifyMissionComplete(order->state, timeDiff, order->execution);
+    if (order->type != kChargeOrderType) {
+        const int deadline = order->deadline.value_or(m_currentTime);
+        const int timeDiff = m_currentTime - deadline;
+        notifyMissionComplete(order->state, timeDiff, order->execution);
+    }
     if (m_currentMission == order) {
         setOrderPtr(nullptr);
     }

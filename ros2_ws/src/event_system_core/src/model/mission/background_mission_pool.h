@@ -18,6 +18,7 @@
 #include "../robot.h"
 #include "../i_sim_context.h"
 #include "../../algo/op_instance_builder.h"
+#include "../../plugins/charge/charge_order.h"
 
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 constexpr int kGraspIterations = 200;
@@ -28,6 +29,7 @@ constexpr int kGraspSeed       = 42;
 class BackgroundMissionPool {
     std::vector<des::OrderPtr> m_missions;
     std::queue<des::OrderPtr> m_pending;
+    int m_chargeOrderSeq = 0;  // negative-id generator for synthesized charge stops
 
 public:
     void add(const des::OrderPtr& order) {
@@ -36,7 +38,7 @@ public:
     }
 
     bool has() const {
-        return !m_missions.empty();
+        return !m_missions.empty() || !m_pending.empty();
     }
 
     std::size_t size() const {
@@ -73,6 +75,7 @@ public:
         const double currentWh      = batStats.soc * batStats.capacity * Battery::kVoltage;
         const double capacityWh     = batStats.capacity * Battery::kVoltage;
         const auto cfg              = ctx.getConfig();
+        const double socThreshold   = capacityWh / 100 * cfg->lowBatteryThreshold;
         const std::string& startLoc = robot->getLocation();
         const std::string& dockLoc  = cfg->dockLocation;
         const int now               = ctx.getTime();
@@ -106,9 +109,10 @@ public:
 
         const OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
-            .energyBudget    = static_cast<float>(std::max(energyBudget, 1e-3)),
+            .energyBudget    = static_cast<float>(currentWh), // TODO: check for deletion
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
+            .socThreshold    = static_cast<float>(socThreshold),
             .maxEnergy       = static_cast<float>(cfg->fullBatteryThreshold / 100.0 * capacityWh),
             .chargeTimePerWh = chargeTimePerWh,
         };
@@ -130,6 +134,14 @@ public:
                     m_missions.erase(it);
                 }
             } else {
+                // station node -> execute the planned charge as a background order
+                auto charge         = std::make_shared<ChargeOrder>();
+                charge->id          = -1 - m_chargeOrderSeq++;
+                charge->type        = kChargeOrderType;
+                charge->execution   = des::ExecutionMode::BACKGROUND;
+                charge->description = "Charge";
+                charge->dockLocation = dockLoc;
+                m_pending.push(charge);
                 ++chargeStops;
             }
         }
