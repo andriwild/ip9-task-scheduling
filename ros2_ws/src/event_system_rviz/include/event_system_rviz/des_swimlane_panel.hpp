@@ -37,7 +37,7 @@ struct EventRecord {
 
 struct StateChangeRecord {
     int time;
-    quint8 state;       // structural category (IDLE/MISSION/CHARGING/RETURNING)
+    quint8 state;       // structural category (IDLE/MISSION/CHARGING)
     QString name;       // plugin-supplied state name for display
     float soc;
 };

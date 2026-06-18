@@ -88,10 +88,10 @@ QColor stateColor(quint8 category, const QString& name) {
     if (name == "accompany")  return QColor(100, 180, 255);
     if (name == "clean")      return QColor(240, 150, 200);
     if (name == "acquire")    return QColor(220, 180, 100);
+    if (name == "returning")  return QColor(120, 200, 160);
     switch (category) {
         case SC::IDLE:      return QColor(200, 200, 200);
         case SC::CHARGING:  return QColor(255, 210, 50);
-        case SC::RETURNING: return QColor(120, 200, 160);
         case SC::MISSION:   return QColor(170, 170, 220);  // unknown plugin
         default:            return Qt::gray;
     }
@@ -760,7 +760,6 @@ QString DesSwimlanePanel::stateName(quint8 s) {
     switch (s) {
         case SC::IDLE:       return "Idle";
         case SC::CHARGING:   return "Charging";
-        case SC::RETURNING:  return "Returning";
         case SC::MISSION:    return "Mission";
         default:             return "Unknown";
     }

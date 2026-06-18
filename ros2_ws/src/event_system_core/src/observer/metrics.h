@@ -27,7 +27,6 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     int moveTime              = 0;
     int lastTimeStateChanged  = 0;
     int lastTimeMoved         = 0;
-    // Lateness aggregates only make sense for scheduled missions (deadlines).
     int accMissionToLateTime  = 0;
     int accMissionToEarlyTime = 0;
     int minLateness           = 0;
@@ -37,8 +36,7 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     double lastSoc            = -1.0;
     double batteryCapacity    = 0.0;
     bool wasDriving           = false;
-    // Most recently seen state, kept verbatim so we can attribute the next
-    // elapsed slice on the next transition.
+
     bool hasLastState = false;
     des::RobotStateType lastCategory{};
     std::string lastStateName;
@@ -205,13 +203,13 @@ public:
         for (const auto& [_, t] : timePerStateName) totalTime += t;
         if (totalTime > 0) {
             const int missionCat   = timePerCategory[des::RobotStateType::MISSION];
-            const int idleCat      = timePerCategory[des::RobotStateType::IDLE];
             const int chargingCat  = timePerCategory[des::RobotStateType::CHARGING];
-            const int returningCat = timePerCategory[des::RobotStateType::RETURNING];
-            msg.utilization       = static_cast<float>(missionCat   / totalTime * 100.0);
-            msg.idle_percent      = static_cast<float>(idleCat      / totalTime * 100.0);
-            msg.charging_percent  = static_cast<float>(chargingCat  / totalTime * 100.0);
-            msg.returning_percent = static_cast<float>(returningCat / totalTime * 100.0);
+            const int returningName = timeFor("returning");
+            const int idleName      = timeFor("idle");
+            msg.utilization       = static_cast<float>(missionCat    / totalTime * 100.0);
+            msg.idle_percent      = static_cast<float>(idleName      / totalTime * 100.0);
+            msg.charging_percent  = static_cast<float>(chargingCat   / totalTime * 100.0);
+            msg.returning_percent = static_cast<float>(returningName / totalTime * 100.0);
         } else {
             msg.utilization       = 0.0f;
             msg.idle_percent      = 0.0f;

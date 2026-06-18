@@ -86,13 +86,12 @@ inline RobotStateMeta getMeta(int category, const std::string& name = "") {
     if (name == "accompany")  return {2, QColor(100, 180, 255), "Accompany"};
     if (name == "clean")      return {7, QColor(240, 150, 200), "Cleaning"};
     if (name == "acquire")    return {8, QColor(220, 180, 100), "Acquiring"};
+    if (name == "returning")  return {6, QColor(120, 200, 160), "Returning"};
     switch (static_cast<des::RobotStateType>(category)) {
         case des::RobotStateType::IDLE:
             return {0, QColor(200, 200, 200), "Idle"};
         case des::RobotStateType::CHARGING:
             return {3, QColor(255, 210, 50), "Charging"};
-        case des::RobotStateType::RETURNING:
-            return {6, QColor(120, 200, 160), "Returning"};
         case des::RobotStateType::MISSION:
             return {9, QColor(170, 170, 220), "Mission"};
         default: return {-1, Qt::gray, "Unknown"};

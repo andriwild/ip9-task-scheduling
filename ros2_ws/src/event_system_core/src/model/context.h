@@ -247,7 +247,12 @@ public:
 
     void notifyRobotStateChanged() const {
         const auto* state = m_robot->getState();
-        m_eventBus.notifyStateChanged(m_currentTime, state->getType(), state->getName(), m_robot->m_bat->getStats());
+        const auto type   = state->getType();
+        std::string name = state->getName();
+        if (type == des::RobotStateType::IDLE && m_robot->isDriving() && m_robot->getTargetLocation() == m_robot->getIdleLocation()) {
+            name = "returning";
+        }
+        m_eventBus.notifyStateChanged(m_currentTime, type, name, m_robot->m_bat->getStats());
     }
 
     void notifyBatteryChanged() const override {

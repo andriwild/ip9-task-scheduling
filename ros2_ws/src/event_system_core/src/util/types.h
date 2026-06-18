@@ -152,8 +152,7 @@ struct SimConfig {
 enum class RobotStateType {
     IDLE,
     MISSION,
-    CHARGING,
-    RETURNING
+    CHARGING
 };
 
 enum class Result {

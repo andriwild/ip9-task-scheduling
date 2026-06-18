@@ -6,7 +6,6 @@ int32 time
 uint8 IDLE = 0
 uint8 MISSION = 1
 uint8 CHARGING = 2
-uint8 RETURNING = 3
 uint8 state
 
 # Plugin-specific state name (e.g. "search", "accompany", "clean", "acquire").

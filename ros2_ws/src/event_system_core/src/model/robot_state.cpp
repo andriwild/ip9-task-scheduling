@@ -15,23 +15,14 @@ void IdleState::exit(Robot& robot) {
     RobotState::exit(robot);
 }
 double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
-    if(ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation()) {
-        // Robot at dock
+    const auto robot = ctx.getRobot();
+    if (robot->isDriving() && robot->getTargetLocation() == robot->getIdleLocation()) {
+        return ctx.getConfig()->energyConsumptionDrive;
+    }
+    if (robot->getLocation() == robot->getIdleLocation()) {
         return ctx.getConfig()->energyConsumptionBase - ctx.getConfig()->chargingRate;
     }
     return ctx.getConfig()->energyConsumptionBase;
-}
-
-void ReturningState::enter(Robot& robot) {
-    RobotState::enter(robot);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Returning");
-    robot.setSpeed(robot.getDriveSpeed());
-}
-void ReturningState::exit(Robot& robot) { RobotState::exit(robot); }
-double ReturningState::getEnergyConsumption(const ISimContext& ctx) const {
-    return ctx.getRobot()->isDriving()
-        ? ctx.getConfig()->energyConsumptionDrive
-        : ctx.getConfig()->energyConsumptionBase;
 }
 
 void ChargeState::enter(Robot& robot) {

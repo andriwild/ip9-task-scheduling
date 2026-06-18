@@ -48,9 +48,7 @@ public:
     des::EventType getType() const override { return des::EventType::START_DRIVE; }
 };
 
-// Idempotent drive request: marks the robot driving and enqueues the StartDriveEvent.
-// A second call while a drive is already pending is a no-op, so repeated BT ticks
-// within the same simulation instant cannot enqueue duplicate drives.
+// Idempotent drive request: marks the robot driving and enqueues the StartDriveEvent
 inline void requestDrive(ISimContext& ctx, const std::string& target) {
     const auto robot = ctx.getRobot();
     if (robot->isDriving()) {

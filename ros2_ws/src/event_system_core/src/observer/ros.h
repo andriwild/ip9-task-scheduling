@@ -53,9 +53,6 @@ public:
         m_pubReset->publish(msg);
     }
 
-    // Event-driven: every time a mission becomes visible (arrival / dispatch),
-    // ask the matching plugin to emit a TimelineMeeting. This replaces the old
-    // up-front scan of the initial event queue.
     void onMissionPublished(const des::OrderPtr& order, int time) override {
         if (!order) return;
         auto& plugin = OrderRegistry::instance().get(order->type);

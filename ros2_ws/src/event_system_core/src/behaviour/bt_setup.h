@@ -73,12 +73,8 @@ const std::string CHARGE_ROUTINE = R"(
 const std::string IDLE_ROUTINE = R"(
 <BehaviorTree ID="IdleRoutine">
 <Sequence name="Seq_IdleMain">
-    <Fallback>
-        <IsIdle/>
-        <IsReturning/>
-    </Fallback>
+    <IsIdle/>
     <Docking/>
-    <EnterIdle/>
 </Sequence>
 </BehaviorTree>
 )";
@@ -96,9 +92,7 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
 
     // idle
     factory.registerNodeType<IsIdle>("IsIdle");
-    factory.registerNodeType<IsReturning>("IsReturning");
     factory.registerNodeType<Docking>("Docking");
-    factory.registerNodeType<EnterIdle>("EnterIdle");
     factory.registerNodeType<HasPendingMissionIdle>("HasPendingMissionIdle");
 
     // mission control
