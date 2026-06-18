@@ -17,6 +17,13 @@ public:
         , orderPtr(order)
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<MissionCompleteEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
 

@@ -12,6 +12,13 @@ public:
     explicit StartAcquisitionEvent(const int time, const des::OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<StartAcquisitionEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);

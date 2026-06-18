@@ -18,6 +18,13 @@ public:
         : FoundPersonConversationCompleteEvent(time)
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<SuccessFoundPersonConversationCompleteEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
         ctx.notifyEvent(*this);
@@ -32,6 +39,13 @@ public:
     explicit FailedFoundPersonConversationCompleteEvent(const int time)
         : FoundPersonConversationCompleteEvent(time)
     {}
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<FailedFoundPersonConversationCompleteEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 
     void execute(ISimContext& ctx) override {
         ctx.getRobot()->getState()->setResult(des::Result::FAILURE);

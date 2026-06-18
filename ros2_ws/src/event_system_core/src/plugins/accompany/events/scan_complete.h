@@ -17,6 +17,13 @@ public:
         , m_found(found)
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<ScanComplete>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;

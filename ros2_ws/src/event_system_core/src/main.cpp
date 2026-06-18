@@ -94,6 +94,9 @@ int main(const int argc, char *argv[]) {
                     }
                     const auto e = app->m_eventQueue.top();
                     app->m_eventQueue.pop();
+                    if (e->cancelled) {
+                        break;
+                    }
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
                     DES_LOG_INFO(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <optional>
+#include <set>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
@@ -10,66 +9,50 @@
 #include "../util/types.h"
 
 class EventQueue {
-    // Vector-backed min-heap (earliest time on top)
-    EventList m_heap;
-    EventComparator m_cmp;
+    struct EarliestFirst {
+        bool operator()(const std::shared_ptr<IEvent>& a,
+                        const std::shared_ptr<IEvent>& b) const {
+            return a->time < b->time;
+        }
+    };
 
-    void heapPush(const std::shared_ptr<IEvent>& event) {
-        m_heap.push_back(event);
-        std::push_heap(m_heap.begin(), m_heap.end(), m_cmp);
-    }
+    std::multiset<std::shared_ptr<IEvent>, EarliestFirst> m_events;
 
 public:
     explicit EventQueue() = default;
 
     void extend(SortedEventQueue queue) {
         while(!queue.empty()){
-            heapPush(queue.top());
+            m_events.insert(queue.top());
             queue.pop();
         }
     }
 
     void extend(std::vector<std::shared_ptr<IEvent>> events) {
         for (const auto& event: events) {
-            heapPush(event);
+            m_events.insert(event);
         }
     }
 
-    bool empty() const { return m_heap.empty(); }
+    bool empty() const { return m_events.empty(); }
 
-    [[nodiscard]] size_t size() const { return m_heap.size(); }
+    [[nodiscard]] size_t size() const { return m_events.size(); }
 
     void push(const std::shared_ptr<IEvent>& event) {
-        heapPush(event);
+        m_events.insert(event);
     }
 
     void pop() {
-        if (m_heap.empty()) { return; }
-        std::pop_heap(m_heap.begin(), m_heap.end(), m_cmp);
-        m_heap.pop_back();
+        if (m_events.empty()) { return; }
+        m_events.erase(m_events.begin());
     }
 
     std::shared_ptr<IEvent> top() const {
-        return m_heap.empty() ? nullptr : m_heap.front();
+        return m_events.empty() ? nullptr : *m_events.begin();
     }
 
     void clear() {
-        m_heap.clear();
-    }
-
-    // Shifts `event`'s time to `newTime` and re-heaps. Returns false if the
-    // event isn't in the queue (already popped, never pushed)
-    bool reschedule(const std::shared_ptr<IEvent>& event, int newTime) {
-        auto it = std::find(m_heap.begin(), m_heap.end(), event);
-        if (it == m_heap.end()) {
-            return false;
-        }
-        const int oldTime = (*it)->time;
-        (*it)->time = newTime; // shift to new time
-        std::make_heap(m_heap.begin(), m_heap.end(), m_cmp);
-        DES_LOG_DEBUG(rclcpp::get_logger("des.event_queue"), "Reschedule '%s': %d → %d (delta%+d)",
-                     event->getName().c_str(), oldTime, newTime, newTime - oldTime);
-        return true;
+        m_events.clear();
     }
 
     int getFirstEventTime() const {
@@ -77,18 +60,13 @@ public:
         return t ? t->time : 0;
     }
 
-    // Earliest queued event matching `type`, or nullptr if none.
     std::shared_ptr<IEvent> nextEvent(des::EventType type) const {
-        std::shared_ptr<IEvent> next;
-        for (const auto& e : m_heap) {
-            if (e->getType() != type) {
-                continue;
-            }
-            if (!next || e->time < next->time) {
-                next = e;
+        for (const auto& e : m_events) {
+            if (e->getType() == type && !e->cancelled) {
+                return e;
             }
         }
-        return next;
+        return nullptr;
     }
 
     // Time of the earliest queued event matching `type`
@@ -107,11 +85,8 @@ public:
     }
 
     void print() const {
-        auto copy = m_heap;
-        std::sort(copy.begin(), copy.end(),
-                  [](const auto& a, const auto& b) { return a->time < b->time; });
-        for (const auto& e : copy) {
-            DES_LOG_INFO(rclcpp::get_logger("des.event_queue"), "%d: %d - %s", e->time, static_cast<int>(e->getType()), e->getName().c_str());
+        for (const auto& e : m_events) {
+            DES_LOG_INFO(rclcpp::get_logger("des.event_queue"), "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
         }
     }
 };

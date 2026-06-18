@@ -22,6 +22,13 @@ public:
         , currentRoom(std::move(currentRoom))
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonAccompanyDepartureEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         ctx.notifyEvent(*this);
     }
@@ -45,6 +52,13 @@ public:
         , person(std::move(p))
         , arrivalRoom(std::move(arrivalRoom))
     {}
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonAccompanyArrivedEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 
     void execute(ISimContext& ctx) override {
         ctx.notifyEvent(*this);

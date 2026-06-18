@@ -20,6 +20,13 @@ public:
         person(std::move(p))
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonTransitionEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override;
 
     std::string getName() const override {
@@ -34,6 +41,13 @@ public:
     explicit PersonArrivedEvent(const int time, std::shared_ptr<des::Person> p) :
         PersonTransitionEvent(time, std::move(p))
     {}
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonArrivedEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 
     void execute(ISimContext& ctx) override {
         auto& p = *this->person;
@@ -76,6 +90,13 @@ public:
     explicit PersonDepartureEvent(const int time, std::shared_ptr<des::Person> p) :
         PersonTransitionEvent(time, std::move(p))
     {}
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonDepartureEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 
     void execute(ISimContext& ctx) override {
         if (this->person->busy) {

@@ -288,7 +288,9 @@ public:
         if (auto e = m_robot->inFlight().lock()) {
             const int oldTime = e->time;
             const int newTime = oldTime + duration;
-            m_queue.reschedule(e, newTime);
+            e->cancelled = true;
+            auto shifted = e->withTime(newTime);
+            startActivity(shifted);
             DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, m_currentTime, e->getName().c_str(), oldTime, newTime);
         } else {
             DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, m_currentTime); 

@@ -14,12 +14,14 @@ constexpr int ONE_HOUR = 3600;
 class IEvent {
 public:
     int time;
+    bool cancelled = false;
     explicit IEvent(const int time) : time(time) {}
     virtual ~IEvent() = default;
 
     virtual void execute(ISimContext& ctx) = 0;
     virtual std::string getName() const = 0;
     virtual des::EventType getType() const = 0;
+    virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;
     virtual std::string getColor() const { return ""; }
     // -1 if the event is not bound to a specific mission. Used by the
     // telemetry layer to route events to the correct mission lane.

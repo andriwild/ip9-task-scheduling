@@ -17,6 +17,13 @@ public:
         , orderPtr(order)
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<MissionDispatchEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         ctx.publishMission(this->orderPtr, time);
         ctx.addScheduledMission(this->orderPtr);

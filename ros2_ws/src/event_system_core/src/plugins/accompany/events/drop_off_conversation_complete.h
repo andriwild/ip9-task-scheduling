@@ -18,6 +18,13 @@ public:
         : DropOffConversationCompleteEvent(time)
     {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<SuccessDropOffConversationCompleteEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
         ctx.getRobot()->setIsPersonVisible(false);
@@ -33,6 +40,13 @@ public:
     explicit FailedDropOffConversationCompleteEvent(const int time)
         : DropOffConversationCompleteEvent(time)
     {}
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<FailedDropOffConversationCompleteEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 
     void execute(ISimContext& ctx) override {
         ctx.getRobot()->getState()->setResult(des::Result::FAILURE);

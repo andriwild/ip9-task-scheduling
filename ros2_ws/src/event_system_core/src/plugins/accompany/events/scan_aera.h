@@ -15,6 +15,13 @@ public:
     explicit ScanAera(const int time, const des::OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<ScanAera>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         ctx.notifyEvent(*this);
         ctx.getRobot()->setScanning(true);

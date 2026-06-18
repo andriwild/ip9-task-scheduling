@@ -15,6 +15,13 @@ class StartFoundPersonConversationEvent final : public IEvent {
 public:
     explicit StartFoundPersonConversationEvent(const int time) : IEvent(time) {}
 
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<StartFoundPersonConversationEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
     void execute(ISimContext& ctx) override {
         assert(!ctx.getRobot()->isDriving());
         auto eventTime = this->time + rndAccompanyConversationTime(ctx.rng());

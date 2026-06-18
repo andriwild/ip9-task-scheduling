@@ -13,6 +13,12 @@ public:
     void execute(ISimContext&) override {}
     std::string getName() const override { return "Dummy"; }
     des::EventType getType() const override { return m_type; }
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<DummyEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
 };
 
 class EventQueueTest : public ::testing::Test {
@@ -115,40 +121,39 @@ TEST_F(EventQueueTest, ManyEventsOrderedCorrectly) {
     }
 }
 
-// --- reschedule ---
+// --- lazy invalidation (cancel + reinsert) ---
 
-TEST_F(EventQueueTest, RescheduleShiftsToLaterTime) {
-    auto a = makeEvent(100);
-    auto b = makeEvent(200);
-    auto c = makeEvent(300);
+TEST_F(EventQueueTest, CancelledEventIsSkippedByNextEvent) {
+    auto a = makeEvent(100, des::EventType::MISSION_DISPATCH);
+    auto b = makeEvent(300, des::EventType::MISSION_DISPATCH);
     queue.push(a);
     queue.push(b);
-    queue.push(c);
 
-    // Shift the middle event past c — heap order must reflect that.
-    EXPECT_TRUE(queue.reschedule(b, 400));
-
-    EXPECT_EQ(queue.top()->time, 100); queue.pop();
-    EXPECT_EQ(queue.top()->time, 300); queue.pop();
-    EXPECT_EQ(queue.top()->time, 400);
+    a->cancelled = true;
+    auto next = queue.nextEvent(des::EventType::MISSION_DISPATCH);
+    ASSERT_NE(next, nullptr);
+    EXPECT_EQ(next->time, 300);
 }
 
-TEST_F(EventQueueTest, RescheduleShiftsToEarlierTime) {
-    auto a = makeEvent(100);
-    auto b = makeEvent(500);
+TEST_F(EventQueueTest, CancelAndReinsertYieldsNewTimeAtFront) {
+    auto a = makeEvent(200);
     queue.push(a);
-    queue.push(b);
 
-    // Pulling b in front of a must rebuild the heap correctly.
-    EXPECT_TRUE(queue.reschedule(b, 50));
+    a->cancelled = true;
+    queue.push(a->withTime(50));
+
     EXPECT_EQ(queue.top()->time, 50);
+    EXPECT_FALSE(queue.top()->cancelled);
 }
 
-TEST_F(EventQueueTest, RescheduleReturnsFalseForUnknownEvent) {
-    queue.push(makeEvent(100));
-    auto stranger = makeEvent(999);
-    EXPECT_FALSE(queue.reschedule(stranger, 50));
-    EXPECT_EQ(queue.top()->time, 100);
+TEST_F(EventQueueTest, SameTimeEventsPopInPushOrder) {
+    auto first = makeEvent(100, des::EventType::SIMULATION_START);
+    auto second = makeEvent(100, des::EventType::SIMULATION_END);
+    queue.push(first);
+    queue.push(second);
+
+    EXPECT_EQ(queue.top(), first); queue.pop();
+    EXPECT_EQ(queue.top(), second);
 }
 
 // --- nextEvent ---
@@ -208,7 +213,7 @@ TEST_F(EventQueueTest, NextEventFindsEarliestEvenWhenDeepInHeap) {
     EXPECT_EQ(next->time, 100);
 }
 
-TEST_F(EventQueueTest, NextEventReflectsPopAndReschedule) {
+TEST_F(EventQueueTest, NextEventReflectsPopAndCancel) {
     auto a = makeEvent(100, des::EventType::MISSION_DISPATCH);
     auto b = makeEvent(300, des::EventType::MISSION_DISPATCH);
     queue.push(a);
@@ -219,6 +224,6 @@ TEST_F(EventQueueTest, NextEventReflectsPopAndReschedule) {
     queue.pop(); // removes a
     EXPECT_EQ(queue.nextEvent(des::EventType::MISSION_DISPATCH)->time, 300);
 
-    queue.reschedule(b, 50);
-    EXPECT_EQ(queue.nextEvent(des::EventType::MISSION_DISPATCH)->time, 50);
+    b->cancelled = true;
+    EXPECT_EQ(queue.nextEvent(des::EventType::MISSION_DISPATCH), nullptr);
 }
