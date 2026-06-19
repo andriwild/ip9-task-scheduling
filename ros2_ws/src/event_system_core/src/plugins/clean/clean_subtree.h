@@ -2,10 +2,10 @@
 
 inline constexpr const char* CLEAN_SUBTREE_XML = R"(
   <BehaviorTree ID="CleanRoutine">
-    <Sequence>
+    <ReactiveSequence>
       <IsActiveOrderType type="clean"/>
       <SubTree ID="Clean_Sweep" _autoremap="true"/>
-    </Sequence>
+    </ReactiveSequence>
   </BehaviorTree>
 
   <BehaviorTree ID="Clean_Sweep">

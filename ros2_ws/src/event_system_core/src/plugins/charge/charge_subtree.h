@@ -2,10 +2,10 @@
 
 inline constexpr const char* CHARGE_SUBTREE_XML = R"(
   <BehaviorTree ID="BackgroundChargeRoutine">
-    <Sequence>
+    <ReactiveSequence>
       <IsActiveOrderType type="charge"/>
       <SubTree ID="Charge_ToFull" _autoremap="true"/>
-    </Sequence>
+    </ReactiveSequence>
   </BehaviorTree>
 
   <BehaviorTree ID="Charge_ToFull">

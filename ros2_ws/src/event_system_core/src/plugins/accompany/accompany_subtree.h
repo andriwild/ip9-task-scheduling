@@ -1,13 +1,13 @@
 inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
   <BehaviorTree ID="AccompanyRoutine">
-    <Sequence>
+    <ReactiveSequence>
       <IsActiveOrderType type="accompany"/>
       <Fallback>
         <SubTree ID="AccompanySearch"     _autoremap="true"/>
         <SubTree ID="AccompanyConversate" _autoremap="true"/>
         <SubTree ID="AccompanyAccompany"  _autoremap="true"/>
       </Fallback>
-    </Sequence>
+    </ReactiveSequence>
   </BehaviorTree>
 
   <BehaviorTree ID="AccompanySearch">

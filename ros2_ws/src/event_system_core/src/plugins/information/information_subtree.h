@@ -2,9 +2,9 @@
 
 inline constexpr const char* INFORMATION_SUBTREE_XML = R"(
   <BehaviorTree ID="InformationRoutine">
-    <Sequence>
+    <ReactiveSequence>
       <IsActiveOrderType type="information"/>
       <ExecuteInformation />
-    </Sequence>
+    </ReactiveSequence>
   </BehaviorTree>
 )";
