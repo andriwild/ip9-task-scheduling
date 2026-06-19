@@ -86,6 +86,7 @@ private:
             config.cvThreshold    = request->cv_threshold;
             config.taperFraction  = request->taper_fraction;
             config.chargeToFull   = request->charge_to_full;
+            config.alwaysChargeAtDock = request->always_charge_at_dock;
             std::lock_guard lock(m_configMutex);
             // Preserve fields not carried by the service request.
             config.useDistanceMatrix = m_currentConfig->useDistanceMatrix;
@@ -130,6 +131,7 @@ private:
             msg.cv_threshold               = m_currentConfig->cvThreshold;
             msg.taper_fraction             = m_currentConfig->taperFraction;
             msg.charge_to_full             = m_currentConfig->chargeToFull;
+            msg.always_charge_at_dock      = m_currentConfig->alwaysChargeAtDock;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

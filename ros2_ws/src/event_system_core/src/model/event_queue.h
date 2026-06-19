@@ -69,6 +69,14 @@ public:
         return nullptr;
     }
 
+    void cancelByType(des::EventType type) const {
+        for (const auto& e : m_events) {
+            if (e->getType() == type && !e->cancelled) {
+                e->cancelled = true;
+            }
+        }
+    }
+
     // Time of the earliest queued event matching `type`
     std::optional<int> nextEventTime(des::EventType type) const {
         auto e = nextEvent(type);

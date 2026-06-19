@@ -269,6 +269,10 @@ public:
         m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), missionId);
     }
 
+    void notifyChargeStarted() const override {
+        m_eventBus.notifyEvent(m_currentTime, des::EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
+    }
+
     void robotMoved(const std::string& location, const double distance = 0) const override {
         m_robot->setLocation(location);
         m_eventBus.notifyMoved(m_currentTime, location, distance);

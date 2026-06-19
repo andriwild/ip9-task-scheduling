@@ -49,6 +49,7 @@ protected:
     QDoubleSpinBox* m_cvThreshold;
     QDoubleSpinBox* m_taperFraction;
     QCheckBox* m_chargeToFull;
+    QCheckBox* m_alwaysChargeAtDock;
     QTimeEdit* m_arrivalMean;
     QDoubleSpinBox* m_arrivalStd;
     QTimeEdit* m_departureMean;

@@ -81,10 +81,21 @@ void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConf
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
     const auto* current = m_robot->getState();
+    const auto newType = newState->getType();
     const bool sameState = current
-        && current->getType() == newState->getType()
+        && current->getType() == newType
         && current->getName() == newState->getName();
+    const bool leavingOpportunisticCharge = current
+        && current->getType() == des::RobotStateType::CHARGING
+        && newType != des::RobotStateType::CHARGING
+        && m_robot->m_opportunisticCharge;
     m_robot->changeState(std::move(newState));
+    if (leavingOpportunisticCharge) {
+        m_queue.cancelByType(des::EventType::BATTERY_FULL);
+        m_queue.cancelByType(des::EventType::CHARGE_PHASE_TRANSITION);
+        m_robot->m_batteryFullEventScheduled = false;
+        m_robot->m_opportunisticCharge = false;
+    }
     if (!sameState) {
         notifyRobotStateChanged();
     }

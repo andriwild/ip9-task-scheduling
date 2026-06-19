@@ -75,6 +75,9 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_chargeToFull = new QCheckBox();
     addConfigItem(energyGroup, "Charge To Full", m_chargeToFull);
 
+    m_alwaysChargeAtDock = new QCheckBox();
+    addConfigItem(energyGroup, "Always Charge At Dock", m_alwaysChargeAtDock);
+
     m_energyConsumptionDrive = new QDoubleSpinBox(); m_energyConsumptionDrive->setRange(0.0, 1000.0);
     m_energyConsumptionDrive->setSuffix(" W");
     addConfigItem(energyGroup, "Drive Power Load", m_energyConsumptionDrive);
@@ -227,6 +230,7 @@ void DesSystemConfig::onSetConfig() {
     request->cv_threshold = m_cvThreshold->value();
     request->taper_fraction = m_taperFraction->value();
     request->charge_to_full = m_chargeToFull->isChecked();
+    request->always_charge_at_dock = m_alwaysChargeAtDock->isChecked();
     request->arrival_mean = QTime(0, 0).secsTo(m_arrivalMean->time());
     request->arrival_std = m_arrivalStd->value();
     request->departure_mean = QTime(0, 0).secsTo(m_departureMean->time());
@@ -278,6 +282,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_cvThreshold->setValue(msg->cv_threshold);
     m_taperFraction->setValue(msg->taper_fraction);
     m_chargeToFull->setChecked(msg->charge_to_full);
+    m_alwaysChargeAtDock->setChecked(msg->always_charge_at_dock);
     m_arrivalMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->arrival_mean)));
     m_arrivalStd->setValue(msg->arrival_std);
     m_departureMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->departure_mean)));

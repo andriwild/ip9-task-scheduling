@@ -106,6 +106,7 @@ public:
     }
 
     void notifyBatteryChanged() const override {}
+    void notifyChargeStarted() const override {}
 
     bool pushInterrupt(const des::OrderPtr& /*order*/) override { return true; }
     void popInterrupt(const des::OrderPtr& /*completedOrder*/) override {}

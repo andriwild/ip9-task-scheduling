@@ -22,7 +22,7 @@ const std::string TREE_FILE = "bt_config.xml";
 const std::string MISSION_CONTROL_ROUTINE = R"(
   <BehaviorTree ID="MissionControlRoutine">
     <Sequence name="Seq_HandleMissions">
-      <IsIdle/>
+      <IsAvailable/>
       <Inverter><IsMissionAssigned/></Inverter>
       <Fallback name="Fallback_PendingOrBackground">
         <Sequence name="Seq_HandlePending">
@@ -51,7 +51,10 @@ const std::string CHARGE_ROUTINE = R"(
 
     <Sequence name="ContinueRegularWork">
       <Inverter><IsBatteryLow /></Inverter>
-      <Inverter><IsCharging /></Inverter>
+      <Fallback>
+        <Inverter><IsCharging /></Inverter>
+        <IsOpportunisticallyCharging />
+      </Fallback>
     </Sequence>
 
     <IsTaskActive />
@@ -75,6 +78,11 @@ const std::string IDLE_ROUTINE = R"(
 <Sequence name="Seq_IdleMain">
     <IsIdle/>
     <Docking/>
+    <Fallback name="TopUpOrHold">
+      <Inverter><IsAlwaysChargeAtDock/></Inverter>
+      <IsBatteryCharged/>
+      <Charge/>
+    </Fallback>
 </Sequence>
 </BehaviorTree>
 )";
@@ -87,6 +95,10 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsBatteryLow>("IsBatteryLow");
     factory.registerNodeType<IsCharging>("IsCharging");
     factory.registerNodeType<IsTaskActive>("IsTaskActive");
+    factory.registerNodeType<IsAlwaysChargeAtDock>("IsAlwaysChargeAtDock");
+    factory.registerNodeType<IsBatteryCharged>("IsBatteryCharged");
+    factory.registerNodeType<IsOpportunisticallyCharging>("IsOpportunisticallyCharging");
+    factory.registerNodeType<IsAvailable>("IsAvailable");
     factory.registerNodeType<Charge>("Charge");
     factory.registerNodeType<GoToDock>("GoToDock");
 

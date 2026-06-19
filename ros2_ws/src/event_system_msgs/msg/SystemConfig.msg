@@ -17,6 +17,7 @@ float32 battery_voltage
 float32 cv_threshold
 float32 taper_fraction
 bool charge_to_full
+bool always_charge_at_dock
 
 # People
 float32 arrival_mean

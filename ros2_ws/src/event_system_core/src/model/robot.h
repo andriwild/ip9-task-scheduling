@@ -27,6 +27,7 @@ class Robot {
 
 public:
     bool m_batteryFullEventScheduled = false;
+    bool m_opportunisticCharge = false;
     std::unique_ptr<Battery> m_bat;
 
     explicit Robot(const std::shared_ptr<des::SimConfig> &config)

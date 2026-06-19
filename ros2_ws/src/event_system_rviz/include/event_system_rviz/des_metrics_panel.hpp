@@ -37,6 +37,7 @@ private:
     QLabel* m_lblMissionStats;
     QLabel* m_lblPerformance;
     QLabel* m_lblMovement;
+    QLabel* m_lblBatteryHealth;
 };
 
 }  // namespace des_metrics_panel

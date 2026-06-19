@@ -40,6 +40,61 @@ public:
     }
 };
 
+class IsAlwaysChargeAtDock final : public BT::ConditionNode {
+public:
+    IsAlwaysChargeAtDock(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        return ctx->getConfig()->alwaysChargeAtDock ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
+class IsBatteryCharged final : public BT::ConditionNode {
+public:
+    IsBatteryCharged(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        return ctx->getRobot()->m_bat->isFullyCharged() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
+class IsOpportunisticallyCharging final : public BT::ConditionNode {
+public:
+    IsOpportunisticallyCharging(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        return ctx->getRobot()->m_opportunisticCharge ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
+// Available for a new mission: idle, or opportunistically charging at the dock; never while driving.
+class IsAvailable final : public BT::ConditionNode {
+public:
+    IsAvailable(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx     = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto robot   = ctx->getRobot();
+        const auto type    = robot->getStateType();
+        const bool driving = robot->isDriving();
+        const bool available = !driving
+            && (type == des::RobotStateType::IDLE
+                || (type == des::RobotStateType::CHARGING && robot->m_opportunisticCharge));
+        return available ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+};
+
 
 class IsTaskActive final : public BT::ConditionNode {
 public:
@@ -89,9 +144,15 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
 
+        if (ctx->getRobot()->getStateType() != des::RobotStateType::CHARGING) {
+            ctx->changeRobotState(std::make_unique<ChargeState>());
+        }
+
         if (ctx->getRobot()->m_batteryFullEventScheduled) {
             return BT::NodeStatus::SUCCESS;
         }
+
+        ctx->getRobot()->m_opportunisticCharge = !ctx->getRobot()->m_bat->isBatteryLow();
 
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
         const double timeToFull = ctx->getRobot()->m_bat->timeToFull(netChargingPower);
@@ -105,7 +166,8 @@ public:
         }
 
         ctx->getRobot()->m_batteryFullEventScheduled = true;
-        DES_LOG_INFO(rclcpp::get_logger("des.bt.charge"), "Start Charging, time to full: %.1fs", timeToFull);
+        ctx->notifyChargeStarted();
+        DES_LOG_INFO(rclcpp::get_logger("des.bt.charge"), "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
         return BT::NodeStatus::SUCCESS;
     }
 };

@@ -50,3 +50,11 @@ float32 utilization
 float32 idle_percent
 float32 charging_percent
 float32 returning_percent
+
+# Battery health
+int32 charge_cycles_total
+int32 charge_cycles_complete
+int32 charge_cycles_partial
+int32 deep_discharge_count
+float32 equivalent_full_cycles
+float32 avg_depth_of_discharge

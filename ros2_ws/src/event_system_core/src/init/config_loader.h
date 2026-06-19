@@ -184,6 +184,7 @@ public:
             config.cvThreshold    = j.value("cv_threshold", 0.8);
             config.taperFraction  = j.value("taper_fraction", 0.5);
             config.chargeToFull   = j.value("charge_to_full", true);
+            config.alwaysChargeAtDock = j.value("always_charge_at_dock", false);
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -315,6 +316,7 @@ public:
         j["cv_threshold"] = config->cvThreshold;
         j["taper_fraction"] = config->taperFraction;
         j["charge_to_full"] = config->chargeToFull;
+        j["always_charge_at_dock"] = config->alwaysChargeAtDock;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
@@ -41,6 +42,14 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     des::RobotStateType lastCategory{};
     std::string lastStateName;
 
+    int chargeCyclesTotal    = 0;
+    int chargeCyclesComplete = 0;
+    int deepDischargeCount   = 0;
+    double dischargedAh      = 0.0;
+    double dodSum            = 0.0;
+    int dodCount             = 0;
+    double lastChargeEndSoc  = -1.0;
+
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
 
 public:
@@ -73,6 +82,13 @@ public:
         wasDriving            = false;
         hasLastState          = false;
         lastStateName.clear();
+        chargeCyclesTotal     = 0;
+        chargeCyclesComplete  = 0;
+        deepDischargeCount    = 0;
+        dischargedAh          = 0.0;
+        dodSum                = 0.0;
+        dodCount              = 0;
+        lastChargeEndSoc      = -1.0;
     }
 
 
@@ -83,6 +99,13 @@ public:
         } else if(!isDriving && wasDriving){
            moveTime += time - lastTimeMoved;
             wasDriving = false;
+        }
+
+        if (type == des::EventType::CHARGE_MISSION_START) {
+            chargeCyclesTotal++;
+        }
+        if (type == des::EventType::BATTERY_FULL || type == des::EventType::CHARGE_MISSION) {
+            chargeCyclesComplete++;
         }
 
         if(type == des::EventType::SIMULATION_END){
@@ -104,6 +127,25 @@ public:
             timePerCategory[lastCategory]     += passedTime;
             energyPerCategory[lastCategory]   += consumedAh;
         }
+
+        if (consumedAh > 0.0) {
+            dischargedAh += consumedAh;
+        }
+        const double lowFraction = batStats.lowThreshold / 100.0;
+        if (lastSoc >= 0.0 && lastSoc >= lowFraction && batStats.soc < lowFraction) {
+            deepDischargeCount++;
+        }
+        const bool wasCharging = lastStateName == "charging";
+        const bool isCharging  = newName == "charging";
+        if (!wasCharging && isCharging) {
+            if (lastChargeEndSoc >= 0.0) {
+                const double dod = lastChargeEndSoc - batStats.soc;
+                if (dod > 0.0) { dodSum += dod; dodCount++; }
+            }
+        } else if (wasCharging && !isCharging) {
+            lastChargeEndSoc = batStats.soc;
+        }
+
         lastSoc              = batStats.soc;
         lastCategory         = newState;
         lastStateName        = newName;
@@ -217,7 +259,18 @@ public:
             msg.returning_percent = 0.0f;
         }
 
+        msg.charge_cycles_total    = chargeCyclesTotal;
+        msg.charge_cycles_complete = chargeCyclesComplete;
+        msg.charge_cycles_partial  = std::max(0, chargeCyclesTotal - chargeCyclesComplete);
+        msg.deep_discharge_count   = deepDischargeCount;
+        msg.equivalent_full_cycles = (batteryCapacity > 0.0) ? static_cast<float>(dischargedAh / batteryCapacity) : 0.0f;
+        msg.avg_depth_of_discharge = (dodCount > 0) ? static_cast<float>(dodSum / dodCount) : 0.0f;
+
         DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Publish Metrics");
+        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"),
+                     "Battery: cycles=%d (full=%d, partial=%d), chargingTime=%ds, deepDischarges=%d, equivFullCycles=%.2f, avgDoD=%.2f",
+                     msg.charge_cycles_total, msg.charge_cycles_complete, msg.charge_cycles_partial,
+                     msg.charging_time, msg.deep_discharge_count, msg.equivalent_full_cycles, msg.avg_depth_of_discharge);
         m_publisher->publish(msg);
         clear();
     }

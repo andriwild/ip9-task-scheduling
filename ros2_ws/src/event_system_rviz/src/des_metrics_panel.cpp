@@ -57,6 +57,10 @@ DesMetricsPanel::DesMetricsPanel(QWidget* parent) : rviz_common::Panel(parent) {
     grid->addWidget(new QLabel("<b>General:</b>"), 2, 1);
     grid->addWidget(m_lblMovement, 3, 1);
 
+    m_lblBatteryHealth = new QLabel("Charge cycles: 0 (0 full / 0 partial)\nCharging: 0s\nDeep discharges: 0\nEquiv. full cycles: 0.0\nAvg DoD: 0.0%");
+    grid->addWidget(new QLabel("<b>Battery:</b>"), 4, 0);
+    grid->addWidget(m_lblBatteryHealth, 5, 0, 1, 2);
+
     mainLayout->addWidget(statsGroup);
     mainLayout->addStretch();
 }
@@ -138,6 +142,16 @@ void DesMetricsPanel::onMetricsReport(const event_system_msgs::msg::MetricsRepor
                            .arg(QString::number(msg->charging_percent, 'f', 1))
                            .arg(QString::number(msg->returning_percent, 'f', 1));
     m_lblMovement->setText(moveText);
+
+    QString batteryText = QString("Charge cycles: %1 (%2 full / %3 partial)\nCharging: %4s\nDeep discharges: %5\nEquiv. full cycles: %6\nAvg DoD: %7%")
+                              .arg(msg->charge_cycles_total)
+                              .arg(msg->charge_cycles_complete)
+                              .arg(msg->charge_cycles_partial)
+                              .arg(msg->charging_time)
+                              .arg(msg->deep_discharge_count)
+                              .arg(QString::number(msg->equivalent_full_cycles, 'f', 2))
+                              .arg(QString::number(msg->avg_depth_of_discharge * 100.0, 'f', 1));
+    m_lblBatteryHealth->setText(batteryText);
 }
 
 }  // namespace des_metrics_panel

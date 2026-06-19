@@ -117,6 +117,7 @@ struct SimConfig {
     double cvThreshold = 0.8;
     double taperFraction = 0.5;
     bool chargeToFull = true;
+    bool alwaysChargeAtDock = false;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -150,6 +151,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "cvThreshold" << ": " << config.cvThreshold << std::endl;
         os << std::left << std::setw(W) << "taperFraction" << ": " << config.taperFraction << std::endl;
         os << std::left << std::setw(W) << "chargeToFull" << ": " << config.chargeToFull << std::endl;
+        os << std::left << std::setw(W) << "alwaysChargeAtDock" << ": " << config.alwaysChargeAtDock << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;

@@ -112,6 +112,10 @@ public:
         return isFull;
     }
 
+    bool isFullyCharged() const {
+        return m_currentCapacity >= targetCapacity() - 1e-6;
+    }
+
     double timeToFull(const double phaseOnePowerWatts) const {
         if (phaseOnePowerWatts <= 0) return -1.0;
 
