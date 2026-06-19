@@ -80,6 +80,12 @@ void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConf
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
+    const auto* current = m_robot->getState();
+    const bool sameState = current
+        && current->getType() == newState->getType()
+        && current->getName() == newState->getName();
     m_robot->changeState(std::move(newState));
-    notifyRobotStateChanged();
+    if (!sameState) {
+        notifyRobotStateChanged();
+    }
 }

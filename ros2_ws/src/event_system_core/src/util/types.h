@@ -113,6 +113,10 @@ struct SimConfig {
     int simStartTime = 25200;  // 07:00
     int simEndTime   = 68400;  // 19:00
     bool useDistanceMatrix = false;
+    double batteryVoltage = 12.0;
+    double cvThreshold = 0.8;
+    double taperFraction = 0.5;
+    bool chargeToFull = true;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -142,6 +146,10 @@ struct SimConfig {
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
+        os << std::left << std::setw(W) << "batteryVoltage" << ": " << config.batteryVoltage << std::endl;
+        os << std::left << std::setw(W) << "cvThreshold" << ": " << config.cvThreshold << std::endl;
+        os << std::left << std::setw(W) << "taperFraction" << ": " << config.taperFraction << std::endl;
+        os << std::left << std::setw(W) << "chargeToFull" << ": " << config.chargeToFull << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;
@@ -194,7 +202,8 @@ enum class EventType : int {
     INFORMATION_START = 29,
     INFORMATION = 30,
     CHARGE_MISSION_START = 31,
-    CHARGE_MISSION = 32
+    CHARGE_MISSION = 32,
+    CHARGE_PHASE_TRANSITION = 33
 };
 
 enum MissionState {

@@ -181,6 +181,7 @@ GlyphSpec glyphFor(quint8 type) {
         case TE::RESET:
             return {Glyph::Bar, 22};
         case TE::BATTERY_FULL: return {Glyph::Square, 12};
+        case TE::CHARGE_PHASE_TRANSITION: return {Glyph::Circle, 12};
 
         // Faulty / abort → cross
         case TE::ABORT_SEARCH: return {Glyph::Cross, 14};
@@ -745,6 +746,7 @@ QString DesSwimlanePanel::eventTypeName(quint8 type) {
         case TE::FOUND_PERSON_CONV_COMPLETE: return "Found-Person Conv. Complete";
         case TE::ABORT_SEARCH:     return "Abort Search";
         case TE::BATTERY_FULL:     return "Battery Full";
+        case TE::CHARGE_PHASE_TRANSITION: return "Charge Phase Transition";
         case TE::RESET:            return "Reset";
         case TE::PERSON_TRANSITION: return "Person Transition";
         case TE::PERSON_ARRIVED:   return "Person Arrived";
@@ -1291,6 +1293,41 @@ void DesSwimlanePanel::redraw() {
             dot->setZValue(5);
             dot->setToolTip(QString("<b>SoC %1%</b><br>%2")
                                 .arg(int(s.soc * 100)).arg(humanTime(s.time)));
+        }
+
+        auto socAt = [&](int t) -> float {
+            if (t <= sorted.front().time) return sorted.front().soc;
+            if (t >= sorted.back().time) return sorted.back().soc;
+            for (size_t i = 1; i < sorted.size(); ++i) {
+                if (sorted[i].time >= t) {
+                    const auto& a = sorted[i - 1];
+                    const auto& b = sorted[i];
+                    const float span = float(b.time - a.time);
+                    if (span <= 0.0f) return b.soc;
+                    return a.soc + (b.soc - a.soc) * (float(t - a.time) / span);
+                }
+            }
+            return sorted.back().soc;
+        };
+
+        using TE = event_system_msgs::msg::TimelineEvent;
+        for (const auto& e : m_events) {
+            if (e.type != TE::CHARGE_PHASE_TRANSITION) continue;
+            const double x = timeToX(e.time);
+            const double yc = socToY(socAt(e.time));
+            const QColor c = parseColor(e.color, QColor("#f0a000"));
+            QPen guidePen(c);
+            guidePen.setCosmetic(true);
+            guidePen.setStyle(Qt::DashLine);
+            auto* guide = m_scene->addLine(x, topY, x, botY, guidePen);
+            guide->setZValue(3);
+            auto* mark = makeGlyphItem(m_scene, {Glyph::Diamond, 11}, c, c.darker(170));
+            if (mark) {
+                mark->setPos(x, yc);
+                mark->setZValue(6);
+                mark->setToolTip(QString("<b>%1</b><br>Time: %2<br>%3")
+                                     .arg(eventTypeName(e.type), humanTime(e.time), e.label));
+            }
         }
     }
 

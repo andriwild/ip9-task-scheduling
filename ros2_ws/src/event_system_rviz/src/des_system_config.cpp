@@ -62,6 +62,19 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_fullBatteryThreshold->setSuffix(" %");
     addConfigItem(energyGroup, "Full Battery Threshold", m_fullBatteryThreshold);
 
+    m_batteryVoltage = new QDoubleSpinBox(); m_batteryVoltage->setRange(0.0, 100.0); m_batteryVoltage->setSingleStep(0.1);
+    m_batteryVoltage->setSuffix(" V");
+    addConfigItem(energyGroup, "Battery Voltage", m_batteryVoltage);
+
+    m_cvThreshold = new QDoubleSpinBox(); m_cvThreshold->setRange(0.0, 1.0); m_cvThreshold->setSingleStep(0.05);
+    addConfigItem(energyGroup, "CV Threshold", m_cvThreshold);
+
+    m_taperFraction = new QDoubleSpinBox(); m_taperFraction->setRange(0.0, 1.0); m_taperFraction->setSingleStep(0.05);
+    addConfigItem(energyGroup, "Taper Fraction", m_taperFraction);
+
+    m_chargeToFull = new QCheckBox();
+    addConfigItem(energyGroup, "Charge To Full", m_chargeToFull);
+
     m_energyConsumptionDrive = new QDoubleSpinBox(); m_energyConsumptionDrive->setRange(0.0, 1000.0);
     m_energyConsumptionDrive->setSuffix(" W");
     addConfigItem(energyGroup, "Drive Power Load", m_energyConsumptionDrive);
@@ -210,6 +223,10 @@ void DesSystemConfig::onSetConfig() {
     request->charging_rate = m_chargingRate->value();
     request->low_battery_threshold = m_lowBatteryThreshold->value();
     request->full_battery_threshold = m_fullBatteryThreshold->value();
+    request->battery_voltage = m_batteryVoltage->value();
+    request->cv_threshold = m_cvThreshold->value();
+    request->taper_fraction = m_taperFraction->value();
+    request->charge_to_full = m_chargeToFull->isChecked();
     request->arrival_mean = QTime(0, 0).secsTo(m_arrivalMean->time());
     request->arrival_std = m_arrivalStd->value();
     request->departure_mean = QTime(0, 0).secsTo(m_departureMean->time());
@@ -257,6 +274,10 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_chargingRate->setValue(msg->charging_rate);
     m_lowBatteryThreshold->setValue(msg->low_battery_threshold);
     m_fullBatteryThreshold->setValue(msg->full_battery_threshold);
+    m_batteryVoltage->setValue(msg->battery_voltage);
+    m_cvThreshold->setValue(msg->cv_threshold);
+    m_taperFraction->setValue(msg->taper_fraction);
+    m_chargeToFull->setChecked(msg->charge_to_full);
     m_arrivalMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->arrival_mean)));
     m_arrivalStd->setValue(msg->arrival_std);
     m_departureMean->setTime(QTime(0, 0).addSecs(static_cast<int>(msg->departure_mean)));

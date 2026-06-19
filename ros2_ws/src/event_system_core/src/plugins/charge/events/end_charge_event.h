@@ -3,6 +3,7 @@
 #include "model/event/base.h"
 #include "model/event/mission_complete_event.h"
 #include "model/i_sim_context.h"
+#include "model/robot.h"
 #include "plugins/i_order.h"
 
 class EndChargeEvent final : public IEvent {
@@ -19,6 +20,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
+        ctx.getRobot()->m_bat->completeCharge();
         m_order->state = des::MissionState::COMPLETED;
         ctx.notifyEvent(*this);
         ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));

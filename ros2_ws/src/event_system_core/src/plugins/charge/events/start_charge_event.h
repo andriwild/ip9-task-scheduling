@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "model/event/base.h"
+#include "model/event/charge_phase_transition_event.h"
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "plugins/i_order.h"
@@ -28,6 +29,11 @@ public:
         assert(ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation());
         const double netChargingPower = ctx.getConfig()->chargingRate - ctx.getConfig()->energyConsumptionBase;
         const double timeToFull       = ctx.getRobot()->m_bat->timeToFull(netChargingPower);
+
+        const double timeToTransition = ctx.getRobot()->m_bat->timeToPhaseTransition(netChargingPower);
+        if (timeToTransition >= 0.0) {
+            ctx.pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(this->time + timeToTransition)));
+        }
 
         ctx.startActivity(std::make_shared<EndChargeEvent>(static_cast<int>(this->time + timeToFull), m_order));
     }

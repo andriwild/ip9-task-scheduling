@@ -71,6 +71,9 @@ inline QColor getEventColor(des::EventType type) {
         case des::EventType::START_DRIVE:
             return QColor(0, 150, 50);
 
+        case des::EventType::CHARGE_PHASE_TRANSITION:
+            return QColor(240, 160, 0);
+
         default: return Qt::black;
     }
 }

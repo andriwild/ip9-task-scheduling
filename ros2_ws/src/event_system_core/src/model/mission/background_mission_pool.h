@@ -72,8 +72,9 @@ public:
 
         const auto robot            = ctx.getRobot();
         const auto batStats         = robot->m_bat->getStats();
-        const double currentWh      = batStats.soc * batStats.capacity * Battery::kVoltage;
-        const double capacityWh     = batStats.capacity * Battery::kVoltage;
+        const double voltage        = robot->m_bat->getVoltage();
+        const double currentWh      = batStats.soc * batStats.capacity * voltage;
+        const double capacityWh     = batStats.capacity * voltage;
         const auto cfg              = ctx.getConfig();
         const double socThreshold   = capacityWh / 100 * cfg->lowBatteryThreshold;
         const std::string& startLoc = robot->getLocation();
@@ -106,6 +107,9 @@ public:
 
         // netChargeW <= 0: charging never pays off, price stations out of the tour
         const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : 1e9f;
+        const double taperedW = netChargeW * cfg->taperFraction;
+        const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : 1e9f;
+        const float cvEnergy = static_cast<float>(cfg->cvThreshold * capacityWh);
 
         const OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
@@ -115,6 +119,8 @@ public:
             .socThreshold    = static_cast<float>(socThreshold),
             .maxEnergy       = static_cast<float>(cfg->fullBatteryThreshold / 100.0 * capacityWh),
             .chargeTimePerWh = chargeTimePerWh,
+            .chargeTimePerWhTapered = chargeTimePerWhTapered,
+            .cvEnergy        = cvEnergy,
         };
 
         const auto problem = buildOpInstance(ctx, m_missions, startLoc, endLoc, budgets);

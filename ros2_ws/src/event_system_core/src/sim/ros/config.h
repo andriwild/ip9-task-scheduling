@@ -82,7 +82,13 @@ private:
             };
             config.simStartTime = request->sim_start_time;
             config.simEndTime   = request->sim_end_time;
+            config.batteryVoltage = request->battery_voltage;
+            config.cvThreshold    = request->cv_threshold;
+            config.taperFraction  = request->taper_fraction;
+            config.chargeToFull   = request->charge_to_full;
             std::lock_guard lock(m_configMutex);
+            // Preserve fields not carried by the service request.
+            config.useDistanceMatrix = m_currentConfig->useDistanceMatrix;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }
@@ -120,6 +126,10 @@ private:
             msg.person_detection_range     = m_currentConfig->personDetectionRange;
             msg.sim_start_time             = m_currentConfig->simStartTime;
             msg.sim_end_time               = m_currentConfig->simEndTime;
+            msg.battery_voltage            = m_currentConfig->batteryVoltage;
+            msg.cv_threshold               = m_currentConfig->cvThreshold;
+            msg.taper_fraction             = m_currentConfig->taperFraction;
+            msg.charge_to_full             = m_currentConfig->chargeToFull;
         }
         m_publisher->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Simulation configuration published!");

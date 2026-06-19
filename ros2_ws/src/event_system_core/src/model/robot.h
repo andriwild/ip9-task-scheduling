@@ -38,7 +38,11 @@ public:
             config->batteryCapacity,
             config->initialBatteryCapacity,
             config->lowBatteryThreshold,
-            config->fullBatteryThreshold
+            config->fullBatteryThreshold,
+            config->batteryVoltage,
+            config->cvThreshold,
+            config->taperFraction,
+            config->chargeToFull
         );
         setLocation(m_dockLocation);
     }

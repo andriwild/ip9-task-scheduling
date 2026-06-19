@@ -16,9 +16,6 @@
 const std::string DEFAULT_ORDER_FILE    = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
 const std::string DEFAULT_EMPLOYEE_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
 const std::string SIM_CONFIG_FILE       = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
-// Generated building snapshot: names + distance matrix + waypoint coords + areas.
-// Built offline from the DB + Nav2 planner (see build_snapshot.sh); the running
-// sim reads building geometry from here and never touches the DB.
 const std::string BUILDING_FILE         = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
@@ -183,10 +180,11 @@ public:
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simEndTime   = j.value("sim_end_time",   SIM_END_TIME);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
+            config.batteryVoltage = j.value("battery_voltage", 12.0);
+            config.cvThreshold    = j.value("cv_threshold", 0.8);
+            config.taperFraction  = j.value("taper_fraction", 0.5);
+            config.chargeToFull   = j.value("charge_to_full", true);
 
-            // Per-plugin config sections live under their typeName() key, e.g.
-            // "accompany": {...}, "clean": {...}. Each plugin pulls its own
-            // sub-object; missing sections fall back to plugin defaults.
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
             }
@@ -313,6 +311,10 @@ public:
         j["sim_start_time"] = config->simStartTime;
         j["sim_end_time"]   = config->simEndTime;
         j["use_distance_matrix"] = config->useDistanceMatrix;
+        j["battery_voltage"] = config->batteryVoltage;
+        j["cv_threshold"] = config->cvThreshold;
+        j["taper_fraction"] = config->taperFraction;
+        j["charge_to_full"] = config->chargeToFull;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
@@ -350,10 +352,7 @@ public:
         return json;
     }
 
-    // Loads the building snapshot into a name -> Location map (coords + optional
-    // area). Index i of "names"/"locations"/"areas" refers to the same waypoint.
-    // The distance matrix ("mat") is left in the file for offline algorithms; the
-    // runtime sim resolves distances via the planner, so it is not loaded here.
+    // Loads the building snapshot into a name -> Location map (coords + optional area) 
     static std::optional<des::LocationMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {

@@ -45,6 +45,10 @@ protected:
     QDoubleSpinBox* m_chargingRate;
     QDoubleSpinBox* m_lowBatteryThreshold;
     QDoubleSpinBox* m_fullBatteryThreshold;
+    QDoubleSpinBox* m_batteryVoltage;
+    QDoubleSpinBox* m_cvThreshold;
+    QDoubleSpinBox* m_taperFraction;
+    QCheckBox* m_chargeToFull;
     QTimeEdit* m_arrivalMean;
     QDoubleSpinBox* m_arrivalStd;
     QTimeEdit* m_departureMean;

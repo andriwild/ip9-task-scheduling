@@ -17,6 +17,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
+        ctx.getRobot()->m_bat->completeCharge();
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.getRobot()->m_batteryFullEventScheduled = false;
         ctx.notifyEvent(*this);
