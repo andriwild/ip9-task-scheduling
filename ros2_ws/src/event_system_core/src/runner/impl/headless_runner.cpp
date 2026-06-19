@@ -1,5 +1,6 @@
 #include "headless_runner.h"
 #include "../../util/log.h"
+#include <ctime>
 #include <memory>
 #include <filesystem>
 #include "../../behaviour/bt_setup.h"
@@ -42,6 +43,12 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     }
     rebuildFileQueue();
 
+    if (m_config->metricsCsvExport) {
+        const std::time_t now = std::time(nullptr);
+        char stamp[32];
+        std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&now));
+        m_metricsNode->enableCsv(CONFIG_PATH + "../results/metrics_" + stamp + ".csv", m_config);
+    }
     m_ctx->addObserver(m_metricsNode);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
@@ -72,6 +79,7 @@ bool HeadlessRunner::loadNextBatch() {
     m_orderFiles.pop();
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loading batch: %s (round %d/%d)",
                 path.c_str(), m_currentRound + 1, m_totalRounds);
+    m_metricsNode->setRunInfo(std::filesystem::path(path).stem().string(), m_currentRound + 1);
 
     auto appts = ConfigLoader::loadOrderConfig(path);
     if (!appts.has_value()) {

@@ -1,11 +1,18 @@
 #pragma once
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <map>
+#include <memory>
+#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
+#include "../util/types.h"
 #include "../observer/observer.h"
 #include "event_system_msgs/msg/metrics_report.hpp"
 
@@ -50,6 +57,12 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
     int dodCount             = 0;
     double lastChargeEndSoc  = -1.0;
 
+    std::shared_ptr<const des::SimConfig> m_csvConfig;
+    std::string m_csvPath;
+    std::string m_csvScenario;
+    int m_csvRound    = 0;
+    int m_csvRunIndex = 0;
+
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
 
 public:
@@ -60,6 +73,16 @@ public:
 
     std::string getName() override {
         return "Metrics";
+    }
+
+    void enableCsv(std::string path, std::shared_ptr<const des::SimConfig> config) {
+        m_csvPath   = std::move(path);
+        m_csvConfig = std::move(config);
+    }
+
+    void setRunInfo(const std::string& scenario, const int round) {
+        m_csvScenario = scenario;
+        m_csvRound    = round;
     }
 
     void clear() {
@@ -184,7 +207,9 @@ public:
         movedDistance += distance;
     }
 
-    void publishReport() {
+    bool hasData() const { return hasLastState; }
+
+    event_system_msgs::msg::MetricsReport buildReport() {
         auto msg = event_system_msgs::msg::MetricsReport();
 
         auto timeFor   = [&](const std::string& n) { auto it = timePerStateName.find(n);   return it == timePerStateName.end()   ? 0    : it->second; };
@@ -266,12 +291,117 @@ public:
         msg.equivalent_full_cycles = (batteryCapacity > 0.0) ? static_cast<float>(dischargedAh / batteryCapacity) : 0.0f;
         msg.avg_depth_of_discharge = (dodCount > 0) ? static_cast<float>(dodSum / dodCount) : 0.0f;
 
+        return msg;
+    }
+
+    void publishReport() {
+        const auto msg = buildReport();
         DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Publish Metrics");
         DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"),
                      "Battery: cycles=%d (full=%d, partial=%d), chargingTime=%ds, deepDischarges=%d, equivFullCycles=%.2f, avgDoD=%.2f",
                      msg.charge_cycles_total, msg.charge_cycles_complete, msg.charge_cycles_partial,
                      msg.charging_time, msg.deep_discharge_count, msg.equivalent_full_cycles, msg.avg_depth_of_discharge);
+        if (!m_csvPath.empty() && m_csvConfig && hasLastState) {
+            writeCsvRow(msg);
+        }
         m_publisher->publish(msg);
         clear();
+    }
+
+private:
+    // Appends one CSV row per finished simulation: run metadata + config
+    // parameters + outcome metrics. Enabled via enableCsv() (headless only).
+    void writeCsvRow(const event_system_msgs::msg::MetricsReport& r) {
+        std::vector<std::pair<std::string, std::string>> fields;
+        auto add = [&](const std::string& key, const auto& value) {
+            std::ostringstream os;
+            os << value;
+            fields.emplace_back(key, os.str());
+        };
+
+        add("run_index", m_csvRunIndex);
+        add("scenario", m_csvScenario);
+        add("round", m_csvRound);
+
+        add("always_charge_at_dock", m_csvConfig->alwaysChargeAtDock ? 1 : 0);
+        add("charge_to_full", m_csvConfig->chargeToFull ? 1 : 0);
+        add("cv_threshold", m_csvConfig->cvThreshold);
+        add("taper_fraction", m_csvConfig->taperFraction);
+        add("battery_voltage", m_csvConfig->batteryVoltage);
+        add("charging_rate", m_csvConfig->chargingRate);
+        add("low_battery_threshold", m_csvConfig->lowBatteryThreshold);
+        add("full_battery_threshold", m_csvConfig->fullBatteryThreshold);
+        add("battery_capacity", m_csvConfig->batteryCapacity);
+        add("initial_battery_capacity", m_csvConfig->initialBatteryCapacity);
+        add("energy_consumption_base", m_csvConfig->energyConsumptionBase);
+        add("energy_consumption_drive", m_csvConfig->energyConsumptionDrive);
+        add("robot_speed", m_csvConfig->robotSpeed);
+
+        add("idle_time", r.idle_time);
+        add("moving_time", r.moving_time);
+        add("searching_time", r.searching_time);
+        add("accompany_time", r.accompany_time);
+        add("charging_time", r.charging_time);
+        add("talk_time", r.talk_time);
+        add("scheduled_total", r.scheduled_total);
+        add("scheduled_on_time", r.scheduled_on_time);
+        add("scheduled_late", r.scheduled_late);
+        add("scheduled_failed", r.scheduled_failed);
+        add("scheduled_cancelled", r.scheduled_cancelled);
+        add("scheduled_rejected", r.scheduled_rejected);
+        add("background_total", r.background_total);
+        add("background_completed", r.background_completed);
+        add("background_failed", r.background_failed);
+        add("background_cancelled", r.background_cancelled);
+        add("interrupt_total", r.interrupt_total);
+        add("interrupt_completed", r.interrupt_completed);
+        add("avg_early_arrival", r.avg_early_arrival);
+        add("avg_lateness", r.avg_lateness);
+        add("min_lateness", r.min_lateness);
+        add("max_lateness", r.max_lateness);
+        add("rejected_rate", r.rejected_rate);
+        add("total_distance", r.total_distance);
+        add("energy_total_consumed_ah", r.energy_total_consumed_ah);
+        add("energy_idle_ah", r.energy_idle_ah);
+        add("energy_searching_ah", r.energy_searching_ah);
+        add("energy_accompany_ah", r.energy_accompany_ah);
+        add("energy_talk_ah", r.energy_talk_ah);
+        add("energy_charging_ah", r.energy_charging_ah);
+        add("utilization", r.utilization);
+        add("idle_percent", r.idle_percent);
+        add("charging_percent", r.charging_percent);
+        add("returning_percent", r.returning_percent);
+        add("charge_cycles_total", r.charge_cycles_total);
+        add("charge_cycles_complete", r.charge_cycles_complete);
+        add("charge_cycles_partial", r.charge_cycles_partial);
+        add("deep_discharge_count", r.deep_discharge_count);
+        add("equivalent_full_cycles", r.equivalent_full_cycles);
+        add("avg_depth_of_discharge", r.avg_depth_of_discharge);
+
+        std::error_code ec;
+        const auto parent = std::filesystem::path(m_csvPath).parent_path();
+        if (!parent.empty()) {
+            std::filesystem::create_directories(parent, ec);
+        }
+        const bool writeHeader = !std::filesystem::exists(m_csvPath) || std::filesystem::file_size(m_csvPath, ec) == 0;
+
+        std::ofstream out(m_csvPath, std::ios::app);
+        if (!out.is_open()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.observer.metrics"), "Could not open CSV file: %s", m_csvPath.c_str());
+            return;
+        }
+        if (writeHeader) {
+            for (size_t i = 0; i < fields.size(); ++i) {
+                out << (i ? "," : "") << fields[i].first;
+            }
+            out << "\n";
+        }
+        for (size_t i = 0; i < fields.size(); ++i) {
+            out << (i ? "," : "") << fields[i].second;
+        }
+        out << "\n";
+
+        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "CSV row written: scenario=%s round=%d -> %s", m_csvScenario.c_str(), m_csvRound, m_csvPath.c_str());
+        m_csvRunIndex++;
     }
 };

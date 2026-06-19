@@ -118,6 +118,7 @@ struct SimConfig {
     double taperFraction = 0.5;
     bool chargeToFull = true;
     bool alwaysChargeAtDock = false;
+    bool metricsCsvExport = true;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -152,6 +153,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "taperFraction" << ": " << config.taperFraction << std::endl;
         os << std::left << std::setw(W) << "chargeToFull" << ": " << config.chargeToFull << std::endl;
         os << std::left << std::setw(W) << "alwaysChargeAtDock" << ": " << config.alwaysChargeAtDock << std::endl;
+        os << std::left << std::setw(W) << "metricsCsvExport" << ": " << config.metricsCsvExport << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;

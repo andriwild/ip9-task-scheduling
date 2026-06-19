@@ -185,6 +185,7 @@ public:
             config.taperFraction  = j.value("taper_fraction", 0.5);
             config.chargeToFull   = j.value("charge_to_full", true);
             config.alwaysChargeAtDock = j.value("always_charge_at_dock", false);
+            config.metricsCsvExport   = j.value("metrics_csv_export", true);
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -317,6 +318,7 @@ public:
         j["taper_fraction"] = config->taperFraction;
         j["charge_to_full"] = config->chargeToFull;
         j["always_charge_at_dock"] = config->alwaysChargeAtDock;
+        j["metrics_csv_export"] = config->metricsCsvExport;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
