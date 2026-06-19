@@ -1,11 +1,13 @@
 #include "information_plugin.h"
 
+#include <algorithm>
 #include <memory>
 
 #include "bt_nodes/information.h"
 #include "observer/ros.h"
 #include "information_order.h"
 #include "states.h"
+#include "../../util/rnd.h"
 
 void InformationPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<ExecuteInformation>("ExecuteInformation");
@@ -37,8 +39,13 @@ bool InformationPlugin::isFeasible(const des::IOrder& /*order*/, const ISimConte
     return true;
 }
 
-double InformationPlugin::estimateMissionDuration(const des::IOrder& /*order*/, const ISimContext& /*context*/, const std::string& /*startLocation*/) const {
-    return informationConfig().informationDuration;
+double InformationPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& /*startLocation*/) const {
+    const auto& info = static_cast<const InformationOrder&>(order);
+    if (info.sampledDuration < 0.0) {
+        const auto& cfg = informationConfig();
+        info.sampledDuration = std::max(1.0, rnd::uni(context.rng(), cfg.informationDurationMin, cfg.informationDurationMax));
+    }
+    return info.sampledDuration;
 }
 
 void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

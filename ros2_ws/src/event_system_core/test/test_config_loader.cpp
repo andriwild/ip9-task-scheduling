@@ -138,7 +138,8 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_DOUBLE_EQ(accompanyConfig().appointmentDuration, 1800.0);
     EXPECT_DOUBLE_EQ(cleanConfig().cleaningArea, 0.09);
     EXPECT_DOUBLE_EQ(dataAcquisitionConfig().dataAcquisitionDuration, 120.0);
-    EXPECT_DOUBLE_EQ(informationConfig().informationDuration, 30.0);
+    EXPECT_DOUBLE_EQ(informationConfig().informationDurationMin, 30.0);
+    EXPECT_DOUBLE_EQ(informationConfig().informationDurationMax, 90.0);
 }
 
 TEST(ConfigLoaderSimConfig, DistributionTypesParsedCorrectly) {
@@ -201,7 +202,8 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_DOUBLE_EQ(accompanyOriginal.appointmentDuration,      accompanyConfig().appointmentDuration);
     EXPECT_DOUBLE_EQ(cleanOriginal.cleaningArea,                 cleanConfig().cleaningArea);
     EXPECT_DOUBLE_EQ(dataAcquisitionOriginal.dataAcquisitionDuration, dataAcquisitionConfig().dataAcquisitionDuration);
-    EXPECT_DOUBLE_EQ(informationOriginal.informationDuration,    informationConfig().informationDuration);
+    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMin, informationConfig().informationDurationMin);
+    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMax, informationConfig().informationDurationMax);
 
     std::filesystem::remove(tmpFile);
 }
