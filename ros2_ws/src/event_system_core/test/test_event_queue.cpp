@@ -156,6 +156,68 @@ TEST_F(EventQueueTest, SameTimeEventsPopInPushOrder) {
     EXPECT_EQ(queue.top(), second);
 }
 
+// --- deterministic tie-breaking via sequence number ---
+
+TEST_F(EventQueueTest, ConstructionAssignsMonotonicSeq) {
+    auto a = makeEvent(100);
+    auto b = makeEvent(100);
+    auto c = makeEvent(100);
+    EXPECT_LT(a->seq, b->seq);
+    EXPECT_LT(b->seq, c->seq);
+}
+
+TEST_F(EventQueueTest, SameTimeEventsPopInSeqOrderRegardlessOfPushOrder) {
+    // Created first, but pushed last: order must follow seq (creation), not push.
+    auto early = makeEvent(100, des::EventType::SIMULATION_START);
+    auto late = makeEvent(100, des::EventType::SIMULATION_END);
+
+    queue.push(late);
+    queue.push(early);
+
+    EXPECT_EQ(queue.top(), early); queue.pop();
+    EXPECT_EQ(queue.top(), late);
+}
+
+TEST_F(EventQueueTest, TimeTakesPrecedenceOverSeq) {
+    auto laterSeqEarlierTime = makeEvent(100);
+    auto earlierSeqLaterTime = makeEvent(300);
+    // earlierSeqLaterTime has the smaller seq but the larger time.
+    queue.push(earlierSeqLaterTime);
+    queue.push(laterSeqEarlierTime);
+
+    EXPECT_EQ(queue.top()->time, 100); queue.pop();
+    EXPECT_EQ(queue.top()->time, 300);
+}
+
+TEST_F(EventQueueTest, ExtendFromSortedEventQueuePreservesSeqOrderForSameTime) {
+    // The SortedEventQueue is a binary heap: not stable for equal times.
+    // The seq tie-break must still yield creation order after extend().
+    auto e0 = makeEvent(100, des::EventType::MISSION_DISPATCH);
+    auto e1 = makeEvent(100, des::EventType::SIMULATION_END);
+    auto e2 = makeEvent(100, des::EventType::SIMULATION_START);
+
+    SortedEventQueue sorted;
+    sorted.push(e2); // scrambled push order
+    sorted.push(e0);
+    sorted.push(e1);
+
+    queue.extend(std::move(sorted));
+
+    EXPECT_EQ(queue.top(), e0); queue.pop();
+    EXPECT_EQ(queue.top(), e1); queue.pop();
+    EXPECT_EQ(queue.top(), e2);
+}
+
+TEST_F(EventQueueTest, WithTimeAssignsFreshSeq) {
+    auto original = makeEvent(100);
+    auto rescheduled = original->withTime(100); // same time, must sort after
+    EXPECT_GT(rescheduled->seq, original->seq);
+
+    queue.push(rescheduled);
+    queue.push(original);
+    EXPECT_EQ(queue.top(), original);
+}
+
 // --- nextEvent ---
 
 TEST_F(EventQueueTest, NextEventOnEmptyQueueReturnsNullptr) {

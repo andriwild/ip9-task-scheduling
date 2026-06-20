@@ -12,7 +12,10 @@ class EventQueue {
     struct EarliestFirst {
         bool operator()(const std::shared_ptr<IEvent>& a,
                         const std::shared_ptr<IEvent>& b) const {
-            return a->time < b->time;
+            if (a->time != b->time) {
+                return a->time < b->time;
+            }
+            return a->seq < b->seq;
         }
     };
 

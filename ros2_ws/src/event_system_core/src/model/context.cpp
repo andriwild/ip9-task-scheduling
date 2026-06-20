@@ -76,7 +76,7 @@ des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
-    DES_LOG_INFO_STREAM(rclcpp::get_logger("des.context"), *m_simConfig);
+    DES_LOG_INFO(rclcpp::get_logger("des.context"), "Config updated");
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
