@@ -124,6 +124,7 @@ bool isPersonEvent(quint8 t) {
     using TE = event_system_msgs::msg::TimelineEvent;
     return t == TE::PERSON_TRANSITION
         || t == TE::PERSON_ARRIVED
+        || t == TE::PERSON_ROOM_ARRIVED
         || t == TE::PERSON_DEPARTURE
         || t == TE::PERSON_ACCOMPANY_ARRIVED
         || t == TE::PERSON_ACCOMPANY_DEPARTURE;
@@ -189,12 +190,13 @@ GlyphSpec glyphFor(quint8 type) {
         // Person events — Arrival = ◀ (incoming, like STOP_DRIVE),
         // Departure = ▶ (outgoing, like START_DRIVE).
         case TE::PERSON_ARRIVED:
+        case TE::PERSON_ROOM_ARRIVED:
         case TE::PERSON_ACCOMPANY_ARRIVED:
             return {Glyph::TriangleLeft, 10};
         case TE::PERSON_DEPARTURE:
         case TE::PERSON_ACCOMPANY_DEPARTURE:
             return {Glyph::TriangleRight, 10};
-        case TE::PERSON_TRANSITION: return {Glyph::Circle, 8};
+        case TE::PERSON_TRANSITION: return {Glyph::TriangleRight, 10};
         default:                    return {Glyph::Bar, 14};
     }
 }
@@ -262,6 +264,7 @@ double subBandFor(quint8 type) {
         case TE::START_FOUND_PERSON_CONV:
         case TE::MISSION_DISPATCH:
         case TE::MISSION_START:
+        case TE::PERSON_TRANSITION:
         case TE::PERSON_DEPARTURE:
         case TE::PERSON_ACCOMPANY_DEPARTURE:
             return 0.28;
@@ -272,6 +275,7 @@ double subBandFor(quint8 type) {
         case TE::FOUND_PERSON_CONV_COMPLETE:
         case TE::MISSION_COMPLETE:
         case TE::PERSON_ARRIVED:
+        case TE::PERSON_ROOM_ARRIVED:
         case TE::PERSON_ACCOMPANY_ARRIVED:
             return 0.72;
         default:
@@ -749,6 +753,7 @@ QString DesSwimlanePanel::eventTypeName(quint8 type) {
         case TE::CHARGE_PHASE_TRANSITION: return "Charge Phase Transition";
         case TE::RESET:            return "Reset";
         case TE::PERSON_TRANSITION: return "Person Transition";
+        case TE::PERSON_ROOM_ARRIVED: return "Person Room Arrived";
         case TE::PERSON_ARRIVED:   return "Person Arrived";
         case TE::PERSON_DEPARTURE: return "Person Departure";
         case TE::PERSON_ACCOMPANY_ARRIVED: return "Person Accompany Arrived";

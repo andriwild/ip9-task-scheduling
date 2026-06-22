@@ -177,6 +177,7 @@ public:
             }
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personDetectionRange = j.value("person_detection_range", 5.0);
+            config.personSpeed = j.value("person_speed", 1.4);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simEndTime   = j.value("sim_end_time",   SIM_END_TIME);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
@@ -310,6 +311,7 @@ public:
         j["appointments_path"] = config->appointmentsPath;
         j["people_spawn_location"] = config->peopleSpawnLocation;
         j["person_detection_range"] = config->personDetectionRange;
+        j["person_speed"] = config->personSpeed;
         j["sim_start_time"] = config->simStartTime;
         j["sim_end_time"]   = config->simEndTime;
         j["use_distance_matrix"] = config->useDistanceMatrix;

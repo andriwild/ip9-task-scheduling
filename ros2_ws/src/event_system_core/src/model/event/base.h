@@ -12,6 +12,7 @@
 
 class ISimContext;
 constexpr int ONE_HOUR = 3600;
+constexpr const char* IN_TRANSIT = "IN_TRANSIT";
 
 class IEvent {
     static inline std::atomic<uint64_t> s_seqCounter{0};

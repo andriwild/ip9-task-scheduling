@@ -678,12 +678,19 @@ TEST(EventExecute, PersonTransitionMovesToNewRoomAndSchedulesNext) {
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
 
-    // Person should have moved to Kitchen (100% probability)
+    EXPECT_EQ(ctx.personLocations["Max"], IN_TRANSIT);
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_ROOM_ARRIVED);
+    EXPECT_GT(ctx.pushedEvents[0]->time, 30000);
+
+    auto arrival = ctx.pushedEvents[0];
+    ctx.pushedEvents.clear();
+    arrival->execute(ctx);
+
     EXPECT_EQ(ctx.personLocations["Max"], "IMVS_Kitchen");
-    // Should schedule a follow-up transition
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
-    EXPECT_GT(ctx.pushedEvents[0]->time, 30000);
+    EXPECT_GT(ctx.pushedEvents[0]->time, arrival->time);
 }
 
 TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
@@ -704,11 +711,15 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
     PersonTransitionEvent event(30000, person);
     event.execute(ctx);
 
-    // nextExecutionTime will be > departureTime, so should schedule departure
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_ROOM_ARRIVED);
+    auto arrival = ctx.pushedEvents[0];
+    ctx.pushedEvents.clear();
+
+    arrival->execute(ctx);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_DEPARTURE);
-    EXPECT_EQ(ctx.pushedEvents[0]->time, 30001);
-    // Person should be moved to elevator
+    EXPECT_GE(ctx.pushedEvents[0]->time, person->departureTime);
     EXPECT_EQ(ctx.personLocations["Max"], "5.2B_Elevator");
 }
 

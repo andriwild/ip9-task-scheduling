@@ -101,8 +101,21 @@ void DesOccupancyPanel::onTimelineEvent(const event_system_msgs::msg::TimelineEv
         return;
     }
 
+    if (type == event_system_msgs::msg::TimelineEvent::PERSON_TRANSITION) {
+        auto [person, room] = parseLabel(QString::fromStdString(msg->label));
+        if (person.isEmpty()) return;
+        addPersonWalkStart(person, msg->time, QString::fromStdString(msg->color));
+        return;
+    }
+
+    if (type == event_system_msgs::msg::TimelineEvent::PERSON_ROOM_ARRIVED) {
+        auto [person, room] = parseLabel(QString::fromStdString(msg->label));
+        if (person.isEmpty()) return;
+        addPersonArrival(person, room, msg->time, QString::fromStdString(msg->color));
+        return;
+    }
+
     const bool isPersonEvent =
-        type == event_system_msgs::msg::TimelineEvent::PERSON_TRANSITION ||
         type == event_system_msgs::msg::TimelineEvent::PERSON_ARRIVED ||
         type == event_system_msgs::msg::TimelineEvent::PERSON_DEPARTURE;
 
@@ -140,7 +153,7 @@ void DesOccupancyPanel::onReset(const event_system_msgs::msg::TimelineReset::Sha
 
 std::pair<QString, QString> DesOccupancyPanel::parseLabel(const QString& label) const {
     // Labels: "{name} moved to {room}", "{name} arrived to {room}", "{name} leaved to {room}"
-    static const QStringList patterns = {" moved to ", " arrived to ", " leaved to "};
+    static const QStringList patterns = {" walking to ", " arrived at ", " moved to ", " arrived to ", " leaved to "};
     for (const auto& pat : patterns) {
         int idx = label.indexOf(pat);
         if (idx >= 0) {
@@ -263,6 +276,13 @@ void DesOccupancyPanel::addPersonArrival(const QString& name, const QString& roo
     auto* series = getOrCreateSeries(name, color);
     series->append(hours, yIdx);
     m_lastY[name] = yIdx;
+}
+
+void DesOccupancyPanel::addPersonWalkStart(const QString& name, int time, const QString& color) {
+    if (!m_lastY.contains(name)) return;
+    const double hours = time / 3600.0;
+    auto* series = getOrCreateSeries(name, color);
+    series->append(hours, m_lastY[name]);
 }
 
 void DesOccupancyPanel::addPoint(const QString& name, const QString& room, int time, const QString& color) {

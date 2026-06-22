@@ -50,6 +50,7 @@ private:
     void addRobotArrival(const QString& room, int time);
     void addPersonDeparture(const QString& name, const QString& room, int time, const QString& color);
     void addPersonArrival(const QString& name, const QString& room, int time, const QString& color);
+    void addPersonWalkStart(const QString& name, int time, const QString& color);
     void addPoint(const QString& name, const QString& room, int time, const QString& color);
     void updateXAxis();
 

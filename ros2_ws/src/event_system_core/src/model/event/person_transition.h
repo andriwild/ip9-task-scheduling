@@ -11,6 +11,17 @@
 
 class PersonDepartureEvent;
 
+inline double personWalkTime(ISimContext& ctx, const std::string& from, const std::string& to) {
+    const std::optional<double> dist = ctx.getDistance(from, to);
+    const double speed = ctx.getConfig()->personSpeed;
+    if (!dist.has_value() || speed <= 0.0) {
+        return 0.0;
+    }
+    const double t = dist.value() / speed;
+    const double tRnd = rnd::normal(ctx.rng(), t, t * 0.1);
+    return tRnd < 0 ? t : tRnd;
+}
+
 class PersonTransitionEvent : public IEvent {
 public:
     const std::shared_ptr<des::Person> person;
@@ -30,7 +41,7 @@ public:
     void execute(ISimContext& ctx) override;
 
     std::string getName() const override {
-        return std::format("{} moved to {}", person->firstName, targetRoom);
+        return std::format("{} walking to {}", person->firstName, targetRoom);
     }
     des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
     std::string getColor() const override { return person->color; }
@@ -113,6 +124,54 @@ public:
     des::EventType getType() const override { return des::EventType::PERSON_DEPARTURE; }
 };
 
+class PersonRoomArrivedEvent final : public PersonTransitionEvent {
+public:
+    explicit PersonRoomArrivedEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+        PersonTransitionEvent(time, std::move(p))
+    {
+        targetRoom = std::move(room);
+    }
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonRoomArrivedEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
+    void execute(ISimContext& ctx) override {
+        auto& p = *this->person;
+
+        if (p.busy) {
+            ctx.notifyEvent(*this);
+            return;
+        }
+
+        ctx.setPersonLocation(p.firstName, targetRoom);
+        ctx.notifyEvent(*this);
+
+        double nextExecutionTime = this->time + p.getStayDuration(targetRoom, ctx.rng());
+
+        if (p.departureTime < nextExecutionTime) {
+            auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
+                [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
+            if (elevatorIt != p.roomLabels.end()) {
+                ctx.setPersonLocation(p.firstName, *elevatorIt);
+            }
+            const int departAt = std::max(p.departureTime, this->time);
+            ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
+        } else {
+            ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
+                static_cast<int>(nextExecutionTime), this->person));
+        }
+    }
+
+    std::string getName() const override {
+        return std::format("{} arrived at {}", person->firstName, targetRoom);
+    }
+    des::EventType getType() const override { return des::EventType::PERSON_ROOM_ARRIVED; }
+};
+
 inline void PersonTransitionEvent::execute(ISimContext& ctx) {
     auto& p = *this->person;
 
@@ -149,20 +208,9 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
     const std::string nextRoom = p.roomLabels.at(nextRoomIdx);
     targetRoom = nextRoom;
     ctx.notifyEvent(*this);
-    ctx.setPersonLocation(p.firstName, nextRoom);
 
-    double nextExecutionTime = this->time + p.getStayDuration(nextRoom, ctx.rng());
-
-    if (p.departureTime < nextExecutionTime) {
-        auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
-            [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
-        if (elevatorIt != p.roomLabels.end()) {
-            ctx.setPersonLocation(p.firstName, *elevatorIt);
-        }
-        // Sample can land before now (busy stretch overran scheduled departure) — clamp.
-        const int departAt = std::max(p.departureTime, this->time);
-        ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
-    } else {
-        ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
-    }
+    const double walkTime = personWalkTime(ctx, currentRoom, nextRoom);
+    ctx.setPersonLocation(p.firstName, IN_TRANSIT);
+    ctx.pushEvent(std::make_shared<PersonRoomArrivedEvent>(
+        static_cast<int>(this->time + walkTime), this->person, nextRoom));
 }

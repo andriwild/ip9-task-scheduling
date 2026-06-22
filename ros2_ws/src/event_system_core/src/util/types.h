@@ -110,6 +110,7 @@ struct SimConfig {
     std::string appointmentsPath;
     std::string peopleSpawnLocation;
     double personDetectionRange = 5.0;
+    double personSpeed = 1.4;
     int simStartTime = 25200;  // 07:00
     int simEndTime   = 68400;  // 19:00
     bool useDistanceMatrix = false;
@@ -145,6 +146,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
+        os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
@@ -207,7 +209,8 @@ enum class EventType : int {
     INFORMATION = 30,
     CHARGE_MISSION_START = 31,
     CHARGE_MISSION = 32,
-    CHARGE_PHASE_TRANSITION = 33
+    CHARGE_PHASE_TRANSITION = 33,
+    PERSON_ROOM_ARRIVED = 34
 };
 
 enum MissionState {
