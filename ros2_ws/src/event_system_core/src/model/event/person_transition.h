@@ -7,6 +7,7 @@
 
 #include "base.h"
 #include "../i_sim_context.h"
+#include "../occupancy.h"
 #include "../../util/rnd.h"
 
 class PersonDepartureEvent;
@@ -116,6 +117,13 @@ public:
         targetRoom = "OUTDOOR";
         ctx.notifyEvent(*this);
         ctx.setPersonLocation(this->person->firstName, "OUTDOOR");
+
+        const int nextDayBase = (this->time / SECONDS_PER_DAY + 1) * SECONDS_PER_DAY;
+        des::sampleOccupancy(*ctx.getConfig(), ctx.rng(), nextDayBase, *this->person);
+        const auto simEnd = ctx.getSimulationEndTime();
+        if (simEnd.has_value() && this->person->arrivalTime < simEnd.value()) {
+            ctx.pushEvent(std::make_shared<PersonArrivedEvent>(this->person->arrivalTime, this->person));
+        }
     }
 
     std::string getName() const override {

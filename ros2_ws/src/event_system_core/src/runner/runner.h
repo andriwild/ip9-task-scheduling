@@ -5,6 +5,7 @@
 
 #include "../model/context.h"
 #include "../model/event.h"
+#include "../model/occupancy.h"
 #include "../sim/ros/path_node.h"
 #include "../sim/matrix_planner.h"
 #include "../util/db.h"
@@ -106,18 +107,8 @@ public:
         des::PersonList people,
         std::mt19937& rng
     ) {
-        auto sample = [&rng](des::DistributionType type, double mean, double std) -> double {
-            switch (type) {
-                case des::DistributionType::UNIFORM:        return rnd::uni(rng, mean - std, mean + std);
-                case des::DistributionType::EXPONENTIAL:    return rnd::exponential(rng, mean);
-                case des::DistributionType::LOG_NORMAL:     return rnd::logNormal(rng, mean, std);
-                default:                                    return rnd::normal(rng, mean, std);
-            }
-        };
-
         for (auto& p: people) {
-            p->arrivalTime = sample(config.arrivalDistribution, config.arrivalMean, config.arrivalStd);
-            p->departureTime = sample(config.departureDistribution, config.departureMean, config.departureStd);
+            des::sampleOccupancy(config, rng, 0, *p);
         }
     }
 
