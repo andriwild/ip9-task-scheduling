@@ -134,6 +134,21 @@ public:
     }
 };
 
+// Charge full only when charging at dock and no background work is left, otherwise hold the CV target.
+class UpdateChargeTarget final : public BT::SyncActionNode {
+public:
+    UpdateChargeTarget(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx       = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundMission();
+        ctx->getRobot()->m_bat->setForceFull(forceFull);
+        return BT::NodeStatus::SUCCESS;
+    }
+};
+
 class Charge final : public BT::SyncActionNode {
 public:
     Charge(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}

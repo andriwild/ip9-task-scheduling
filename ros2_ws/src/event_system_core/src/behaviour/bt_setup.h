@@ -80,8 +80,13 @@ const std::string IDLE_ROUTINE = R"(
     <Docking/>
     <Fallback name="TopUpOrHold">
       <Inverter><IsAlwaysChargeAtDock/></Inverter>
-      <IsBatteryCharged/>
-      <Charge/>
+      <Sequence name="Seq_DockCharge">
+        <UpdateChargeTarget/>
+        <Fallback name="ChargedOrCharge">
+          <IsBatteryCharged/>
+          <Charge/>
+        </Fallback>
+      </Sequence>
     </Fallback>
 </Sequence>
 </BehaviorTree>
@@ -101,6 +106,7 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsAvailable>("IsAvailable");
     factory.registerNodeType<Charge>("Charge");
     factory.registerNodeType<GoToDock>("GoToDock");
+    factory.registerNodeType<UpdateChargeTarget>("UpdateChargeTarget");
 
     // idle
     factory.registerNodeType<IsIdle>("IsIdle");

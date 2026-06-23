@@ -131,6 +131,9 @@ public:
 
         const auto route = problem->instance.grasp(kGraspIterations, kGraspAlpha, kGraspSeed);
 
+        DES_LOG_INFO(rclcpp::get_logger("des.mission.background"), "Route: %s",
+                    formatRoute(*problem, route, startLoc, endLoc).c_str());
+
         int chargeStops = 0;
         for (const int idx : route) {
             if (const auto& order = problem->orderByNode[idx]) {

@@ -17,6 +17,9 @@ class Battery {
     double m_cvThreshold   = 0.8;
     double m_taperFraction = 0.5;
     bool m_chargeToFull    = true;
+    bool m_forceFull       = false; // runtime override: top up to full even if m_chargeToFull is false
+
+    bool chargesToFull() const { return m_chargeToFull || m_forceFull; }
 
     double capacityToTime(const double capacityDiff, const double powerWatts) const {
         return capacityDiff * 3600.0 * m_voltage / powerWatts;
@@ -25,7 +28,7 @@ class Battery {
     double targetCapacity() const {
         const double cvCap   = m_cvThreshold * m_designCapacity;
         const double fullCap = m_fullBatteryThreshold / 100.0 * m_designCapacity;
-        return m_chargeToFull ? fullCap : cvCap;
+        return chargesToFull() ? fullCap : cvCap;
     }
 
 public:
@@ -88,9 +91,13 @@ public:
         m_currentCapacity = targetCapacity();
     }
 
+    // Runtime override of the charge target, independent of the configured charge_to_full baseline.
+    void setForceFull(const bool forceFull) { m_forceFull = forceFull; }
+
     void reset(const int startTime) {
         m_lastBalanceUpdate = startTime;
         m_currentCapacity = m_initialCapacity;
+        m_forceFull = false;
         DES_LOG_INFO(rclcpp::get_logger("des.battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
     }
 
@@ -139,7 +146,7 @@ public:
 
     double timeToPhaseTransition(const double phaseOnePowerWatts) const {
         if (phaseOnePowerWatts <= 0) return -1.0;
-        if (!m_chargeToFull) return -1.0;
+        if (!chargesToFull()) return -1.0;
 
         const double cvCap   = m_cvThreshold * m_designCapacity;
         const double fullCap = m_fullBatteryThreshold / 100.0 * m_designCapacity;
@@ -152,7 +159,7 @@ public:
     double chargingConsumption(const double chargingRate, const double baseConsumption) const {
         const double netFull = chargingRate - baseConsumption;
         const double cvCap   = m_cvThreshold * m_designCapacity;
-        const double net     = (m_chargeToFull && m_currentCapacity >= cvCap) ? netFull * m_taperFraction : netFull;
+        const double net     = (chargesToFull() && m_currentCapacity >= cvCap) ? netFull * m_taperFraction : netFull;
         return -net;
     }
 
