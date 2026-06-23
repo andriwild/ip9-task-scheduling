@@ -42,7 +42,7 @@
     "person_detection_range": 2.5,
     "person_speed": 1.4,
     "robot_speed": 0.30000001192092896,
-    "sim_end_time": 64800,
+    "sim_duration": 86400,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
     "timeBuffer": 0.0,

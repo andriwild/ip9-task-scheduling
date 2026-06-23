@@ -147,9 +147,11 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_simStartTime->setDisplayFormat("HH:mm");
     addConfigItem(generalGroup, "Sim Start", m_simStartTime);
 
-    m_simEndTime = new QTimeEdit();
-    m_simEndTime->setDisplayFormat("HH:mm");
-    addConfigItem(generalGroup, "Sim End", m_simEndTime);
+    m_simDuration = new QDoubleSpinBox();
+    m_simDuration->setRange(0.0, 336.0);
+    m_simDuration->setSingleStep(0.5);
+    m_simDuration->setSuffix(" h");
+    addConfigItem(generalGroup, "Sim Duration", m_simDuration);
 
     m_cacheEnabled = new QCheckBox();
     addConfigItem(generalGroup, "Cache Enabled", m_cacheEnabled);
@@ -244,7 +246,7 @@ void DesSystemConfig::onSetConfig() {
     request->people_spawn_location = m_peopleSpawnLocation->text().toStdString();
     request->person_detection_range = m_personDetectionRange->value();
     request->sim_start_time = QTime(0, 0).secsTo(m_simStartTime->time());
-    request->sim_end_time   = QTime(0, 0).secsTo(m_simEndTime->time());
+    request->sim_duration   = static_cast<int>(m_simDuration->value() * 3600.0);
 
     m_statusLabel->setText("Sending...");
 
@@ -294,7 +296,7 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_personDetectionRange->setValue(msg->person_detection_range);
     m_cacheEnabled->setChecked(msg->cache_enabled);
     m_simStartTime->setTime(QTime(0, 0).addSecs(msg->sim_start_time));
-    m_simEndTime->setTime(QTime(0, 0).addSecs(msg->sim_end_time));
+    m_simDuration->setValue(msg->sim_duration / 3600.0);
 
     const auto appointmentConfigPath = QString::fromStdString(msg->appointments_path);
     const QFileInfo info(appointmentConfigPath);

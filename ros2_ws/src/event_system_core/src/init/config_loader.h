@@ -19,7 +19,7 @@ const std::string SIM_CONFIG_FILE       = "/home/andri/repos/ip9-task-scheduling
 const std::string BUILDING_FILE         = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
-constexpr int SIM_END_TIME   = 68400;  // 19:00
+constexpr int SIM_DURATION   = 43200;
 
 struct InterruptGeneratorConfig {
     std::string type;
@@ -179,7 +179,7 @@ public:
             config.personDetectionRange = j.value("person_detection_range", 5.0);
             config.personSpeed = j.value("person_speed", 1.4);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
-            config.simEndTime   = j.value("sim_end_time",   SIM_END_TIME);
+            config.simDuration  = j.value("sim_duration",   SIM_DURATION);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
             config.batteryVoltage = j.value("battery_voltage", 12.0);
             config.cvThreshold    = j.value("cv_threshold", 0.8);
@@ -313,7 +313,7 @@ public:
         j["person_detection_range"] = config->personDetectionRange;
         j["person_speed"] = config->personSpeed;
         j["sim_start_time"] = config->simStartTime;
-        j["sim_end_time"]   = config->simEndTime;
+        j["sim_duration"]   = config->simDuration;
         j["use_distance_matrix"] = config->useDistanceMatrix;
         j["battery_voltage"] = config->batteryVoltage;
         j["cv_threshold"] = config->cvThreshold;

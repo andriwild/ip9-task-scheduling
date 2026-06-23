@@ -112,7 +112,7 @@ struct SimConfig {
     double personDetectionRange = 5.0;
     double personSpeed = 1.4;
     int simStartTime = 25200;  // 07:00
-    int simEndTime   = 68400;  // 19:00
+    int simDuration  = 43200;
     bool useDistanceMatrix = false;
     double batteryVoltage = 12.0;
     double cvThreshold = 0.8;
@@ -148,7 +148,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
-        os << std::left << std::setw(W) << "simEndTime" << ": " << config.simEndTime << std::endl;
+        os << std::left << std::setw(W) << "simDuration" << ": " << config.simDuration << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
         os << std::left << std::setw(W) << "batteryVoltage" << ": " << config.batteryVoltage << std::endl;
         os << std::left << std::setw(W) << "cvThreshold" << ": " << config.cvThreshold << std::endl;

@@ -81,7 +81,7 @@ private:
                 request->person_detection_range
             };
             config.simStartTime = request->sim_start_time;
-            config.simEndTime   = request->sim_end_time;
+            config.simDuration  = request->sim_duration;
             config.batteryVoltage = request->battery_voltage;
             config.cvThreshold    = request->cv_threshold;
             config.taperFraction  = request->taper_fraction;
@@ -126,7 +126,7 @@ private:
             msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
             msg.person_detection_range     = m_currentConfig->personDetectionRange;
             msg.sim_start_time             = m_currentConfig->simStartTime;
-            msg.sim_end_time               = m_currentConfig->simEndTime;
+            msg.sim_duration               = m_currentConfig->simDuration;
             msg.battery_voltage            = m_currentConfig->batteryVoltage;
             msg.cv_threshold               = m_currentConfig->cvThreshold;
             msg.taper_fraction             = m_currentConfig->taperFraction;

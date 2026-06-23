@@ -161,7 +161,7 @@ protected:
         m_eventQueue.extend(createMissionQueue(m_config, m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
         const int simStartTime = m_config->simStartTime;
-        const int simEndTime   = m_config->simEndTime;
+        const int simEndTime   = m_config->simStartTime + m_config->simDuration;
         DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Sim window: %d → %d", simStartTime, simEndTime);
 
         m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));

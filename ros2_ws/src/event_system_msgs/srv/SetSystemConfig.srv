@@ -21,7 +21,7 @@ bool cache_enabled
 string appointments_path
 string employee_path
 int32 sim_start_time
-int32 sim_end_time
+int32 sim_duration
 float32 battery_voltage
 float32 cv_threshold
 float32 taper_fraction

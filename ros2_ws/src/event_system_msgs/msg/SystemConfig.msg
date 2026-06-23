@@ -37,6 +37,6 @@ string appointments_path
 string employee_path
 bool cache_enabled
 
-# Simulation window (seconds since midnight)
+# Simulation window
 int32 sim_start_time
-int32 sim_end_time
+int32 sim_duration
