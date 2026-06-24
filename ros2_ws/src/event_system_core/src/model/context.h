@@ -283,6 +283,10 @@ public:
 
     bool pushInterrupt(const des::OrderPtr& order) override {
         assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
+        if (m_robot->m_bat->isBatteryLow()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->m_bat->getStats().soc * 100.0);
+            return false;
+        }
         if (!m_interruptMission.push(order, m_currentMission)) {
             return false;
         }
@@ -322,7 +326,7 @@ public:
             changeRobotState(std::move(snap->state));
             resumeDrive = snap->wasDriving;
         }
-        if (resumeDrive) {
+        if (resumeDrive && m_robot->getLocation() != m_robot->getTargetLocation()) {
             m_robot->setDriving(true);
             m_eventBus.notifyEvent(m_currentTime, des::EventType::START_DRIVE, "Drive resumed: " + m_robot->getTargetLocation(), true, m_robot->isCharging(), "", -1);
         }

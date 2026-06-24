@@ -31,17 +31,19 @@ public:
         m_currentOpenState.type = newState;
     }
 
-    void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase) override {
+    void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase, int visStart, int visEnd) override {
         const TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
 
         int barHeight = m_height;
 
         for (const auto&[startTime, endTime, type] : m_states) {
+            if (endTime < visStart || startTime > visEnd) continue;
+
             double x1 = tf.toX(startTime);
             double x2 = tf.toX(endTime);
             double blockLength = x2 - x1;
 
-            if (blockLength <= 0) continue;
+            if (blockLength < 0.75) continue;
 
             RobotStateMeta meta = getMeta(type);
             QColor blockColor = meta.color;

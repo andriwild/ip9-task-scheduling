@@ -156,7 +156,22 @@ public:
 
         const auto order = ctx->nextScheduledMission();
         const auto& plugin = OrderRegistry::instance().get(order->type);
-        const bool isFeasible  = plugin.isFeasible(*order, *ctx);
+        const bool timeFeasible = plugin.isFeasible(*order, *ctx);
+
+        const auto robot       = ctx->getRobot();
+        const auto bat         = robot->m_bat->getStats();
+        const double voltage   = robot->m_bat->getVoltage();
+        const double currentWh = bat.soc * bat.capacity * voltage;
+        const double reserveWh = (bat.lowThreshold / 100.0) * bat.capacity * voltage;
+        const double missionWh = plugin.estimateMissionEnergy(*order, *ctx, robot->getLocation());
+        const bool energyFeasible = currentWh - missionWh >= reserveWh;
+        if (!energyFeasible) {
+            DES_LOG_WARN(rclcpp::get_logger("des.plugin"),
+                         "Mission %d infeasible: energy %.1fWh, mission needs %.1fWh, reserve %.1fWh — charge first",
+                         order->id, currentWh, missionWh, reserveWh);
+        }
+
+        const bool isFeasible = timeFeasible && energyFeasible;
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "MissionFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;

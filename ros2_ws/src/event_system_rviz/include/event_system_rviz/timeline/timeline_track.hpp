@@ -7,7 +7,7 @@
 class ITimelineTrack {
 public:
     virtual ~ITimelineTrack() = default;
-    virtual void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase) {}
+    virtual void updateScene(QGraphicsScene* scene, double pixelsPerSecond, int simStartTime, double xOffset, double yBase, int visStart, int visEnd) {}
     virtual double getHeight() const = 0;
     virtual void clear() = 0;
     virtual std::string getName() const = 0;

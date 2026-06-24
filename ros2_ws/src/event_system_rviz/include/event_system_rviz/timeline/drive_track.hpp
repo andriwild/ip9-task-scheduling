@@ -29,7 +29,7 @@ public:
         m_states.push_back({ time, isDriving, isCharging });
     }
 
-    void updateScene(QGraphicsScene* scene, const double pixelsPerSecond, const int simStartTime, const double xOffset, const double yBase) override {
+    void updateScene(QGraphicsScene* scene, const double pixelsPerSecond, const int simStartTime, const double xOffset, const double yBase, const int visStart, const int visEnd) override {
         if (m_states.empty()) { return; }
         const TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
 
@@ -51,19 +51,23 @@ public:
         // draw soc range: x,y,w,h
         for (auto it = m_states.begin(); it != m_states.end(); ++it) {
             const auto [time, isDriving, isCharging] = *it;
-        
+
             if (isDriving || isCharging) {
                 const auto color = isDriving ? driveColor : chargeColor;
                 auto nextIt = std::next(it);
                 const double nextTime = nextIt != m_states.end() ? nextIt->time: time + 1.0;
-        
+
+                if (nextTime < visStart || time > visEnd) { continue; }
+
                 const double xStartPixel = tf.toX(time);
                 const double xEndPixel   = tf.toX(nextTime);
                 const double widthPixel  = xEndPixel - xStartPixel;
-        
+
+                if (widthPixel < 0.75) { continue; }
+
                 scene->addRect(
                     xStartPixel,
-                    yBase, 
+                    yBase,
                     widthPixel,
                     m_height,
                     QPen(Qt::NoPen),

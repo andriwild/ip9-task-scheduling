@@ -37,12 +37,13 @@ public:
         m_appointments.clear();
     }
 
-    void updateScene(QGraphicsScene* scene, const double pixelsPerSecond, const int simStartTime, const double xOffset, const double yBase) override {
+    void updateScene(QGraphicsScene* scene, const double pixelsPerSecond, const int simStartTime, const double xOffset, const double yBase, const int visStart, const int visEnd) override {
         const double yAxis = yBase + m_height;
         const TimelineTransformer tf { pixelsPerSecond, simStartTime, xOffset };
 
         // Draw Appointments
         for (const auto& appt : m_appointments) {
+            if (appt.scheduledTime < visStart || appt.startTime > visEnd) { continue; }
             const double startX = tf.toX(appt.startTime);
             const double meetingX = tf.toX(appt.scheduledTime);
             double durationWidth = meetingX - startX;
@@ -67,15 +68,31 @@ public:
             drawMeetingMarker(scene, appt.scheduledTime, labelText, yAxis, tf);
         }
 
-        // Draw Events
-        QList<int> eventTimes = m_events.uniqueKeys();
-        for (int t : eventTimes) {
-            QList<VisualEvent> eventsOfTime = m_events.values(t);
-            int counter = 0;
-            for(const auto& ev : eventsOfTime) {
-                drawEventMarker(scene, t, ev, counter, yAxis, tf);
-                counter++;
+        // Draw Events: only the visible time range, with per-pixel LOD so the
+        // item count scales with viewport width, not with the number of events.
+        constexpr double MIN_LINE_PX = 1.0;
+        constexpr double MIN_TEXT_PX = 20.0;
+        double lastLineX = -1e9;
+        double lastTextX = -1e9;
+
+        const auto itHi = m_events.upperBound(visEnd);
+        for (auto it = m_events.lowerBound(visStart); it != itHi; ) {
+            const int t = it.key();
+            const double x = tf.toX(t);
+            const bool drawLine = (x - lastLineX) >= MIN_LINE_PX;
+            const bool drawText = drawLine && (x - lastTextX) >= MIN_TEXT_PX;
+
+            if (drawLine) {
+                int counter = 0;
+                for (auto vit = it; vit != itHi && vit.key() == t; ++vit) {
+                    drawEventMarker(scene, t, vit.value(), counter, yAxis, tf, drawText);
+                    counter++;
+                }
+                lastLineX = x;
+                if (drawText) { lastTextX = x; }
             }
+
+            while (it != itHi && it.key() == t) { ++it; }
         }
     }
 
@@ -125,7 +142,8 @@ private:
        const VisualEvent &evt,
        const int etage,
        const double yAxis,
-       const TimelineTransformer &tf
+       const TimelineTransformer &tf,
+       const bool withText
    ) const {
        const double x = tf.toX(time);
 
@@ -139,6 +157,8 @@ private:
 
        const auto line = scene->addLine(x, yLineBottom, x, yLineTop, {color, 2});
        line->setZValue(Z_MARKER);
+
+       if (!withText) { return; }
 
        const QString eventLabel = evt.label
                                   + " - ("

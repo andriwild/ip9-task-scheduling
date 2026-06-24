@@ -5,6 +5,7 @@
 
 #include <QGraphicsView>
 #include <QPushButton>
+#include <QTimer>
 #include <QWheelEvent>
 #include <algorithm>
 #include <cmath>
@@ -45,6 +46,9 @@ class Timeline final : public QGraphicsView {
     QPushButton* m_btnZoomIn;
     QPushButton* m_btnZoomOut;
 
+    QTimer* m_redrawTimer;
+    mutable bool m_dirty = false;
+
 public:
     explicit Timeline(const double pixelsPerSecond = 0.025):
         QGraphicsView(),
@@ -73,33 +77,46 @@ public:
         centerOn(0, 0);
 
         setupButtons();
+
+        m_redrawTimer = new QTimer(this);
+        m_redrawTimer->setInterval(33);
+        connect(m_redrawTimer, &QTimer::timeout, this, [this]() {
+            if (m_dirty) {
+                m_dirty = false;
+                updateScene();
+            }
+        });
+        m_redrawTimer->start();
+
         updateScene();
     }
+
+    void markDirty() const { m_dirty = true; }
 
     void setRange(const int start, const int end) {
         m_simStartTime = start;
         m_simEndTime   = end;
         m_duration     = m_simEndTime - m_simStartTime;
-        updateScene();
+        markDirty();
     }
 
     void addMeetingPlan(const VisualAppointment& appointment) const {
         m_markerTrack->addMeetingPlan(appointment);
-        updateScene();
+        markDirty();
     }
 
     void clear() const {
         for(const auto track : m_tracks) {
             track->clear();
         }
-        updateScene();
+        markDirty();
     }
 
 public slots:
     void handleStateChange(const int time, const int newState, const des::BatteryProps &batStats) const {
         m_stateTrack->handleStateChange(time, newState);
         m_batteryTrack->handleStateChange(time, batStats);
-        updateScene();
+        markDirty();
     }
 
     void handleReset() const { clear(); }
@@ -107,7 +124,7 @@ public slots:
     void handleEvent(const int time, const VisualEvent &ve, const bool isDriving, const bool isCharging) const {
         m_markerTrack->handleEvent(time, ve);
         m_driveTrack->handleStateChange(time, isDriving, isCharging);
-        updateScene(); // Events need scene update to draw items
+        markDirty();
     }
 
     void handleBattery(const int time, const double soc, const double capacity) const {}
@@ -124,6 +141,12 @@ protected:
     void resizeEvent(QResizeEvent * event) override {
         QGraphicsView::resizeEvent(event);
         positionButtons();
+        markDirty();
+    }
+
+    void scrollContentsBy(int dx, int dy) override {
+        QGraphicsView::scrollContentsBy(dx, dy);
+        markDirty();
     }
 
     void wheelEvent(QWheelEvent* event) override {
@@ -197,13 +220,24 @@ private:
 
         m_scene->setSceneRect( -SCENE_MARGIN, 0, totalWidth + (SCENE_MARGIN * 2), totalHeight );
 
+        int visStart = m_simStartTime;
+        int visEnd   = m_simEndTime;
+        if (viewport()->width() > 0) {
+            const QRectF vis = mapToScene(viewport()->rect()).boundingRect();
+            const double tLeft  = xToTime(vis.left());
+            const double tRight = xToTime(vis.right());
+            const double margin = tRight - tLeft;
+            visStart = static_cast<int>(std::floor(tLeft - margin));
+            visEnd   = static_cast<int>(std::ceil(tRight + margin));
+        }
+
         double currentY = 0.0;
         int index = 0;
         std::vector gaps(m_tracks.size(), TRACK_GAP);
         gaps[0] = 2 * TRACK_GAP;
 
         for (const auto& track : m_tracks) {
-            track->updateScene(m_scene, m_pixelsPerSecond, m_simStartTime, X_LINE_OFFSET, currentY);
+            track->updateScene(m_scene, m_pixelsPerSecond, m_simStartTime, X_LINE_OFFSET, currentY, visStart, visEnd);
 
             // track label on the left side
             QString name = QString::fromStdString(track->getName());
