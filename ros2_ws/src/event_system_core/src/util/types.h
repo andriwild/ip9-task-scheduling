@@ -210,7 +210,8 @@ enum class EventType : int {
     CHARGE_MISSION_START = 31,
     CHARGE_MISSION = 32,
     CHARGE_PHASE_TRANSITION = 33,
-    PERSON_ROOM_ARRIVED = 34
+    PERSON_ROOM_ARRIVED = 34,
+    BACKGROUND_RELEASE = 35
 };
 
 enum MissionState {

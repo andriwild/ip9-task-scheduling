@@ -31,6 +31,11 @@ struct InterruptGeneratorConfig {
     nlohmann::json params;
 };
 
+struct BackgroundTemplate {
+    nlohmann::json json;
+    int everyNDays;
+};
+
 class ConfigLoader {
 public:
     static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath) {
@@ -71,6 +76,23 @@ public:
             orders.push_back(order);
         }
         return orders;
+    }
+
+    static std::vector<BackgroundTemplate> loadBackgroundTemplates(const std::string& filePath) {
+        auto json = getJson(filePath);
+        if (!json.has_value() || !json.value().contains("background")) {
+            return {};
+        }
+
+        std::vector<BackgroundTemplate> templates;
+        for (const auto& j : json.value().at("background")) {
+            if (j.contains("appointmentTime")) {
+                throw std::runtime_error(
+                    "Background order (id=" + std::to_string(j.value("id", -1)) + ") must not specify appointmentTime");
+            }
+            templates.push_back({ j, j.value("every_n_days", 0) });
+        }
+        return templates;
     }
 
     static std::optional<std::vector<InterruptGeneratorConfig>> loadInterruptGenerators(const std::string& filePath) {

@@ -136,7 +136,7 @@ protected:
     }
     std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
     des::OrderList m_orders;
-    des::OrderList m_backgroundOrders;
+    std::vector<BackgroundTemplate> m_backgroundTemplates;
     std::optional<des::PersonList> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
@@ -164,18 +164,11 @@ protected:
         }
 
         addEventsFromInterruptGenerators(m_config->appointmentsPath);
+        addBackgroundReleaseEvents(simStartTime, simEndTime);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
 
-        // Background tasks live in the background mission pool, not in the event queue
-        for (const auto& order : m_backgroundOrders) {
-            m_ctx->addBackgroundMission(order);
-        }
-
         for (const auto& order : m_orders) {
-            m_ctx->publishMissionRegistered(order);
-        }
-        for (const auto& order : m_backgroundOrders) {
             m_ctx->publishMissionRegistered(order);
         }
 
@@ -198,28 +191,56 @@ protected:
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load ad-hoc generators: %s", path.c_str());
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
         int eventId = 100000;
+        const int simStart = m_config->simStartTime;
+        const int simEnd   = m_config->simStartTime + m_config->simDuration;
 
         for (const auto& gen : adHocGenerators.value()) {
-            int t = gen.from;
-            while (t < gen.to) {
-                // TODO: not only exponential supported
-                // rnd::exponential takes the mean (sec/event), not the rate (event/sec).
-                const double dt = rnd::exponential(m_ctx->rng(), 1.0 / gen.ratePerSecond);
-                t += static_cast<int>(dt);
-                if (t < gen.to) {
-                    nlohmann::json params = gen.params;
-                    params["id"] = eventId++;
-                    auto orderPtr = OrderRegistry::instance().get(gen.type).fromJson(params);
-                    orderPtr->execution = gen.execution;
+            for (int dayBase = 0; dayBase < simEnd; dayBase += SECONDS_PER_DAY) {
+                int t = dayBase + gen.from;
+                const int winTo = dayBase + gen.to;
+                while (t < winTo) {
+                    // TODO: not only exponential supported
+                    // rnd::exponential takes the mean (sec/event), not the rate (event/sec).
+                    const double dt = rnd::exponential(m_ctx->rng(), 1.0 / gen.ratePerSecond);
+                    t += static_cast<int>(dt);
+                    if (t < winTo && t >= simStart && t < simEnd) {
+                        nlohmann::json params = gen.params;
+                        params["id"] = eventId++;
+                        auto orderPtr = OrderRegistry::instance().get(gen.type).fromJson(params);
+                        orderPtr->execution = gen.execution;
 
-                    m_eventQueue.push(std::make_shared<OrderArrivalEvent>(t, orderPtr));
+                        m_eventQueue.push(std::make_shared<OrderArrivalEvent>(t, orderPtr));
+                    }
                 }
             }
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
-    // Runtime building geometry comes from the generated snapshot, not the DB.
+    void addBackgroundReleaseEvents(const int simStartTime, const int simEndTime) {
+        const int releaseOffset = simStartTime % SECONDS_PER_DAY;
+        int bgId = 300000;
+        for (int day = 0, base = 0; base < simEndTime; ++day, base += SECONDS_PER_DAY) {
+            const int releaseTime = base + releaseOffset;
+            if (releaseTime < simStartTime || releaseTime >= simEndTime) {
+                continue;
+            }
+            for (const auto& tpl : m_backgroundTemplates) {
+                const bool due = (tpl.everyNDays <= 0) ? (day == 0) : (day % tpl.everyNDays == 0);
+                if (!due) {
+                    continue;
+                }
+                nlohmann::json j = tpl.json;
+                j["id"] = bgId++;
+                const std::string& type = j.at("type").get_ref<const std::string&>();
+                auto order = OrderRegistry::instance().get(type).fromJson(j);
+                order->execution = des::ExecutionMode::BACKGROUND;
+                m_eventQueue.push(std::make_shared<BackgroundReleaseEvent>(releaseTime, order));
+            }
+        }
+    }
+
+    // Runtime building geometry comes from the generated snapshot (json file), not the DB.
     des::LocationMap loadLocations() {
         auto map = ConfigLoader::loadBuildingSnapshot(BUILDING_FILE);
         if (!map.has_value()) {

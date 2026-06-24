@@ -88,8 +88,8 @@ bool HeadlessRunner::loadNextBatch() {
     }
     m_orders = appts.value();
 
-    m_backgroundOrders = ConfigLoader::loadBackgroundOrders(path);
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background orders", m_backgroundOrders.size());
+    m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
     ConfigLoader::validateConfig(m_orders, m_allPeople, m_locationMap, "5.2B_Elevator");
 

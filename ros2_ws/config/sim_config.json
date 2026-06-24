@@ -7,7 +7,7 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/only_background.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/week_energy.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -42,7 +42,7 @@
     "person_detection_range": 2.5,
     "person_speed": 1.4,
     "robot_speed": 0.30000001192092896,
-    "sim_duration": 86400,
+    "sim_duration": 604800,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
     "timeBuffer": 0.0,

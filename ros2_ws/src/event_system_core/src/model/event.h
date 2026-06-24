@@ -13,3 +13,4 @@
 #include "event/charge_phase_transition_event.h"
 #include "event/person_transition.h"
 #include "event/order_arrival_event.h"
+#include "event/background_release_event.h"
