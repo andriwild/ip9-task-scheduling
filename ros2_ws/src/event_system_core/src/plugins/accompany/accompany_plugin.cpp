@@ -43,11 +43,18 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
 void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     auto accompanyOrder = static_cast<AccompanyOrder&>(order);
     const auto& personName = accompanyOrder.personName;
-    if (ctx.hasEmployee(personName)) {
-        auto person = ctx.getPersonByName(personName);
-        int endTime = ctx.getTime() + static_cast<int>(accompanyConfig().appointmentDuration);
-        ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
+    if (!ctx.hasEmployee(personName)) {
+        return;
     }
+    auto person = ctx.getPersonByName(personName);
+
+    if (order.state != des::COMPLETED) {
+        person->busy = false;
+        return;
+    }
+
+    int endTime = ctx.getTime() + static_cast<int>(accompanyConfig().appointmentDuration);
+    ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
 }
 
 void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) {

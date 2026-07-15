@@ -121,6 +121,11 @@ struct SimConfig {
     bool alwaysChargeAtDock = false;
     bool metricsCsvExport = true;
     bool replanBackgroundOnInterrupt = true;
+    double lunchMean = 12.0 * 3600;
+    double lunchStd = 1800.0;
+    DistributionType lunchDistribution = DistributionType::NORMAL;
+    double lunchDurationMean = 2400.0;
+    double lunchDurationStd = 600.0;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -142,6 +147,11 @@ struct SimConfig {
         os << std::left << std::setw(W) << "departureStd" << ": " << config.departureStd << std::endl;
         os << std::left << std::setw(W) << "arrivalDistribution" << ": " << distributionTypeToString(config.arrivalDistribution) << std::endl;
         os << std::left << std::setw(W) << "departureDistribution" << ": " << distributionTypeToString(config.departureDistribution) << std::endl;
+        os << std::left << std::setw(W) << "lunchMean" << ": " << config.lunchMean << std::endl;
+        os << std::left << std::setw(W) << "lunchStd" << ": " << config.lunchStd << std::endl;
+        os << std::left << std::setw(W) << "lunchDistribution" << ": " << distributionTypeToString(config.lunchDistribution) << std::endl;
+        os << std::left << std::setw(W) << "lunchDurationMean" << ": " << config.lunchDurationMean << std::endl;
+        os << std::left << std::setw(W) << "lunchDurationStd" << ": " << config.lunchDurationStd << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;

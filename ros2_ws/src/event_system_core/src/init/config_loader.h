@@ -189,6 +189,11 @@ public:
             config.departureStd             = j.value("departure_std", 3600.0);
             config.arrivalDistribution      = des::distributionTypeFromString(j.value("arrival_distribution", "normal"));
             config.departureDistribution    = des::distributionTypeFromString(j.value("departure_distribution", "normal"));
+            config.lunchMean                = j.value("lunch_mean", 12.0 * 3600);
+            config.lunchStd                 = j.value("lunch_std", 1800.0);
+            config.lunchDistribution        = des::distributionTypeFromString(j.value("lunch_distribution", "normal"));
+            config.lunchDurationMean        = j.value("lunch_duration_mean", 2400.0);
+            config.lunchDurationStd         = j.value("lunch_duration_std", 600.0);
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
@@ -329,6 +334,11 @@ public:
         j["departure_std"] = config->departureStd;
         j["arrival_distribution"] = des::distributionTypeToString(config->arrivalDistribution);
         j["departure_distribution"] = des::distributionTypeToString(config->departureDistribution);
+        j["lunch_mean"] = config->lunchMean;
+        j["lunch_std"] = config->lunchStd;
+        j["lunch_distribution"] = des::distributionTypeToString(config->lunchDistribution);
+        j["lunch_duration_mean"] = config->lunchDurationMean;
+        j["lunch_duration_std"] = config->lunchDurationStd;
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;

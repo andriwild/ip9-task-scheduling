@@ -12,6 +12,10 @@
 
 class PersonDepartureEvent;
 
+inline int busyRetryAt(ISimContext& ctx, const int now) {
+    return now + static_cast<int>(rnd::uni(ctx.rng(), 60, 300));
+}
+
 inline double personWalkTime(ISimContext& ctx, const std::string& from, const std::string& to) {
     const std::optional<double> dist = ctx.getDistance(from, to);
     const double speed = ctx.getConfig()->personSpeed;
@@ -65,6 +69,7 @@ public:
         auto& p = *this->person;
 
         if (p.busy) {
+            ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
             return;
         }
 
@@ -112,6 +117,7 @@ public:
 
     void execute(ISimContext& ctx) override {
         if (this->person->busy) {
+            ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
             return;
         }
         targetRoom = "OUTDOOR";
@@ -130,6 +136,77 @@ public:
         return std::format("{} leaved to {}", person->firstName, targetRoom);
     }
     des::EventType getType() const override { return des::EventType::PERSON_DEPARTURE; }
+};
+
+class PersonLunchArrivedEvent final : public PersonTransitionEvent {
+public:
+    explicit PersonLunchArrivedEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+        PersonTransitionEvent(time, std::move(p))
+    {
+        targetRoom = std::move(room);
+    }
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonLunchArrivedEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
+    void execute(ISimContext& ctx) override {
+        auto& p = *this->person;
+
+        if (p.busy) {
+            ctx.notifyEvent(*this);
+            ctx.pushEvent(std::make_shared<PersonTransitionEvent>(busyRetryAt(ctx, this->time), this->person));
+            return;
+        }
+
+        ctx.setPersonLocation(p.firstName, targetRoom);
+        ctx.notifyEvent(*this);
+        ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
+            static_cast<int>(this->time + p.lunchDuration), this->person));
+    }
+
+    std::string getName() const override {
+        return std::format("{} having lunch at {}", person->firstName, targetRoom);
+    }
+    des::EventType getType() const override { return des::EventType::PERSON_ROOM_ARRIVED; }
+};
+
+class PersonLunchEvent final : public PersonTransitionEvent {
+public:
+    explicit PersonLunchEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+        PersonTransitionEvent(time, std::move(p))
+    {
+        targetRoom = std::move(room);
+    }
+
+    std::shared_ptr<IEvent> withTime(int newTime) const override {
+        auto copy = std::make_shared<PersonLunchEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
+    void execute(ISimContext& ctx) override {
+        auto& p = *this->person;
+
+        if (p.busy) {
+            ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
+            return;
+        }
+
+        const std::string currentRoom = ctx.getPersonLocation(p.firstName);
+        ctx.notifyEvent(*this);
+
+        const double walkTime = personWalkTime(ctx, currentRoom, targetRoom);
+        ctx.setPersonLocation(p.firstName, IN_TRANSIT);
+        ctx.pushEvent(std::make_shared<PersonLunchArrivedEvent>(
+            static_cast<int>(this->time + walkTime), this->person, targetRoom));
+    }
+
+    des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
 };
 
 class PersonRoomArrivedEvent final : public PersonTransitionEvent {
@@ -152,6 +229,7 @@ public:
 
         if (p.busy) {
             ctx.notifyEvent(*this);
+            ctx.pushEvent(std::make_shared<PersonTransitionEvent>(busyRetryAt(ctx, this->time), this->person));
             return;
         }
 
@@ -159,6 +237,17 @@ public:
         ctx.notifyEvent(*this);
 
         double nextExecutionTime = this->time + p.getStayDuration(targetRoom, ctx.rng());
+
+        if (p.lunchPending && p.lunchTime < nextExecutionTime && p.lunchTime < p.departureTime) {
+            const auto kitchenIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
+                [](const std::string& r) { return r.find("Kitchen") != std::string::npos; });
+            if (kitchenIt != p.roomLabels.end()) {
+                p.lunchPending = false;
+                ctx.pushEvent(std::make_shared<PersonLunchEvent>(
+                    std::max(p.lunchTime, this->time), this->person, *kitchenIt));
+                return;
+            }
+        }
 
         if (p.departureTime < nextExecutionTime) {
             auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
@@ -187,6 +276,7 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
         if (!targetRoom.empty()) {
             ctx.notifyEvent(*this);
         }
+        ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
         return;
     }
 

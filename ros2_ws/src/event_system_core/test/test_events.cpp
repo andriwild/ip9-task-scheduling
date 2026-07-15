@@ -18,6 +18,7 @@
 #include "../src/plugins/accompany/events/start_drop_off_conversation_event.h"
 #include "../src/plugins/accompany/events/found_person_conversation_complete.h"
 #include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
+#include "../src/plugins/accompany/events/appointment_end_event.h"
 
 class MockSimContext : public ISimContext {
 public:
@@ -721,6 +722,138 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_DEPARTURE);
     EXPECT_GE(ctx.pushedEvents[0]->time, person->departureTime);
     EXPECT_EQ(ctx.personLocations["Max"], "5.2B_Elevator");
+}
+
+TEST(EventExecute, PersonTransitionRetriesWhileBusyInsteadOfEndingChain) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->workplace = "5.2B03";
+    person->departureTime = 999999;
+    person->busy = true;
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
+    person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
+    ctx.personLocations["Max"] = "5.2B03";
+
+    PersonTransitionEvent event(30000, person);
+    event.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+    EXPECT_GT(ctx.pushedEvents[0]->time, 30000);
+    EXPECT_EQ(ctx.personLocations["Max"], "5.2B03");
+}
+
+TEST(EventExecute, AppointmentEndReleasesPersonWithoutStartingSecondChain) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->busy = true;
+
+    AppointmentEndEvent event(30000, person);
+    event.execute(ctx);
+
+    EXPECT_FALSE(person->busy);
+    EXPECT_TRUE(ctx.pushedEvents.empty());
+}
+
+TEST(EventExecute, PersonGoesToLunchWhenDueAndResumesAfterwards) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->workplace = "5.2B03";
+    person->departureTime = 999999;
+    person->lunchTime = 30500;
+    person->lunchDuration = 2400;
+    person->lunchPending = true;
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
+    person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
+    ctx.personLocations["Max"] = "5.2B03";
+
+    PersonRoomArrivedEvent arrival(30000, person, "5.2B03");
+    arrival.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    auto lunch = ctx.pushedEvents[0];
+    EXPECT_EQ(lunch->time, person->lunchTime);
+    EXPECT_FALSE(person->lunchPending);
+
+    ctx.pushedEvents.clear();
+    lunch->execute(ctx);
+
+    EXPECT_EQ(ctx.personLocations["Max"], IN_TRANSIT);
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_ROOM_ARRIVED);
+    auto lunchArrival = ctx.pushedEvents[0];
+    EXPECT_GE(lunchArrival->time, person->lunchTime);
+
+    ctx.pushedEvents.clear();
+    lunchArrival->execute(ctx);
+
+    EXPECT_EQ(ctx.personLocations["Max"], "IMVS_Kitchen");
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
+    EXPECT_EQ(ctx.pushedEvents[0]->time, lunchArrival->time + 2400);
+}
+
+TEST(EventExecute, FailedAccompanyReleasesPersonWithoutAppointmentEnd) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->busy = true;
+    ctx.employees["Max"] = person;
+
+    auto order = std::make_shared<AccompanyOrder>();
+    order->personName = "Max";
+    order->state = des::FAILED;
+
+    AccompanyOrderPlugin plugin;
+    plugin.onMissionEnd(ctx, *order);
+
+    EXPECT_FALSE(person->busy);
+    EXPECT_TRUE(ctx.pushedEvents.empty());
+}
+
+TEST(EventExecute, CompletedAccompanySchedulesAppointmentEnd) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->busy = true;
+    ctx.employees["Max"] = person;
+
+    auto order = std::make_shared<AccompanyOrder>();
+    order->personName = "Max";
+    order->state = des::COMPLETED;
+
+    AccompanyOrderPlugin plugin;
+    plugin.onMissionEnd(ctx, *order);
+
+    EXPECT_TRUE(person->busy);
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::APPOINTMENT_END);
+}
+
+TEST(EventExecute, PersonWithoutSampledLunchDoesNotGoToLunch) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->workplace = "5.2B03";
+    person->departureTime = 999999;
+    person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
+    person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
+    ctx.personLocations["Max"] = "5.2B03";
+
+    PersonRoomArrivedEvent arrival(30000, person, "5.2B03");
+    arrival.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_TRANSITION);
 }
 
 // --- PersonArrivedEvent ---

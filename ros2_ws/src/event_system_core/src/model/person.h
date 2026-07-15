@@ -54,6 +54,9 @@ public:
     bool busy = false;
     int arrivalTime{};
     int departureTime{};
+    int lunchTime{};
+    double lunchDuration{};
+    bool lunchPending = false;
     std::vector<std::string> roomLabels;
     std::vector<std::vector<double>> transitionMatrix;
     StayDurationConfig stayDuration;

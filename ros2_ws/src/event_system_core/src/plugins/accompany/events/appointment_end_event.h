@@ -22,7 +22,6 @@ public:
 
     void execute(ISimContext& ctx) override {
         person->busy = false;
-        ctx.pushEvent(std::make_shared<PersonTransitionEvent>(this->time, person));
         ctx.notifyEvent(*this);
     }
 

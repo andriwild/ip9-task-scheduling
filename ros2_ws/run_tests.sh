@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 source /opt/ros/jazzy/setup.bash
 
