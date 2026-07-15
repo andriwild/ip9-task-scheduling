@@ -330,6 +330,9 @@ public:
             m_robot->setDriving(true);
             m_eventBus.notifyEvent(m_currentTime, des::EventType::START_DRIVE, "Drive resumed: " + m_robot->getTargetLocation(), true, m_robot->isCharging(), "", -1);
         }
+        if (m_simConfig->replanBackgroundOnInterrupt) {
+            m_backgroundMissions.invalidatePlan();
+        }
         DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), m_currentTime);
     }
 

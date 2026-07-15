@@ -63,6 +63,16 @@ public:
         return order;
     }
 
+    void invalidatePlan() {
+        while (!m_pending.empty()) {
+            const auto order = m_pending.front();
+            m_pending.pop();
+            if (order && order->type != kChargeOrderType) {
+                m_missions.push_back(order);
+            }
+        }
+    }
+
     void plan(
         const ISimContext& ctx,
         double safetyMarginWh = kBackgroundEnergySafetyMarginWh
