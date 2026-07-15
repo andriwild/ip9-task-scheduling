@@ -7,13 +7,13 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/mixed.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
     "battery_capacity": 44.0,
     "battery_voltage": 12.0,
-    "cacheEnabled": false,
+    "cacheEnabled": true,
     "charge_to_full": false,
     "charging_rate": 88.0,
     "clean": {
@@ -41,10 +41,11 @@
     "people_spawn_location": "IMVS_Entrance",
     "person_detection_range": 2.5,
     "person_speed": 1.4,
+    "replan_background_on_interrupt": true,
     "robot_speed": 0.30000001192092896,
     "sim_duration": 259200,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
     "timeBuffer": 0.0,
-    "use_distance_matrix": true
+    "use_distance_matrix": false
 }

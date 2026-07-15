@@ -209,6 +209,7 @@ public:
             config.chargeToFull   = j.value("charge_to_full", true);
             config.alwaysChargeAtDock = j.value("always_charge_at_dock", false);
             config.metricsCsvExport   = j.value("metrics_csv_export", true);
+            config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -343,6 +344,7 @@ public:
         j["charge_to_full"] = config->chargeToFull;
         j["always_charge_at_dock"] = config->alwaysChargeAtDock;
         j["metrics_csv_export"] = config->metricsCsvExport;
+        j["replan_background_on_interrupt"] = config->replanBackgroundOnInterrupt;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
