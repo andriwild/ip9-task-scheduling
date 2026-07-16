@@ -89,7 +89,15 @@ private:
             config.alwaysChargeAtDock = request->always_charge_at_dock;
             std::lock_guard lock(m_configMutex);
             // Preserve fields not carried by the service request.
-            config.useDistanceMatrix = m_currentConfig->useDistanceMatrix;
+            config.useDistanceMatrix            = m_currentConfig->useDistanceMatrix;
+            config.metricsCsvExport             = m_currentConfig->metricsCsvExport;
+            config.replanBackgroundOnInterrupt  = m_currentConfig->replanBackgroundOnInterrupt;
+            config.lunchMean                    = m_currentConfig->lunchMean;
+            config.lunchStd                     = m_currentConfig->lunchStd;
+            config.lunchDistribution            = m_currentConfig->lunchDistribution;
+            config.lunchDurationMean            = m_currentConfig->lunchDurationMean;
+            config.lunchDurationStd             = m_currentConfig->lunchDurationStd;
+            config.simSpeedFactor               = m_currentConfig->simSpeedFactor;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }

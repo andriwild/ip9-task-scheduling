@@ -194,6 +194,7 @@ public:
             config.lunchDistribution        = des::distributionTypeFromString(j.value("lunch_distribution", "normal"));
             config.lunchDurationMean        = j.value("lunch_duration_mean", 2400.0);
             config.lunchDurationStd         = j.value("lunch_duration_std", 600.0);
+            config.simSpeedFactor           = j.value("sim_speed_factor", 0.0);
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
@@ -317,7 +318,7 @@ public:
     }
 
     static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
-        nlohmann::json j;
+        nlohmann::json j = getJson(filePath).value_or(nlohmann::json::object());
         j["drive_time_std"] = config->driveTimeStd;
         j["robot_speed"] = config->robotSpeed;
         j["timeBuffer"] = config->timeBuffer;
@@ -339,6 +340,7 @@ public:
         j["lunch_distribution"] = des::distributionTypeToString(config->lunchDistribution);
         j["lunch_duration_mean"] = config->lunchDurationMean;
         j["lunch_duration_std"] = config->lunchDurationStd;
+        j["sim_speed_factor"] = config->simSpeedFactor;
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;

@@ -27,12 +27,14 @@ protected:
     QLabel* m_stateLabel;
     QPushButton* m_btnRun;
     QPushButton* m_btnPause;
+    QPushButton* m_btnStep;
     QPushButton* m_btnReset;
 
 private Q_SLOTS:
     void btnRunClick();
     void btnPauseClick();
     void btnResetClick();
+    void btnStepClick();
     void onServiceResponse(ServiceResponseFuture future);
 };
 

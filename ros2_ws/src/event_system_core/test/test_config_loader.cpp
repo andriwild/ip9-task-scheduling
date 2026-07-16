@@ -340,3 +340,21 @@ TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {
     ASSERT_TRUE(roomA.m_area.has_value());
     EXPECT_TRUE(roomA.m_footprint.empty());
 }
+
+TEST(ConfigLoaderSimConfig, SaveMergesUnknownKeysIntoExistingFile) {
+    const std::string path = "/tmp/des_test_sim_config_merge.json";
+    {
+        std::ofstream out(path);
+        out << R"({"robot_speed": 1.0, "future_key": "keep-me"})";
+    }
+
+    auto config = std::make_shared<des::SimConfig>();
+    config->robotSpeed = 2.5;
+    ASSERT_TRUE(ConfigLoader::saveSimConfig(path, config));
+
+    std::ifstream in(path);
+    nlohmann::json j;
+    in >> j;
+    EXPECT_EQ(j.at("future_key").get<std::string>(), "keep-me");
+    EXPECT_DOUBLE_EQ(j.at("robot_speed").get<double>(), 2.5);
+}

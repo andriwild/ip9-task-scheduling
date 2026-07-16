@@ -127,6 +127,7 @@ struct SimConfig {
     DistributionType lunchDistribution = DistributionType::NORMAL;
     double lunchDurationMean = 2400.0;
     double lunchDurationStd = 600.0;
+    double simSpeedFactor = 0.0;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -153,6 +154,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "lunchDistribution" << ": " << distributionTypeToString(config.lunchDistribution) << std::endl;
         os << std::left << std::setw(W) << "lunchDurationMean" << ": " << config.lunchDurationMean << std::endl;
         os << std::left << std::setw(W) << "lunchDurationStd" << ": " << config.lunchDurationStd << std::endl;
+        os << std::left << std::setw(W) << "simSpeedFactor" << ": " << config.simSpeedFactor << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;

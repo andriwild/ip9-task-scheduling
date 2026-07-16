@@ -45,6 +45,8 @@ void SimRunner::buildSimulation() {
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
+    m_personMarkerObserver->attach(m_ctx.get(), m_employees);
+    m_ctx->addObserver(m_personMarkerObserver);
     rebuildEventQueue();
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 }
@@ -70,6 +72,7 @@ void SimRunner::setupApplication() {
     m_config = m_systemConfigNode->getConfig();
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
+    m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_locationMap);
     buildSimulation();
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");

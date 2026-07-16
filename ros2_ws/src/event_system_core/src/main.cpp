@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <string>
 #include <memory>
@@ -58,13 +59,16 @@ int main(const int argc, char *argv[]) {
     auto sim_loop = [&] {
         DES_LOG_INFO(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
         app->m_eventQueue.print();
+        int lastEventTime = -1;
         while (running && rclcpp::ok()) {
             app->updateConfig();
 
-            switch (app->loadAppState()) {
+            const int state = app->loadAppState();
+            switch (state) {
                 case SystemState::Request::RESET:
                     app->reset();
                     app->enterPause();
+                    lastEventTime = -1;
                     break;
 
                 case SystemState::Request::PAUSE:
@@ -75,6 +79,7 @@ int main(const int argc, char *argv[]) {
                     running = false;
                     break;
 
+                case SystemState::Request::STEP:
                 case SystemState::Request::RUN: {
                     auto handleSimComplete = [&] {
                         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Simulation complete.");
@@ -94,12 +99,23 @@ int main(const int argc, char *argv[]) {
                     if (e->cancelled) {
                         break;
                     }
+
+                    const double speedFactor = app->m_ctx->getConfig()->simSpeedFactor;
+                    if (!headless && state == SystemState::Request::RUN && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
+                        const double waitMs = std::min(500.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(waitMs)));
+                    }
+                    lastEventTime = e->time;
+
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
                     DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
                     if (e->getType() == des::EventType::SIMULATION_END) {
                         app->m_eventQueue.clear();
                         handleSimComplete();
+                    }
+                    if (state == SystemState::Request::STEP) {
+                        app->enterPause();
                     }
                     break;
                 }
