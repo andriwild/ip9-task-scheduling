@@ -33,7 +33,7 @@ public:
     std::shared_ptr<Robot> robot;
     des::OrderPtr currentOrder;
     std::shared_ptr<des::SimConfig> simConfig;
-    des::PersonLocationMap employees;
+    des::PersonRegistry employees;
     std::map<std::string, std::string> personLocations;
     des::OrderList pendingMissions;
     des::OrderList m_backgroundMissions;
@@ -180,10 +180,22 @@ public:
     std::string getPersonLocation(const std::string& name) const override {
         return personLocations.at(name);
     }
+    const std::map<std::string, std::string>& getAllPersonLocations() const override {
+        return personLocations;
+    }
     void setPersonLocation(const std::string& name, const std::string& room) override {
         personLocations[name] = room;
     }
     double getLocationArea(const std::string& /*name*/) const override { return 0.0; }
+
+    bool robotSeesPerson(const std::string& name) const override {
+        auto it = personLocations.find(name);
+        if (it == personLocations.end()) {
+            return false;
+        }
+        return it->second == robot->getLocation();
+    }
+
 };
 
 static bool pluginsRegistered = [] {

@@ -16,7 +16,7 @@
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<IPathPlanner> m_plannerNode;
-    const std::map<std::string, std::shared_ptr<des::Person>>& m_locations;
+    const std::map<std::string, std::shared_ptr<des::Person>>& m_employees;
     const des::LocationMap& m_locationMap;
     std::string m_startPosition = "IMVS_Dock";
 
@@ -25,12 +25,12 @@ public:
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<IPathPlanner> &plannerNode,
-        const std::map<std::string, std::shared_ptr<des::Person>>& locations,
+        const std::map<std::string, std::shared_ptr<des::Person>>& employees,
         const des::LocationMap& locationMap
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
-        , m_locations(locations)
+        , m_employees(employees)
         , m_locationMap(locationMap)
     {}
 
@@ -80,6 +80,6 @@ public:
 
     // Room labels for a given employee
     const std::vector<std::string>& employeeRooms(const std::string& personName) const {
-        return m_locations.at(personName)->roomLabels;
+        return m_employees.at(personName)->roomLabels;
     }
 };

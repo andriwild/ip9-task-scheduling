@@ -1,8 +1,12 @@
 #include "headless_runner.h"
 #include "../../util/log.h"
+#include <algorithm>
 #include <ctime>
+#include <map>
 #include <memory>
 #include <filesystem>
+#include <tuple>
+#include <vector>
 #include "../../behaviour/bt_setup.h"
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "../../model/event_queue.h"
@@ -21,16 +25,16 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     }
     m_allPeople = allPeople.value();
 
-    // employeeLocations needs all people for scheduler path lookups
+    // employees needs all people for scheduler path lookups
     for (const auto& p: m_allPeople) {
-        m_employeeLocations[p->firstName] = p;
+        m_employees[p->firstName] = p;
     }
 
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_planner,
-        m_employeeLocations,
+        m_employees,
         m_locationMap
     );
 
@@ -102,7 +106,39 @@ bool HeadlessRunner::loadNextBatch() {
     return true;
 }
 
+namespace {
+void logSightingSummary(const Robot& robot) {
+    const auto sightings = robot.getSightings();
+    DES_LOG_INFO(rclcpp::get_logger("des.robot.sightings"), "Sightings recorded: %zu", sightings.size());
+
+    std::map<std::string, std::map<std::string, std::pair<int, int>>> counts;
+    for (const auto& s : sightings) {
+        auto& [present, absent] = counts[s.personName][s.location];
+        if (s.kind == SightingKind::PRESENT) {
+            present++;
+        } else {
+            absent++;
+        }
+    }
+
+    for (const auto& [person, rooms] : counts) {
+        std::vector<std::tuple<double, std::string, int, int>> rows;
+        for (const auto& [room, presentAbsent] : rooms) {
+            const auto& [present, absent] = presentAbsent;
+            const double rate = present + absent > 0 ? static_cast<double>(present) / (present + absent) : 0.0;
+            rows.emplace_back(rate, room, present, absent);
+        }
+        std::sort(rows.begin(), rows.end(), std::greater<>());
+        for (const auto& [rate, room, present, absent] : rows) {
+            DES_LOG_INFO(rclcpp::get_logger("des.robot.sightings"), "%-8s %-18s present=%4d absent=%4d rate=%.3f",
+                         person.c_str(), room.c_str(), present, absent, rate);
+        }
+    }
+}
+}
+
 void HeadlessRunner::onSimulationComplete() {
+    logSightingSummary(*m_ctx->getRobot());
     m_metricsNode->publishReport();
     m_metricsNode->clear();
 

@@ -118,6 +118,13 @@ protected:
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     std::shared_ptr<MetricsNode> m_metricsNode;
+    std::map<std::string, std::shared_ptr<des::Person>> m_employees;
+    des::OrderList m_orders;
+    std::vector<BackgroundTemplate> m_backgroundTemplates;
+    std::optional<des::PersonList> m_people;
+    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
+    std::thread m_rosThread;
+    DBClient m_db;
 
     void createPlanner() {
         const bool useMatrix = ConfigLoader::loadSimConfig().value_or(des::SimConfig{}).useDistanceMatrix;
@@ -134,13 +141,6 @@ protected:
             DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: Nav2 planner");
         }
     }
-    std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
-    des::OrderList m_orders;
-    std::vector<BackgroundTemplate> m_backgroundTemplates;
-    std::optional<des::PersonList> m_people;
-    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
-    std::thread m_rosThread;
-    DBClient m_db;
 
     void populateEventQueue() {
         if (!m_ctx) {

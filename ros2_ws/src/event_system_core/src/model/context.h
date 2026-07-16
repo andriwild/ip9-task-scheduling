@@ -32,8 +32,11 @@ class SimulationContext : public ISimContext {
     InterruptMissionSlot m_interruptMission;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
-    std::map<std::string, std::shared_ptr<des::Person>> m_employeeLocations;
-    std::map<std::string, std::string> m_personLocations;
+
+    // TODO: unique pointer for person?
+    // TODO: make meaningful types
+    std::map<std::string, std::shared_ptr<des::Person>> m_employees; // name and person object
+    std::map<std::string, std::string> m_personLocations; // name and current person location
     std::unique_ptr<Scheduler> m_scheduler;
 
 public:
@@ -49,7 +52,7 @@ public:
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
-        std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
+        std::map<std::string, std::shared_ptr<des::Person>> employees,
         des::LocationMap locationMap
     );
 
@@ -113,25 +116,32 @@ public:
         m_behaviorTree->rootBlackboard()->set(key, value);
     }
 
-    // Employee data access
-    void updateEmployeeLocations(const std::map<std::string, std::shared_ptr<des::Person>>& locations) {
-        m_employeeLocations = locations;
-    }
-
     std::shared_ptr<des::Person> getPersonByName(const std::string& person) const override {
-        return m_employeeLocations.at(person);
+        return m_employees.at(person);
     }
 
     bool hasEmployee(const std::string& person) const override {
-        return m_employeeLocations.contains(person);
+        return m_employees.contains(person);
     }
 
     std::string getPersonLocation(const std::string& name) const override {
         return m_personLocations.at(name);
     }
 
+    const std::map<std::string, std::string>& getAllPersonLocations() const override {
+        return m_personLocations;
+    }
+
     void setPersonLocation(const std::string& name, const std::string& room) override {
         m_personLocations[name] = room;
+    }
+
+    bool robotSeesPerson(const std::string& name) const override {
+        auto it = m_personLocations.find(name);
+        if (it == m_personLocations.end()) {
+            return false;
+        }
+        return it->second == m_robot->getLocation();
     }
 
     double getLocationArea(const std::string& name) const override {

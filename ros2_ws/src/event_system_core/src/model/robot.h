@@ -2,11 +2,20 @@
 
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
+#include <vector>
 
 #include "../util/log.h"
 #include "robot_state.h"
 #include "battery.hpp"
 #include "event/base.h"
+
+enum class SightingKind { PRESENT, ABSENT };
+struct Sighting {
+    int time;
+    std::string personName;
+    std::string location;
+    SightingKind kind;
+};
 
 class Robot {
     std::string m_dockLocation = "IMVS_Dock";
@@ -14,9 +23,12 @@ class Robot {
     std::string m_currentLocation;
     std::string m_targetLocation;
 
+    std::vector<Sighting> m_sightings;
+
     double m_driveSpeed;
     double m_currentSpeed = 0;
 
+    // TODO: enum instead of single bools
     bool m_isDriving        = false;
     bool m_isCharging       = false;
     bool m_isScanning       = false;
@@ -33,7 +45,7 @@ public:
     explicit Robot(const std::shared_ptr<des::SimConfig> &config)
         : m_state(std::make_unique<IdleState>())
     {
-        m_driveSpeed     = config->robotSpeed;
+        m_driveSpeed = config->robotSpeed;
 
         m_bat = std::make_unique<Battery>(
             config->batteryCapacity,
@@ -122,4 +134,12 @@ public:
     std::weak_ptr<IEvent> inFlight() const { return m_inFlightEvent; }
     void setInFlight(const std::shared_ptr<IEvent>& event) { m_inFlightEvent = event; }
     void clearInFlight() { m_inFlightEvent.reset(); }
+
+    void addSighting(const Sighting& sighting) {
+        m_sightings.push_back(sighting);
+    }
+
+    const std::vector<Sighting>& getSightings() const {
+        return m_sightings;
+    }
 };

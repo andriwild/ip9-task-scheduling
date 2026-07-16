@@ -27,9 +27,7 @@ public:
     void execute(ISimContext& ctx) override {
         const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
-        const std::string personLocation = ctx.getPersonLocation(personName);
-        const std::string robotLocation  = ctx.getRobot()->getLocation();
-        const bool personPresent = robotLocation == personLocation;
+        const bool personPresent = ctx.robotSeesPerson(personName);
         if (personPresent) {
             ctx.getRobot()->setIsPersonVisible(true);
             auto person = ctx.getPersonByName(personName);

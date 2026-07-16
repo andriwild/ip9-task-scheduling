@@ -34,6 +34,16 @@ public:
             plugin.onStopDriveEvent(ctx, *orderPtr);
         }
 
+        // check if the robot detects a person
+        for (const auto& [name, personLocation] : ctx.getAllPersonLocations()) {
+            ctx.getRobot()->addSighting({
+                ctx.getTime(),
+                name,
+                this->location,
+                personLocation == this->location ? SightingKind::PRESENT : SightingKind::ABSENT
+            });
+        }
+
         ctx.notifyEvent(*this);
         ctx.notifyBatteryChanged();
 

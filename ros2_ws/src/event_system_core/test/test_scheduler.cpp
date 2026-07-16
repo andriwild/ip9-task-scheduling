@@ -46,7 +46,7 @@ class SchedulerTest : public ::testing::Test {
 protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
-    des::PersonLocationMap locations;
+    des::PersonRegistry employees;
     des::LocationMap locationMap;
 
     static void SetUpTestSuite() {
@@ -71,12 +71,12 @@ protected:
         auto max = std::make_shared<des::Person>();
         max->firstName = "Max";
         max->roomLabels = {"Office"};
-        locations["Max"] = max;
+        employees["Max"] = max;
 
         auto anna = std::make_shared<des::Person>();
         anna->firstName = "Anna";
         anna->roomLabels = {"Lab"};
-        locations["Anna"] = anna;
+        employees["Anna"] = anna;
 
         // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
         locationMap.emplace("Office", des::Location("Office", {}, 0.0));
@@ -96,7 +96,7 @@ protected:
     }
 
     std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, locations, locationMap);
+        return std::make_unique<Scheduler>(config, planner, employees, locationMap);
     }
 
     static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
@@ -175,7 +175,7 @@ TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
 
 TEST_F(SchedulerTest, PessimisticMeetingWithMultipleSearchLocations) {
     // Give Anna multiple rooms — pessimistic search visits each in order.
-    locations["Anna"]->roomLabels = {"Lab", "Kitchen"};
+    employees["Anna"]->roomLabels = {"Lab", "Kitchen"};
     planner->setDistance("Lab", "Kitchen", 7.0);
     auto scheduler = makeScheduler();
 

@@ -28,10 +28,8 @@ public:
 
         const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
-        const std::string personLocation = ctx.getPersonLocation(personName);
-        const std::string robotLocation  = ctx.getRobot()->getLocation();
-        const bool personPresent = robotLocation == personLocation;
-        const double areaToSearch = ctx.getLocationArea(robotLocation);
+        const bool personPresent = ctx.robotSeesPerson(personName);
+        const double areaToSearch = ctx.getLocationArea(ctx.getRobot()->getLocation());
         const double fieldOfView  = ctx.getConfig()->personDetectionRange * ctx.getConfig()->personDetectionRange;
         assert(fieldOfView != 0);
         const double steps = (areaToSearch / fieldOfView) + 1;

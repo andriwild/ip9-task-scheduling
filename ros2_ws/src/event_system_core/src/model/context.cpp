@@ -11,13 +11,13 @@ SimulationContext::SimulationContext(
     EventQueue& queue,
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<IPathPlanner> plannerNode,
-    std::map<std::string, std::shared_ptr<des::Person>> employeeLocations,
+    std::map<std::string, std::shared_ptr<des::Person>> employees,
     des::LocationMap locationMap
 )
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)
-    , m_employeeLocations(std::move(employeeLocations))
-    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_employeeLocations, m_locationMap))
+    , m_employees(std::move(employees))
+    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_employees, m_locationMap))
     , m_plannerNode(std::move(plannerNode))
     , m_locationMap(std::move(locationMap))
 {

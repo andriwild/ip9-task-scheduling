@@ -29,9 +29,9 @@ void SimRunner::reloadSimulationData() {
     m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_orders);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu of %zu employees", m_people.value().size(), allPeople.value().size());
 
-    m_employeeLocations.clear();
+    m_employees.clear();
     for (const auto& p: m_people.value()) {
-        m_employeeLocations[p->firstName] = p;
+        m_employees[p->firstName] = p;
     }
 }
 
@@ -41,7 +41,7 @@ void SimRunner::rebuildEventQueue() {
 
 void SimRunner::buildSimulation() {
     m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue, m_config, m_planner, m_employeeLocations, m_locationMap
+        m_eventQueue, m_config, m_planner, m_employees, m_locationMap
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);

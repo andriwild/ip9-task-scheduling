@@ -254,7 +254,7 @@ struct BatteryProps {
 };
 
 using PersonList        = std::vector<std::shared_ptr<Person>>;
-using PersonLocationMap = std::map<std::string, std::shared_ptr<Person>>;
+using PersonRegistry = std::map<std::string, std::shared_ptr<Person>>;
 using LocationMap       = std::map<std::string, Location>;  // name -> coordinates + optional area
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
