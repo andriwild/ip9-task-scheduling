@@ -14,8 +14,6 @@
 #include "runner/impl/snapshot_builder.h"
 #include "util/log.h"
 
-const std::string APPOINTMENT_FILES = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/test/";
-
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;
     OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
@@ -48,11 +46,10 @@ int main(const int argc, char *argv[]) {
     // Initialize application runner
     if (headless) {
         app = HeadlessRunner::create(argc, argv);
-        app->setupApplication(APPOINTMENT_FILES);
     } else {
         app = SimRunner::create(argc, argv);
-        app->setupApplication("");
     }
+    app->setupApplication();
 
     des::log::installOutputHandler();  // after rclcpp::init() from create()
     

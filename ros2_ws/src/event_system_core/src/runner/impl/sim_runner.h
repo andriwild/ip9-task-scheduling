@@ -39,7 +39,7 @@ public:
         return std::make_unique<SimRunner>();
     }
 
-    void setupApplication(const std::string& path) override;
+    void setupApplication() override;
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;

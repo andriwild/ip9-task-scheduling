@@ -11,7 +11,6 @@
 class MetricsNode;
 
 class HeadlessRunner final : public IAppRunner {
-    std::vector<std::string> m_orderFilePaths;
     std::queue<std::string> m_orderFiles;
     int m_totalRounds = 1;
     int m_currentRound = 0;
@@ -19,9 +18,7 @@ class HeadlessRunner final : public IAppRunner {
 
     void rebuildFileQueue() {
         m_orderFiles = {};
-        for (const auto& path : m_orderFilePaths) {
-            m_orderFiles.push(path);
-        }
+        m_orderFiles.push(m_config->appointmentsPath);
     }
 
 public:
@@ -62,7 +59,7 @@ public:
         return runner;
     }
 
-    void setupApplication(const std::string& path) override;
+    void setupApplication() override;
     void updateConfig() override;
     int loadAppState() const override;
     void enterPause() const override;

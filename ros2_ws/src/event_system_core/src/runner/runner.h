@@ -61,7 +61,7 @@ public:
 
     virtual ~IAppRunner() = default;
 
-    virtual void setupApplication(const std::string& path) = 0;
+    virtual void setupApplication() = 0;
     virtual void updateConfig() = 0;
     [[nodiscard]] virtual int loadAppState() const = 0;
     virtual void enterPause() const = 0;

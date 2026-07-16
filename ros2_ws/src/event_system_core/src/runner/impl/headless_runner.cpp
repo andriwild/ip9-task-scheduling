@@ -11,14 +11,14 @@
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "../../model/event_queue.h"
 
-void HeadlessRunner::setupApplication(const std::string& path) {
+void HeadlessRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
-    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
-        throw std::runtime_error("Appointment path does not exist or is not a directory: " + path);
-    }
-
     m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
+
+    if (!std::filesystem::is_regular_file(m_config->appointmentsPath)) {
+        throw std::runtime_error("Appointments file does not exist: " + m_config->appointmentsPath);
+    }
     auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
@@ -38,13 +38,6 @@ void HeadlessRunner::setupApplication(const std::string& path) {
         m_locationMap
     );
 
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        m_orderFilePaths.push_back(entry.path());
-    }
-    std::sort(m_orderFilePaths.begin(), m_orderFilePaths.end());
-    if (m_orderFilePaths.empty()) {
-        throw std::runtime_error("No order files found in: " + path);
-    }
     rebuildFileQueue();
 
     if (m_config->metricsCsvExport) {
@@ -56,8 +49,8 @@ void HeadlessRunner::setupApplication(const std::string& path) {
     m_ctx->addObserver(m_metricsNode);
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Rounds: %d, Files per round: %zu",
-                m_totalRounds, m_orderFilePaths.size());
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Rounds: %d, scenario: %s",
+                m_totalRounds, m_config->appointmentsPath.c_str());
 
     loadNextBatch();
 

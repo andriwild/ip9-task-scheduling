@@ -64,7 +64,7 @@ void SimRunner::reset() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "System Reset Complete");
 }
 
-void SimRunner::setupApplication(const std::string& /*path*/) {
+void SimRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
     m_config = m_systemConfigNode->getConfig();
