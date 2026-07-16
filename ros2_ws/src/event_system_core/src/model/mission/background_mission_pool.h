@@ -135,13 +135,13 @@ public:
 
         const auto problem = buildOpInstance(ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
-            DES_LOG_INFO(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
             return;
         }
 
         const auto route = problem->instance.grasp(kGraspIterations, kGraspAlpha, kGraspSeed);
 
-        DES_LOG_INFO(rclcpp::get_logger("des.mission.background"), "Route: %s",
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s",
                     formatRoute(*problem, route, startLoc, endLoc).c_str());
 
         int chargeStops = 0;
@@ -165,7 +165,7 @@ public:
             }
         }
 
-        DES_LOG_INFO(rclcpp::get_logger("des.mission.background"),
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"),
                     "Planned %zu/%zu background missions (%d charge stops, time=%ds, energy=%.1fWh, reserve=%.1fWh)",
                     m_pending.size(), m_missions.size(), chargeStops, timeBudget, energyBudget, requiredWh);
     }

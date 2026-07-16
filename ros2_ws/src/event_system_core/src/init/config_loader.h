@@ -404,9 +404,16 @@ public:
             return std::nullopt;
         }
 
+        if (j.contains("generated_at")) {
+            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Building snapshot generated at %s", j.at("generated_at").get<std::string>().c_str());
+        } else {
+            DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no generated_at stamp, consider re-baking via ./build_snapshot.sh", filePath.c_str());
+        }
+
         const auto& names = j.at("names");
         const auto& locs  = j.at("locations");
-        const bool hasAreas = j.contains("areas");
+        const bool hasAreas      = j.contains("areas");
+        const bool hasFootprints = j.contains("footprints");
 
         des::LocationMap map;
         for (size_t i = 0; i < names.size() && i < locs.size(); ++i) {
@@ -418,7 +425,14 @@ public:
             if (hasAreas && i < j.at("areas").size() && !j.at("areas").at(i).is_null()) {
                 area = j.at("areas").at(i).get<double>();
             }
-            map.emplace(name, des::Location(name, p, area));
+
+            des::Location location(name, p, area);
+            if (hasFootprints && i < j.at("footprints").size() && j.at("footprints").at(i).is_array()) {
+                for (const auto& v : j.at("footprints").at(i)) {
+                    location.m_footprint.push_back(des::Point{v.at(0).get<double>(), v.at(1).get<double>(), 0.0});
+                }
+            }
+            map.emplace(name, std::move(location));
         }
         return map;
     }

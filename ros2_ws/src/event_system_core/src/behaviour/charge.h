@@ -177,12 +177,12 @@ public:
         const double timeToTransition = ctx->getRobot()->m_bat->timeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
             ctx->pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(ctx->getTime() + timeToTransition)));
-            DES_LOG_INFO(rclcpp::get_logger("des.bt.charge"), "Phase transition in: %.1fs", timeToTransition);
+            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Phase transition in: %.1fs", timeToTransition);
         }
 
         ctx->getRobot()->m_batteryFullEventScheduled = true;
         ctx->notifyChargeStarted();
-        DES_LOG_INFO(rclcpp::get_logger("des.bt.charge"), "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
         return BT::NodeStatus::SUCCESS;
     }
 };

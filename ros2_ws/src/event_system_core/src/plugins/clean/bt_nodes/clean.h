@@ -70,7 +70,7 @@ public:
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only push StartCleanEvent if mission hasn't been started yet.
         if (order && order->state == des::MissionState::PENDING) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: start");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: start");
             ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime(), order));
         }
         return BT::NodeStatus::RUNNING;
@@ -80,7 +80,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == des::MissionState::COMPLETED) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: done");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: done");
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;

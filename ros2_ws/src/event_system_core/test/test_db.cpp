@@ -52,7 +52,7 @@ TEST_F(DBTest, PersonByNameReturnsNulloptForUnknown) {
 }
 
 TEST_F(DBTest, AreaByNameReturnsPositiveArea) {
-    auto result = db->areaByName("IMVS_CoffeeMachine");
+    auto result = db->areaByName("IMVS_Kitchen");
     ASSERT_TRUE(result.has_value());
     EXPECT_GT(result.value(), 0.0);
 }
@@ -71,14 +71,43 @@ TEST_F(DBTest, AllAreasReturnsData) {
 TEST_F(DBTest, AllAreasContainsKnownZone) {
     auto result = db->allAreas();
     ASSERT_TRUE(result.has_value());
-    EXPECT_TRUE(result.value().contains("IMVS_CoffeeMachine"));
-    EXPECT_GT(result.value().at("IMVS_CoffeeMachine"), 0.0);
+    EXPECT_TRUE(result.value().contains("IMVS_Kitchen"));
+    EXPECT_GT(result.value().at("IMVS_Kitchen"), 0.0);
 }
 
 TEST_F(DBTest, AllAreasConsistentWithAreaByName) {
     auto all = db->allAreas();
-    auto single = db->areaByName("IMVS_CoffeeMachine");
+    auto single = db->areaByName("IMVS_Kitchen");
     ASSERT_TRUE(all.has_value());
     ASSERT_TRUE(single.has_value());
-    EXPECT_DOUBLE_EQ(all.value().at("IMVS_CoffeeMachine"), single.value());
+    EXPECT_DOUBLE_EQ(all.value().at("IMVS_Kitchen"), single.value());
+}
+
+TEST_F(DBTest, AllFootprintsReturnsData) {
+    auto result = db->allFootprints();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_FALSE(result->empty());
+}
+
+TEST_F(DBTest, AllFootprintsAreOpenRingsWithAtLeastThreeVertices) {
+    auto result = db->allFootprints();
+    ASSERT_TRUE(result.has_value());
+    for (const auto& [name, ring] : result.value()) {
+        EXPECT_GE(ring.size(), 3u) << name;
+        if (ring.size() > 1) {
+            const bool closed = ring.front().m_x == ring.back().m_x && ring.front().m_y == ring.back().m_y;
+            EXPECT_FALSE(closed) << name;
+        }
+    }
+}
+
+TEST_F(DBTest, AllFootprintsMatchAllAreas) {
+    auto footprints = db->allFootprints();
+    auto areas = db->allAreas();
+    ASSERT_TRUE(footprints.has_value());
+    ASSERT_TRUE(areas.has_value());
+    EXPECT_EQ(footprints->size(), areas->size());
+    for (const auto& [name, ring] : footprints.value()) {
+        EXPECT_TRUE(areas->contains(name)) << name;
+    }
 }

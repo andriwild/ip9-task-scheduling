@@ -314,3 +314,29 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
         std::runtime_error
     );
 }
+
+TEST(ConfigLoaderBuildingSnapshot, LoadsFootprintsAndAreas) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    ASSERT_TRUE(map.has_value());
+    ASSERT_EQ(map->size(), 3u);
+
+    const auto& roomA = map->at("RoomA");
+    ASSERT_TRUE(roomA.m_area.has_value());
+    EXPECT_DOUBLE_EQ(roomA.m_area.value(), 12.0);
+    ASSERT_EQ(roomA.m_footprint.size(), 4u);
+    EXPECT_DOUBLE_EQ(roomA.m_footprint[0].m_x, 0.0);
+    EXPECT_DOUBLE_EQ(roomA.m_footprint[2].m_x, 4.0);
+    EXPECT_DOUBLE_EQ(roomA.m_footprint[2].m_y, 3.0);
+
+    const auto& roomB = map->at("RoomB");
+    EXPECT_FALSE(roomB.m_area.has_value());
+    EXPECT_TRUE(roomB.m_footprint.empty());
+}
+
+TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_legacy.json");
+    ASSERT_TRUE(map.has_value());
+    const auto& roomA = map->at("RoomA");
+    ASSERT_TRUE(roomA.m_area.has_value());
+    EXPECT_TRUE(roomA.m_footprint.empty());
+}

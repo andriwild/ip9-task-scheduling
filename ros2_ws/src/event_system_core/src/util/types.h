@@ -41,6 +41,7 @@ struct Location {
     std::string m_name;
     Point m_p;
     std::optional<double> m_area;
+    std::vector<Point> m_footprint;
 
     explicit Location(const std::string& name, const Point p, const std::optional<double> area = std::nullopt) : m_name(name), m_p(p), m_area(area) {}
 

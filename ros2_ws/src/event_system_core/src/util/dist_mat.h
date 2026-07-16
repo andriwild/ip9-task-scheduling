@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -33,8 +34,9 @@ public:
 
         std::vector<std::string> names;
         names.reserve(points.size());
-        nlohmann::json locations = nlohmann::json::array();
-        nlohmann::json areas     = nlohmann::json::array();
+        nlohmann::json locations  = nlohmann::json::array();
+        nlohmann::json areas      = nlohmann::json::array();
+        nlohmann::json footprints = nlohmann::json::array();
         for (const auto& p : points) {
             names.push_back(p.m_name);
             locations.push_back({
@@ -44,10 +46,25 @@ public:
             });
             if (p.m_area) areas.push_back(*p.m_area);
             else          areas.push_back(nullptr);
+            if (p.m_footprint.empty()) {
+                footprints.push_back(nullptr);
+            } else {
+                nlohmann::json ring = nlohmann::json::array();
+                for (const auto& v : p.m_footprint) {
+                    ring.push_back({v.m_x, v.m_y});
+                }
+                footprints.push_back(ring);
+            }
         }
-        j["names"]     = names;
-        j["locations"] = locations;
-        j["areas"]     = areas;
+        j["names"]      = names;
+        j["locations"]  = locations;
+        j["areas"]      = areas;
+        j["footprints"] = footprints;
+
+        const std::time_t now = std::time(nullptr);
+        char stamp[32];
+        std::strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+        j["generated_at"] = stamp;
 
         std::ofstream file(BUILDING_FILE);
         if (!file.is_open()) {

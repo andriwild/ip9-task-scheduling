@@ -102,11 +102,11 @@ public:
         const auto ss = dynamic_cast<SearchState*>(currentState);
 
         if (ss->locations.empty()){
-            DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: List empty!");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: List empty!");
             ctx->updateOrderState(des::MissionState::FAILED);
             return BT::NodeStatus::FAILURE;
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: %zu locations remaining", ss->locations.size());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: %zu locations remaining", ss->locations.size());
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -138,7 +138,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.search"), "Abort Search!");
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "Abort Search!");
         return BT::NodeStatus::SUCCESS;
     }
 };

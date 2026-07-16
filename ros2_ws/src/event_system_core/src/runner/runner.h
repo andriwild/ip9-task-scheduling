@@ -49,6 +49,22 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu areas into locations", matched, areas.value().size());
 
+    const auto footprints = db.allFootprints();
+    if (!footprints.has_value()) {
+        throw std::runtime_error("Could not load location footprints from DB");
+    }
+    size_t matchedFootprints = 0;
+    for (const auto& [name, ring] : footprints.value()) {
+        const auto it = locationMap.find(name);
+        if (it == locationMap.end()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; footprint dropped", name.c_str());
+            continue;
+        }
+        it->second.m_footprint = ring;
+        ++matchedFootprints;
+    }
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu footprints into locations", matchedFootprints, footprints.value().size());
+
     for (const auto& [_, loc] : locationMap) {
         DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
     }

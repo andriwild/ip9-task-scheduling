@@ -58,7 +58,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
         if (convResult == des::Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -75,7 +75,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "Start Accompany Action");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -137,7 +137,7 @@ public:
         }
         ctx->changeRobotState(std::make_unique<IdleState>());
         ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.conversation"), "Complete Mission Action");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "Complete Mission Action");
         
         return BT::NodeStatus::SUCCESS;
     }

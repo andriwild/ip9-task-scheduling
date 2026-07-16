@@ -132,8 +132,6 @@ void logSightingSummary(const Robot& robot) {
 
 void HeadlessRunner::onSimulationComplete() {
     logSightingSummary(*m_ctx->getRobot());
-    m_metricsNode->publishReport();
-    m_metricsNode->clear();
 
     if (!loadNextBatch()) {
         m_batchComplete = true;

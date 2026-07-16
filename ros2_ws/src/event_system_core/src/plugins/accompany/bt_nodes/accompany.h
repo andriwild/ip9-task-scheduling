@@ -60,7 +60,7 @@ public:
 
         ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.accompany"), "Start Drop-off Conversation");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -76,7 +76,7 @@ public:
 
         ctx->updateOrderState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
-        DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.accompany"), "Abort Accompany!");
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.accompany"), "Abort Accompany!");
         return BT::NodeStatus::SUCCESS;
     }
 };

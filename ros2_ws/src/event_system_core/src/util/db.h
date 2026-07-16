@@ -133,6 +133,33 @@ public:
         return std::nullopt;
     }
 
+    std::optional<std::map<std::string, std::vector<des::Point>>> allFootprints() {
+        if (!m_db.isOpen() && !m_db.open()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        QSqlQuery query;
+        if (!query.exec(
+                "SELECT sz.name, ST_X(p.geom), ST_Y(p.geom) "
+                "FROM (SELECT DISTINCT ON (name) name, polygon FROM search_zones ORDER BY name, id) sz, "
+                "LATERAL ST_DumpPoints(ST_ExteriorRing(sz.polygon)) AS p "
+                "ORDER BY sz.name, p.path[1]")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allFootprints Query failed: %s", query.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        std::map<std::string, std::vector<des::Point>> footprints;
+        while (query.next()) {
+            const std::string name = query.value(0).toString().toStdString();
+            footprints[name].push_back({query.value(1).toDouble(), query.value(2).toDouble(), 0.0});
+        }
+        for (auto& [name, ring] : footprints) {
+            if (ring.size() > 1 && ring.front().m_x == ring.back().m_x && ring.front().m_y == ring.back().m_y) {
+                ring.pop_back();
+            }
+        }
+        return footprints;
+    }
+
     std::optional<std::map<std::string, double>> allAreas() {
         if (!m_db.isOpen() && !m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());

@@ -147,7 +147,7 @@ public:
     double getLocationArea(const std::string& name) const override {
         auto it = m_locationMap.find(name);
         if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.context"), "Location area not found for '%s', defaulting to 1.0", name.c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Location area not found for '%s', defaulting to 1.0", name.c_str());
             return 1.0;
         }
         return it->second.m_area.value();
@@ -294,7 +294,7 @@ public:
     bool pushInterrupt(const des::OrderPtr& order) override {
         assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
         if (m_robot->m_bat->isBatteryLow()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->m_bat->getStats().soc * 100.0);
+            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->m_bat->getStats().soc * 100.0);
             return false;
         }
         if (!m_interruptMission.push(order, m_currentMission)) {
@@ -314,9 +314,9 @@ public:
             e->cancelled = true;
             auto shifted = e->withTime(newTime);
             startActivity(shifted);
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, m_currentTime, e->getName().c_str(), oldTime, newTime);
+            DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, m_currentTime, e->getName().c_str(), oldTime, newTime);
         } else {
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, m_currentTime); 
+            DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, m_currentTime); 
         }
 
         if (wasDriving) {
@@ -343,7 +343,7 @@ public:
         if (m_simConfig->replanBackgroundOnInterrupt) {
             m_backgroundMissions.invalidatePlan();
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), m_currentTime);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), m_currentTime);
     }
 
     bool hasActiveInterrupt() const override {

@@ -43,7 +43,7 @@
     "lunch_mean": 43200.0,
     "lunch_std": 1800.0,
     "metrics_csv_export": true,
-    "people_spawn_location": "IMVS_Entrance",
+    "people_spawn_location": "5.2B_Elevator",
     "person_detection_range": 2.5,
     "person_speed": 1.0,
     "replan_background_on_interrupt": true,

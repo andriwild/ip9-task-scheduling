@@ -97,7 +97,7 @@ public:
 
     void print() const {
         for (const auto& e : m_events) {
-            DES_LOG_INFO(rclcpp::get_logger("des.event_queue"), "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.event_queue"), "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
         }
     }
 };

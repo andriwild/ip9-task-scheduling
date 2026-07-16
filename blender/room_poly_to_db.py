@@ -154,6 +154,7 @@ else:
 
             for obj in polygon_objects:
                 if obj.type != "MESH":
+                    print(f"  SKIP: {obj.name} (not a mesh, type={obj.type})")
                     continue
 
                 verts = get_polygon_vertices(obj)
@@ -204,6 +205,12 @@ else:
                 obj.name = matched_name
                 matched += 1
                 print(f"  OK: {matched_name:20} | Type: {room_type:10} | poi_id: {poi_id} | Vertices: {len(verts)}")
+
+            invalid = conn.execute(text(
+                "SELECT name, ST_IsValidReason(polygon) FROM search_zones WHERE NOT ST_IsValid(polygon)"
+            )).fetchall()
+            for name, reason in invalid:
+                print(f"  INVALID: {name}: {reason}")
 
             trans.commit()
             print(f"\n{'=' * 30}")

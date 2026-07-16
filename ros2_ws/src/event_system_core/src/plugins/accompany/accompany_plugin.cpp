@@ -140,7 +140,7 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
         return true;
     }
-    DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany"),
+    DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany"),
                  "Mission %u (%s -> %s) infeasible: deadline %d, optimistic mission %.0fs from %s, now %d → slack %ds",
                  order.id, a.personName.c_str(), a.roomName.c_str(),
                  *order.deadline, missionDuration, robotLocation.c_str(),

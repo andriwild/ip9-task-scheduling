@@ -72,7 +72,7 @@ public:
     [[nodiscard]] double getScanTime(const std::string& area) const {
         auto it = m_locationMap.find(area);
         if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.scheduler"), "Location area not found for '%s', defaulting to 1.0", area.c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "Location area not found for '%s', defaulting to 1.0", area.c_str());
             return 1.0;
         }
         return it->second.m_area.value();
