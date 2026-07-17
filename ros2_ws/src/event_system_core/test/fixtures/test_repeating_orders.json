@@ -1,0 +1,6 @@
+{
+    "orders": [
+        { "id": 1, "type": "accompany", "personName": "Max", "roomName": "RoomA", "appointmentTime": 36000, "every_n_days": 7 },
+        { "id": 2, "type": "accompany", "personName": "Max", "roomName": "RoomB", "appointmentTime": 122400 }
+    ]
+}

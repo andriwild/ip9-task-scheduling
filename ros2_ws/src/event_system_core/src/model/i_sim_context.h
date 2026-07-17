@@ -96,6 +96,9 @@ public:
 
     virtual bool robotSeesPerson(const std::string& name) const = 0;
 
+    virtual std::optional<int> lastServiced(const std::string& room, const std::string& type) const = 0;
+    virtual void recordServiced(const std::string& room, const std::string& type, int time) = 0;
+
     // Configuration accessors
     virtual std::shared_ptr<des::SimConfig> getConfig() const = 0;
 

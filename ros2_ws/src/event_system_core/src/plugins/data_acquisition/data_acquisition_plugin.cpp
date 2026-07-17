@@ -20,8 +20,16 @@ void DataAcquisition::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
     ctx.changeRobotState(std::make_unique<AcquireState>());
 }
 
-void DataAcquisition::onMissionEnd(ISimContext& ctx, des::IOrder& /*order*/) {
+void DataAcquisition::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
+    if (order.state == des::COMPLETED) {
+        const auto& o = static_cast<const DataAcquisitionOrder&>(order);
+        ctx.recordServiced(o.roomName, kTypeName, ctx.getTime());
+    }
     ctx.changeRobotState(std::make_unique<IdleState>());
+}
+
+double DataAcquisition::estimateReward(const des::IOrder& /*order*/, const ISimContext& /*context*/) const {
+    return m_config.rewardWeight;
 }
 
 void DataAcquisition::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}

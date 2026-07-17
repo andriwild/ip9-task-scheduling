@@ -63,6 +63,7 @@ void SimulationContext::resetContext(const int newTime) {
     m_backgroundMissions.clear();
     m_interruptMission.clear();
     m_personLocations.clear();
+    m_lastServiced.clear();
     resetRobot();
 }
 

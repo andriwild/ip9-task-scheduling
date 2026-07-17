@@ -17,11 +17,14 @@
     "charge_to_full": false,
     "charging_rate": 88.0,
     "clean": {
-        "cleaning_area": 0.09
+        "cleaning_area": 0.09,
+        "cleaning_interval": 86400.0,
+        "reward_weight": 0.23
     },
     "cv_threshold": 0.800000011920929,
     "data_acquisition": {
-        "data_acquisition_duration": 120.0
+        "data_acquisition_duration": 120.0,
+        "reward_weight": 0.12
     },
     "departure_distribution": "normal",
     "departure_mean": 61200.0,

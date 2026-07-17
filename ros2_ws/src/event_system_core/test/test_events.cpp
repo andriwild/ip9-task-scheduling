@@ -196,6 +196,15 @@ public:
         return it->second == robot->getLocation();
     }
 
+    std::map<std::pair<std::string, std::string>, int> lastServicedMap;
+    std::optional<int> lastServiced(const std::string& room, const std::string& type) const override {
+        auto it = lastServicedMap.find({room, type});
+        return it == lastServicedMap.end() ? std::nullopt : std::optional<int>(it->second);
+    }
+    void recordServiced(const std::string& room, const std::string& type, int time) override {
+        lastServicedMap[{room, type}] = time;
+    }
+
 };
 
 static bool pluginsRegistered = [] {

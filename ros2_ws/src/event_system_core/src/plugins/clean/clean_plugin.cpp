@@ -8,6 +8,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "observer/ros.h"
+#include <algorithm>
 #include "clean_order.h"
 #include "states.h"
 #include "util/types.h"
@@ -22,8 +23,25 @@ void CleanPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
     ctx.changeRobotState(std::make_unique<CleanState>());
 }
 
-void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& /*order*/) {
+void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
+    if (order.state == des::COMPLETED) {
+        const auto& o = static_cast<const CleanOrder&>(order);
+        ctx.recordServiced(o.roomName, kTypeName, ctx.getTime());
+    }
     ctx.changeRobotState(std::make_unique<IdleState>());
+}
+
+double CleanPlugin::estimateReward(const des::IOrder& order, const ISimContext& context) const {
+    const auto& o = static_cast<const CleanOrder&>(order);
+    const double areaUtility = std::min(1.0, context.getLocationArea(o.roomName) / 100.0);
+    const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
+
+    double urgency = 1.0;
+    const auto last = context.lastServiced(o.roomName, kTypeName);
+    if (last.has_value() && interval > 0.0) {
+        urgency = std::clamp((context.getTime() - last.value()) / interval, 0.0, 1.0);
+    }
+    return m_config.rewardWeight * areaUtility * urgency;
 }
 
 void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
@@ -37,6 +55,9 @@ des::OrderPtr CleanPlugin::fromJson(const nlohmann::json& j) const {
     o->deadline    = j.contains("appointmentTime") ? std::optional<int>(j.at("appointmentTime").get<int>()) : std::nullopt;
     o->description = j.value("description", "Clean");
     o->roomName    = j.at("roomName");
+    if (j.contains("cleaning_interval")) {
+        o->cleaningInterval = j.at("cleaning_interval").get<double>();
+    }
     o->execution   = des::ExecutionMode::BACKGROUND;
     return o;
 }

@@ -18,6 +18,7 @@
 #include "../robot.h"
 #include "../i_sim_context.h"
 #include "../../algo/op_instance_builder.h"
+#include "../../algo/op_solver.h"
 #include "../../plugins/charge/charge_order.h"
 
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
@@ -133,17 +134,20 @@ public:
             .cvEnergy        = cvEnergy,
         };
 
-        const auto problem = buildOpInstance(ctx, m_missions, startLoc, endLoc, budgets);
+        // builds a problem instance containing parameters (constraints, budget) and a list of locations to visit 
+        const auto problem = buildMissionInstance(ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
             return;
         }
 
-        const auto route = problem->instance.grasp(kGraspIterations, kGraspAlpha, kGraspSeed);
+        // index based route (tour)
+        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, kGraspSeed);
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s",
-                    formatRoute(*problem, route, startLoc, endLoc).c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 
+
+        // generate a tour of orderPtr, which the robot can process
         int chargeStops = 0;
         for (const int idx : route) {
             if (const auto& order = problem->orderByNode[idx]) {

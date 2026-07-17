@@ -14,6 +14,8 @@ class RosObserver;
 
 struct CleanConfig {
     double cleaningArea = 0.09;
+    double rewardWeight = 0.23;
+    double cleaningInterval = 86400.0;
 };
 
 class CleanPlugin: public IOrderPlugin {
@@ -40,15 +42,22 @@ public:
     std::optional<std::string> targetLocation(const des::IOrder& order) const override;
     double estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const override;
     double estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const override;
+    double estimateReward(const des::IOrder& order, const ISimContext& context) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 
     const CleanConfig& config() const { return m_config; }
 
     void loadConfig(const nlohmann::json& j) override {
-        m_config.cleaningArea = j.value("cleaning_area", m_config.cleaningArea);
+        m_config.cleaningArea     = j.value("cleaning_area", m_config.cleaningArea);
+        m_config.rewardWeight     = j.value("reward_weight", m_config.rewardWeight);
+        m_config.cleaningInterval = j.value("cleaning_interval", m_config.cleaningInterval);
     }
     nlohmann::json saveConfig() const override {
-        return { {"cleaning_area", m_config.cleaningArea} };
+        return {
+            {"cleaning_area", m_config.cleaningArea},
+            {"reward_weight", m_config.rewardWeight},
+            {"cleaning_interval", m_config.cleaningInterval},
+        };
     }
 };
 

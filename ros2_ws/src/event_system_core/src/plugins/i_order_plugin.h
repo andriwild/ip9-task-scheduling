@@ -6,10 +6,10 @@
 
 #include "i_order.h"
 #include "../util/types.h"
+#include "../model/i_sim_context.h"
 
 namespace BT { class BehaviorTreeFactory; }
 class Scheduler;
-class ISimContext;
 class RosObserver;
 
 class IOrderPlugin {
@@ -39,6 +39,12 @@ public:
     // nullopt = mission has no single target and cannot be routed.
     virtual std::optional<std::string> targetLocation(const des::IOrder& /*order*/) const {
         return std::nullopt;
+    }
+
+    // OP reward for visiting this mission's location. Default: the room area.
+    virtual double estimateReward(const des::IOrder& order, const ISimContext& context) const {
+        const auto target = targetLocation(order);
+        return target ? context.getLocationArea(*target) : 0.0;
     }
 
     // On-site execution time in seconds — no drive legs.

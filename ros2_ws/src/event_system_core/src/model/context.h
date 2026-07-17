@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <map>
+#include <utility>
 #include <memory>
 #include <optional>
 #include <random>
@@ -37,6 +38,7 @@ class SimulationContext : public ISimContext {
     // TODO: make meaningful types
     std::map<std::string, std::shared_ptr<des::Person>> m_employees; // name and person object
     std::map<std::string, std::string> m_personLocations; // name and current person location
+    std::map<std::pair<std::string, std::string>, int> m_lastServiced; // (room, type) -> last completion time
     std::unique_ptr<Scheduler> m_scheduler;
 
 public:
@@ -142,6 +144,15 @@ public:
             return false;
         }
         return it->second == m_robot->getLocation();
+    }
+
+    std::optional<int> lastServiced(const std::string& room, const std::string& type) const override {
+        auto it = m_lastServiced.find({room, type});
+        return it == m_lastServiced.end() ? std::nullopt : std::optional<int>(it->second);
+    }
+
+    void recordServiced(const std::string& room, const std::string& type, int time) override {
+        m_lastServiced[{room, type}] = time;
     }
 
     double getLocationArea(const std::string& name) const override {

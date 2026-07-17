@@ -14,6 +14,7 @@ class RosObserver;
 
 struct DataAcquisitionConfig {
     double dataAcquisitionDuration = 120.0;
+    double rewardWeight = 0.12;
 };
 
 class DataAcquisition: public IOrderPlugin {
@@ -40,15 +41,20 @@ public:
     std::optional<std::string> targetLocation(const des::IOrder& order) const override;
     double estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const override;
     double estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const override;
+    double estimateReward(const des::IOrder& order, const ISimContext& context) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 
     const DataAcquisitionConfig& config() const { return m_config; }
 
     void loadConfig(const nlohmann::json& j) override {
         m_config.dataAcquisitionDuration = j.value("data_acquisition_duration", m_config.dataAcquisitionDuration);
+        m_config.rewardWeight            = j.value("reward_weight", m_config.rewardWeight);
     }
     nlohmann::json saveConfig() const override {
-        return { {"data_acquisition_duration", m_config.dataAcquisitionDuration} };
+        return {
+            {"data_acquisition_duration", m_config.dataAcquisitionDuration},
+            {"reward_weight", m_config.rewardWeight},
+        };
     }
 };
 
