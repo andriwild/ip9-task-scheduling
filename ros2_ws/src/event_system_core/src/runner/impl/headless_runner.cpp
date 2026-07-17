@@ -78,7 +78,7 @@ bool HeadlessRunner::loadNextBatch() {
                 path.c_str(), m_currentRound + 1, m_totalRounds);
     m_metricsNode->setRunInfo(std::filesystem::path(path).stem().string(), m_currentRound + 1);
 
-    auto appts = ConfigLoader::loadOrderConfig(path);
+    auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     if (!appts.has_value()) {
         DES_LOG_ERROR(rclcpp::get_logger("des.runner"), "Failed to load appointments from: %s", path.c_str());
         return loadNextBatch();

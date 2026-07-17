@@ -49,7 +49,7 @@
     "replan_background_on_interrupt": true,
     "robot_speed": 0.30000001192092896,
     "sim_duration": 259200,
-    "sim_speed_factor": 60.0,
+    "sim_speed_factor": 0.0,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
     "timeBuffer": 0.0,

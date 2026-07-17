@@ -20,6 +20,7 @@ const std::string BUILDING_FILE         = "/home/andri/repos/ip9-task-scheduling
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
 constexpr int SIM_DURATION   = 43200;
+constexpr int SECONDS_PER_DAY_CFG = 86400;
 
 struct InterruptGeneratorConfig {
     std::string type;
@@ -38,7 +39,7 @@ struct BackgroundTemplate {
 
 class ConfigLoader {
 public:
-    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath) {
+    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY_CFG) {
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -48,9 +49,28 @@ public:
         }
 
         des::OrderList orders;
+        int instanceId = 200000;
         for (const auto& j : json.value().at("orders")) {
             const std::string& type = j.at("type").get_ref<const std::string&>();
-            orders.push_back(OrderRegistry::instance().get(type).fromJson(j));
+            auto& plugin = OrderRegistry::instance().get(type);
+
+            const int everyNDays = j.value("every_n_days", 0);
+            if (everyNDays <= 0) {
+                orders.push_back(plugin.fromJson(j));
+                continue;
+            }
+
+            const int offset = j.at("appointmentTime").get<int>();
+            for (int day = 0; day * SECONDS_PER_DAY_CFG < simEndTime; day += everyNDays) {
+                const int appointmentTime = day * SECONDS_PER_DAY_CFG + offset;
+                if (appointmentTime < simStartTime || appointmentTime >= simEndTime) {
+                    continue;
+                }
+                nlohmann::json instance = j;
+                instance["id"] = instanceId++;
+                instance["appointmentTime"] = appointmentTime;
+                orders.push_back(plugin.fromJson(instance));
+            }
         }
         return orders;
     };

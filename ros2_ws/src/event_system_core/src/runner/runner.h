@@ -193,9 +193,9 @@ protected:
         }
     }
 
-    static des::OrderList loadOrders(const std::string& path) {
+    static des::OrderList loadOrders(const std::string& path, const int simStartTime, const int simEndTime) {
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load orders: %s", path.c_str());
-        const auto orders = ConfigLoader::loadOrderConfig(path.c_str());
+        const auto orders = ConfigLoader::loadOrderConfig(path.c_str(), simStartTime, simEndTime);
         if (!orders.has_value()) {
             throw std::runtime_error("Could not load orders from file");
         }

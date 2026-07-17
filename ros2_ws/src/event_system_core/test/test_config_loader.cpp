@@ -358,3 +358,30 @@ TEST(ConfigLoaderSimConfig, SaveMergesUnknownKeysIntoExistingFile) {
     EXPECT_EQ(j.at("future_key").get<std::string>(), "keep-me");
     EXPECT_DOUBLE_EQ(j.at("robot_speed").get<double>(), 2.5);
 }
+
+TEST(ConfigLoaderOrders, ExpandsRepeatingOrdersOverSimWindow) {
+    const auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json", 25200, 30 * 86400);
+    ASSERT_TRUE(orders.has_value());
+    ASSERT_EQ(orders->size(), 6u);
+
+    std::vector<int> repeatedDeadlines;
+    for (const auto& o : *orders) {
+        if (o->id >= 200000) {
+            repeatedDeadlines.push_back(*o->deadline);
+        }
+    }
+    ASSERT_EQ(repeatedDeadlines.size(), 5u);
+    EXPECT_EQ(repeatedDeadlines[0], 36000);
+    EXPECT_EQ(repeatedDeadlines[1], 7 * 86400 + 36000);
+    EXPECT_EQ(repeatedDeadlines[4], 28 * 86400 + 36000);
+
+    const auto absolute = std::find_if(orders->begin(), orders->end(), [](const auto& o) { return o->id == 2; });
+    ASSERT_NE(absolute, orders->end());
+    EXPECT_EQ(*(*absolute)->deadline, 122400);
+}
+
+TEST(ConfigLoaderOrders, RepeatingOrderDefaultsToSingleDayWindow) {
+    const auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json");
+    ASSERT_TRUE(orders.has_value());
+    ASSERT_EQ(orders->size(), 2u);
+}

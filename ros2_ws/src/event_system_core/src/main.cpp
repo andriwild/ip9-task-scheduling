@@ -102,7 +102,7 @@ int main(const int argc, char *argv[]) {
 
                     const double speedFactor = app->m_ctx->getConfig()->simSpeedFactor;
                     if (!headless && state == SystemState::Request::RUN && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
-                        const double waitMs = std::min(500.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
+                        const double waitMs = std::min(10000.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
                         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(waitMs)));
                     }
                     lastEventTime = e->time;
