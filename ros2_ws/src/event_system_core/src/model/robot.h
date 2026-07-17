@@ -8,14 +8,7 @@
 #include "robot_state.h"
 #include "battery.hpp"
 #include "event/base.h"
-
-enum class SightingKind { PRESENT, ABSENT };
-struct Sighting {
-    int time;
-    std::string personName;
-    std::string location;
-    SightingKind kind;
-};
+#include "sighting.h"
 
 class Robot {
     std::string m_dockLocation = "IMVS_Dock";
