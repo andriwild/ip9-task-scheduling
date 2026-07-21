@@ -15,6 +15,9 @@ class EventQueue {
             if (a->time != b->time) {
                 return a->time < b->time;
             }
+            if (a->priority() != b->priority()) {
+                return a->priority() > b->priority();
+            }
             return a->seq < b->seq;
         }
     };

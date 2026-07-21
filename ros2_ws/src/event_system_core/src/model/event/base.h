@@ -32,10 +32,14 @@ public:
     virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;
     virtual std::string getColor() const { return ""; }
     virtual int getMissionId() const { return -1; }
+    virtual int priority() const { return 0; }
 
     bool operator<(const IEvent& other) const {
         if (time != other.time) {
             return time < other.time;
+        }
+        if (priority() != other.priority()) {
+            return priority() > other.priority();
         }
         return seq < other.seq;
     }
@@ -53,6 +57,9 @@ struct EventComparator {
         }
         if (a->time != b->time) {
             return a->time > b->time;
+        }
+        if (a->priority() != b->priority()) {
+            return a->priority() < b->priority();
         }
         return a->seq > b->seq;
     }
