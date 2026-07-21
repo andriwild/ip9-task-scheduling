@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include <algorithm>
+
 #include "bt_nodes/search.h"
 #include "bt_nodes/accompany.h"
 #include "bt_nodes/conversation.h"
@@ -10,6 +12,9 @@
 #include "sim/scheduler.h"
 #include "model/i_sim_context.h"
 #include "model/robot.h"
+#include "model/sighting.h"
+#include "algo/search_instance_builder.h"
+#include "algo/op_solver.h"
 #include "observer/ros.h"
 #include "states.h"
 
@@ -57,9 +62,88 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     ctx.pushEvent(std::make_shared<AppointmentEndEvent>(endTime, person));
 }
 
+namespace {
+constexpr int kSearchGraspIterations = 200;
+constexpr int kEstimateGraspIterations = 8;
+constexpr float kSearchGraspAlpha    = 0.3f;
+constexpr int kSearchGraspSeed       = 42;
+
+bool isPersonReachableRoom(const std::string& name) {
+    return name.find("Elevator") == std::string::npos
+        && name.find("Stairwell") == std::string::npos
+        && name.find("Dock") == std::string::npos;
+}
+
+struct SearchPlan {
+    std::vector<std::string> locations;
+    double energyWh;
+};
+
+std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc, int graspIterations) {
+    const auto person = ctx.getPersonByName(a.personName);
+    const auto robot  = ctx.getRobot();
+
+    std::vector<std::string> universe;
+    for (const auto& name : ctx.roomNames()) {
+        if (isPersonReachableRoom(name)) {
+            universe.push_back(name);
+        }
+    }
+    const auto roomNodes = occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe);
+
+    const auto bat          = robot->m_bat->getStats();
+    const double voltage    = robot->m_bat->getVoltage();
+    const double currentWh  = bat.soc * bat.capacity * voltage;
+    const double capacityWh = bat.capacity * voltage;
+    const double reserveWh  = capacityWh * bat.lowThreshold / 100.0;
+    const int now           = ctx.getTime();
+    const int deadline      = a.deadline.value_or(now);
+
+    const OpBudgets budgets {
+        .timeBudget      = static_cast<float>(std::max(0, deadline - now)),
+        .energyBudget    = static_cast<float>(currentWh),
+        .initialSoc      = static_cast<float>(currentWh),
+        .endSocMin       = static_cast<float>(reserveWh),
+        .socThreshold    = static_cast<float>(reserveWh),
+        .maxEnergy       = static_cast<float>(capacityWh),
+        .chargeTimePerWh = 1e9f,
+        .chargeTimePerWhTapered = 1e9f,
+        .cvEnergy        = static_cast<float>(capacityWh),
+    };
+
+    auto instance = buildSearchInstance(ctx, roomNodes, startLoc, a.roomName, budgets);
+    if (!instance) {
+        return std::nullopt;
+    }
+    const auto route = op_solver::grasp(*instance, graspIterations, kSearchGraspAlpha, kSearchGraspSeed);
+    if (route.empty()) {
+        return std::nullopt;
+    }
+
+    const auto cfg           = ctx.getConfig();
+    const double driveWhPerM = cfg->energyConsumptionDrive / (3600.0 * cfg->robotSpeed);
+    double energyWh          = instance->routeDriveDistance(route) * driveWhPerM;
+    std::vector<std::string> locations;
+    for (const int idx : route) {
+        energyWh += instance->node(idx).serviceEnergy;
+        locations.push_back(instance->node(idx).name);
+    }
+    return SearchPlan{ std::move(locations), energyWh };
+}
+}
+
 void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) {
-    auto accompanyOrder = static_cast<AccompanyOrder&>(order);
-    auto locations = ctx.getPersonByName(accompanyOrder.personName)->roomLabels;
+    auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
+    const auto person    = ctx.getPersonByName(accompanyOrder.personName);
+
+    std::vector<std::string> locations;
+    if (auto plan = planPersonSearch(ctx, accompanyOrder, ctx.getRobot()->getLocation(), kSearchGraspIterations)) {
+        locations = std::move(plan->locations);
+    }
+    if (locations.empty()) {
+        locations.push_back(person->workplace);
+    }
+
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
 }
 
@@ -93,48 +177,27 @@ des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
 }
 
 namespace {
-// Optimistic estimate: assume the person is in their *first* known room.
-// Used for feasibility checks where we don't want to over-reject missions
-// just because the search could in principle take longer.
-double optimisticMeeting(const Scheduler& sched, const std::string& personName, const std::string& startPos, const std::string& goalPos) {
-    const auto& rooms          = sched.employeeRooms(personName);
-    const auto employeeLoc     = rooms.front();
+double meetingViaWorkplace(const Scheduler& sched, const std::string& workplace, const std::string& startPos, const std::string& goalPos) {
     const double accompanySpd  = accompanyConfig().accompanySpeed;
-    const double searchTime    = sched.robotDriveTime(startPos, employeeLoc);
-    const double scanTime      = sched.getScanTime(employeeLoc);
-    const double accompanyTime = sched.getDriveTime(employeeLoc, goalPos, accompanySpd);
+    const double searchTime    = sched.robotDriveTime(startPos, workplace);
+    const double scanTime      = sched.getScanTime(workplace);
+    const double accompanyTime = sched.getDriveTime(workplace, goalPos, accompanySpd);
     return searchTime + accompanyTime + scanTime;
-}
-
-// Pessimistic estimate: assume the search visits AND scans every known room
-// before finding the person in the last one. Used for dispatch scheduling so
-// we leave enough lead time.
-double pessimisticMeeting(const Scheduler& sched, const std::string& personName, const std::string& startPos, const std::string& goalPos) {
-    const auto& rooms         = sched.employeeRooms(personName);
-    const double accompanySpd = accompanyConfig().accompanySpeed;
-    double searchTime = 0.0;
-    std::string currentPos = startPos;
-    for (const auto& location : rooms) {
-        searchTime += sched.robotDriveTime(currentPos, location);
-        searchTime += sched.getScanTime(location);
-        currentPos = location;
-    }
-    const double accompanyTime = sched.getDriveTime(currentPos, goalPos, accompanySpd);
-    return searchTime + accompanyTime;
 }
 }
 
 int AccompanyOrderPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, const std::string& startPos) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
-    const double driveTime = pessimisticMeeting(s, a.personName, startPos, a.roomName);
-    return *a.deadline - static_cast<int>(driveTime) - s.timeBuffer();
+    (void)startPos;
+    return *a.deadline - s.timeBuffer();
 }
 
 bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContext& context) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
 
     const auto robotLocation = context.getRobot()->getLocation();
-    const double missionDuration = optimisticMeeting(context.getScheduler(), a.personName, robotLocation, a.roomName);
+    const auto person        = context.getPersonByName(a.personName);
+    const double missionDuration = meetingViaWorkplace(context.getScheduler(), person->workplace, robotLocation, a.roomName);
     const int slack = static_cast<int>(order.deadline.value() - missionDuration - context.getTime());
     if (slack >= 0) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
@@ -152,28 +215,23 @@ std::optional<std::string> AccompanyOrderPlugin::targetLocation(const des::IOrde
     return static_cast<const AccompanyOrder&>(order).roomName;
 }
 
-namespace {
-struct AccompanyTimings { double meeting; double appointment; double driveBack; };
-
-AccompanyTimings accompanyTimings(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) {
-    const auto& a     = static_cast<const AccompanyOrder&>(order);
-    const auto& sched = context.getScheduler();
-    const auto& cfg   = *context.getConfig();
-    return {
-        pessimisticMeeting(sched, a.personName, startLocation, a.roomName),
-        accompanyConfig().appointmentDuration,
-        sched.robotDriveTime(a.roomName, cfg.dockLocation)
-    };
-}
-}
-
 double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto t   = accompanyTimings(order, context, startLocation);
-    const auto& cfg = *context.getConfig();
-    // Worst-case meeting (search + accompany) treated as driving for upper bound.
-    return (t.meeting * cfg.energyConsumptionDrive
-          + t.appointment * cfg.energyConsumptionBase
-          + t.driveBack   * cfg.energyConsumptionDrive) / 3600.0;
+    const auto& a     = static_cast<const AccompanyOrder&>(order);
+    const auto& cfg   = *context.getConfig();
+    const auto& sched = context.getScheduler();
+
+    double searchWh;
+    if (auto plan = planPersonSearch(context, a, startLocation, kEstimateGraspIterations)) {
+        searchWh = plan->energyWh;
+    } else {
+        const auto person    = context.getPersonByName(a.personName);
+        const double meeting = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
+        searchWh             = meeting * cfg.energyConsumptionDrive / 3600.0;
+    }
+
+    const double appointmentWh = accompanyConfig().appointmentDuration * cfg.energyConsumptionBase / 3600.0;
+    const double driveBackWh   = sched.robotDriveTime(a.roomName, cfg.dockLocation) * cfg.energyConsumptionDrive / 3600.0;
+    return searchWh + appointmentWh + driveBackWh;
 }
 
 void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

@@ -96,7 +96,7 @@ protected:
     }
 
     std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, employees, locationMap);
+        return std::make_unique<Scheduler>(config, planner, locationMap);
     }
 
     static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
@@ -126,11 +126,7 @@ TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
     auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
-    // pessimisticMeeting for Max with single location ["Office"]:
-    //   search Dock->Office (10/1.0 = 10)
-    //   accompany Office->MeetingRoom (20/0.5 = 40)
-    // total = 50. timeBuffer = 60. startTime = 36000 - 50 - 60 = 35890
-    EXPECT_EQ(missions[0]->time, 35890);
+    EXPECT_EQ(missions[0]->time, 35940);
     auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(missions[0]->orderPtr);
     ASSERT_NE(accompany, nullptr);
     EXPECT_EQ(accompany->personName, "Max");
@@ -147,9 +143,8 @@ TEST_F(SchedulerTest, SimplePlanMultipleAppointments) {
     auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 2u);
 
-    EXPECT_EQ(missions[0]->time, 35890);
-    // Anna: pessimistic = 12 + 16 = 28s, start = 39600 - 28 - 60 = 39512
-    EXPECT_EQ(missions[1]->time, 39512);
+    EXPECT_EQ(missions[0]->time, 35940);
+    EXPECT_EQ(missions[1]->time, 39540);
 }
 
 TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
@@ -161,8 +156,7 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
     auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
-    // Without buffer: 36000 - 50 - 0 = 35950
-    EXPECT_EQ(missions[0]->time, 35950);
+    EXPECT_EQ(missions[0]->time, 36000);
 }
 
 TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
@@ -173,34 +167,13 @@ TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
     EXPECT_TRUE(missions.empty());
 }
 
-TEST_F(SchedulerTest, PessimisticMeetingWithMultipleSearchLocations) {
-    // Give Anna multiple rooms — pessimistic search visits each in order.
+TEST_F(SchedulerTest, DispatchIndependentOfPersonRooms) {
     employees["Anna"]->roomLabels = {"Lab", "Kitchen"};
     planner->setDistance("Lab", "Kitchen", 7.0);
     auto scheduler = makeScheduler();
 
-    // Anna has rooms ["Lab", "Kitchen"]
-    //   search Dock->Lab (12/1.0) = 12
-    //   search Lab->Kitchen (7/1.0) = 7
-    //   accompany Kitchen->HallA (18/0.5) = 36
-    // total = 55. startTime = 39600 - 55 - 60 = 39485
     des::OrderList orders = { makeAccompanyOrder(1, "Anna", "HallA", 39600) };
     auto missions = scheduler->simplePlan(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
-    EXPECT_EQ(missions[0]->time, 39485);
-}
-
-// --- Speed impact ---
-
-TEST_F(SchedulerTest, HigherSpeedReducesDriveTime) {
-    config->robotSpeed = 2.0;        // double the base drive speed
-    setAccompanyConfig(/*accompanySpeed=*/1.0);
-    auto scheduler = makeScheduler();
-
-    // Max: pessimistic = Dock->Office (10/2.0 = 5) + Office->MeetingRoom (20/1.0 = 20) = 25
-    // startTime = 36000 - 25 - 60 = 35915
-    des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000) };
-    auto missions = scheduler->simplePlan(orders, "Dock");
-    ASSERT_EQ(missions.size(), 1u);
-    EXPECT_EQ(missions[0]->time, 35915);
+    EXPECT_EQ(missions[0]->time, 39540);
 }

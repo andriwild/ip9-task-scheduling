@@ -17,7 +17,7 @@ SimulationContext::SimulationContext(
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)
     , m_employees(std::move(employees))
-    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_employees, m_locationMap))
+    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_locationMap))
     , m_plannerNode(std::move(plannerNode))
     , m_locationMap(std::move(locationMap))
 {

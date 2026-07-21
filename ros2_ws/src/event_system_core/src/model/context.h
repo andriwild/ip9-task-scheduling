@@ -155,6 +155,15 @@ public:
         m_lastServiced[{room, type}] = time;
     }
 
+    std::vector<std::string> roomNames() const override {
+        std::vector<std::string> names;
+        names.reserve(m_locationMap.size());
+        for (const auto& [name, loc] : m_locationMap) {
+            names.push_back(name);
+        }
+        return names;
+    }
+
     double getLocationArea(const std::string& name) const override {
         auto it = m_locationMap.find(name);
         if (it == m_locationMap.end() || !it->second.m_area.has_value()) {

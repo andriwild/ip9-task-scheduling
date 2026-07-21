@@ -105,7 +105,7 @@ public:
 
         // energy budget [Wh]: spendable on background before hitting the next-mission reserve.
         // requiredWh = energy the next scheduled mission needs + safety floor.
-        const double requiredWh   = reservedWh + safetyMarginWh;
+        const double requiredWh   = reservedWh + socThreshold + safetyMarginWh;
         const double energyBudget = currentWh - requiredWh;
 
         // time budget [s]: until the next hard stop (next dispatch or sim end).

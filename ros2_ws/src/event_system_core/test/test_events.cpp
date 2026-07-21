@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <memory>
 #include <random>
 #include <stdexcept>
@@ -205,6 +206,11 @@ public:
         lastServicedMap[{room, type}] = time;
     }
 
+    std::vector<std::string> roomNamesList;
+    std::vector<std::string> roomNames() const override {
+        return roomNamesList;
+    }
+
 };
 
 static bool pluginsRegistered = [] {
@@ -301,15 +307,16 @@ TEST(EventExecute, MissionDispatchAddsPendingAndTicksBT) {
 
 // --- MissionStartEvent ---
 
-TEST(EventExecute, MissionStartSetsSearchState) {
+TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     MockSimContext ctx;
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
-    person->roomLabels = {"Office", "Kitchen"};
+    person->workplace = "Office";
     ctx.employees["Max"] = person;
+    ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
 
-    auto order = makeAccompanyOrder(1, "Max");
+    auto order = makeAccompanyOrder(1, "Max", "Room1", 40000);
     ctx.setOrderPtr(order);
 
     MissionStartEvent event(35000, order);
@@ -318,12 +325,12 @@ TEST(EventExecute, MissionStartSetsSearchState) {
     EXPECT_EQ(ctx.robot->getState()->getName(), "search");
     EXPECT_EQ(ctx.tickCount, 1);
 
-    // Verify SearchState has the correct locations
     auto* searchState = dynamic_cast<SearchState*>(ctx.robot->getState());
     ASSERT_NE(searchState, nullptr);
-    ASSERT_EQ(searchState->locations.size(), 2u);
-    EXPECT_EQ(searchState->locations[0], "Office");
-    EXPECT_EQ(searchState->locations[1], "Kitchen");
+
+    std::vector<std::string> got = searchState->locations;
+    std::sort(got.begin(), got.end());
+    EXPECT_EQ(got, (std::vector<std::string>{"Kitchen", "Lab", "Office"}));
 }
 
 // --- AbortSearchEvent ---

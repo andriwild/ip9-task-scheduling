@@ -88,7 +88,6 @@ public:
     std::shared_ptr<SimulationContext> m_ctx;
 
     static SortedEventQueue createMissionQueue(
-        const std::shared_ptr<des::SimConfig> &config,
         des::OrderList& orders,
         Scheduler& scheduler,
         std::string idleLocation
@@ -99,8 +98,6 @@ public:
         const auto missions = scheduler.simplePlan(orders, idleLocation);
 
         for (const auto& mission : missions) {
-            const double buffer = config->timeBuffer;
-            mission->time = mission->time - buffer;
             queue.push(mission);
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
@@ -165,7 +162,7 @@ protected:
 
         scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
-        m_eventQueue.extend(createMissionQueue(m_config, m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
+        m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
         const int simStartTime = m_config->simStartTime;
         const int simEndTime   = m_config->simStartTime + m_config->simDuration;
