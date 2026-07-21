@@ -128,6 +128,7 @@ struct SimConfig {
     double lunchDurationMean = 2400.0;
     double lunchDurationStd = 600.0;
     double simSpeedFactor = 0.0;
+    std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -171,6 +172,11 @@ struct SimConfig {
         os << std::left << std::setw(W) << "alwaysChargeAtDock" << ": " << config.alwaysChargeAtDock << std::endl;
         os << std::left << std::setw(W) << "metricsCsvExport" << ": " << config.metricsCsvExport << std::endl;
         os << std::left << std::setw(W) << "replanBackgroundOnInterrupt" << ": " << config.replanBackgroundOnInterrupt << std::endl;
+        os << std::left << std::setw(W) << "searchExcludedRooms" << ": ";
+        for (size_t i = 0; i < config.searchExcludedRooms.size(); ++i) {
+            os << (i ? ", " : "") << config.searchExcludedRooms[i];
+        }
+        os << std::endl;
         os << "----------------------------\n"
            << std::endl;
         return os;

@@ -341,14 +341,31 @@ TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
     auto order = makeAccompanyOrder(1, "Max");
     order->state = des::MissionState::IN_PROGRESS;
     ctx.currentOrder = order;
+    ctx.personLocations["Max"] = "OUTDOOR";
 
     AbortSearchEvent event(36000, order);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.currentOrder->state, des::MissionState::FAILED);
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::IDLE);
+    EXPECT_EQ(order->abortReason, SearchAbortReason::OUTSIDE);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::MISSION_COMPLETE);
+}
+
+TEST(EventExecute, AbortSearchInBuildingSetsReason) {
+    MockSimContext ctx;
+
+    auto order = makeAccompanyOrder(1, "Max");
+    order->state = des::MissionState::IN_PROGRESS;
+    order->plannedSearch = {"5.2B03"};
+    ctx.currentOrder = order;
+    ctx.personLocations["Max"] = "5.2B10";
+
+    AbortSearchEvent event(36000, order);
+    event.execute(ctx);
+
+    EXPECT_EQ(order->abortReason, SearchAbortReason::IN_BUILDING);
 }
 
 // --- StartAccompanyEvent ---

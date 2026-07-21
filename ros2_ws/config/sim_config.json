@@ -51,10 +51,15 @@
     "person_speed": 1.4,
     "replan_background_on_interrupt": true,
     "robot_speed": 0.30000001192092896,
+    "search_excluded_rooms": [
+        "Elevator",
+        "Stairwell",
+        "Dock"
+    ],
     "sim_duration": 259200,
     "sim_speed_factor": 0.0,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
-    "timeBuffer": 0.0,
+    "timeBuffer": 1200.0,
     "use_distance_matrix": true
 }

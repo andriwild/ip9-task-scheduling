@@ -98,6 +98,7 @@ private:
             config.lunchDurationMean            = m_currentConfig->lunchDurationMean;
             config.lunchDurationStd             = m_currentConfig->lunchDurationStd;
             config.simSpeedFactor               = m_currentConfig->simSpeedFactor;
+            config.searchExcludedRooms          = m_currentConfig->searchExcludedRooms;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }

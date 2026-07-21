@@ -68,10 +68,13 @@ constexpr int kEstimateGraspIterations = 8;
 constexpr float kSearchGraspAlpha    = 0.3f;
 constexpr int kSearchGraspSeed       = 42;
 
-bool isPersonReachableRoom(const std::string& name) {
-    return name.find("Elevator") == std::string::npos
-        && name.find("Stairwell") == std::string::npos
-        && name.find("Dock") == std::string::npos;
+bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded) {
+    for (const auto& pattern : excluded) {
+        if (name.find(pattern) != std::string::npos) {
+            return false;
+        }
+    }
+    return true;
 }
 
 struct SearchPlan {
@@ -83,9 +86,10 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const auto person = ctx.getPersonByName(a.personName);
     const auto robot  = ctx.getRobot();
 
+    const auto& excluded = ctx.getConfig()->searchExcludedRooms;
     std::vector<std::string> universe;
     for (const auto& name : ctx.roomNames()) {
-        if (isPersonReachableRoom(name)) {
+        if (isPersonReachableRoom(name, excluded)) {
             universe.push_back(name);
         }
     }
@@ -144,6 +148,7 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
         locations.push_back(person->workplace);
     }
 
+    accompanyOrder.plannedSearch = locations;
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
 }
 
