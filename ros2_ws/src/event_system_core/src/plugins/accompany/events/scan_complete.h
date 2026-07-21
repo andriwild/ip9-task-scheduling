@@ -4,6 +4,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "plugins/accompany/accompany_order.h"
+#include "util/log.h"
 
 class ScanComplete final : public IEvent {
     des::OrderPtr m_order;
@@ -29,6 +30,9 @@ public:
         const auto& personName = accompany.personName;
         const bool personPresent = ctx.robotSeesPerson(personName);
         if (personPresent) {
+            if (!ctx.getRobot()->isPersonVisible()) {
+                DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "Found %s in %s", personName.c_str(), ctx.getRobot()->getLocation().c_str());
+            }
             ctx.getRobot()->setIsPersonVisible(true);
             auto person = ctx.getPersonByName(personName);
             person->busy = true;

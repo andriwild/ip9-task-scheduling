@@ -31,6 +31,7 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
         int rejected    = 0;
     };
     std::map<des::ExecutionMode, MissionStats> missionsByMode;
+    std::map<int, MissionStats> scheduledPerDay;
 
     int moveTime              = 0;
     int lastTimeStateChanged  = 0;
@@ -99,6 +100,7 @@ public:
         maxLateness           = 0;
         hasLateMission        = false;
         missionsByMode.clear();
+        scheduledPerDay.clear();
         movedDistance         = 0.0;
         lastSoc               = -1.0;
         batteryCapacity       = 0.0;
@@ -181,24 +183,27 @@ public:
         missionsByMode[order->execution].registered++;
     }
 
-    void onMissionComplete(int /*time*/, const des::MissionState& state, const int timeDiff, des::ExecutionMode execution) override {
+    void onMissionComplete(int time, const des::MissionState& state, const int timeDiff, des::ExecutionMode execution) override {
         auto& s = missionsByMode[execution];
+        MissionStats* perDay = (execution == des::ExecutionMode::SCHEDULED) ? &scheduledPerDay[time / 86400] : nullptr;
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff > 0) {
                     s.late++;
+                    if (perDay) perDay->late++;
                     accMissionToLateTime += timeDiff;
                     if (!hasLateMission || timeDiff < minLateness) minLateness = timeDiff;
                     if (!hasLateMission || timeDiff > maxLateness) maxLateness = timeDiff;
                     hasLateMission = true;
                 } else {
                     s.onTime++;
+                    if (perDay) perDay->onTime++;
                     accMissionToEarlyTime += timeDiff;
                 }
                 break;
-            case des::MissionState::CANCELLED: s.cancelled++; break;
-            case des::MissionState::FAILED:    s.failed++;    break;
-            case des::MissionState::REJECTED:  s.rejected++;  break;
+            case des::MissionState::CANCELLED: s.cancelled++; if (perDay) perDay->cancelled++; break;
+            case des::MissionState::FAILED:    s.failed++;    if (perDay) perDay->failed++;    break;
+            case des::MissionState::REJECTED:  s.rejected++;  if (perDay) perDay->rejected++;  break;
             default: break;
         }
     }
@@ -294,13 +299,35 @@ public:
         return msg;
     }
 
+    void logSummary(const event_system_msgs::msg::MetricsReport& m) {
+        const auto log = rclcpp::get_logger("des.metrics.summary");
+        DES_LOG_INFO(log, "================= SIMULATION SUMMARY =================");
+        DES_LOG_INFO(log, "Scheduled  : total=%d  on-time=%d  late=%d  failed=%d  rejected=%d  (reject-rate=%.1f%%)",
+                     m.scheduled_total, m.scheduled_on_time, m.scheduled_late, m.scheduled_failed, m.scheduled_rejected, m.rejected_rate * 100.0f);
+        DES_LOG_INFO(log, "Background  : total=%d  completed=%d  failed=%d", m.background_total, m.background_completed, m.background_failed);
+        DES_LOG_INFO(log, "Interrupt   : total=%d  completed=%d", m.interrupt_total, m.interrupt_completed);
+        DES_LOG_INFO(log, "Lateness    : avg=%.0fs  min=%ds  max=%ds  avg-early=%.0fs", m.avg_lateness, m.min_lateness, m.max_lateness, m.avg_early_arrival);
+        DES_LOG_INFO(log, "Time [h]    : idle=%.1f  moving=%.1f  searching=%.1f  accompany=%.1f  charging=%.1f  talk=%.1f",
+                     m.idle_time / 3600.0, m.moving_time / 3600.0, m.searching_time / 3600.0, m.accompany_time / 3600.0, m.charging_time / 3600.0, m.talk_time / 3600.0);
+        DES_LOG_INFO(log, "Battery     : cycles=%d (full=%d, partial=%d)  deep-discharge=%d  avg-DoD=%.2f  equiv-cycles=%.1f",
+                     m.charge_cycles_total, m.charge_cycles_complete, m.charge_cycles_partial, m.deep_discharge_count, m.avg_depth_of_discharge, m.equivalent_full_cycles);
+        DES_LOG_INFO(log, "Movement    : distance=%.0fm  energy=%.1fAh", m.total_distance, m.energy_total_consumed_ah);
+        if (!scheduledPerDay.empty()) {
+            DES_LOG_INFO(log, "--- Scheduled missions per day ---");
+            DES_LOG_INFO(log, "day  completed  failed  rejected  success");
+            for (const auto& [day, s] : scheduledPerDay) {
+                const int completed = s.onTime + s.late;
+                const int dispatched = completed + s.failed;
+                const double success = dispatched > 0 ? 100.0 * completed / dispatched : 0.0;
+                DES_LOG_INFO(log, "%3d  %9d  %6d  %8d  %5.0f%%", day, completed, s.failed, s.rejected, success);
+            }
+        }
+        DES_LOG_INFO(log, "=====================================================");
+    }
+
     void publishReport() {
         const auto msg = buildReport();
-        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Publish Metrics");
-        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"),
-                     "Battery: cycles=%d (full=%d, partial=%d), chargingTime=%ds, deepDischarges=%d, equivFullCycles=%.2f, avgDoD=%.2f",
-                     msg.charge_cycles_total, msg.charge_cycles_complete, msg.charge_cycles_partial,
-                     msg.charging_time, msg.deep_discharge_count, msg.equivalent_full_cycles, msg.avg_depth_of_discharge);
+        logSummary(msg);
         if (!m_csvPath.empty() && m_csvConfig && hasLastState) {
             writeCsvRow(msg);
         }

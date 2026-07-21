@@ -19,7 +19,7 @@ void SimRunner::reloadSimulationData() {
     m_orders = loadOrders(m_config->appointmentsPath, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(m_config->appointmentsPath);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
-    auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    auto allPeople = ConfigLoader::loadEmployees(m_config->employeesPath);
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
     }

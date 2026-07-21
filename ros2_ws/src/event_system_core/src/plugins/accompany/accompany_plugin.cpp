@@ -138,6 +138,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 
 void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) {
     auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
+    order.state          = des::MissionState::IN_PROGRESS;
     const auto person    = ctx.getPersonByName(accompanyOrder.personName);
 
     std::vector<std::string> locations;

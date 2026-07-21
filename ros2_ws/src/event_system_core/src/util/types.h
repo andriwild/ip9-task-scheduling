@@ -129,6 +129,7 @@ struct SimConfig {
     double lunchDurationStd = 600.0;
     double simSpeedFactor = 0.0;
     std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
+    std::string employeesPath = "";
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -159,6 +160,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
+        os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;

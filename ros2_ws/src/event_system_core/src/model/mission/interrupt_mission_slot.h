@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../../util/log.h"
@@ -49,7 +50,8 @@ public:
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) popped", completedOrder->id, completedOrder->type.c_str());
             m_mission = nullptr;
         } else {
-            DES_LOG_WARN(rclcpp::get_logger("des.mission.interrupt"), "pop: order %d not active", completedOrder->id);
+            const std::string activeId = m_mission ? std::to_string(m_mission->id) : "none";
+            DES_LOG_WARN(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) completed but is not the active interrupt (active=%s) — already popped or superseded, ignoring", completedOrder->id, completedOrder->type.c_str(), activeId.c_str());
         }
     }
 

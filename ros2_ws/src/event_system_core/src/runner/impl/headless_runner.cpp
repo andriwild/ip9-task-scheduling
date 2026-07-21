@@ -19,7 +19,7 @@ void HeadlessRunner::setupApplication() {
     if (!std::filesystem::is_regular_file(m_config->appointmentsPath)) {
         throw std::runtime_error("Appointments file does not exist: " + m_config->appointmentsPath);
     }
-    auto allPeople = ConfigLoader::loadEmployees(CONFIG_PATH + "employee.json");
+    auto allPeople = ConfigLoader::loadEmployees(m_config->employeesPath);
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
     }
@@ -102,7 +102,7 @@ bool HeadlessRunner::loadNextBatch() {
 namespace {
 void logSightingSummary(const Robot& robot) {
     const auto sightings = robot.getSightings();
-    DES_LOG_INFO(rclcpp::get_logger("des.robot.sightings"), "Sightings recorded: %zu", sightings.size());
+    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.sightings"), "Sightings recorded: %zu", sightings.size());
 
     std::map<std::string, std::map<std::string, std::pair<int, int>>> counts;
     for (const auto& s : sightings) {
@@ -123,7 +123,7 @@ void logSightingSummary(const Robot& robot) {
         }
         std::sort(rows.begin(), rows.end(), std::greater<>());
         for (const auto& [rate, room, present, absent] : rows) {
-            DES_LOG_INFO(rclcpp::get_logger("des.robot.sightings"), "%-8s %-18s present=%4d absent=%4d rate=%.3f",
+            DES_LOG_DEBUG(rclcpp::get_logger("des.robot.sightings"), "%-8s %-18s present=%4d absent=%4d rate=%.3f",
                          person.c_str(), room.c_str(), present, absent, rate);
         }
     }

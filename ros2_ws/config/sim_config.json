@@ -31,6 +31,7 @@
     "departure_std": 3600.0,
     "dock_location": "IMVS_Dock",
     "drive_time_std": 0.10000000149011612,
+    "employees_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json",
     "energy_consumption_base": 56.0,
     "energy_consumption_drive": 26.0,
     "full_battery_threshold": 100.0,

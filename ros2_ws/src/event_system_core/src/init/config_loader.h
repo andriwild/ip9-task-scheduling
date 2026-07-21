@@ -223,6 +223,7 @@ public:
             } else {
                 config.appointmentsPath = "appointments.json";
             }
+            config.employeesPath = j.value("employees_path", DEFAULT_EMPLOYEE_FILE);
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personDetectionRange = j.value("person_detection_range", 5.0);
             config.personSpeed = j.value("person_speed", 1.4);
@@ -365,6 +366,7 @@ public:
         j["dock_location"] = config->dockLocation;
         j["cacheEnabled"] = config->cacheEnabled;
         j["appointments_path"] = config->appointmentsPath;
+        j["employees_path"] = config->employeesPath;
         j["people_spawn_location"] = config->peopleSpawnLocation;
         j["person_detection_range"] = config->personDetectionRange;
         j["person_speed"] = config->personSpeed;
