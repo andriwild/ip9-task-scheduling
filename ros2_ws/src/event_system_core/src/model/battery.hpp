@@ -18,6 +18,7 @@ class Battery {
     double m_taperFraction = 0.5;
     bool m_chargeToFull    = true;
     bool m_forceFull       = false; // runtime override: top up to full even if m_chargeToFull is false
+    bool m_depleted        = false;
 
     bool chargesToFull() const { return m_chargeToFull || m_forceFull; }
 
@@ -83,6 +84,7 @@ public:
 
         if (m_currentCapacity <= 0) {
             DES_LOG_ERROR(rclcpp::get_logger("des.battery"), "Battery discharged - no energy left");
+            m_depleted = true;
         }
         m_currentCapacity = clip(m_currentCapacity, 0.0, m_designCapacity);
     }
@@ -94,10 +96,13 @@ public:
     // Runtime override of the charge target, independent of the configured charge_to_full baseline.
     void setForceFull(const bool forceFull) { m_forceFull = forceFull; }
 
+    bool isDepleted() const { return m_depleted; }
+
     void reset(const int startTime) {
         m_lastBalanceUpdate = startTime;
         m_currentCapacity = m_initialCapacity;
         m_forceFull = false;
+        m_depleted = false;
         DES_LOG_INFO(rclcpp::get_logger("des.battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
     }
 

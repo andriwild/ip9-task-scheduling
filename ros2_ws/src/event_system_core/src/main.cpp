@@ -56,6 +56,7 @@ int main(const int argc, char *argv[]) {
     
 
     bool running = true;
+    bool batteryDepleted = false;
     auto sim_loop = [&] {
         DES_LOG_INFO(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
         app->m_eventQueue.print();
@@ -110,6 +111,12 @@ int main(const int argc, char *argv[]) {
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
                     DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+                    if (app->m_ctx->getRobot()->m_bat->isDepleted()) {
+                        DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Robot battery reached SoC 0 at %s — aborting simulation", des::toHumanReadableTime(e->time).c_str());
+                        batteryDepleted = true;
+                        running = false;
+                        break;
+                    }
                     if (e->getType() == des::EventType::SIMULATION_END) {
                         app->m_eventQueue.clear();
                         handleSimComplete();
@@ -134,5 +141,5 @@ int main(const int argc, char *argv[]) {
     app->shutdown();
     app.reset();
 
-    return 0;
+    return batteryDepleted ? EXIT_FAILURE : 0;
 }
