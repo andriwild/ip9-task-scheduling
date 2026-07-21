@@ -14,6 +14,7 @@
 #include "../util/log.h"
 #include "../util/types.h"
 #include "../observer/observer.h"
+#include "../plugins/accompany/accompany_order.h"
 #include "event_system_msgs/msg/metrics_report.hpp"
 
 class MetricsNode final : public rclcpp::Node, public IObserver {
@@ -29,6 +30,9 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
         int failed      = 0;
         int cancelled   = 0;
         int rejected    = 0;
+        int failOutside     = 0;
+        int failUnreachable = 0;
+        int failFindable    = 0;
     };
     std::map<des::ExecutionMode, MissionStats> missionsByMode;
     std::map<int, MissionStats> scheduledPerDay;
@@ -183,7 +187,9 @@ public:
         missionsByMode[order->execution].registered++;
     }
 
-    void onMissionComplete(int time, const des::MissionState& state, const int timeDiff, des::ExecutionMode execution) override {
+    void onMissionComplete(int time, const des::OrderPtr& order, const int timeDiff) override {
+        const auto state     = order->state;
+        const auto execution = order->execution;
         auto& s = missionsByMode[execution];
         MissionStats* perDay = (execution == des::ExecutionMode::SCHEDULED) ? &scheduledPerDay[time / 86400] : nullptr;
         switch (state) {
@@ -202,7 +208,20 @@ public:
                 }
                 break;
             case des::MissionState::CANCELLED: s.cancelled++; if (perDay) perDay->cancelled++; break;
-            case des::MissionState::FAILED:    s.failed++;    if (perDay) perDay->failed++;    break;
+            case des::MissionState::FAILED:
+                s.failed++;
+                if (perDay) {
+                    perDay->failed++;
+                    if (order->type == "accompany") {
+                        switch (static_cast<const AccompanyOrder&>(*order).abortReason) {
+                            case SearchAbortReason::OUTSIDE:                 perDay->failOutside++;     break;
+                            case SearchAbortReason::IN_BUILDING_UNREACHABLE: perDay->failUnreachable++; break;
+                            case SearchAbortReason::IN_BUILDING_FINDABLE:    perDay->failFindable++;    break;
+                            default: break;
+                        }
+                    }
+                }
+                break;
             case des::MissionState::REJECTED:  s.rejected++;  if (perDay) perDay->rejected++;  break;
             default: break;
         }
@@ -313,13 +332,23 @@ public:
                      m.charge_cycles_total, m.charge_cycles_complete, m.charge_cycles_partial, m.deep_discharge_count, m.avg_depth_of_discharge, m.equivalent_full_cycles);
         DES_LOG_INFO(log, "Movement    : distance=%.0fm  energy=%.1fAh", m.total_distance, m.energy_total_consumed_ah);
         if (!scheduledPerDay.empty()) {
-            DES_LOG_INFO(log, "--- Scheduled missions per day ---");
-            DES_LOG_INFO(log, "day  completed  failed  rejected  success");
+            int tCompl = 0, tOut = 0, tUnr = 0, tFind = 0;
+            for (const auto& [day, s] : scheduledPerDay) {
+                tCompl += s.onTime + s.late; tOut += s.failOutside; tUnr += s.failUnreachable; tFind += s.failFindable;
+            }
+            const int findDenTot = tCompl + tFind;
+            DES_LOG_INFO(log, "Accompany   : findable-success=%.1f%%  (completed=%d, findable-miss=%d)  outside=%d  unreachable=%d",
+                         findDenTot > 0 ? 100.0 * tCompl / findDenTot : 0.0, tCompl, tFind, tOut, tUnr);
+            DES_LOG_INFO(log, "--- Accompany per day (find%% ignores outside + unreachable) ---");
+            DES_LOG_INFO(log, "day  compl  fail  outside  unreach  findFail  raw%%  find%%");
             for (const auto& [day, s] : scheduledPerDay) {
                 const int completed = s.onTime + s.late;
                 const int dispatched = completed + s.failed;
-                const double success = dispatched > 0 ? 100.0 * completed / dispatched : 0.0;
-                DES_LOG_INFO(log, "%3d  %9d  %6d  %8d  %5.0f%%", day, completed, s.failed, s.rejected, success);
+                const int findDen = completed + s.failFindable;
+                const double raw  = dispatched > 0 ? 100.0 * completed / dispatched : 0.0;
+                const double find = findDen > 0 ? 100.0 * completed / findDen : 0.0;
+                DES_LOG_INFO(log, "%3d  %5d  %4d  %7d  %7d  %8d  %4.0f%%  %5.0f%%",
+                             day, completed, s.failed, s.failOutside, s.failUnreachable, s.failFindable, raw, find);
             }
         }
         DES_LOG_INFO(log, "=====================================================");

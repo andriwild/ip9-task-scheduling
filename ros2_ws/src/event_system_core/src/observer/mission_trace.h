@@ -1,0 +1,251 @@
+#pragma once
+
+#include <fstream>
+#include <map>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+#include <rclcpp/rclcpp.hpp>
+
+#include "observer.h"
+#include "../model/i_sim_context.h"
+#include "../model/robot.h"
+#include "../plugins/order_registry.h"
+#include "../plugins/accompany/accompany_order.h"
+#include "../util/log.h"
+#include "../util/types.h"
+
+class MissionTraceObserver final : public IObserver {
+public:
+    MissionTraceObserver(
+        const ISimContext* ctx,
+        des::LocationMap locationMap,
+        std::string outputPath) 
+        : m_ctx(ctx)
+        , m_locationMap(std::move(locationMap))
+        , m_outputPath(std::move(outputPath)) 
+    {}
+
+    std::string getName() override { return "MissionTrace"; }
+
+    void onRobotMoved(const int time, const std::string& location, const double /*distance*/) override {
+        auto* trace = active();
+        if (!trace) {
+            return;
+        }
+        appendRobot(*trace, time, location, "move");
+        snapshotPerson(*trace, time);
+    }
+
+    void onStateChanged(const int time, const des::RobotStateType& /*type*/, const std::string& name, des::BatteryProps /*bat*/) override {
+        auto* trace = active();
+        if (!trace) {
+            return;
+        }
+        if (name != trace->lastRobotState) {
+            trace->lastRobotState = name;
+            appendRobot(*trace, time, m_ctx->getRobot()->getLocation(), "state:" + name);
+        }
+    }
+
+    void onEvent(const int time, const des::EventType type, const std::string& /*message*/, const bool /*isDriving*/, const bool /*isCharging*/, const std::string& /*color*/ = "", const int missionId = -1) override {
+        if (type == des::EventType::SIMULATION_END) {
+            flush();
+            return;
+        }
+        if (isPersonEvent(type)) {
+            if (auto* trace = active()) {
+                snapshotPerson(*trace, time);
+            }
+        }
+        if (missionId >= 0 && type == des::EventType::ABORT_SEARCH) {
+            if (auto it = m_traces.find(missionId); it != m_traces.end()) {
+                appendRobot(it->second, time, m_ctx->getRobot()->getLocation(), "abort");
+            }
+        }
+    }
+
+    void onMissionComplete(const int /*time*/, const des::OrderPtr& order, const int /*timeDiff*/) override {
+        if (!order) {
+            return;
+        }
+        auto it = m_traces.find(order->id);
+        if (it == m_traces.end()) {
+            return;
+        }
+        it->second.outcome = des::missionStateStr(order->state);
+        if (order->type == "accompany") {
+            const auto& a = static_cast<const AccompanyOrder&>(*order);
+            switch (a.abortReason) {
+                case SearchAbortReason::OUTSIDE:                 it->second.outcome += " (person outside)"; break;
+                case SearchAbortReason::IN_BUILDING_FINDABLE:    it->second.outcome += " (missed in building)"; break;
+                case SearchAbortReason::IN_BUILDING_UNREACHABLE: it->second.outcome += " (unreachable room)"; break;
+                default: break;
+            }
+        }
+    }
+
+private:
+    struct Pt {
+        int time;
+        std::string location;
+        std::optional<double> x, y;
+        std::string event;
+    };
+
+    struct Trace {
+        int id = 0;
+        std::string type;
+        std::string personName;
+        std::string room;
+        std::optional<int> deadline;
+        std::string outcome;
+        std::vector<Pt> robot;
+        std::vector<Pt> personPath;
+        std::string lastPersonLoc;
+        std::string lastRobotState;
+    };
+
+    Trace* active() {
+        const auto order = m_ctx->getOrderPtr();
+        if (!order) {
+            return nullptr;
+        }
+        auto [it, inserted] = m_traces.try_emplace(order->id);
+        Trace& trace = it->second;
+        if (inserted) {
+            trace.id = order->id;
+            trace.type = order->type;
+            trace.deadline = order->deadline;
+            if (const auto target = OrderRegistry::instance().get(order->type).targetLocation(*order)) {
+                trace.room = *target;
+            }
+            if (order->type == "accompany") {
+                trace.personName = static_cast<const AccompanyOrder&>(*order).personName;
+                snapshotPerson(trace, m_ctx->getTime());
+            }
+        }
+        return &trace;
+    }
+
+    std::optional<std::pair<double, double>> coordsOf(const std::string& location) const {
+        const auto it = m_locationMap.find(location);
+        if (it == m_locationMap.end()) {
+            return std::nullopt;
+        }
+        return std::make_pair(it->second.m_p.m_x, it->second.m_p.m_y);
+    }
+
+    void appendRobot(Trace& trace, const int time, const std::string& location, const std::string& event) {
+        Pt pt{ time, location, std::nullopt, std::nullopt, event };
+        if (const auto c = coordsOf(location)) {
+            pt.x = c->first;
+            pt.y = c->second;
+        }
+        trace.robot.push_back(std::move(pt));
+    }
+
+    void snapshotPerson(Trace& trace, const int time) {
+        if (trace.personName.empty()) {
+            return;
+        }
+        const auto& locations = m_ctx->getAllPersonLocations();
+        const auto it = locations.find(trace.personName);
+        if (it == locations.end() || it->second == trace.lastPersonLoc) {
+            return;
+        }
+        trace.lastPersonLoc = it->second;
+        Pt pt{ time, it->second, std::nullopt, std::nullopt, "" };
+        if (const auto c = coordsOf(it->second)) {
+            pt.x = c->first;
+            pt.y = c->second;
+        }
+        trace.personPath.push_back(std::move(pt));
+    }
+
+    static bool isPersonEvent(const des::EventType type) {
+        switch (type) {
+            case des::EventType::PERSON_TRANSITION:
+            case des::EventType::PERSON_ARRIVED:
+            case des::EventType::PERSON_DEPARTURE:
+            case des::EventType::PERSON_ROOM_ARRIVED:
+            case des::EventType::PERSON_ACCOMPANY_DEPARTURE:
+            case des::EventType::PERSON_ACCOMPANY_ARRIVED:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    static nlohmann::json stepsToJson(const std::vector<Pt>& steps) {
+        nlohmann::json arr = nlohmann::json::array();
+        for (const auto& s : steps) {
+            nlohmann::json j;
+            j["t"] = s.time;
+            j["loc"] = s.location;
+            if (s.x) {
+                j["x"] = *s.x;
+            }
+            if (s.y) {
+                j["y"] = *s.y;
+            }
+            if (!s.event.empty()) {
+                j["event"] = s.event;
+            }
+            arr.push_back(std::move(j));
+        }
+        return arr;
+    }
+
+    std::string pathForFlush() const {
+        if (m_flushCount == 0) {
+            return m_outputPath;
+        }
+        const auto dot = m_outputPath.rfind(".json");
+        const std::string base = dot == std::string::npos ? m_outputPath : m_outputPath.substr(0, dot);
+        return base + "_r" + std::to_string(m_flushCount + 1) + ".json";
+    }
+
+    void flush() {
+        if (!m_outputPath.empty() && !m_traces.empty()) {
+            nlohmann::json root = nlohmann::json::array();
+            for (const auto& [id, trace] : m_traces) {
+                nlohmann::json m;
+                m["missionId"] = trace.id;
+                m["type"] = trace.type;
+                if (!trace.personName.empty()) {
+                    m["person"] = trace.personName;
+                }
+                if (!trace.room.empty()) {
+                    m["appointmentRoom"] = trace.room;
+                }
+                if (trace.deadline) {
+                    m["deadline"] = *trace.deadline;
+                }
+                m["outcome"] = trace.outcome;
+                m["robot"] = stepsToJson(trace.robot);
+                m["person_path"] = stepsToJson(trace.personPath);
+                root.push_back(std::move(m));
+            }
+            const std::string path = pathForFlush();
+            std::ofstream out(path);
+            if (out.is_open()) {
+                out << root.dump(2);
+                DES_LOG_INFO(rclcpp::get_logger("des.observer.trace"), "Mission trace written: %zu missions -> %s", m_traces.size(), path.c_str());
+            } else {
+                DES_LOG_ERROR(rclcpp::get_logger("des.observer.trace"), "Could not write mission trace: %s", path.c_str());
+            }
+        }
+        m_traces.clear();
+        m_flushCount++;
+    }
+
+    const ISimContext* m_ctx;
+    des::LocationMap m_locationMap;
+    std::string m_outputPath;
+    std::map<int, Trace> m_traces;
+    int m_flushCount = 0;
+};

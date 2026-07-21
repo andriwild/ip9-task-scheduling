@@ -40,9 +40,9 @@ public:
         }
     }
 
-    void notifyMissionComplete(int time, const des::MissionState& state, int timeDiff, des::ExecutionMode execution) const {
+    void notifyMissionComplete(int time, const des::OrderPtr& order, int timeDiff) const {
         for (const auto& obs : m_observers) {
-            obs->onMissionComplete(time, state, timeDiff, execution);
+            obs->onMissionComplete(time, order, timeDiff);
         }
     }
 

@@ -238,6 +238,7 @@ public:
             config.metricsCsvExport   = j.value("metrics_csv_export", true);
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
+            config.missionTraceExport = j.value("mission_trace_export", false);
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -381,6 +382,7 @@ public:
         j["metrics_csv_export"] = config->metricsCsvExport;
         j["replan_background_on_interrupt"] = config->replanBackgroundOnInterrupt;
         j["search_excluded_rooms"] = config->searchExcludedRooms;
+        j["mission_trace_export"] = config->missionTraceExport;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
