@@ -47,6 +47,7 @@
     "lunch_mean": 43200.0,
     "lunch_std": 1800.0,
     "metrics_csv_export": true,
+    "mission_trace_export": true,
     "people_spawn_location": "5.2B_Elevator",
     "person_detection_range": 2.5,
     "person_speed": 1.4,
@@ -57,7 +58,7 @@
         "Stairwell",
         "Dock"
     ],
-    "sim_duration": 259200,
+    "sim_duration": 2592000,
     "sim_speed_factor": 0.0,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,

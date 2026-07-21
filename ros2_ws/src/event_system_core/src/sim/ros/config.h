@@ -100,6 +100,7 @@ private:
             config.simSpeedFactor               = m_currentConfig->simSpeedFactor;
             config.searchExcludedRooms          = m_currentConfig->searchExcludedRooms;
             config.employeesPath                = m_currentConfig->employeesPath;
+            config.missionTraceExport           = m_currentConfig->missionTraceExport;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }

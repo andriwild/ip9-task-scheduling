@@ -365,7 +365,7 @@ TEST(EventExecute, AbortSearchInBuildingSetsReason) {
     AbortSearchEvent event(36000, order);
     event.execute(ctx);
 
-    EXPECT_EQ(order->abortReason, SearchAbortReason::IN_BUILDING);
+    EXPECT_EQ(order->abortReason, SearchAbortReason::IN_BUILDING_FINDABLE);
 }
 
 // --- StartAccompanyEvent ---

@@ -8,6 +8,7 @@
 #include <tuple>
 #include <vector>
 #include "../../behaviour/bt_setup.h"
+#include "../../observer/mission_trace.h"
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "../../model/event_queue.h"
 
@@ -47,6 +48,15 @@ void HeadlessRunner::setupApplication() {
         m_metricsNode->enableCsv(CONFIG_PATH + "../results/metrics_" + stamp + ".csv", m_config);
     }
     m_ctx->addObserver(m_metricsNode);
+
+    if (m_config->missionTraceExport) {
+        const std::time_t traceNow = std::time(nullptr);
+        char traceStamp[32];
+        std::strftime(traceStamp, sizeof(traceStamp), "%Y%m%d_%H%M%S", std::localtime(&traceNow));
+        const std::string tracePath = CONFIG_PATH + "../results/mission_trace_" + traceStamp + ".json";
+        m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_locationMap, tracePath));
+    }
+
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Rounds: %d, scenario: %s",

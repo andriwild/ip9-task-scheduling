@@ -50,8 +50,8 @@ public:
         stateChanges.push_back({time, type, name});
     }
 
-    void onMissionComplete(int time, const des::MissionState& state, int, des::ExecutionMode) override {
-        missionCompletions.emplace_back(time, state);
+    void onMissionComplete(int time, const des::OrderPtr& order, int) override {
+        missionCompletions.emplace_back(time, order->state);
     }
 
     void onRobotMoved(int time, const std::string& location, double) override {

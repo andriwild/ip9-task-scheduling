@@ -28,4 +28,5 @@ public:
 
     std::string getName() const override { return "End Information"; }
     des::EventType getType() const override { return des::EventType::INFORMATION; }
+    int priority() const override { return 1; }
 };

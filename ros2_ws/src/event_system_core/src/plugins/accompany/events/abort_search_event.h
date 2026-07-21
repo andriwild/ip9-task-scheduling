@@ -32,13 +32,18 @@ public:
                 DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"),
                              "Abort Search for %s: person is OUTSIDE the building", personName.c_str());
             } else {
-                accompany->abortReason = SearchAbortReason::IN_BUILDING;
+                const auto& excluded = ctx.getConfig()->searchExcludedRooms;
+                const bool unreachable = std::any_of(excluded.begin(), excluded.end(),
+                                                     [&](const std::string& p) { return loc.find(p) != std::string::npos; });
+                accompany->abortReason = unreachable ? SearchAbortReason::IN_BUILDING_UNREACHABLE
+                                                     : SearchAbortReason::IN_BUILDING_FINDABLE;
                 const auto& plan    = accompany->plannedSearch;
                 const bool searched = std::find(plan.begin(), plan.end(), loc) != plan.end();
                 DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"),
                              "Abort Search for %s: person was IN BUILDING at %s (%s)",
                              personName.c_str(), loc.c_str(),
-                             searched ? "searched room, timing miss" : "unsearched room, belief miss");
+                             unreachable ? "unreachable room (excluded from search)"
+                                         : (searched ? "searched room, timing miss" : "unsearched room, belief miss"));
             }
         }
         m_order->state = des::MissionState::FAILED;
@@ -49,11 +54,11 @@ public:
 
     std::string getName() const override {
         if (auto* a = dynamic_cast<AccompanyOrder*>(m_order.get())) {
-            if (a->abortReason == SearchAbortReason::OUTSIDE) {
-                return "Abort Search: person outside";
-            }
-            if (a->abortReason == SearchAbortReason::IN_BUILDING) {
-                return "Abort Search: missed in building";
+            switch (a->abortReason) {
+                case SearchAbortReason::OUTSIDE:                 return "Abort Search: person outside";
+                case SearchAbortReason::IN_BUILDING_UNREACHABLE: return "Abort Search: unreachable room";
+                case SearchAbortReason::IN_BUILDING_FINDABLE:    return "Abort Search: missed in building";
+                default: break;
             }
         }
         return "Abort Search";
@@ -61,11 +66,11 @@ public:
 
     std::string getColor() const override {
         if (auto* a = dynamic_cast<AccompanyOrder*>(m_order.get())) {
-            if (a->abortReason == SearchAbortReason::OUTSIDE) {
-                return "#9aa4b0";
-            }
-            if (a->abortReason == SearchAbortReason::IN_BUILDING) {
-                return "#d62728";
+            switch (a->abortReason) {
+                case SearchAbortReason::OUTSIDE:                 return "#9aa4b0";
+                case SearchAbortReason::IN_BUILDING_UNREACHABLE: return "#d0a020";
+                case SearchAbortReason::IN_BUILDING_FINDABLE:    return "#d62728";
+                default: break;
             }
         }
         return "";

@@ -63,11 +63,7 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
 }
 
 namespace {
-constexpr int kSearchGraspIterations = 200;
-constexpr int kEstimateGraspIterations = 8;
-constexpr float kSearchGraspAlpha    = 0.3f;
-constexpr int kSearchGraspSeed       = 42;
-
+// exclude rooms (e.g. elevator)
 bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded) {
     for (const auto& pattern : excluded) {
         if (name.find(pattern) != std::string::npos) {
@@ -82,7 +78,7 @@ struct SearchPlan {
     double energyWh;
 };
 
-std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc, int graspIterations) {
+std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc) {
     const auto person = ctx.getPersonByName(a.personName);
     const auto robot  = ctx.getRobot();
 
@@ -119,7 +115,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     if (!instance) {
         return std::nullopt;
     }
-    const auto route = op_solver::grasp(*instance, graspIterations, kSearchGraspAlpha, kSearchGraspSeed);
+    const auto route = op_solver::greedySearchOrder(*instance);
     if (route.empty()) {
         return std::nullopt;
     }
@@ -142,7 +138,7 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
     const auto person    = ctx.getPersonByName(accompanyOrder.personName);
 
     std::vector<std::string> locations;
-    if (auto plan = planPersonSearch(ctx, accompanyOrder, ctx.getRobot()->getLocation(), kSearchGraspIterations)) {
+    if (auto plan = planPersonSearch(ctx, accompanyOrder, ctx.getRobot()->getLocation())) {
         locations = std::move(plan->locations);
     }
     if (locations.empty()) {
@@ -227,7 +223,7 @@ double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, con
     const auto& sched = context.getScheduler();
 
     double searchWh;
-    if (auto plan = planPersonSearch(context, a, startLocation, kEstimateGraspIterations)) {
+    if (auto plan = planPersonSearch(context, a, startLocation)) {
         searchWh = plan->energyWh;
     } else {
         const auto person    = context.getPersonByName(a.personName);

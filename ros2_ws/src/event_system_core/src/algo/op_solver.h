@@ -219,4 +219,36 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     return bestSolution;
 }
 
+inline std::vector<int> greedySearchOrder(const OpInstance& op) {
+    std::vector<int> route;
+    std::vector<int> candidates = detail::taskCandidates(op);
+    int cur = op.params().startNodeId;
+    while (true) {
+        int bestPos = -1;
+        float bestVal = -1.0f;
+        for (std::size_t i = 0; i < candidates.size(); ++i) {
+            const int c = candidates[i];
+            route.push_back(c);
+            const bool feasible = op.simulateRoute(route).feasible;
+            route.pop_back();
+            if (!feasible) {
+                continue;
+            }
+            const float v = greedyValue(op, cur, c);
+            if (v > bestVal) {
+                bestVal = v;
+                bestPos = static_cast<int>(i);
+            }
+        }
+        if (bestPos < 0) {
+            break;
+        }
+        cur = candidates[bestPos];
+        route.push_back(cur);
+        std::swap(candidates[bestPos], candidates.back());
+        candidates.pop_back();
+    }
+    return route;
+}
+
 }  // namespace op_solver

@@ -5,7 +5,7 @@
 
 #include "plugins/i_order.h"
 
-enum class SearchAbortReason { NONE, OUTSIDE, IN_BUILDING };
+enum class SearchAbortReason { NONE, OUTSIDE, IN_BUILDING_FINDABLE, IN_BUILDING_UNREACHABLE };
 
 struct AccompanyOrder : des::IOrder {
     std::string personName;
