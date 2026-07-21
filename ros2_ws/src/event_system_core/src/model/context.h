@@ -271,8 +271,8 @@ public:
         m_eventBus.clear();
     }
 
-    void notifyMissionComplete(const des::MissionState& state, const int timeDiff, const des::ExecutionMode execution) const {
-        m_eventBus.notifyMissionComplete(m_currentTime, state, timeDiff, execution);
+    void notifyMissionComplete(const des::OrderPtr& order, const int timeDiff) const {
+        m_eventBus.notifyMissionComplete(m_currentTime, order, timeDiff);
     }
 
     void notifyRobotStateChanged() const {
