@@ -66,23 +66,20 @@ private:
         }
 
         visualization_msgs::msg::MarkerArray markers;
-        const auto& personLocations = m_ctx->getAllPersonLocations();
 
         for (const auto& [name, person] : m_employees) {
             auto marker = baseMarker(person->id);
 
-            const auto locIt = personLocations.find(name);
-            const auto roomIt = locIt != personLocations.end() ? m_locationMap.find(locIt->second) : m_locationMap.end();
-            if (roomIt == m_locationMap.end()) {
+            const auto pos = m_ctx->getPersonPosition(name);
+            if (!pos) {
                 marker.action = visualization_msgs::msg::Marker::DELETE;
                 markers.markers.push_back(marker);
                 continue;
             }
 
-            const auto [dx, dy] = spreadOffset(person->id);
             marker.action = visualization_msgs::msg::Marker::ADD;
-            marker.pose.position.x = roomIt->second.m_p.m_x + dx;
-            marker.pose.position.y = roomIt->second.m_p.m_y + dy;
+            marker.pose.position.x = pos->m_x;
+            marker.pose.position.y = pos->m_y;
             marker.pose.position.z = 0.2;
             marker.pose.orientation.w = 1.0;
             marker.color = colorFromHex(person->color);
@@ -102,11 +99,6 @@ private:
         marker.scale.y = 0.4;
         marker.scale.z = 0.4;
         return marker;
-    }
-
-    static std::pair<double, double> spreadOffset(const int id) {
-        const double angle = id * 2.399963;
-        return { 0.35 * std::cos(angle), 0.35 * std::sin(angle) };
     }
 
     static std_msgs::msg::ColorRGBA colorFromHex(const std::string& hex) {

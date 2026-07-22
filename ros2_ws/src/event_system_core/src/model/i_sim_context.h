@@ -91,6 +91,7 @@ public:
     virtual std::string getPersonLocation(const std::string& name) const = 0;
     virtual const std::map<std::string, std::string>& getAllPersonLocations() const = 0;
     virtual void setPersonLocation(const std::string& name, const std::string& room) = 0;
+    virtual std::optional<des::Point> getPersonPosition(const std::string& name) const = 0;
 
     virtual double getLocationArea(const std::string& name) const = 0;
 

@@ -228,6 +228,7 @@ public:
     void execute(ISimContext& ctx) override {
         auto& p = *this->person;
 
+        // accompany guard
         if (p.busy) {
             ctx.notifyEvent(*this);
             ctx.pushEvent(std::make_shared<PersonTransitionEvent>(busyRetryAt(ctx, this->time), this->person));

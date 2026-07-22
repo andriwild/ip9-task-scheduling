@@ -187,6 +187,9 @@ public:
     void setPersonLocation(const std::string& name, const std::string& room) override {
         personLocations[name] = room;
     }
+    std::optional<des::Point> getPersonPosition(const std::string& /*name*/) const override {
+        return std::nullopt;
+    }
     double getLocationArea(const std::string& /*name*/) const override { return 0.0; }
 
     bool robotSeesPerson(const std::string& name) const override {

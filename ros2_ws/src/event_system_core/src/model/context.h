@@ -20,6 +20,7 @@
 #include "../model/i_sim_context.h"
 #include "../util/log.h"
 #include "../util/types.h"
+#include "../util/geometry.h"
 #include "../model/event_queue.h"
 
 
@@ -38,13 +39,16 @@ class SimulationContext : public ISimContext {
     // TODO: make meaningful types
     std::map<std::string, std::shared_ptr<des::Person>> m_employees; // name and person object
     std::map<std::string, std::string> m_personLocations; // name and current person location
+    std::map<std::string, des::Point> m_personPos; // name and sampled in-room position
     std::map<std::pair<std::string, std::string>, int> m_lastServiced; // (room, type) -> last completion time
     std::unique_ptr<Scheduler> m_scheduler;
 
 public:
     static constexpr unsigned int DEFAULT_SEED = 42;
+    static constexpr unsigned int PLACEMENT_SEED = 1337;
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
     mutable std::mt19937 m_rng{DEFAULT_SEED};
+    std::mt19937 m_placementRng{PLACEMENT_SEED};
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::shared_ptr<Robot> m_robot;
@@ -136,6 +140,30 @@ public:
 
     void setPersonLocation(const std::string& name, const std::string& room) override {
         m_personLocations[name] = room;
+        if (const auto pos = samplePosition(room)) {
+            m_personPos[name] = *pos;
+        } else {
+            m_personPos.erase(name);
+        }
+    }
+
+    std::optional<des::Point> getPersonPosition(const std::string& name) const override {
+        const auto it = m_personPos.find(name);
+        if (it == m_personPos.end()) {
+            return std::nullopt;
+        }
+        return it->second;
+    }
+
+    std::optional<des::Point> samplePosition(const std::string& room) {
+        const auto it = m_locationMap.find(room);
+        if (it == m_locationMap.end()) {
+            return std::nullopt;
+        }
+        if (const auto pos = geom::sampleInPolygon(it->second.m_footprint, m_placementRng)) {
+            return pos;
+        }
+        return it->second.m_p;
     }
 
     bool robotSeesPerson(const std::string& name) const override {

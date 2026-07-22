@@ -168,9 +168,9 @@ private:
         }
         trace.lastPersonLoc = it->second;
         Pt pt{ time, it->second, std::nullopt, std::nullopt, "" };
-        if (const auto c = coordsOf(it->second)) {
-            pt.x = c->first;
-            pt.y = c->second;
+        if (const auto pos = m_ctx->getPersonPosition(trace.personName)) {
+            pt.x = pos->m_x;
+            pt.y = pos->m_y;
         }
         trace.personPath.push_back(std::move(pt));
     }
@@ -189,9 +189,9 @@ private:
             }
             track.lastLoc = loc;
             Pt pt{ time, loc, std::nullopt, std::nullopt, "" };
-            if (const auto c = coordsOf(loc)) {
-                pt.x = c->first;
-                pt.y = c->second;
+            if (const auto pos = m_ctx->getPersonPosition(name)) {
+                pt.x = pos->m_x;
+                pt.y = pos->m_y;
             }
             track.path.push_back(std::move(pt));
         }
