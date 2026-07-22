@@ -37,7 +37,7 @@ double ChargeState::getEnergyConsumption(const ISimContext& ctx) const {
     if (ctx.getRobot()->isDriving()) {
         energyConsumption = ctx.getConfig()->energyConsumptionDrive;
     } else if (ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation()) {
-        return ctx.getRobot()->m_bat->chargingConsumption(ctx.getConfig()->chargingRate, ctx.getConfig()->energyConsumptionBase);
+        return ctx.getRobot()->chargingConsumption(ctx.getConfig()->chargingRate, ctx.getConfig()->energyConsumptionBase);
     }
     return energyConsumption;
 }

@@ -107,8 +107,8 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         ? frequencyReward(robot->getSightings(), a.personName, universe)
         : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe);
 
-    const auto bat          = robot->m_bat->getStats();
-    const double voltage    = robot->m_bat->getVoltage();
+    const auto bat          = robot->batteryStats();
+    const double voltage    = robot->batteryVoltage();
     const double currentWh  = bat.soc * bat.capacity * voltage;
     const double capacityWh = bat.capacity * voltage;
     const double reserveWh  = capacityWh * bat.lowThreshold / 100.0;

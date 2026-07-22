@@ -30,109 +30,68 @@ class Robot {
 
     std::weak_ptr<IEvent> m_inFlightEvent;
 
+    std::unique_ptr<Battery> m_bat;
+
 public:
     bool m_batteryFullEventScheduled = false;
     bool m_opportunisticCharge = false;
-    std::unique_ptr<Battery> m_bat;
 
-    explicit Robot(const std::shared_ptr<des::SimConfig> &config)
-        : m_state(std::make_unique<IdleState>())
-    {
-        m_driveSpeed = config->robotSpeed;
-
-        m_bat = std::make_unique<Battery>(
-            config->batteryCapacity,
-            config->initialBatteryCapacity,
-            config->lowBatteryThreshold,
-            config->fullBatteryThreshold,
-            config->batteryVoltage,
-            config->cvThreshold,
-            config->taperFraction,
-            config->chargeToFull
-        );
-        setLocation(m_dockLocation);
-    }
+    explicit Robot(const std::shared_ptr<des::SimConfig>& config);
 
     bool isBusy() const;
     void updateConfig(const des::SimConfig& config);
 
-    std::string getLocation() const { return m_currentLocation; };
-    void setLocation(const std::string &location) { 
-        m_currentLocation = location;
-        if (m_currentLocation == getIdleLocation()) {
-           m_isCharging = true;
-        }
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot location set to: %s", location.c_str());
-    }
+    std::string getLocation() const;
+    void setLocation(const std::string& location);
 
-    std::string getTargetLocation() const { return m_targetLocation; }
-    void setTargetLocation(const std::string &location) { 
-        m_targetLocation = location; 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot target location set to: %s", location.c_str());
-    }
+    std::string getTargetLocation() const;
+    void setTargetLocation(const std::string& location);
 
     void changeState(std::unique_ptr<RobotState> newState);
-    RobotState* getState() const { return m_state.get(); }
+    RobotState* getState() const;
 
-    bool isDriving() const { return m_isDriving; }
-    bool isPersonVisible() const { return m_isPersonVisible; }
-    bool setIsPersonVisible(const bool isPersonVisible) { return m_isPersonVisible = isPersonVisible; }
+    bool isDriving() const;
+    bool isPersonVisible() const;
+    bool setIsPersonVisible(const bool isPersonVisible);
 
-    void setDriving(const bool isDriving) { 
-        m_isDriving = isDriving; 
-    }
+    void setDriving(const bool isDriving);
 
-    bool isCharging() const { return m_isCharging; }
-    void setCharging(const bool isCharging) { 
-        m_isCharging = isCharging; 
-    }
+    bool isCharging() const;
+    void setCharging(const bool isCharging);
 
-    bool isScanning() const { return m_isScanning; }
-    void setScanning(const bool isScanning) { 
-        m_isScanning = isScanning; 
-    }
+    bool isScanning() const;
+    void setScanning(const bool isScanning);
 
-    bool updateAndGetChargingRequired() {
-        m_chargingRequired = false;
-        if (m_bat->isBatteryLow()) {
-            m_chargingRequired = true;
-        }
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot charging required: %d", m_chargingRequired);
-        return m_chargingRequired;
-    }
-    void setChargingRequired(const bool isChargingRequired) { 
-        m_chargingRequired = isChargingRequired; 
-    }
+    bool updateAndGetChargingRequired();
+    void setChargingRequired(const bool isChargingRequired);
 
-    des::RobotStateType getStateType() const { return m_state->getType(); }
+    des::BatteryProps batteryStats() const;
+    double batteryVoltage() const;
+    bool isBatteryLow() const;
+    bool isBatteryDepleted() const;
+    bool isBatteryFullyCharged() const;
+    double batteryTimeToFull(const double phaseOnePowerWatts) const;
+    double batteryTimeToPhaseTransition(const double phaseOnePowerWatts) const;
+    double chargingConsumption(const double chargingRate, const double baseConsumption) const;
+    void updateBatteryBalance(const int time, const double energyConsumption);
+    void completeCharge();
+    void setBatteryForceFull(const bool forceFull);
 
-    double getCurrentSpeed() const { return m_currentSpeed; }
-    void setSpeed(const double newSpeed) { 
-        m_currentSpeed = newSpeed; 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot speed set to: %.2f", newSpeed);
-    }
+    des::RobotStateType getStateType() const;
 
-    double getDriveSpeed() const { return m_driveSpeed; }
-    void setDriveSpeed(const double speed) { 
-        m_driveSpeed = speed; 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot drive speed set to: %.2f", speed);
-    }
+    double getCurrentSpeed() const;
+    void setSpeed(const double newSpeed);
 
-    std::string getIdleLocation() const { return m_dockLocation; }
-    void setIdleLocation(const std::string &location) {
-        m_dockLocation = location;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot idle/dock location set to: %s", location.c_str());
-    }
+    double getDriveSpeed() const;
+    void setDriveSpeed(const double speed);
 
-    std::weak_ptr<IEvent> inFlight() const { return m_inFlightEvent; }
-    void setInFlight(const std::shared_ptr<IEvent>& event) { m_inFlightEvent = event; }
-    void clearInFlight() { m_inFlightEvent.reset(); }
+    std::string getIdleLocation() const;
+    void setIdleLocation(const std::string& location);
 
-    void addSighting(const Sighting& sighting) {
-        m_sightings.push_back(sighting);
-    }
+    std::weak_ptr<IEvent> inFlight() const;
+    void setInFlight(const std::shared_ptr<IEvent>& event);
+    void clearInFlight();
 
-    const std::vector<Sighting>& getSightings() const {
-        return m_sightings;
-    }
+    void addSighting(const Sighting& sighting);
+    const std::vector<Sighting>& getSightings() const;
 };

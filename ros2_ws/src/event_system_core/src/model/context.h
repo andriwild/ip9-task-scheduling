@@ -43,7 +43,6 @@ class SimulationContext : public ISimContext {
     std::map<std::pair<std::string, std::string>, int> m_lastServiced; // (room, type) -> last completion time
     std::unique_ptr<Scheduler> m_scheduler;
 
-public:
     static constexpr unsigned int DEFAULT_SEED = 42;
     static constexpr unsigned int PLACEMENT_SEED = 1337;
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
@@ -54,6 +53,7 @@ public:
     std::shared_ptr<Robot> m_robot;
     des::LocationMap m_locationMap;
 
+public:
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
@@ -278,8 +278,8 @@ public:
 
     void advanceTime(const int newTime) {
         assert(newTime >= m_currentTime);
-        m_robot->m_bat->updateBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
-        if (m_robot->m_bat->isBatteryLow()) {
+        m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
+        if (m_robot->isBatteryLow()) {
             m_robot->setChargingRequired(true);
         }
         m_currentTime = newTime;
@@ -310,7 +310,7 @@ public:
         if (type == des::RobotStateType::IDLE && m_robot->isDriving() && m_robot->getTargetLocation() == m_robot->getIdleLocation()) {
             name = "returning";
         }
-        m_eventBus.notifyStateChanged(m_currentTime, type, name, m_robot->m_bat->getStats());
+        m_eventBus.notifyStateChanged(m_currentTime, type, name, m_robot->batteryStats());
     }
 
     void notifyBatteryChanged() const override {
@@ -341,8 +341,8 @@ public:
 
     bool pushInterrupt(const des::OrderPtr& order) override {
         assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
-        if (m_robot->m_bat->isBatteryLow()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->m_bat->getStats().soc * 100.0);
+        if (m_robot->isBatteryLow()) {
+            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->batteryStats().soc * 100.0);
             return false;
         }
         if (!m_interruptMission.push(order, m_currentMission)) {

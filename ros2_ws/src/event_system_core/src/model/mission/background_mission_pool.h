@@ -82,8 +82,8 @@ public:
         if (m_missions.empty()) { return; }
 
         const auto robot            = ctx.getRobot();
-        const auto batStats         = robot->m_bat->getStats();
-        const double voltage        = robot->m_bat->getVoltage();
+        const auto batStats         = robot->batteryStats();
+        const double voltage        = robot->batteryVoltage();
         const double currentWh      = batStats.soc * batStats.capacity * voltage;
         const double capacityWh     = batStats.capacity * voltage;
         const auto cfg              = ctx.getConfig();

@@ -114,7 +114,7 @@ int main(const int argc, char *argv[]) {
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
                     DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
-                    if (app->m_ctx->getRobot()->m_bat->isDepleted()) {
+                    if (app->m_ctx->getRobot()->isBatteryDepleted()) {
                         DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Robot battery reached SoC 0 at %s — aborting simulation", des::toHumanReadableTime(e->time).c_str());
                         batteryDepleted = true;
                         running = false;

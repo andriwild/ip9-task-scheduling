@@ -159,8 +159,8 @@ public:
         const bool timeFeasible = plugin.isFeasible(*order, *ctx);
 
         const auto robot       = ctx->getRobot();
-        const auto bat         = robot->m_bat->getStats();
-        const double voltage   = robot->m_bat->getVoltage();
+        const auto bat         = robot->batteryStats();
+        const double voltage   = robot->batteryVoltage();
         const double currentWh = bat.soc * bat.capacity * voltage;
         const double reserveWh = (bat.lowThreshold / 100.0) * bat.capacity * voltage;
         const double missionWh = plugin.estimateMissionEnergy(*order, *ctx, robot->getLocation());

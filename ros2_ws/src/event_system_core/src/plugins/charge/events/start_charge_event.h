@@ -28,9 +28,9 @@ public:
 
         assert(ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation());
         const double netChargingPower = ctx.getConfig()->chargingRate - ctx.getConfig()->energyConsumptionBase;
-        const double timeToFull       = ctx.getRobot()->m_bat->timeToFull(netChargingPower);
+        const double timeToFull       = ctx.getRobot()->batteryTimeToFull(netChargingPower);
 
-        const double timeToTransition = ctx.getRobot()->m_bat->timeToPhaseTransition(netChargingPower);
+        const double timeToTransition = ctx.getRobot()->batteryTimeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
             ctx.pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(this->time + timeToTransition)));
         }

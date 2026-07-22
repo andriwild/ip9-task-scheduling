@@ -160,7 +160,7 @@ protected:
             throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
         }
 
-        scheduleOccupancy(*m_config, m_people.value(), m_ctx->m_rng);
+        scheduleOccupancy(*m_config, m_people.value(), m_ctx->rng());
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
         m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 

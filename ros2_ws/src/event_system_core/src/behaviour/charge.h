@@ -60,7 +60,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        return ctx->getRobot()->m_bat->isFullyCharged() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        return ctx->getRobot()->isBatteryFullyCharged() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
@@ -144,7 +144,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx       = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundMission();
-        ctx->getRobot()->m_bat->setForceFull(forceFull);
+        ctx->getRobot()->setBatteryForceFull(forceFull);
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -167,14 +167,14 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
 
-        ctx->getRobot()->m_opportunisticCharge = !ctx->getRobot()->m_bat->isBatteryLow();
+        ctx->getRobot()->m_opportunisticCharge = !ctx->getRobot()->isBatteryLow();
 
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
-        const double timeToFull = ctx->getRobot()->m_bat->timeToFull(netChargingPower);
+        const double timeToFull = ctx->getRobot()->batteryTimeToFull(netChargingPower);
 
         ctx->pushEvent(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull)));
 
-        const double timeToTransition = ctx->getRobot()->m_bat->timeToPhaseTransition(netChargingPower);
+        const double timeToTransition = ctx->getRobot()->batteryTimeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
             ctx->pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(ctx->getTime() + timeToTransition)));
             DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Phase transition in: %.1fs", timeToTransition);
