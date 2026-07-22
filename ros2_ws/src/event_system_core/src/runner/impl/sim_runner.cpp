@@ -26,8 +26,8 @@ void SimRunner::reloadSimulationData() {
 
     ConfigLoader::validateConfig(m_orders, allPeople.value(), m_locationMap, "5.2B_Elevator");
 
-    m_people = ConfigLoader::filterByAppointments(allPeople.value(), m_orders);
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu of %zu employees", m_people.value().size(), allPeople.value().size());
+    m_people = allPeople.value();
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", m_people.value().size());
 
     m_employees.clear();
     for (const auto& p: m_people.value()) {

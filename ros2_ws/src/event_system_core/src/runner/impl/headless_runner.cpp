@@ -100,9 +100,9 @@ bool HeadlessRunner::loadNextBatch() {
 
     ConfigLoader::validateConfig(m_orders, m_allPeople, m_locationMap, "5.2B_Elevator");
 
-    m_people = ConfigLoader::filterByAppointments(m_allPeople, m_orders);
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu of %zu employees",
-                m_people.value().size(), m_allPeople.size());
+    m_people = m_allPeople;
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees",
+                m_people.value().size());
 
     populateEventQueue();
     m_eventQueue.print();
