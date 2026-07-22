@@ -76,6 +76,23 @@ inline DistributionType distributionTypeFromString(const std::string& str) {
     return DistributionType::NORMAL;
 }
 
+enum class SearchRewardStrategy {
+    BETA_SMOOTHED,
+    FREQUENCY
+};
+
+inline std::string searchRewardStrategyToString(const SearchRewardStrategy strategy) {
+    switch (strategy) {
+        case SearchRewardStrategy::FREQUENCY: return "frequency";
+        default:                              return "beta_smoothed";
+    }
+}
+
+inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& str) {
+    if (str == "frequency") return SearchRewardStrategy::FREQUENCY;
+    return SearchRewardStrategy::BETA_SMOOTHED;
+}
+
 enum class ExecutionMode {
     SCHEDULED,
     BACKGROUND,
@@ -131,6 +148,7 @@ struct SimConfig {
     std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
     std::string employeesPath = "";
     bool missionTraceExport = false;
+    SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -163,6 +181,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "missionTraceExport" << ": " << config.missionTraceExport << std::endl;
+        os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;

@@ -32,3 +32,19 @@ inline std::vector<OpNode> occupancyProbability(const std::vector<Sighting>& sig
     return nodes;
 
 }
+
+inline std::vector<OpNode> frequencyReward(const std::vector<Sighting>& sightings, const std::string& person, const std::vector<std::string>& allRooms) {
+    std::vector<OpNode> nodes;
+    for(const auto& room: allRooms) {
+        int hits = 0;
+        for(const auto& s: sightings) {
+            if(s.personName == person && s.location == room && s.kind == SightingKind::PRESENT) {
+                hits++;
+            }
+        }
+        if(hits > 0) {
+            nodes.push_back({room, static_cast<float>(hits)});
+        }
+    }
+    return nodes;
+}

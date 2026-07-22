@@ -101,6 +101,7 @@ private:
             config.searchExcludedRooms          = m_currentConfig->searchExcludedRooms;
             config.employeesPath                = m_currentConfig->employeesPath;
             config.missionTraceExport           = m_currentConfig->missionTraceExport;
+            config.searchRewardStrategy         = m_currentConfig->searchRewardStrategy;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }
