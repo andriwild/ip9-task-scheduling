@@ -1,13 +1,366 @@
 {
     "orders": [],
     "background": [
-        { "id": 100, "type": "clean",            "roomName": "5.2B01", "description": "Raum 5.2B01 reinigen" },
-        { "id": 101, "type": "data_acquisition", "roomName": "5.2B01", "description": "Foto 5.2B01" },
-        { "id": 102, "type": "clean",            "roomName": "5.2B03", "description": "Raum 5.2B03 reinigen" },
-        { "id": 103, "type": "data_acquisition", "roomName": "5.2B13", "description": "Foto 5.2B13" },
-        { "id": 104, "type": "clean",            "roomName": "5.2B15", "description": "Raum 5.2B15 reinigen" },
-        { "id": 105, "type": "data_acquisition", "roomName": "5.2A15", "description": "Foto 5.2A15" },
-        { "id": 106, "type": "clean",            "roomName": "5.2C07", "description": "Raum 5.2C07 reinigen" }
+        {
+            "id": 100,
+            "type": "clean",
+            "roomName": "5.2A01",
+            "description": "Raum 5.2A01 reinigen"
+        },
+        {
+            "id": 101,
+            "type": "clean",
+            "roomName": "5.2A02",
+            "description": "Raum 5.2A02 reinigen"
+        },
+        {
+            "id": 102,
+            "type": "clean",
+            "roomName": "5.2A04",
+            "description": "Raum 5.2A04 reinigen"
+        },
+        {
+            "id": 103,
+            "type": "clean",
+            "roomName": "5.2A05",
+            "description": "Raum 5.2A05 reinigen"
+        },
+        {
+            "id": 104,
+            "type": "clean",
+            "roomName": "5.2A07",
+            "description": "Raum 5.2A07 reinigen"
+        },
+        {
+            "id": 105,
+            "type": "clean",
+            "roomName": "5.2A10",
+            "description": "Raum 5.2A10 reinigen"
+        },
+        {
+            "id": 106,
+            "type": "clean",
+            "roomName": "5.2A12",
+            "description": "Raum 5.2A12 reinigen"
+        },
+        {
+            "id": 107,
+            "type": "clean",
+            "roomName": "5.2A13",
+            "description": "Raum 5.2A13 reinigen"
+        },
+        {
+            "id": 108,
+            "type": "clean",
+            "roomName": "5.2A14",
+            "description": "Raum 5.2A14 reinigen"
+        },
+        {
+            "id": 109,
+            "type": "clean",
+            "roomName": "5.2A15",
+            "description": "Raum 5.2A15 reinigen"
+        },
+        {
+            "id": 110,
+            "type": "clean",
+            "roomName": "5.2A17",
+            "description": "Raum 5.2A17 reinigen"
+        },
+        {
+            "id": 111,
+            "type": "clean",
+            "roomName": "5.2A32",
+            "description": "Raum 5.2A32 reinigen"
+        },
+        {
+            "id": 112,
+            "type": "clean",
+            "roomName": "5.2A34",
+            "description": "Raum 5.2A34 reinigen"
+        },
+        {
+            "id": 113,
+            "type": "clean",
+            "roomName": "5.2A38",
+            "description": "Raum 5.2A38 reinigen"
+        },
+        {
+            "id": 114,
+            "type": "clean",
+            "roomName": "5.2B01",
+            "description": "Raum 5.2B01 reinigen"
+        },
+        {
+            "id": 115,
+            "type": "clean",
+            "roomName": "5.2B03",
+            "description": "Raum 5.2B03 reinigen"
+        },
+        {
+            "id": 116,
+            "type": "clean",
+            "roomName": "5.2B04",
+            "description": "Raum 5.2B04 reinigen"
+        },
+        {
+            "id": 117,
+            "type": "clean",
+            "roomName": "5.2B05",
+            "description": "Raum 5.2B05 reinigen"
+        },
+        {
+            "id": 118,
+            "type": "clean",
+            "roomName": "5.2B06",
+            "description": "Raum 5.2B06 reinigen"
+        },
+        {
+            "id": 119,
+            "type": "clean",
+            "roomName": "5.2B10",
+            "description": "Raum 5.2B10 reinigen"
+        },
+        {
+            "id": 120,
+            "type": "clean",
+            "roomName": "5.2B13",
+            "description": "Raum 5.2B13 reinigen"
+        },
+        {
+            "id": 121,
+            "type": "clean",
+            "roomName": "5.2B15",
+            "description": "Raum 5.2B15 reinigen"
+        },
+        {
+            "id": 122,
+            "type": "clean",
+            "roomName": "5.2B17",
+            "description": "Raum 5.2B17 reinigen"
+        },
+        {
+            "id": 123,
+            "type": "clean",
+            "roomName": "5.2B18",
+            "description": "Raum 5.2B18 reinigen"
+        },
+        {
+            "id": 124,
+            "type": "clean",
+            "roomName": "5.2B31",
+            "description": "Raum 5.2B31 reinigen"
+        },
+        {
+            "id": 125,
+            "type": "clean",
+            "roomName": "5.2B33",
+            "description": "Raum 5.2B33 reinigen"
+        },
+        {
+            "id": 126,
+            "type": "clean",
+            "roomName": "5.2B34",
+            "description": "Raum 5.2B34 reinigen"
+        },
+        {
+            "id": 127,
+            "type": "clean",
+            "roomName": "5.2C01",
+            "description": "Raum 5.2C01 reinigen"
+        },
+        {
+            "id": 128,
+            "type": "clean",
+            "roomName": "5.2C03",
+            "description": "Raum 5.2C03 reinigen"
+        },
+        {
+            "id": 129,
+            "type": "clean",
+            "roomName": "5.2C05",
+            "description": "Raum 5.2C05 reinigen"
+        },
+        {
+            "id": 130,
+            "type": "clean",
+            "roomName": "5.2C07",
+            "description": "Raum 5.2C07 reinigen"
+        },
+        {
+            "id": 131,
+            "type": "clean",
+            "roomName": "5.2C08",
+            "description": "Raum 5.2C08 reinigen"
+        },
+        {
+            "id": 132,
+            "type": "clean",
+            "roomName": "5.2C19",
+            "description": "Raum 5.2C19 reinigen"
+        },
+        {
+            "id": 133,
+            "type": "clean",
+            "roomName": "5.2C30",
+            "description": "Raum 5.2C30 reinigen"
+        },
+        {
+            "id": 134,
+            "type": "clean",
+            "roomName": "5.2C52",
+            "description": "Raum 5.2C52 reinigen"
+        },
+        {
+            "id": 135,
+            "type": "clean",
+            "roomName": "5.2C54",
+            "description": "Raum 5.2C54 reinigen"
+        },
+        {
+            "id": 136,
+            "type": "clean",
+            "roomName": "5.2C56",
+            "description": "Raum 5.2C56 reinigen"
+        },
+        {
+            "id": 137,
+            "type": "clean",
+            "roomName": "5.2C59",
+            "description": "Raum 5.2C59 reinigen"
+        },
+        {
+            "id": 138,
+            "type": "clean",
+            "roomName": "5.2D02",
+            "description": "Raum 5.2D02 reinigen"
+        },
+        {
+            "id": 139,
+            "type": "clean",
+            "roomName": "5.2D11",
+            "description": "Raum 5.2D11 reinigen"
+        },
+        {
+            "id": 140,
+            "type": "data_acquisition",
+            "roomName": "5.2A01",
+            "description": "Foto 5.2A01"
+        },
+        {
+            "id": 141,
+            "type": "data_acquisition",
+            "roomName": "5.2A04",
+            "description": "Foto 5.2A04"
+        },
+        {
+            "id": 142,
+            "type": "data_acquisition",
+            "roomName": "5.2A07",
+            "description": "Foto 5.2A07"
+        },
+        {
+            "id": 143,
+            "type": "data_acquisition",
+            "roomName": "5.2A12",
+            "description": "Foto 5.2A12"
+        },
+        {
+            "id": 144,
+            "type": "data_acquisition",
+            "roomName": "5.2A14",
+            "description": "Foto 5.2A14"
+        },
+        {
+            "id": 145,
+            "type": "data_acquisition",
+            "roomName": "5.2A17",
+            "description": "Foto 5.2A17"
+        },
+        {
+            "id": 146,
+            "type": "data_acquisition",
+            "roomName": "5.2A34",
+            "description": "Foto 5.2A34"
+        },
+        {
+            "id": 147,
+            "type": "data_acquisition",
+            "roomName": "5.2B01",
+            "description": "Foto 5.2B01"
+        },
+        {
+            "id": 148,
+            "type": "data_acquisition",
+            "roomName": "5.2B04",
+            "description": "Foto 5.2B04"
+        },
+        {
+            "id": 149,
+            "type": "data_acquisition",
+            "roomName": "5.2B06",
+            "description": "Foto 5.2B06"
+        },
+        {
+            "id": 150,
+            "type": "data_acquisition",
+            "roomName": "5.2B13",
+            "description": "Foto 5.2B13"
+        },
+        {
+            "id": 151,
+            "type": "data_acquisition",
+            "roomName": "5.2B17",
+            "description": "Foto 5.2B17"
+        },
+        {
+            "id": 152,
+            "type": "data_acquisition",
+            "roomName": "5.2B31",
+            "description": "Foto 5.2B31"
+        },
+        {
+            "id": 153,
+            "type": "data_acquisition",
+            "roomName": "5.2B34",
+            "description": "Foto 5.2B34"
+        },
+        {
+            "id": 154,
+            "type": "data_acquisition",
+            "roomName": "5.2C03",
+            "description": "Foto 5.2C03"
+        },
+        {
+            "id": 155,
+            "type": "data_acquisition",
+            "roomName": "5.2C07",
+            "description": "Foto 5.2C07"
+        },
+        {
+            "id": 156,
+            "type": "data_acquisition",
+            "roomName": "5.2C19",
+            "description": "Foto 5.2C19"
+        },
+        {
+            "id": 157,
+            "type": "data_acquisition",
+            "roomName": "5.2C52",
+            "description": "Foto 5.2C52"
+        },
+        {
+            "id": 158,
+            "type": "data_acquisition",
+            "roomName": "5.2C56",
+            "description": "Foto 5.2C56"
+        },
+        {
+            "id": 159,
+            "type": "data_acquisition",
+            "roomName": "5.2D02",
+            "description": "Foto 5.2D02"
+        }
     ],
     "ad_hoc_generators": []
 }

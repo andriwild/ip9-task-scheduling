@@ -6,7 +6,8 @@
 #include <random>
 #include <vector>
 
-#include "op.h"
+#include "../op.h"
+#include "../op_solver_common.h"
 
 namespace op_solver {
 
@@ -19,15 +20,6 @@ inline int nearestStation(const OpInstance& op, const int from) {
         }
     }
     return best;
-}
-
-inline float greedyValue(const OpInstance& op, const int curId, const int candIdx) {
-    const auto& p = op.params();
-    const float d = op.distance(curId, candIdx);
-    const float driveLoad_e = d * p.driveEnergy / p.energyBudget;
-    const float driveLoad_t = d / p.driveSpeed  / p.timeBudget;
-    const float driveLoad   = std::max({ driveLoad_e, driveLoad_t, 1e-12f });
-    return op.node(candIdx).reward / driveLoad;
 }
 
 inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from, const int to) {
@@ -70,19 +62,6 @@ inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from,
 namespace detail {
 
 struct Cand { float value; std::size_t idx; int station; };
-
-inline std::vector<int> taskCandidates(const OpInstance& op) {
-    const auto& p = op.params();
-    std::vector<int> candidates;
-    candidates.reserve(op.nodeCount());
-    for (std::size_t i = 0; i < op.nodeCount(); ++i) {
-        const int idx = static_cast<int>(i);
-        if (idx != p.startNodeId && idx != p.endNodeId && !op.isStation(idx)) {
-            candidates.push_back(idx);
-        }
-    }
-    return candidates;
-}
 
 inline std::optional<Cand> scoreCandidate(const OpInstance& op, std::vector<int>& route,
                                           const int curId, const std::size_t candListIdx, const int candNode) {
@@ -217,38 +196,6 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     }
 
     return bestSolution;
-}
-
-inline std::vector<int> greedySearchOrder(const OpInstance& op) {
-    std::vector<int> route;
-    std::vector<int> candidates = detail::taskCandidates(op);
-    int cur = op.params().startNodeId;
-    while (true) {
-        int bestPos = -1;
-        float bestVal = -1.0f;
-        for (std::size_t i = 0; i < candidates.size(); ++i) {
-            const int c = candidates[i];
-            route.push_back(c);
-            const bool feasible = op.simulateRoute(route).feasible;
-            route.pop_back();
-            if (!feasible) {
-                continue;
-            }
-            const float v = greedyValue(op, cur, c);
-            if (v > bestVal) {
-                bestVal = v;
-                bestPos = static_cast<int>(i);
-            }
-        }
-        if (bestPos < 0) {
-            break;
-        }
-        cur = candidates[bestPos];
-        route.push_back(cur);
-        std::swap(candidates[bestPos], candidates.back());
-        candidates.pop_back();
-    }
-    return route;
 }
 
 }  // namespace op_solver

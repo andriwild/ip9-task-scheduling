@@ -7,7 +7,7 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/only_background.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 3600.0,
@@ -58,7 +58,7 @@
         "Stairwell",
         "Dock"
     ],
-    "sim_duration": 2592000,
+    "sim_duration": 86400,
     "sim_speed_factor": 0.0,
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,

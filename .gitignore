@@ -13,6 +13,6 @@ ros2_ws/log
 mcp
 docs
 .mcp.json
-algo
+algo-dev
 architecture-explorer
 results

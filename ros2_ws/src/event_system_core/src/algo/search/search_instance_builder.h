@@ -5,10 +5,10 @@
 #include <utility>
 #include <vector>
 
-#include "op.h"
-#include "op_instance_builder.h"
-#include "op_types.h"
-#include "../model/i_sim_context.h"
+#include "../op.h"
+#include "../op_types.h"
+#include "../op_build.h"
+#include "../../model/i_sim_context.h"
 
 inline std::optional<OpInstance> buildSearchInstance(
     const ISimContext& ctx,

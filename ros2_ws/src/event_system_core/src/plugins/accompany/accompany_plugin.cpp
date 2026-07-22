@@ -13,8 +13,8 @@
 #include "model/i_sim_context.h"
 #include "model/robot.h"
 #include "model/sighting.h"
-#include "algo/search_instance_builder.h"
-#include "algo/op_solver.h"
+#include "algo/search/search_instance_builder.h"
+#include "algo/search/search_solver.h"
 #include "observer/ros.h"
 #include "states.h"
 

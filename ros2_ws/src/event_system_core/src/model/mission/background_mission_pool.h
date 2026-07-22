@@ -17,8 +17,8 @@
 #include "../battery.hpp"
 #include "../robot.h"
 #include "../i_sim_context.h"
-#include "../../algo/op_instance_builder.h"
-#include "../../algo/op_solver.h"
+#include "../../algo/background/op_instance_builder.h"
+#include "../../algo/background/op_solver.h"
 #include "../../plugins/charge/charge_order.h"
 
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
