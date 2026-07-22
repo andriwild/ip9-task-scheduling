@@ -1,0 +1,184 @@
+{
+    "orders": [
+        {
+            "id": 0,
+            "type": "accompany",
+            "personName": "Sam",
+            "roomName": "5.2B18",
+            "appointmentTime": 43200,
+            "every_n_days": 1,
+            "description": "dummy"
+        }
+    ],
+    "background": [
+        {
+            "id": 1000,
+            "type": "data_acquisition",
+            "roomName": "5.2B01",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1001,
+            "type": "data_acquisition",
+            "roomName": "5.2B01",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1002,
+            "type": "data_acquisition",
+            "roomName": "5.2B01",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1003,
+            "type": "data_acquisition",
+            "roomName": "5.2B01",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1004,
+            "type": "data_acquisition",
+            "roomName": "5.2B03",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1005,
+            "type": "data_acquisition",
+            "roomName": "5.2B03",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1006,
+            "type": "data_acquisition",
+            "roomName": "5.2B03",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1007,
+            "type": "data_acquisition",
+            "roomName": "5.2B03",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1008,
+            "type": "data_acquisition",
+            "roomName": "5.2B06",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1009,
+            "type": "data_acquisition",
+            "roomName": "5.2B06",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1010,
+            "type": "data_acquisition",
+            "roomName": "5.2B06",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1011,
+            "type": "data_acquisition",
+            "roomName": "5.2B06",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1012,
+            "type": "data_acquisition",
+            "roomName": "5.2B10",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1013,
+            "type": "data_acquisition",
+            "roomName": "5.2B10",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1014,
+            "type": "data_acquisition",
+            "roomName": "5.2B10",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1015,
+            "type": "data_acquisition",
+            "roomName": "5.2B10",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1016,
+            "type": "data_acquisition",
+            "roomName": "5.2B13",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1017,
+            "type": "data_acquisition",
+            "roomName": "5.2B13",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1018,
+            "type": "data_acquisition",
+            "roomName": "5.2B13",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1019,
+            "type": "data_acquisition",
+            "roomName": "5.2B13",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1020,
+            "type": "data_acquisition",
+            "roomName": "5.2B18",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1021,
+            "type": "data_acquisition",
+            "roomName": "5.2B18",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1022,
+            "type": "data_acquisition",
+            "roomName": "5.2B18",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        },
+        {
+            "id": 1023,
+            "type": "data_acquisition",
+            "roomName": "5.2B18",
+            "description": "Datenerfassung",
+            "every_n_days": 1
+        }
+    ],
+    "ad_hoc_generators": []
+}

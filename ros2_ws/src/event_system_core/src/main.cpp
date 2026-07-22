@@ -29,6 +29,9 @@ int main(const int argc, char *argv[]) {
         if (std::string(argv[i]) == "--mode") {
             mode = argv[i + 1];
         }
+        if (std::string(argv[i]) == "--config") {
+            ConfigLoader::s_overridePath = argv[i + 1];
+        }
     }
 
     // Offline building-snapshot generation: build the JSON from DB + Nav2, exit.

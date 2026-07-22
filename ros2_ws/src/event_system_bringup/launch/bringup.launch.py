@@ -17,6 +17,7 @@ def generate_launch_description():
     queue_log_level  = LaunchConfiguration("queue_log_level",  default=log_level)
     mode = LaunchConfiguration("mode", default="full")
     rounds = LaunchConfiguration("rounds", default="1")
+    config = LaunchConfiguration("config", default="")
 
     # RViz only in the interactive full mode (not headless, not the build tool).
     is_full_mode = launch.substitutions.PythonExpression(["'", mode, "' == 'full'"])
@@ -34,6 +35,7 @@ def generate_launch_description():
                               description="Override level for des.event_queue (default: log_level). Set to DEBUG to see push/pop traffic."),
         DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless or build"),
         DeclareLaunchArgument("rounds", default_value=rounds, description="Number of rounds in headless mode"),
+        DeclareLaunchArgument("config", default_value=config, description="Optional override config merged onto sim_config.json (path relative to config/ or absolute)"),
 
         Node(
             package='rviz2',
@@ -51,7 +53,7 @@ def generate_launch_description():
             parameters=[{
                 'use_sim_time': use_sim_time,
             }],
-            arguments=['--mode', mode, '--rounds', rounds],
+            arguments=['--mode', mode, '--rounds', rounds, '--config', config],
             ros_arguments=[
                 # All DES-internal loggers live under the `des.*` hierarchy,
                 # so one switch covers the whole engine. More specific entries

@@ -39,6 +39,13 @@ struct BackgroundTemplate {
 
 class ConfigLoader {
 public:
+    static inline std::string s_overridePath = "";
+
+    static std::string configDir() {
+        const auto slash = SIM_CONFIG_FILE.rfind('/');
+        return slash == std::string::npos ? "" : SIM_CONFIG_FILE.substr(0, slash + 1);
+    }
+
     static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY_CFG) {
 
         auto json = getJson(filePath);
@@ -184,7 +191,7 @@ public:
         return employees;
     }
 
-    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = SIM_CONFIG_FILE) {
+    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = SIM_CONFIG_FILE, const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -192,6 +199,17 @@ public:
 
         try {
             auto j = json.value();
+
+            if (!overridePath.empty()) {
+                const std::string resolved = overridePath.front() == '/' ? overridePath : configDir() + overridePath;
+                const auto overrideJson = getJson(resolved);
+                if (!overrideJson.has_value()) {
+                    DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not read override config: %s", resolved.c_str());
+                    return std::nullopt;
+                }
+                j.merge_patch(overrideJson.value());
+                DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Applied config override: %s", resolved.c_str());
+            }
             des::SimConfig config;
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();

@@ -1,0 +1,6 @@
+{
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/only_background.json",
+    "sim_duration": 86400,
+    "battery_capacity": 100000.0,
+    "initial_battery_capacity": 100000.0
+}
