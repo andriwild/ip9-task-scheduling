@@ -12,6 +12,7 @@
 
 #include "observer.h"
 #include "../model/i_sim_context.h"
+#include "../model/person.h"
 #include "../model/robot.h"
 #include "../plugins/order_registry.h"
 #include "../plugins/accompany/accompany_order.h"
@@ -53,10 +54,12 @@ public:
 
     void onEvent(const int time, const des::EventType type, const std::string& /*message*/, const bool /*isDriving*/, const bool /*isCharging*/, const std::string& /*color*/ = "", const int missionId = -1) override {
         if (type == des::EventType::SIMULATION_END) {
+            snapshotAllPersons(time);
             flush();
             return;
         }
         if (isPersonEvent(type)) {
+            snapshotAllPersons(time);
             if (auto* trace = active()) {
                 snapshotPerson(*trace, time);
             }
@@ -107,6 +110,12 @@ private:
         std::vector<Pt> personPath;
         std::string lastPersonLoc;
         std::string lastRobotState;
+    };
+
+    struct PersonTrack {
+        std::string color;
+        std::string lastLoc;
+        std::vector<Pt> path;
     };
 
     Trace* active() {
@@ -166,6 +175,28 @@ private:
         trace.personPath.push_back(std::move(pt));
     }
 
+    void snapshotAllPersons(const int time) {
+        for (const auto& [name, loc] : m_ctx->getAllPersonLocations()) {
+            auto [it, inserted] = m_persons.try_emplace(name);
+            PersonTrack& track = it->second;
+            if (inserted) {
+                if (const auto person = m_ctx->getPersonByName(name)) {
+                    track.color = person->color;
+                }
+            }
+            if (loc == track.lastLoc) {
+                continue;
+            }
+            track.lastLoc = loc;
+            Pt pt{ time, loc, std::nullopt, std::nullopt, "" };
+            if (const auto c = coordsOf(loc)) {
+                pt.x = c->first;
+                pt.y = c->second;
+            }
+            track.path.push_back(std::move(pt));
+        }
+    }
+
     static bool isPersonEvent(const des::EventType type) {
         switch (type) {
             case des::EventType::PERSON_TRANSITION:
@@ -210,8 +241,8 @@ private:
     }
 
     void flush() {
-        if (!m_outputPath.empty() && !m_traces.empty()) {
-            nlohmann::json root = nlohmann::json::array();
+        if (!m_outputPath.empty() && (!m_traces.empty() || !m_persons.empty())) {
+            nlohmann::json missions = nlohmann::json::array();
             for (const auto& [id, trace] : m_traces) {
                 nlohmann::json m;
                 m["missionId"] = trace.id;
@@ -228,18 +259,38 @@ private:
                 m["outcome"] = trace.outcome;
                 m["robot"] = stepsToJson(trace.robot);
                 m["person_path"] = stepsToJson(trace.personPath);
-                root.push_back(std::move(m));
+                missions.push_back(std::move(m));
             }
+
+            nlohmann::json persons = nlohmann::json::array();
+            for (const auto& [name, track] : m_persons) {
+                if (track.path.empty()) {
+                    continue;
+                }
+                nlohmann::json p;
+                p["name"] = name;
+                if (!track.color.empty()) {
+                    p["color"] = track.color;
+                }
+                p["path"] = stepsToJson(track.path);
+                persons.push_back(std::move(p));
+            }
+
+            nlohmann::json root;
+            root["missions"] = std::move(missions);
+            root["persons"] = std::move(persons);
+
             const std::string path = pathForFlush();
             std::ofstream out(path);
             if (out.is_open()) {
                 out << root.dump(2);
-                DES_LOG_INFO(rclcpp::get_logger("des.observer.trace"), "Mission trace written: %zu missions -> %s", m_traces.size(), path.c_str());
+                DES_LOG_INFO(rclcpp::get_logger("des.observer.trace"), "Mission trace written: %zu missions, %zu persons -> %s", m_traces.size(), m_persons.size(), path.c_str());
             } else {
                 DES_LOG_ERROR(rclcpp::get_logger("des.observer.trace"), "Could not write mission trace: %s", path.c_str());
             }
         }
         m_traces.clear();
+        m_persons.clear();
         m_flushCount++;
     }
 
@@ -247,5 +298,6 @@ private:
     des::LocationMap m_locationMap;
     std::string m_outputPath;
     std::map<int, Trace> m_traces;
+    std::map<std::string, PersonTrack> m_persons;
     int m_flushCount = 0;
 };

@@ -116,6 +116,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
+        // accompany guard
         if (this->person->busy) {
             ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
             return;
