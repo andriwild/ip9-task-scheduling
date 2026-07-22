@@ -64,7 +64,20 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
 
 namespace {
 // exclude rooms (e.g. elevator)
-bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded) {
+bool isOppositeSexToilet(const std::string& name, const std::string& sex) {
+    if (sex == "male") {
+        return name.find("_Toilet_W") != std::string::npos;
+    }
+    if (sex == "female") {
+        return name.find("_Toilet_M") != std::string::npos;
+    }
+    return false;
+}
+
+bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded, const std::string& sex) {
+    if (isOppositeSexToilet(name, sex)) {
+        return false;
+    }
     for (const auto& pattern : excluded) {
         if (name.find(pattern) != std::string::npos) {
             return false;
@@ -85,11 +98,14 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const auto& excluded = ctx.getConfig()->searchExcludedRooms;
     std::vector<std::string> universe;
     for (const auto& name : ctx.roomNames()) {
-        if (isPersonReachableRoom(name, excluded)) {
+        if (isPersonReachableRoom(name, excluded, person->sex)) {
             universe.push_back(name);
         }
     }
-    const auto roomNodes = occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe);
+    const auto strategy = ctx.getConfig()->searchRewardStrategy;
+    const auto roomNodes = strategy == des::SearchRewardStrategy::FREQUENCY
+        ? frequencyReward(robot->getSightings(), a.personName, universe)
+        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe);
 
     const auto bat          = robot->m_bat->getStats();
     const double voltage    = robot->m_bat->getVoltage();
