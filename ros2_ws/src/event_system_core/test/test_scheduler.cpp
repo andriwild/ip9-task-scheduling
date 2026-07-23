@@ -46,7 +46,8 @@ class SchedulerTest : public ::testing::Test {
 protected:
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
-    des::PersonRegistry employees;
+    des::PersonMap employees;
+    des::PersonList ownedPeople;
     des::LocationMap locationMap;
 
     static void SetUpTestSuite() {
@@ -68,15 +69,17 @@ protected:
         // Accompany-specific params now live on the plugin.
         setAccompanyConfig(/*accompanySpeed=*/0.5);
 
-        auto max = std::make_shared<des::Person>();
+        auto max = std::make_unique<des::Person>();
         max->firstName = "Max";
         max->roomLabels = {"Office"};
-        employees["Max"] = max;
+        employees["Max"] = max.get();
+        ownedPeople.push_back(std::move(max));
 
-        auto anna = std::make_shared<des::Person>();
+        auto anna = std::make_unique<des::Person>();
         anna->firstName = "Anna";
         anna->roomLabels = {"Lab"};
-        employees["Anna"] = anna;
+        employees["Anna"] = anna.get();
+        ownedPeople.push_back(std::move(anna));
 
         // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
         locationMap.emplace("Office", des::Location("Office", {}, 0.0));

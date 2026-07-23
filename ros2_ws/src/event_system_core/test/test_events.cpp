@@ -34,7 +34,7 @@ public:
     std::shared_ptr<Robot> robot;
     des::OrderPtr currentOrder;
     std::shared_ptr<des::SimConfig> simConfig;
-    des::PersonRegistry employees;
+    des::PersonMap employees;
     std::map<std::string, std::string> personLocations;
     des::OrderList pendingMissions;
     des::OrderList m_backgroundMissions;
@@ -80,7 +80,7 @@ public:
         blackboard[key] = value;
     }
 
-    std::shared_ptr<Robot> getRobot() const override { return robot; }
+    Robot* getRobot() const override { return robot.get(); }
 
     void changeRobotState(std::unique_ptr<RobotState> newState) const override {
         robot->changeState(std::move(newState));
@@ -171,7 +171,7 @@ public:
         return employees.contains(person);
     }
 
-    std::shared_ptr<des::Person> getPersonByName(const std::string& person) const override {
+    des::Person* getPersonByName(const std::string& person) const override {
         return employees.at(person);
     }
 
@@ -316,7 +316,7 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
     person->workplace = "Office";
-    ctx.employees["Max"] = person;
+    ctx.employees["Max"] = person.get();
     ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
 
     auto order = makeAccompanyOrder(1, "Max", "Room1", 40000);
@@ -641,7 +641,7 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
     person->roomLabels = {"Office", "MeetingRoom"};
-    ctx.employees["Max"] = person;
+    ctx.employees["Max"] = person.get();
     ctx.personLocations["Max"] = "Office";
 
     auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
@@ -664,7 +664,7 @@ TEST(EventExecute, PersonDepartureSetsRoomToOutdoor) {
     person->roomLabels = {"Office"};
     ctx.personLocations["Max"] = "Office";
 
-    PersonDepartureEvent event(61200, person);
+    PersonDepartureEvent event(61200, person.get());
     event.execute(ctx);
 
     EXPECT_EQ(ctx.personLocations["Max"], "OUTDOOR");
@@ -681,7 +681,7 @@ TEST(EventExecute, PersonTransitionFromOutdoorDoesNotPushEvent) {
     person->roomLabels = {"Office", "Kitchen"};
     ctx.personLocations["Max"] = "OUTDOOR";
 
-    PersonTransitionEvent event(30000, person);
+    PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
 
     // Should only notify, not push any follow-up event
@@ -699,7 +699,7 @@ TEST(EventExecute, PersonTransitionFromUnknownRoomReturnsToWorkplace) {
     person->roomLabels = {"Office", "Kitchen"};
     ctx.personLocations["Max"] = "UnknownRoom";
 
-    PersonTransitionEvent event(30000, person);
+    PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
 
     EXPECT_EQ(ctx.personLocations["Max"], "Office");
@@ -724,7 +724,7 @@ TEST(EventExecute, PersonTransitionMovesToNewRoomAndSchedulesNext) {
     };
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonTransitionEvent event(30000, person);
+    PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
 
     EXPECT_EQ(ctx.personLocations["Max"], IN_TRANSIT);
@@ -757,7 +757,7 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
     };
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonTransitionEvent event(30000, person);
+    PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
@@ -784,7 +784,7 @@ TEST(EventExecute, PersonTransitionRetriesWhileBusyInsteadOfEndingChain) {
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonTransitionEvent event(30000, person);
+    PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
@@ -800,7 +800,7 @@ TEST(EventExecute, AppointmentEndReleasesPersonWithoutStartingSecondChain) {
     person->firstName = "Max";
     person->busy = true;
 
-    AppointmentEndEvent event(30000, person);
+    AppointmentEndEvent event(30000, person.get());
     event.execute(ctx);
 
     EXPECT_FALSE(person->busy);
@@ -821,7 +821,7 @@ TEST(EventExecute, PersonGoesToLunchWhenDueAndResumesAfterwards) {
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonRoomArrivedEvent arrival(30000, person, "5.2B03");
+    PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
@@ -853,7 +853,7 @@ TEST(EventExecute, FailedAccompanyReleasesPersonWithoutAppointmentEnd) {
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
     person->busy = true;
-    ctx.employees["Max"] = person;
+    ctx.employees["Max"] = person.get();
 
     auto order = std::make_shared<AccompanyOrder>();
     order->personName = "Max";
@@ -872,7 +872,7 @@ TEST(EventExecute, CompletedAccompanySchedulesAppointmentEnd) {
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";
     person->busy = true;
-    ctx.employees["Max"] = person;
+    ctx.employees["Max"] = person.get();
 
     auto order = std::make_shared<AccompanyOrder>();
     order->personName = "Max";
@@ -897,7 +897,7 @@ TEST(EventExecute, PersonWithoutSampledLunchDoesNotGoToLunch) {
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonRoomArrivedEvent arrival(30000, person, "5.2B03");
+    PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
@@ -919,7 +919,7 @@ TEST(EventExecute, PersonArrivedSchedulesTransition) {
     };
     ctx.personLocations["Max"] = "5.2B03";
 
-    PersonArrivedEvent event(30000, person);
+    PersonArrivedEvent event(30000, person.get());
     event.execute(ctx);
 
     // Should transition to a new room via the matrix
@@ -940,7 +940,7 @@ TEST(EventExecute, PersonArrivedAtUnknownRoomReturnsToWorkplace) {
     person->roomLabels = {"Office", "Kitchen"};
     ctx.personLocations["Max"] = "UnknownRoom";
 
-    PersonArrivedEvent event(30000, person);
+    PersonArrivedEvent event(30000, person.get());
     event.execute(ctx);
 
     EXPECT_EQ(ctx.personLocations["Max"], "Office");

@@ -285,8 +285,8 @@ struct BatteryProps {
     double lowThreshold;
 };
 
-using PersonList        = std::vector<std::shared_ptr<Person>>;
-using PersonRegistry = std::map<std::string, std::shared_ptr<Person>>;
+using PersonList        = std::vector<std::unique_ptr<Person>>;
+using PersonMap         = std::map<std::string, Person*>;
 using LocationMap       = std::map<std::string, Location>;  // name -> coordinates + optional area
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {

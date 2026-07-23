@@ -9,8 +9,8 @@
 
 class AppointmentEndEvent final : public IEvent {
 public:
-    std::shared_ptr<des::Person> person;
-    explicit AppointmentEndEvent(const int time, std::shared_ptr<des::Person> p)
+    des::Person* person;
+    explicit AppointmentEndEvent(const int time, des::Person* p)
         : IEvent(time), person(std::move(p)) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {

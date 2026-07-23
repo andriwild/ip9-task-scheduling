@@ -26,12 +26,12 @@ void SimRunner::reloadSimulationData() {
 
     ConfigLoader::validateConfig(m_orders, allPeople.value(), m_locationMap, "5.2B_Elevator");
 
-    m_people = allPeople.value();
+    m_people = std::move(allPeople.value());
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", m_people.value().size());
 
     m_employees.clear();
     for (const auto& p: m_people.value()) {
-        m_employees[p->firstName] = p;
+        m_employees[p->firstName] = p.get();
     }
 }
 

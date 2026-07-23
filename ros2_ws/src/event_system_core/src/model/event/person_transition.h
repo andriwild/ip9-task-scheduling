@@ -29,9 +29,9 @@ inline double personWalkTime(ISimContext& ctx, const std::string& from, const st
 
 class PersonTransitionEvent : public IEvent {
 public:
-    const std::shared_ptr<des::Person> person;
+    des::Person* const person;
     std::string targetRoom;
-    explicit PersonTransitionEvent(const int time, std::shared_ptr<des::Person> p) :
+    explicit PersonTransitionEvent(const int time, des::Person* p) :
         IEvent(time),
         person(std::move(p))
     {}
@@ -54,7 +54,7 @@ public:
 
 class PersonArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonArrivedEvent(const int time, std::shared_ptr<des::Person> p) :
+    explicit PersonArrivedEvent(const int time, des::Person* p) :
         PersonTransitionEvent(time, std::move(p))
     {}
 
@@ -104,7 +104,7 @@ public:
 
 class PersonDepartureEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonDepartureEvent(const int time, std::shared_ptr<des::Person> p) :
+    explicit PersonDepartureEvent(const int time, des::Person* p) :
         PersonTransitionEvent(time, std::move(p))
     {}
 
@@ -141,7 +141,7 @@ public:
 
 class PersonLunchArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonLunchArrivedEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+    explicit PersonLunchArrivedEvent(const int time, des::Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);
@@ -177,7 +177,7 @@ public:
 
 class PersonLunchEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonLunchEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+    explicit PersonLunchEvent(const int time, des::Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);
@@ -212,7 +212,7 @@ public:
 
 class PersonRoomArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonRoomArrivedEvent(const int time, std::shared_ptr<des::Person> p, std::string room) :
+    explicit PersonRoomArrivedEvent(const int time, des::Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);

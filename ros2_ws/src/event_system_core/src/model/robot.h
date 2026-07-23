@@ -6,7 +6,7 @@
 
 #include "../util/log.h"
 #include "robot_state.h"
-#include "battery.hpp"
+#include "battery.h"
 #include "event/base.h"
 #include "sighting.h"
 

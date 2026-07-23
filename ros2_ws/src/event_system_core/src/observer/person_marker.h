@@ -25,7 +25,7 @@ public:
         m_publisher = node->create_publisher<visualization_msgs::msg::MarkerArray>("visualization_marker_array", qos);
     }
 
-    void attach(const ISimContext* ctx, const std::map<std::string, std::shared_ptr<des::Person>>& employees) {
+    void attach(const IPersonRegistry* ctx, const des::PersonMap& employees) {
         m_ctx = ctx;
         m_employees = employees;
 
@@ -118,8 +118,8 @@ private:
         return color;
     }
 
-    const ISimContext* m_ctx = nullptr;
-    std::map<std::string, std::shared_ptr<des::Person>> m_employees;
+    const IPersonRegistry* m_ctx = nullptr;
+    des::PersonMap m_employees;
     des::LocationMap m_locationMap;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_publisher;
 };

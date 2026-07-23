@@ -11,11 +11,11 @@
 
 class PersonAccompanyDepartureEvent final : public IEvent {
 public:
-    const std::shared_ptr<des::Person> person;
+    des::Person* const person;
     const std::string currentRoom;
 
     PersonAccompanyDepartureEvent(const int time,
-                                  std::shared_ptr<des::Person> p,
+                                  des::Person* p,
                                   std::string currentRoom)
         : IEvent(time)
         , person(std::move(p))
@@ -42,11 +42,11 @@ public:
 
 class PersonAccompanyArrivedEvent final : public IEvent {
 public:
-    const std::shared_ptr<des::Person> person;
+    des::Person* const person;
     const std::string arrivalRoom;
 
     PersonAccompanyArrivedEvent(const int time,
-                                std::shared_ptr<des::Person> p,
+                                des::Person* p,
                                 std::string arrivalRoom)
         : IEvent(time)
         , person(std::move(p))

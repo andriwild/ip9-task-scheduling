@@ -105,11 +105,11 @@ public:
     }
 
     static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(
-        des::PersonList people
+        const des::PersonList& people
     ) {
         auto events = std::vector<std::shared_ptr<IEvent>> {};
-        for (auto& p: people) {
-            const auto event = std::make_shared<PersonArrivedEvent>(p->arrivalTime, p);
+        for (const auto& p: people) {
+            const auto event = std::make_shared<PersonArrivedEvent>(p->arrivalTime, p.get());
             events.push_back(event);
         }
         return events;
@@ -117,10 +117,10 @@ public:
 
     static void scheduleOccupancy(
         const des::SimConfig& config,
-        des::PersonList people,
+        const des::PersonList& people,
         std::mt19937& rng
     ) {
-        for (auto& p: people) {
+        for (const auto& p: people) {
             des::sampleOccupancy(config, rng, 0, *p);
         }
     }
@@ -131,7 +131,7 @@ protected:
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     std::shared_ptr<MetricsNode> m_metricsNode;
-    std::map<std::string, std::shared_ptr<des::Person>> m_employees;
+    des::PersonMap m_employees;
     des::OrderList m_orders;
     std::vector<BackgroundTemplate> m_backgroundTemplates;
     std::optional<des::PersonList> m_people;
@@ -171,9 +171,9 @@ protected:
         m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));
         m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
 
-        for (auto& p : m_people.value()) {
-            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simStartTime, p));
-            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p));
+        for (const auto& p : m_people.value()) {
+            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simStartTime, p.get()));
+            m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p.get()));
         }
 
         addEventsFromInterruptGenerators(m_config->appointmentsPath);
@@ -185,7 +185,7 @@ protected:
             m_ctx->publishMissionRegistered(order);
         }
 
-        for (auto& p : m_people.value()) {
+        for (const auto& p : m_people.value()) {
             m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
         }
     }

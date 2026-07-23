@@ -10,9 +10,9 @@
 #include <random>
 #include <rclcpp/rclcpp.hpp>
 
-#include "mission/scheduled_mission_queue.h"
-#include "mission/background_mission_pool.h"
-#include "mission/interrupt_mission_slot.h"
+#include "mission/mission_board.h"
+#include "person_registry.h"
+#include "service_log.h"
 #include "robot.h"
 #include "robot_state.h"
 #include "../observer/event_bus.h"
@@ -20,7 +20,6 @@
 #include "../model/i_sim_context.h"
 #include "../util/log.h"
 #include "../util/types.h"
-#include "../util/geometry.h"
 #include "../model/event_queue.h"
 
 
@@ -28,374 +27,110 @@ class SimulationContext : public ISimContext {
     int m_currentTime {};
     std::shared_ptr<des::SimConfig> m_simConfig;
     EventBus m_eventBus;
-    des::OrderPtr m_currentMission = nullptr;
-    ScheduledMissionQueue m_scheduledMissions;
-    BackgroundMissionPool m_backgroundMissions;
-    InterruptMissionSlot m_interruptMission;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
 
-    // TODO: unique pointer for person?
-    // TODO: make meaningful types
-    std::map<std::string, std::shared_ptr<des::Person>> m_employees; // name and person object
-    std::map<std::string, std::string> m_personLocations; // name and current person location
-    std::map<std::string, des::Point> m_personPos; // name and sampled in-room position
-    std::map<std::pair<std::string, std::string>, int> m_lastServiced; // (room, type) -> last completion time
     std::unique_ptr<Scheduler> m_scheduler;
 
     static constexpr unsigned int DEFAULT_SEED = 42;
-    static constexpr unsigned int PLACEMENT_SEED = 1337;
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
     mutable std::mt19937 m_rng{DEFAULT_SEED};
-    std::mt19937 m_placementRng{PLACEMENT_SEED};
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
-    std::shared_ptr<Robot> m_robot;
+    std::unique_ptr<Robot> m_robot;
     des::LocationMap m_locationMap;
+    PersonRegistry m_persons;
+    ServiceLog m_services;
+    MissionBoard m_missions;
 
 public:
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
-        std::map<std::string, std::shared_ptr<des::Person>> employees,
+        des::PersonMap employees,
         des::LocationMap locationMap
     );
 
-    Scheduler& getScheduler() { return *m_scheduler; }
+    Scheduler& getScheduler();
+    const Scheduler& getScheduler() const override;
 
-    const Scheduler& getScheduler() const override { return *m_scheduler; }
-
-    void resetRobot() {
-        m_robot.reset();
-        m_robot = std::make_unique<Robot>(m_simConfig);
-    }
+    void resetRobot();
 
     Journey scheduleArrival(const std::string& target) const override;
-
-    std::optional<double> getDistance(const std::string& from, const std::string& to) const override {
-        return m_plannerNode->calcDistance(from, to, m_simConfig->cacheEnabled);
-    }
+    std::optional<double> getDistance(const std::string& from, const std::string& to) const override;
 
     void changeRobotState(std::unique_ptr<RobotState> newState) const override;
-    void setConfig(const std::shared_ptr<des::SimConfig> &newConfig);
+    void setConfig(const std::shared_ptr<des::SimConfig>& newConfig);
     void resetContext(int newTime);
     void completeOrder(const des::OrderPtr& order) override;
 
-    int getTime() const override { return m_currentTime; }
+    int getTime() const override;
+    std::shared_ptr<des::SimConfig> getConfig() const override;
+    Robot* getRobot() const override;
+    std::mt19937& rng() const override;
 
-    std::shared_ptr<des::SimConfig> getConfig() const override { return m_simConfig; }
+    void pushEvent(const std::shared_ptr<IEvent>& event) override;
+    void startActivity(const std::shared_ptr<IEvent>& endEvent) override;
+    void executeEvent(const std::shared_ptr<IEvent>& event);
+    void printEventQueue() const;
 
-    std::shared_ptr<Robot> getRobot() const override { return m_robot; }
+    void setBehaviorTree(std::shared_ptr<BT::Tree> tree);
+    void tickBT() override;
+    void setBTBlackboard(const std::string& key, const std::string& value) override;
 
-    std::mt19937& rng() const override { return m_rng; }
+    des::Person* getPersonByName(const std::string& person) const override;
+    bool hasEmployee(const std::string& person) const override;
+    std::string getPersonLocation(const std::string& name) const override;
+    const std::map<std::string, std::string>& getAllPersonLocations() const override;
+    void setPersonLocation(const std::string& name, const std::string& room) override;
+    std::optional<des::Point> getPersonPosition(const std::string& name) const override;
+    bool robotSeesPerson(const std::string& name) const override;
 
-    // Event queue access
-    void pushEvent(const std::shared_ptr<IEvent>& event) override {
-        m_queue.push(event);
-    }
+    std::optional<int> lastServiced(const std::string& room, const std::string& type) const override;
+    void recordServiced(const std::string& room, const std::string& type, int time) override;
 
-    void startActivity(const std::shared_ptr<IEvent>& endEvent) override {
-        m_robot->setInFlight(endEvent);
-        m_queue.push(endEvent);
-    }
-
-    void executeEvent(const std::shared_ptr<IEvent>& event) {
-        event->execute(*this);
-        if (m_robot->inFlight().lock() == event) {
-            m_robot->clearInFlight();
-        }
-    }
-
-    void printEventQueue() const { m_queue.print(); }
-
-    // Behaviour tree access
-    void setBehaviorTree(std::shared_ptr<BT::Tree> tree) {
-        m_behaviorTree = std::move(tree);
-    }
-
-    void tickBT() override {
-        m_behaviorTree->tickOnce();
-    }
-
-    void setBTBlackboard(const std::string& key, const std::string& value) override {
-        m_behaviorTree->rootBlackboard()->set(key, value);
-    }
-
-    std::shared_ptr<des::Person> getPersonByName(const std::string& person) const override {
-        return m_employees.at(person);
-    }
-
-    bool hasEmployee(const std::string& person) const override {
-        return m_employees.contains(person);
-    }
-
-    std::string getPersonLocation(const std::string& name) const override {
-        return m_personLocations.at(name);
-    }
-
-    const std::map<std::string, std::string>& getAllPersonLocations() const override {
-        return m_personLocations;
-    }
-
-    void setPersonLocation(const std::string& name, const std::string& room) override {
-        m_personLocations[name] = room;
-        if (const auto pos = samplePosition(room)) {
-            m_personPos[name] = *pos;
-        } else {
-            m_personPos.erase(name);
-        }
-    }
-
-    std::optional<des::Point> getPersonPosition(const std::string& name) const override {
-        const auto it = m_personPos.find(name);
-        if (it == m_personPos.end()) {
-            return std::nullopt;
-        }
-        return it->second;
-    }
-
-    std::optional<des::Point> samplePosition(const std::string& room) {
-        const auto it = m_locationMap.find(room);
-        if (it == m_locationMap.end()) {
-            return std::nullopt;
-        }
-        if (const auto pos = geom::sampleInPolygon(it->second.m_footprint, m_placementRng)) {
-            return pos;
-        }
-        return it->second.m_p;
-    }
-
-    bool robotSeesPerson(const std::string& name) const override {
-        auto it = m_personLocations.find(name);
-        if (it == m_personLocations.end()) {
-            return false;
-        }
-        return it->second == m_robot->getLocation();
-    }
-
-    std::optional<int> lastServiced(const std::string& room, const std::string& type) const override {
-        auto it = m_lastServiced.find({room, type});
-        return it == m_lastServiced.end() ? std::nullopt : std::optional<int>(it->second);
-    }
-
-    void recordServiced(const std::string& room, const std::string& type, int time) override {
-        m_lastServiced[{room, type}] = time;
-    }
-
-    std::vector<std::string> roomNames() const override {
-        std::vector<std::string> names;
-        names.reserve(m_locationMap.size());
-        for (const auto& [name, loc] : m_locationMap) {
-            names.push_back(name);
-        }
-        return names;
-    }
-
-    double getLocationArea(const std::string& name) const override {
-        auto it = m_locationMap.find(name);
-        if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Location area not found for '%s', defaulting to 1.0", name.c_str());
-            return 1.0;
-        }
-        return it->second.m_area.value();
-    }
+    std::vector<std::string> roomNames() const override;
+    double getLocationArea(const std::string& name) const override;
 
     // Mission management — current mission plus the three mission channels.
-    void setOrderPtr(const des::OrderPtr& orderPtr) override {
-        if (orderPtr) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission set: %d (type=%s)", orderPtr->id, orderPtr->type.c_str());
-        } else if (m_currentMission) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission cleared (was %d)", m_currentMission->id);
-        }
-        m_currentMission = orderPtr;
-    }
+    void setOrderPtr(const des::OrderPtr& orderPtr) override;
+    des::OrderPtr getOrderPtr() const override;
+    void updateOrderState(const des::MissionState& newState) override;
 
-    des::OrderPtr getOrderPtr() const override {
-        if (auto interrupt = m_interruptMission.active()) {
-            return interrupt;
-        }
-        return m_currentMission;
-    }
+    void addScheduledMission(const des::OrderPtr orderPtr) override;
+    bool hasScheduledMission() const override;
+    des::OrderPtr nextScheduledMission() override;
+    des::OrderPtr popScheduledMission() override;
 
-    void updateOrderState(const des::MissionState& newState) override {
-        assert(m_currentMission != nullptr);
-        DES_LOG_INFO(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_currentMission->id, m_currentMission->type.c_str(), des::missionStateStr(m_currentMission->state).c_str(), des::missionStateStr(newState).c_str());
-        m_currentMission->state = newState;
-    }
+    void addBackgroundMission(const des::OrderPtr orderPtr) override;
+    bool hasBackgroundMission() const override;
+    des::OrderPtr acceptFeasibleBackgroundMission() override;
 
-    void addScheduledMission(const des::OrderPtr orderPtr) override {
-        m_scheduledMissions.add(orderPtr);
-    }
-
-    bool hasScheduledMission() const override {
-        return m_scheduledMissions.has();
-    }
-
-    des::OrderPtr nextScheduledMission() override {
-        return m_scheduledMissions.peek();
-    }
-
-    des::OrderPtr popScheduledMission() override {
-        return m_scheduledMissions.pop();
-    }
-
-    void addBackgroundMission(const des::OrderPtr orderPtr) override {
-        m_backgroundMissions.add(orderPtr);
-    }
-
-    bool hasBackgroundMission() const override {
-        return m_backgroundMissions.has();
-    }
-
-    des::OrderPtr acceptFeasibleBackgroundMission() override {
-        if(!m_backgroundMissions.hasPlanned()) {
-            m_backgroundMissions.plan(*this);
-        }
-        auto accepted  = m_backgroundMissions.popPlanned();
-        // const auto accepted = m_backgroundMissions.acceptFeasible(*this);
-        if (accepted) { m_currentMission = accepted; }
-        return accepted;
-    }
-
-    std::optional<int> getNextScheduledDispatchTime() const override {
-        return m_queue.nextDispatchTime();
-    }
-
+    std::optional<int> getNextScheduledDispatchTime() const override;
     des::OrderPtr peekNextScheduledOrder() const override;
+    std::optional<int> getSimulationEndTime() const override;
 
-    std::optional<int> getSimulationEndTime() const override {
-        return m_queue.nextEventTime(des::EventType::SIMULATION_END);
-    }
+    void publishMission(const des::OrderPtr& order, int time) override;
+    void publishMissionRegistered(const des::OrderPtr& order) override;
 
-    void publishMission(const des::OrderPtr& order, const int time) override {
-        m_eventBus.notifyMissionPublished(order, time);
-    }
-
-    void publishMissionRegistered(const des::OrderPtr& order) override {
-        m_eventBus.notifyMissionRegistered(order);
-    }
-
-    void advanceTime(const int newTime) {
-        assert(newTime >= m_currentTime);
-        m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
-        if (m_robot->isBatteryLow()) {
-            m_robot->setChargingRequired(true);
-        }
-        m_currentTime = newTime;
-        des::log::setSimTime(newTime);
-    }
+    void advanceTime(int newTime);
 
     // Observer functions (delegated to EventBus)
-    void addObserver(const std::shared_ptr<IObserver>& observer) {
-        m_eventBus.addObserver(observer);
-    }
+    void addObserver(const std::shared_ptr<IObserver>& observer);
+    void removeObserver(const std::shared_ptr<IObserver>& observer);
+    void clearObservers();
 
-    void removeObserver(const std::shared_ptr<IObserver>& observer) {
-        m_eventBus.removeObserver(observer);
-    }
+    void notifyMissionComplete(const des::OrderPtr& order, int timeDiff) const;
+    void notifyRobotStateChanged() const;
+    void notifyBatteryChanged() const override;
+    void notifyEvent(const IEvent& event) const override;
+    void notifyChargeStarted() const override;
+    void robotMoved(const std::string& location, double distance = 0) const override;
 
-    void clearObservers() {
-        m_eventBus.clear();
-    }
+    double getDriveTimeStd() const;
 
-    void notifyMissionComplete(const des::OrderPtr& order, const int timeDiff) const {
-        m_eventBus.notifyMissionComplete(m_currentTime, order, timeDiff);
-    }
-
-    void notifyRobotStateChanged() const {
-        const auto* state = m_robot->getState();
-        const auto type   = state->getType();
-        std::string name = state->getName();
-        if (type == des::RobotStateType::IDLE && m_robot->isDriving() && m_robot->getTargetLocation() == m_robot->getIdleLocation()) {
-            name = "returning";
-        }
-        m_eventBus.notifyStateChanged(m_currentTime, type, name, m_robot->batteryStats());
-    }
-
-    void notifyBatteryChanged() const override {
-        notifyRobotStateChanged();
-    }
-
-    void notifyEvent(const IEvent& event) const override {
-        int missionId = event.getMissionId();
-        if (missionId < 0) {
-            if (const auto current = m_currentMission) {
-                missionId = current->id;
-            }
-        }
-        m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), missionId);
-    }
-
-    void notifyChargeStarted() const override {
-        m_eventBus.notifyEvent(m_currentTime, des::EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
-    }
-
-    void robotMoved(const std::string& location, const double distance = 0) const override {
-        m_robot->setLocation(location);
-        m_eventBus.notifyMoved(m_currentTime, location, distance);
-    }
-
-    double getDriveTimeStd() const { return m_simConfig->driveTimeStd; };
-
-
-    bool pushInterrupt(const des::OrderPtr& order) override {
-        assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
-        if (m_robot->isBatteryLow()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), m_robot->batteryStats().soc * 100.0);
-            return false;
-        }
-        if (!m_interruptMission.push(order, m_currentMission)) {
-            return false;
-        }
-
-        // Snapshots robot state, shifts the in-flight activity-end event by the interrupt's duration
-        auto suspendedState = m_robot->getState()->clone();
-        const bool wasDriving = m_robot->isDriving();
-
-        auto& plugin = OrderRegistry::instance().get(order->type);
-        const int duration = static_cast<int>(plugin.estimateMissionDuration(*order, *this, m_robot->getLocation()));
-
-        if (auto e = m_robot->inFlight().lock()) {
-            const int oldTime = e->time;
-            const int newTime = oldTime + duration;
-            e->cancelled = true;
-            auto shifted = e->withTime(newTime);
-            startActivity(shifted);
-            DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, m_currentTime, e->getName().c_str(), oldTime, newTime);
-        } else {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, m_currentTime); 
-        }
-
-        if (wasDriving) {
-            m_robot->setDriving(false);
-            m_eventBus.notifyEvent(m_currentTime, des::EventType::STOP_DRIVE, "Drive paused: " + m_robot->getLocation(), false, m_robot->isCharging(), "", order->id); 
-        }
-
-        m_interruptMission.suspend(std::move(suspendedState), wasDriving);
-        plugin.onMissionStart(*this, *order);
-        return true;
-    }
-
-    void popInterrupt(const des::OrderPtr& completedOrder) override {
-        m_interruptMission.pop(completedOrder);
-        bool resumeDrive = false;
-        if (auto snap = m_interruptMission.takeSuspended()) {
-            changeRobotState(std::move(snap->state));
-            resumeDrive = snap->wasDriving;
-        }
-        if (resumeDrive && m_robot->getLocation() != m_robot->getTargetLocation()) {
-            m_robot->setDriving(true);
-            m_eventBus.notifyEvent(m_currentTime, des::EventType::START_DRIVE, "Drive resumed: " + m_robot->getTargetLocation(), true, m_robot->isCharging(), "", -1);
-        }
-        if (m_simConfig->replanBackgroundOnInterrupt) {
-            m_backgroundMissions.invalidatePlan();
-        }
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), m_currentTime);
-    }
-
-    bool hasActiveInterrupt() const override {
-        return m_interruptMission.has();
-    }
-
+    bool pushInterrupt(const des::OrderPtr& order) override;
+    void popInterrupt(const des::OrderPtr& completedOrder) override;
+    bool hasActiveInterrupt() const override;
 };

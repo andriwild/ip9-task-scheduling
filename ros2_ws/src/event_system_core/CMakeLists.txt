@@ -79,7 +79,7 @@ if(BUILD_TESTING)
   )
 
   # Battery model tests
-  ament_add_gtest(test_battery test/test_battery.cpp)
+  ament_add_gtest(test_battery test/test_battery.cpp src/model/battery.cpp)
   ament_target_dependencies(test_battery rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_battery PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
@@ -98,6 +98,7 @@ if(BUILD_TESTING)
     src/plugins/information/states.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/model/battery.cpp
   )
   target_link_libraries(test_config_loader nlohmann_json::nlohmann_json)
   ament_target_dependencies(test_config_loader rclcpp behaviortree_cpp event_system_msgs)
@@ -110,6 +111,7 @@ if(BUILD_TESTING)
     test/test_scheduler.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/model/battery.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
   )
@@ -123,6 +125,7 @@ if(BUILD_TESTING)
     test/test_events.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/model/battery.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
   )
@@ -136,7 +139,11 @@ if(BUILD_TESTING)
     test/test_integration.cpp
     src/model/robot.cpp
     src/model/robot_state.cpp
+    src/model/battery.cpp
     src/model/context.cpp
+    src/model/person_registry.cpp
+    src/model/service_log.cpp
+    src/model/mission/mission_board.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
   )

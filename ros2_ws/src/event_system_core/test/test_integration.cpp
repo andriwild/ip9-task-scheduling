@@ -80,7 +80,8 @@ protected:
     EventQueue eventQueue;
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
-    des::PersonRegistry employees;
+    des::PersonMap employees;
+    des::PersonList ownedPeople;
     des::LocationMap locationMap;
     std::shared_ptr<TrackingObserver> observer;
 
@@ -131,7 +132,7 @@ protected:
         locationMap.emplace("MeetingRoom", des::Location("MeetingRoom", {}, 50.0));
 
         // Employee
-        auto max = std::make_shared<des::Person>();
+        auto max = std::make_unique<des::Person>();
         max->firstName = "Max";
         max->lastName = "Mustermann";
         max->workplace = "Office";
@@ -139,7 +140,8 @@ protected:
         max->transitionMatrix = {{1.0}};
         max->arrivalTime = 28800;
         max->departureTime = 61200;
-        employees["Max"] = max;
+        employees["Max"] = max.get();
+        ownedPeople.push_back(std::move(max));
     }
 
     // Run the event loop similar to main.cpp

@@ -268,11 +268,11 @@ TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
 
 TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
     des::PersonList employees;
-    auto emp = std::make_shared<des::Person>();
+    auto emp = std::make_unique<des::Person>();
     emp->firstName = "Max";
     emp->roomLabels = {"RoomA"};
     emp->transitionMatrix = {{1.0}};
-    employees.push_back(emp);
+    employees.push_back(std::move(emp));
 
     des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomA") };
 
@@ -283,7 +283,7 @@ TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
 }
 
 TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
-    auto emp = std::make_shared<des::Person>();
+    auto emp = std::make_unique<des::Person>();
     emp->firstName = "Max";
     emp->roomLabels = {"RoomA"};
     emp->transitionMatrix = {{1.0}};
@@ -293,14 +293,16 @@ TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
     des::LocationMap locationMap;
     locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
 
+    des::PersonList employees;
+    employees.push_back(std::move(emp));
     EXPECT_THROW(
-        ConfigLoader::validateConfig(orders, {emp}, locationMap, "RoomA"),
+        ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"),
         std::runtime_error
     );
 }
 
 TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
-    auto emp = std::make_shared<des::Person>();
+    auto emp = std::make_unique<des::Person>();
     emp->firstName = "Max";
     emp->roomLabels = {"RoomA", "RoomB"};
     emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
@@ -309,8 +311,10 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
     locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
     locationMap.emplace("RoomB", des::Location("RoomB", des::Point(1, 1, 0)));
 
+    des::PersonList employees;
+    employees.push_back(std::move(emp));
     EXPECT_THROW(
-        ConfigLoader::validateConfig({}, {emp}, locationMap, "RoomA"),
+        ConfigLoader::validateConfig({}, employees, locationMap, "RoomA"),
         std::runtime_error
     );
 }

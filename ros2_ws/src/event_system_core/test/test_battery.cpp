@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "model/battery.hpp"
+#include "model/battery.h"
 
 namespace {
 

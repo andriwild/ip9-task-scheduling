@@ -181,7 +181,7 @@ public:
                     DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Matrix dimension does not match roomLabels for %s", p.firstName.c_str());
                 }
 
-                employees.push_back(std::make_shared<des::Person>(std::move(p)));
+                employees.push_back(std::make_unique<des::Person>(std::move(p)));
             }
         } catch (const nlohmann::json::exception& e) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "JSON Parsing Error: %s", e.what());
@@ -269,7 +269,7 @@ public:
         }
     }
 
-    static des::PersonList filterByAppointments(
+    static std::vector<des::Person*> filterByAppointments(
         const des::PersonList& employees,
         const des::OrderList& orders
     ) {
@@ -279,10 +279,10 @@ public:
                 needed.insert(accompany->personName);
             }
         }
-        des::PersonList filtered;
+        std::vector<des::Person*> filtered;
         for (const auto& p : employees) {
             if (needed.contains(p->firstName)) {
-                filtered.push_back(p);
+                filtered.push_back(p.get());
             }
         }
         return filtered;

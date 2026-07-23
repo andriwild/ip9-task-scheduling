@@ -14,7 +14,7 @@
 #include "../../util/log.h"
 #include "../../plugins/i_order.h"
 #include "../../plugins/order_registry.h"
-#include "../battery.hpp"
+#include "../battery.h"
 #include "../robot.h"
 #include "../i_sim_context.h"
 #include "../../algo/background/op_instance_builder.h"
