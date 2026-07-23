@@ -1,0 +1,3 @@
+[submodule "ros2_ws/third_party/vislib2"]
+	path = ros2_ws/third_party/vislib2
+	url = git@gitlab.fhnw.ch-wild:andri.wild/vislib2.git
