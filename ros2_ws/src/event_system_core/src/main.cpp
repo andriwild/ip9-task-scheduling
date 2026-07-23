@@ -53,7 +53,13 @@ int main(const int argc, char *argv[]) {
     } else {
         app = SimRunner::create(argc, argv);
     }
-    app->setupApplication();
+    try {
+        app->setupApplication();
+    } catch (const std::exception& e) {
+        DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Setup failed: %s", e.what());
+        rclcpp::shutdown();
+        return 1;
+    }
 
     des::log::installOutputHandler();  // after rclcpp::init() from create()
     

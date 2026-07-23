@@ -70,6 +70,16 @@ void SimRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
     m_config = m_systemConfigNode->getConfig();
+
+    constexpr int kMaxInteractiveDurationSec = 3 * 86400;
+    if (m_config->simDuration > kMaxInteractiveDurationSec) {
+        throw std::runtime_error(
+            "Interactive mode is limited to 3 days of simulation, but sim_duration=" +
+            std::to_string(m_config->simDuration) + "s (" +
+            std::to_string(m_config->simDuration / 86400) + " days). Reduce sim_duration to <= " +
+            std::to_string(kMaxInteractiveDurationSec) + "s or run headless.");
+    }
+
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
     m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_locationMap);

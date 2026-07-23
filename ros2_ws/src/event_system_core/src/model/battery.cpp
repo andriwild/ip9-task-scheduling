@@ -40,8 +40,16 @@ Battery::Battery(
     m_currentCapacity = initialCapacity;
 }
 
-void Battery::updateConfig(const double designCapacity, const double initialCapacity, const double lowThreshold, const double fullThreshold,
-                           const double voltage, const double cvThreshold, const double taperFraction, const bool chargeToFull) {
+void Battery::updateConfig(
+    const double designCapacity,
+    const double initialCapacity,
+    const double lowThreshold,
+    const double fullThreshold,
+    const double voltage,
+    const double cvThreshold,
+    const double taperFraction,
+    const bool chargeToFull
+) {
     m_designCapacity       = designCapacity;
     m_initialCapacity      = initialCapacity;
     m_lowBatteryThreshold  = lowThreshold;
