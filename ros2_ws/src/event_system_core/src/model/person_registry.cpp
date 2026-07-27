@@ -6,10 +6,10 @@
 
 PersonRegistry::PersonRegistry(
     des::PersonMap employees,
-    const des::LocationMap& locationMap
+    const des::LocationMap& rooms
 )
     : m_employees(std::move(employees))
-    , m_locationMap(locationMap)
+    , m_rooms(rooms)
     , m_placementRng(PLACEMENT_SEED)
 {
 }
@@ -22,46 +22,46 @@ des::Person* PersonRegistry::getByName(const std::string& name) const {
     return m_employees.at(name);
 }
 
-std::string PersonRegistry::location(const std::string& name) const {
-    return m_locations.at(name);
+std::string PersonRegistry::room(const std::string& person) const {
+    return m_roomByPerson.at(person);
 }
 
-const std::map<std::string, std::string>& PersonRegistry::allLocations() const {
-    return m_locations;
+const std::map<std::string, std::string>& PersonRegistry::allRooms() const {
+    return m_roomByPerson;
 }
 
-void PersonRegistry::setLocation(const std::string& name, const std::string& room) {
-    m_locations[name] = room;
+void PersonRegistry::setRoom(const std::string& person, const std::string& room) {
+    m_roomByPerson[person] = room;
     if (const auto pos = samplePosition(room)) {
-        m_positions[name] = *pos;
+        m_positionByPerson[person] = *pos;
     } else {
-        m_positions.erase(name);
+        m_positionByPerson.erase(person);
     }
 }
 
-std::optional<des::Point> PersonRegistry::position(const std::string& name) const {
-    const auto it = m_positions.find(name);
-    if (it == m_positions.end()) {
+std::optional<des::Point> PersonRegistry::position(const std::string& person) const {
+    const auto it = m_positionByPerson.find(person);
+    if (it == m_positionByPerson.end()) {
         return std::nullopt;
     }
     return it->second;
 }
 
-bool PersonRegistry::isAt(const std::string& name, const std::string& location) const {
-    const auto it = m_locations.find(name);
-    if (it == m_locations.end()) {
+bool PersonRegistry::isAt(const std::string& person, const std::string& room) const {
+    const auto it = m_roomByPerson.find(person);
+    if (it == m_roomByPerson.end()) {
         return false;
     }
-    return it->second == location;
+    return it->second == room;
 }
 
-void PersonRegistry::clearLocations() {
-    m_locations.clear();
+void PersonRegistry::clearRooms() {
+    m_roomByPerson.clear();
 }
 
 std::optional<des::Point> PersonRegistry::samplePosition(const std::string& room) {
-    const auto it = m_locationMap.find(room);
-    if (it == m_locationMap.end()) {
+    const auto it = m_rooms.find(room);
+    if (it == m_rooms.end()) {
         return std::nullopt;
     }
     if (const auto pos = geom::sampleInPolygon(it->second.m_footprint, m_placementRng)) {

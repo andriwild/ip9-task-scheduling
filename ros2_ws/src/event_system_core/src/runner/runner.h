@@ -95,7 +95,7 @@ public:
         DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Start filling event queue");
         SortedEventQueue queue;
 
-        const auto missions = scheduler.simplePlan(orders, idleLocation);
+        const auto missions = scheduler.createMissionDispatchEvents(orders, idleLocation);
 
         for (const auto& mission : missions) {
             queue.push(mission);
@@ -127,6 +127,7 @@ public:
 
 protected:
     des::LocationMap m_locationMap;
+    des::RoomTourMap m_roomTours;
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
@@ -261,6 +262,17 @@ protected:
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu locations from building snapshot", map.value().size());
         return map.value();
+    }
+
+    des::RoomTourMap loadRoomTours() {
+        const std::string path = ConfigLoader::toursFilePath(m_config->personDetectionRange);
+        auto tours = ConfigLoader::loadRoomTours(path);
+        if (!tours.has_value()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "No room tours at %s; scan falls back to area estimate", path.c_str());
+            return {};
+        }
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu room tours from %s", tours.value().size(), path.c_str());
+        return tours.value();
     }
 
     virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {

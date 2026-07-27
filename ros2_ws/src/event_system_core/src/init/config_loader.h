@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <vector>
 
 #include "../util/log.h"
@@ -441,6 +442,43 @@ public:
     }
 
     // Loads the building snapshot into a name -> Location map (coords + optional area) 
+    static std::string toursFilePath(double radius) {
+        std::ostringstream oss;
+        oss << "tours_r" << radius << ".json";
+        const auto slash = BUILDING_FILE.rfind('/');
+        const std::string dir = slash == std::string::npos ? "" : BUILDING_FILE.substr(0, slash + 1);
+        return dir + oss.str();
+    }
+
+    static std::optional<des::RoomTourMap> loadRoomTours(const std::string& filePath) {
+        const auto json = getJson(filePath);
+        if (!json.has_value()) {
+            return std::nullopt;
+        }
+        const auto& j = json.value();
+        if (!j.contains("rooms")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour config %s missing 'rooms'", filePath.c_str());
+            return std::nullopt;
+        }
+
+        des::RoomTourMap tours;
+        for (const auto& [name, entry] : j.at("rooms").items()) {
+            if (!entry.value("ok", false)) {
+                continue;
+            }
+            des::RoomTour tour;
+            tour.m_distance = entry.value("distance", 0.0);
+            tour.m_steps = entry.value("steps", 0);
+            if (entry.contains("path") && entry.at("path").is_array()) {
+                for (const auto& p : entry.at("path")) {
+                    tour.m_path.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
+                }
+            }
+            tours.emplace(name, tour);
+        }
+        return tours;
+    }
+
     static std::optional<des::LocationMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <memory>
 #include <optional>
 #include <random>
 #include <string>
@@ -10,9 +9,9 @@
 
 class PersonRegistry {
     des::PersonMap m_employees;
-    std::map<std::string, std::string> m_locations;
-    std::map<std::string, des::Point> m_positions;
-    const des::LocationMap& m_locationMap;
+    std::map<std::string, std::string> m_roomByPerson;
+    std::map<std::string, des::Point> m_positionByPerson;
+    const des::LocationMap& m_rooms;
     std::mt19937 m_placementRng;
 
 public:
@@ -20,19 +19,19 @@ public:
 
     PersonRegistry(
         des::PersonMap employees,
-        const des::LocationMap& locationMap
+        const des::LocationMap& rooms
     );
 
     bool hasEmployee(const std::string& name) const;
     des::Person* getByName(const std::string& name) const;
 
-    std::string location(const std::string& name) const;
-    const std::map<std::string, std::string>& allLocations() const;
-    void setLocation(const std::string& name, const std::string& room);
-    std::optional<des::Point> position(const std::string& name) const;
-    bool isAt(const std::string& name, const std::string& location) const;
+    std::string room(const std::string& person) const;
+    const std::map<std::string, std::string>& allRooms() const;
+    void setRoom(const std::string& person, const std::string& room);
+    std::optional<des::Point> position(const std::string& person) const;
+    bool isAt(const std::string& person, const std::string& room) const;
 
-    void clearLocations();
+    void clearRooms();
 
 private:
     std::optional<des::Point> samplePosition(const std::string& room);

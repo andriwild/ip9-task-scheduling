@@ -39,6 +39,7 @@ class SimulationContext : public ISimContext {
     std::shared_ptr<IPathPlanner> m_plannerNode;
     std::unique_ptr<Robot> m_robot;
     des::LocationMap m_locationMap;
+    des::RoomTourMap m_roomTours;
     PersonRegistry m_persons;
     ServiceLog m_services;
     MissionBoard m_missions;
@@ -49,7 +50,8 @@ public:
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
         des::PersonMap employees,
-        des::LocationMap locationMap
+        des::LocationMap locationMap,
+        des::RoomTourMap roomTours
     );
 
     Scheduler& getScheduler();
@@ -91,7 +93,8 @@ public:
     void recordServiced(const std::string& room, const std::string& type, int time) override;
 
     std::vector<std::string> roomNames() const override;
-    double getLocationArea(const std::string& name) const override;
+    const des::Location& location(const std::string& room) const override;
+    const des::RoomTour* roomTour(const std::string& room) const override;
 
     // Mission management — current mission plus the three mission channels.
     void setOrderPtr(const des::OrderPtr& orderPtr) override;
@@ -127,6 +130,7 @@ public:
     void notifyEvent(const IEvent& event) const override;
     void notifyChargeStarted() const override;
     void robotMoved(const std::string& location, double distance = 0) const override;
+    void robotMovedTo(const des::Point& position) const override;
 
     double getDriveTimeStd() const;
 
