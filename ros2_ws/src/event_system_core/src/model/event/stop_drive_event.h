@@ -1,19 +1,24 @@
 #pragma once
 
+#include <memory>
+#include <utility>
+
 #include "model/event/base.h"
+#include "model/event/drive_target.h"
 #include "model/i_sim_context.h"
 #include "model/robot.h"
-#include "../../plugins/order_registry.h"
 
 class StopDriveEvent final : public IEvent {
-public:
-    double distance;
-    std::string location;
+    std::shared_ptr<DriveTarget> m_target;
+    double m_distance;
+    std::shared_ptr<IEvent> m_onArrive;
 
-    explicit StopDriveEvent(const int time, const std::string &location, const double distance)
+public:
+    explicit StopDriveEvent(const int time, std::shared_ptr<DriveTarget> target, const double distance, std::shared_ptr<IEvent> onArrive = nullptr)
         : IEvent(time)
-        , distance(distance)
-        , location(location)
+        , m_target(std::move(target))
+        , m_distance(distance)
+        , m_onArrive(std::move(onArrive))
     {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -24,32 +29,18 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        ctx.robotMoved(this->location, this->distance);
+        m_target->arrive(ctx, m_distance);
         ctx.getRobot()->setDriving(false);
-        ctx.setBTBlackboard("location", this->location);
-
-        auto orderPtr = ctx.getOrderPtr();
-        if (orderPtr) {
-            auto& plugin = OrderRegistry::instance().get(orderPtr->type);
-            plugin.onStopDriveEvent(ctx, *orderPtr);
-        }
-
-        // check if the robot detects a person
-        for (const auto& [name, personLocation] : ctx.getAllPersonLocations()) {
-            ctx.getRobot()->addSighting({
-                ctx.getTime(),
-                name,
-                this->location,
-                personLocation == this->location ? SightingKind::PRESENT : SightingKind::ABSENT
-            });
-        }
-
         ctx.notifyEvent(*this);
         ctx.notifyBatteryChanged();
 
-        ctx.tickBT();
+        if (m_onArrive) {
+            ctx.startActivity(m_onArrive->withTime(this->time));
+        } else {
+            ctx.tickBT();
+        }
     }
 
-    std::string getName() const override { return "Arrived: " + location; }
+    std::string getName() const override { return "Arrived: " + m_target->label(); }
     des::EventType getType() const override { return des::EventType::STOP_DRIVE; }
 };

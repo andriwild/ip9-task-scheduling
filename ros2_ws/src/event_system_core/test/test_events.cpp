@@ -93,7 +93,10 @@ public:
         robot->setPosition(position);
     }
 
-    Journey scheduleArrival(const std::string& /*target*/) const override {
+    Journey scheduleArrival(const std::string& target) const override {
+        if (robot->getLocation() == target) {
+            return {0.0, 0.0};
+        }
         return {10.0, 5.0};
     }
 
@@ -554,7 +557,7 @@ TEST(EventExecute, StartDriveSetsDrivingAndSchedulesArrival) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
 
-    StartDriveEvent event(35000, "Office");
+    StartDriveEvent event(35000, std::make_shared<RoomTarget>("Office"));
     event.execute(ctx);
 
     EXPECT_TRUE(ctx.robot->isDriving());
@@ -575,7 +578,7 @@ TEST(EventExecute, StartDriveToSameLocationPushesImmediateStop) {
     ctx.robot->setDriving(false);
     ctx.robot->setLocation("Office");
 
-    StartDriveEvent event(35000, "Office");
+    StartDriveEvent event(35000, std::make_shared<RoomTarget>("Office"));
     event.execute(ctx);
 
     // When already at location, should push StopDriveEvent with time=35000
@@ -633,7 +636,7 @@ TEST(EventExecute, StopDriveMovesRobotAndSetsDrivingFalse) {
     MockSimContext ctx;
     ctx.robot->setDriving(true);
 
-    StopDriveEvent event(35010, "Office", 5.0);
+    StopDriveEvent event(35010, std::make_shared<RoomTarget>("Office"), 5.0);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getLocation(), "Office");
@@ -656,7 +659,7 @@ TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
     auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
     ctx.currentOrder = order;
 
-    StopDriveEvent event(35100, "MeetingRoom", 10.0);
+    StopDriveEvent event(35100, std::make_shared<RoomTarget>("MeetingRoom"), 10.0);
     event.execute(ctx);
 
     // Person should be moved to the robot's arrival location
@@ -967,8 +970,8 @@ TEST(EventMetadata, EventTypesAreCorrect) {
     EXPECT_EQ(StartAccompanyEvent(0, nullptr).getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(StartDropOffConversationEvent(0).getType(), des::EventType::START_DROP_OFF_CONV);
     EXPECT_EQ(StartFoundPersonConversationEvent(0).getType(), des::EventType::START_FOUND_PERSON_CONV);
-    EXPECT_EQ(StopDriveEvent(0, "x", 0).getType(), des::EventType::STOP_DRIVE);
-    EXPECT_EQ(StartDriveEvent(0, "x").getType(), des::EventType::START_DRIVE);
+    EXPECT_EQ(StopDriveEvent(0, std::make_shared<RoomTarget>("x"), 0).getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(StartDriveEvent(0, std::make_shared<RoomTarget>("x")).getType(), des::EventType::START_DRIVE);
 }
 
 TEST(EventMetadata, EventNamesAreNonEmpty) {
@@ -976,6 +979,6 @@ TEST(EventMetadata, EventNamesAreNonEmpty) {
     EXPECT_FALSE(SimulationEndEvent(0).getName().empty());
     EXPECT_FALSE(AbortSearchEvent(0, nullptr).getName().empty());
     EXPECT_FALSE(BatteryFullEvent(0).getName().empty());
-    EXPECT_FALSE(StopDriveEvent(0, "X", 0).getName().empty());
-    EXPECT_FALSE(StartDriveEvent(0, "X").getName().empty());
+    EXPECT_FALSE(StopDriveEvent(0, std::make_shared<RoomTarget>("X"), 0).getName().empty());
+    EXPECT_FALSE(StartDriveEvent(0, std::make_shared<RoomTarget>("X")).getName().empty());
 }

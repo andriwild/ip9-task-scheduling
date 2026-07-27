@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "model/event/base.h"
+#include "model/event/start_drive_event.h"
 #include "scan.h"
 #include "scan_complete.h"
 #include "model/i_sim_context.h"
@@ -38,7 +39,7 @@ public:
         if (tour != nullptr && !tour->m_path.empty()) {
             DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d room=%s person=%s -> tour with %zu points (%.2fm)", this->time, room.c_str(), personName.c_str(), tour->m_path.size(), tour->m_distance);
             ctx.robotMovedTo(ctx.location(room).m_p);
-            ctx.startActivity(std::make_shared<Scan>(this->time, m_order, 0, Scan::Phase::Drive));
+            requestDrive(ctx, tour->m_path[0], std::make_shared<Scan>(this->time, m_order, 0));
             return;
         }
 

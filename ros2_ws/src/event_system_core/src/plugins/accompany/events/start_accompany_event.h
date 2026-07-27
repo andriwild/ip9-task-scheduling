@@ -30,7 +30,15 @@ public:
             ctx.pushEvent(std::make_shared<PersonAccompanyDepartureEvent>(time, person, currentRoom));
         }
         ctx.changeRobotState(std::make_unique<AccompanyState>());
-        requestDrive(ctx, accompany.roomName);
+
+        const std::string currentRoom = ctx.getRobot()->getLocation();
+        if (ctx.roomTour(currentRoom) != nullptr) {
+            auto roomDrive = std::make_shared<StartDriveEvent>(time, std::make_shared<RoomTarget>(accompany.roomName));
+            requestDrive(ctx, ctx.location(currentRoom).m_p, roomDrive);
+        } else {
+            requestDrive(ctx, accompany.roomName);
+        }
+
         ctx.notifyEvent(*this);
     }
 

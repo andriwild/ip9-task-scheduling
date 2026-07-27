@@ -20,7 +20,7 @@ public:
     void execute(ISimContext& ctx) override {
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.notifyEvent(*this);
-        ctx.pushEvent(std::make_shared<StopDriveEvent>(time, ctx.getRobot()->getLocation(), 0));
+        ctx.pushEvent(std::make_shared<StopDriveEvent>(time, std::make_shared<RoomTarget>(ctx.getRobot()->getLocation()), 0));
     }
 
     std::string getName() const override { return "Simulation End"; }
