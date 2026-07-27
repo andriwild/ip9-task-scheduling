@@ -29,6 +29,7 @@ public:
         const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
         const bool personPresent = ctx.robotSeesPerson(personName);
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "ScanComplete t=%d room=%s person=%s personInRoom=%d remaining=%d -> tickBT", this->time, ctx.getRobot()->getLocation().c_str(), personName.c_str(), personPresent, m_remainigSearchTime);
         if (personPresent) {
             if (!ctx.getRobot()->isPersonVisible()) {
                 DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "Found %s in %s", personName.c_str(), ctx.getRobot()->getLocation().c_str());

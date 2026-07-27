@@ -63,21 +63,8 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
 }
 
 namespace {
-// exclude rooms (e.g. elevator)
-bool isOppositeSexToilet(const std::string& name, const std::string& sex) {
-    if (sex == "male") {
-        return name.find("_Toilet_W") != std::string::npos;
-    }
-    if (sex == "female") {
-        return name.find("_Toilet_M") != std::string::npos;
-    }
-    return false;
-}
 
 bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded, const std::string& sex) {
-    if (isOppositeSexToilet(name, sex)) {
-        return false;
-    }
     for (const auto& pattern : excluded) {
         if (name.find(pattern) != std::string::npos) {
             return false;
@@ -205,9 +192,8 @@ double meetingViaWorkplace(const Scheduler& sched, const std::string& workplace,
 }
 
 int AccompanyOrderPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, const std::string& startPos) const {
-    const auto& a = static_cast<const AccompanyOrder&>(order);
-    (void)startPos;
-    return *a.deadline - s.timeBuffer();
+    const auto& mission = static_cast<const AccompanyOrder&>(order);
+    return *mission.deadline - s.timeBuffer();
 }
 
 bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContext& context) const {

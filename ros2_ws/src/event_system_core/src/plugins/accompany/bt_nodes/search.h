@@ -16,7 +16,7 @@
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_found_person_conversation_event.h"
-#include "plugins/accompany/events/scan_aera.h"
+#include "plugins/accompany/events/room_search.h"
 #include "plugins/accompany/events/abort_search_event.h"
 
 class IsSearching final : public BT::ConditionNode {
@@ -58,7 +58,9 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->getRobot()->setScanning(false);
-        return ctx->getRobot()->isPersonVisible() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        const bool visible = ctx->getRobot()->isPersonVisible();
+        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "FoundPerson tick t=%d: setScanning(false), personVisible=%d", ctx->getTime(), visible);
+        return visible ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
@@ -71,7 +73,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->getRobot()->setScanning(true);
-        ctx->pushEvent(std::make_shared<ScanAera>(ctx->getTime(), ctx->getOrderPtr()));
+        ctx->pushEvent(std::make_shared<RoomSearch>(ctx->getTime(), ctx->getOrderPtr()));
         return BT::NodeStatus::SUCCESS;
     }
 };
