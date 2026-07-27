@@ -13,7 +13,7 @@
     "arrival_std": 3600.0,
     "battery_capacity": 44.0,
     "battery_voltage": 12.0,
-    "cacheEnabled": false,
+    "cacheEnabled": true,
     "charge_to_full": false,
     "charging_rate": 88.0,
     "clean": {
@@ -65,5 +65,5 @@
     "sim_start_time": 25200,
     "taper_fraction": 0.6000000238418579,
     "timeBuffer": 1200.0,
-    "use_distance_matrix": false
+    "use_distance_matrix": true 
 }

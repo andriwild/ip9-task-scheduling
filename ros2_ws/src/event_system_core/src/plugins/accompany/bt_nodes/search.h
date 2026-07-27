@@ -59,7 +59,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         ctx->getRobot()->setScanning(false);
         const bool visible = ctx->getRobot()->isPersonVisible();
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "FoundPerson tick t=%d: setScanning(false), personVisible=%d", ctx->getTime(), visible);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "FoundPerson tick t=%d: setScanning(false), personVisible=%d", ctx->getTime(), visible);
         return visible ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };

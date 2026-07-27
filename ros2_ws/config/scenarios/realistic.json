@@ -5,8 +5,8 @@
             "type": "accompany",
             "personName": "Max",
             "roomName": "IMVS_Printer",
-            "appointmentTime": 28800,
-            "every_n_days": 1,
+            "appointmentTime": 45600,
+            "every_n_days": 2,
             "description": "Begleitung"
         },
         {
@@ -14,8 +14,8 @@
             "type": "accompany",
             "personName": "Leo",
             "roomName": "IMVS_Kitchen",
-            "appointmentTime": 31500,
-            "every_n_days": 1,
+            "appointmentTime": 46500,
+            "every_n_days": 2,
             "description": "Dokumente bringen"
         },
         {
@@ -23,8 +23,8 @@
             "type": "accompany",
             "personName": "Anna",
             "roomName": "5.2B10",
-            "appointmentTime": 34200,
-            "every_n_days": 1,
+            "appointmentTime": 47400,
+            "every_n_days": 2,
             "description": "Gast begleiten"
         },
         {
@@ -32,8 +32,8 @@
             "type": "accompany",
             "personName": "Fred",
             "roomName": "5.2B18",
-            "appointmentTime": 36900,
-            "every_n_days": 1,
+            "appointmentTime": 48300,
+            "every_n_days": 2,
             "description": "Materialtransport"
         },
         {
@@ -41,8 +41,8 @@
             "type": "accompany",
             "personName": "Julia",
             "roomName": "5.2D02",
-            "appointmentTime": 39600,
-            "every_n_days": 1,
+            "appointmentTime": 49200,
+            "every_n_days": 2,
             "description": "Post abholen"
         },
         {
@@ -50,8 +50,8 @@
             "type": "accompany",
             "personName": "Sara",
             "roomName": "5.2C_Working_Space",
-            "appointmentTime": 42300,
-            "every_n_days": 1,
+            "appointmentTime": 50100,
+            "every_n_days": 2,
             "description": "Besprechung begleiten"
         },
         {
@@ -59,8 +59,8 @@
             "type": "accompany",
             "personName": "Tom",
             "roomName": "5.2A_Open_Zone",
-            "appointmentTime": 45000,
-            "every_n_days": 1,
+            "appointmentTime": 51000,
+            "every_n_days": 2,
             "description": "Begleitung"
         },
         {
@@ -68,8 +68,8 @@
             "type": "accompany",
             "personName": "Nina",
             "roomName": "5.2B06",
-            "appointmentTime": 47700,
-            "every_n_days": 1,
+            "appointmentTime": 132000,
+            "every_n_days": 2,
             "description": "Dokumente bringen"
         },
         {
@@ -77,8 +77,8 @@
             "type": "accompany",
             "personName": "Max",
             "roomName": "5.2B01",
-            "appointmentTime": 50400,
-            "every_n_days": 1,
+            "appointmentTime": 132900,
+            "every_n_days": 2,
             "description": "Gast begleiten"
         },
         {
@@ -86,8 +86,8 @@
             "type": "accompany",
             "personName": "Leo",
             "roomName": "5.2A13",
-            "appointmentTime": 53100,
-            "every_n_days": 1,
+            "appointmentTime": 133800,
+            "every_n_days": 2,
             "description": "Materialtransport"
         },
         {
@@ -95,8 +95,8 @@
             "type": "accompany",
             "personName": "Anna",
             "roomName": "IMVS_Printer",
-            "appointmentTime": 55800,
-            "every_n_days": 1,
+            "appointmentTime": 134700,
+            "every_n_days": 2,
             "description": "Post abholen"
         },
         {
@@ -104,8 +104,8 @@
             "type": "accompany",
             "personName": "Fred",
             "roomName": "IMVS_Kitchen",
-            "appointmentTime": 58500,
-            "every_n_days": 1,
+            "appointmentTime": 135600,
+            "every_n_days": 2,
             "description": "Besprechung begleiten"
         },
         {
@@ -113,8 +113,8 @@
             "type": "accompany",
             "personName": "Julia",
             "roomName": "5.2B10",
-            "appointmentTime": 61200,
-            "every_n_days": 1,
+            "appointmentTime": 136500,
+            "every_n_days": 2,
             "description": "Begleitung"
         },
         {
@@ -122,8 +122,8 @@
             "type": "accompany",
             "personName": "Sara",
             "roomName": "5.2B18",
-            "appointmentTime": 63900,
-            "every_n_days": 1,
+            "appointmentTime": 137400,
+            "every_n_days": 2,
             "description": "Dokumente bringen"
         },
         {
@@ -131,7 +131,7 @@
             "type": "accompany",
             "personName": "Tom",
             "roomName": "5.2C_Working_Space",
-            "appointmentTime": 381600,
+            "appointmentTime": 393600,
             "every_n_days": 7,
             "description": "Wochenrapport begleiten"
         }
