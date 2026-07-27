@@ -40,13 +40,15 @@ void SimRunner::rebuildEventQueue() {
 }
 
 void SimRunner::buildSimulation() {
+    m_roomTours = loadRoomTours();
     m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue, m_config, m_planner, m_employees, m_locationMap
+        m_eventQueue, m_config, m_planner, m_employees, m_locationMap, m_roomTours
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
     m_personMarkerObserver->attach(m_ctx.get(), m_employees);
     m_ctx->addObserver(m_personMarkerObserver);
+    m_ctx->addObserver(m_robotMarkerObserver);
     rebuildEventQueue();
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
 }
@@ -83,6 +85,7 @@ void SimRunner::setupApplication() {
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
     m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_locationMap);
+    m_robotMarkerObserver = std::make_shared<RobotMarkerObserver>(m_systemConfigNode, m_locationMap);
     buildSimulation();
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");

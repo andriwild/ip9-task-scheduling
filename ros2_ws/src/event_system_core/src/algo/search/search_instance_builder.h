@@ -35,7 +35,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         if (room.name == startLoc || room.name == endLoc) {
             continue;
         }
-        const double area        = ctx.getLocationArea(room.name);
+        const double area        = ctx.location(room.name).m_area.value_or(1.0);
         const double steps       = (area / fieldOfView) + 1.0;
         const double scanTime    = steps * (2.0 * range / cfg->robotSpeed);
         const double scanEnergy  = scanTime * cfg->energyConsumptionBase / 3600.0;

@@ -39,7 +39,7 @@ public:
         return m_simConfig->timeBuffer;
     }
 
-    std::vector<std::shared_ptr<MissionDispatchEvent>> simplePlan(des::OrderList& orders, const std::string& startPos) {
+    std::vector<std::shared_ptr<MissionDispatchEvent>> createMissionDispatchEvents(des::OrderList& orders, const std::string& startPos) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
         std::vector<std::shared_ptr<MissionDispatchEvent>> events;
 

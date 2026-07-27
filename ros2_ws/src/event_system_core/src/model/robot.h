@@ -15,6 +15,7 @@ class Robot {
     std::unique_ptr<RobotState> m_state;
     std::string m_currentLocation;
     std::string m_targetLocation;
+    des::Point m_position;
 
     std::vector<Sighting> m_sightings;
 
@@ -46,6 +47,9 @@ public:
 
     std::string getTargetLocation() const;
     void setTargetLocation(const std::string& location);
+
+    des::Point getPosition() const;
+    void setPosition(const des::Point& position);
 
     void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() const;

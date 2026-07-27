@@ -126,7 +126,7 @@ TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
 
     des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000, "Test Meeting") };
 
-    auto missions = scheduler->simplePlan(orders, "Dock");
+    auto missions = scheduler->createMissionDispatchEvents(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
     EXPECT_EQ(missions[0]->time, 35940);
@@ -143,7 +143,7 @@ TEST_F(SchedulerTest, SimplePlanMultipleAppointments) {
         makeAccompanyOrder(2, "Anna", "HallA",       39600, "Meeting 2"),
     };
 
-    auto missions = scheduler->simplePlan(orders, "Dock");
+    auto missions = scheduler->createMissionDispatchEvents(orders, "Dock");
     ASSERT_EQ(missions.size(), 2u);
 
     EXPECT_EQ(missions[0]->time, 35940);
@@ -156,7 +156,7 @@ TEST_F(SchedulerTest, SimplePlanWithZeroTimeBuffer) {
 
     des::OrderList orders = { makeAccompanyOrder(1, "Max", "MeetingRoom", 36000) };
 
-    auto missions = scheduler->simplePlan(orders, "Dock");
+    auto missions = scheduler->createMissionDispatchEvents(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
 
     EXPECT_EQ(missions[0]->time, 36000);
@@ -166,7 +166,7 @@ TEST_F(SchedulerTest, SimplePlanEmptyAppointments) {
     auto scheduler = makeScheduler();
 
     des::OrderList orders;
-    auto missions = scheduler->simplePlan(orders, "Dock");
+    auto missions = scheduler->createMissionDispatchEvents(orders, "Dock");
     EXPECT_TRUE(missions.empty());
 }
 
@@ -176,7 +176,7 @@ TEST_F(SchedulerTest, DispatchIndependentOfPersonRooms) {
     auto scheduler = makeScheduler();
 
     des::OrderList orders = { makeAccompanyOrder(1, "Anna", "HallA", 39600) };
-    auto missions = scheduler->simplePlan(orders, "Dock");
+    auto missions = scheduler->createMissionDispatchEvents(orders, "Dock");
     ASSERT_EQ(missions.size(), 1u);
     EXPECT_EQ(missions[0]->time, 39540);
 }

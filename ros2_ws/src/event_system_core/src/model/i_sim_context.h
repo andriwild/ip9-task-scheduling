@@ -49,6 +49,7 @@ public:
     virtual Robot* getRobot() const = 0;
     virtual void changeRobotState(std::unique_ptr<RobotState> newState) const = 0;
     virtual void robotMoved(const std::string& location, double distance = 0) const = 0;
+    virtual void robotMovedTo(const des::Point& position) const = 0;
 };
 
 class IPathPlanning {
@@ -119,7 +120,8 @@ public:
 class IWorldModel {
 public:
     virtual ~IWorldModel() = default;
-    virtual double getLocationArea(const std::string& name) const = 0;
+    virtual const des::Location& location(const std::string& room) const = 0;
+    virtual const des::RoomTour* roomTour(const std::string& room) const = 0;
     virtual std::vector<std::string> roomNames() const = 0;
     virtual std::optional<int> lastServiced(const std::string& room, const std::string& type) const = 0;
     virtual void recordServiced(const std::string& room, const std::string& type, int time) = 0;

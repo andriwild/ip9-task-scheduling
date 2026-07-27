@@ -61,6 +61,14 @@ void Robot::setLocation(const std::string& location) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot location set to: %s", location.c_str());
 }
 
+des::Point Robot::getPosition() const {
+    return m_position;
+}
+
+void Robot::setPosition(const des::Point& position) {
+    m_position = position;
+}
+
 std::string Robot::getTargetLocation() const {
     return m_targetLocation;
 }

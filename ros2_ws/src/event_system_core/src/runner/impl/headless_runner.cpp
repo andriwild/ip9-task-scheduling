@@ -31,12 +31,14 @@ void HeadlessRunner::setupApplication() {
         m_employees[p->firstName] = p.get();
     }
 
+    m_roomTours = loadRoomTours();
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_planner,
         m_employees,
-        m_locationMap
+        m_locationMap,
+        m_roomTours
     );
 
     rebuildFileQueue();

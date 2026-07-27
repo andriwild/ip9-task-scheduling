@@ -89,6 +89,9 @@ public:
     void robotMoved(const std::string& location, double /*distance*/) const override {
         robot->setLocation(location);
     }
+    void robotMovedTo(const des::Point& position) const override {
+        robot->setPosition(position);
+    }
 
     Journey scheduleArrival(const std::string& /*target*/) const override {
         return {10.0, 5.0};
@@ -190,7 +193,13 @@ public:
     std::optional<des::Point> getPersonPosition(const std::string& /*name*/) const override {
         return std::nullopt;
     }
-    double getLocationArea(const std::string& /*name*/) const override { return 0.0; }
+    const des::Location& location(const std::string& /*room*/) const override {
+        static const des::Location none{"", des::Point{}, 0.0};
+        return none;
+    }
+    const des::RoomTour* roomTour(const std::string& /*room*/) const override {
+        return nullptr;
+    }
 
     bool robotSeesPerson(const std::string& name) const override {
         auto it = personLocations.find(name);

@@ -27,6 +27,7 @@ private:
 
         if (order->state == des::MissionState::PENDING) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.information"), "ExecuteInformation: start (order id=%d type=%s)", order->id, order->type.c_str());
+            order->state = des::MissionState::IN_PROGRESS;
             ctx->pushEvent(std::make_shared<StartInformationEvent>(ctx->getTime(), order));
             return BT::NodeStatus::RUNNING;
         }

@@ -194,7 +194,7 @@ TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
 
 TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -204,7 +204,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 
     // Schedule mission (same as IAppRunner::createMissionQueue)
     des::OrderList orders = {order};
-    auto missions = ctx->getScheduler().simplePlan(orders, "IMVS_Dock");
+    auto missions = ctx->getScheduler().createMissionDispatchEvents(orders, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;
         eventQueue.push(m);
@@ -243,7 +243,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 
 TEST_F(IntegrationTest, EventLoopDrainsQueue) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -261,7 +261,7 @@ TEST_F(IntegrationTest, EventLoopDrainsQueue) {
 
 TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -290,7 +290,7 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
 
 TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -322,7 +322,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -350,7 +350,7 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
 
 TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -372,7 +372,7 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
 
 TEST_F(IntegrationTest, StepByStepSingleMission) {
     auto ctx = std::make_shared<SimulationContext>(
-        eventQueue, config, planner, employees, locationMap
+        eventQueue, config, planner, employees, locationMap, des::RoomTourMap{}
     );
     ctx->addObserver(observer);
     ctx->setBehaviorTree(setupBehaviorTree(ctx));
@@ -380,7 +380,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000, "Dokument abholen");
 
     des::OrderList orders = {order};
-    auto missions = ctx->getScheduler().simplePlan(orders, "IMVS_Dock");
+    auto missions = ctx->getScheduler().createMissionDispatchEvents(orders, "IMVS_Dock");
     for (auto& m : missions) {
         m->time = m->time - config->timeBuffer;
         eventQueue.push(m);
@@ -425,7 +425,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     // Step 5: ScanAera at Dock
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::SCAN_AREA);
+    EXPECT_EQ(e->getType(), des::EventType::ROOM_SEARCH);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
 
     // Step 6: ScanComplete at Dock (person not found)
@@ -451,7 +451,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     // Step 9: ScanAera at Office
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::SCAN_AREA);
+    EXPECT_EQ(e->getType(), des::EventType::ROOM_SEARCH);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
 
     // Step 10: ScanComplete at Office — person found

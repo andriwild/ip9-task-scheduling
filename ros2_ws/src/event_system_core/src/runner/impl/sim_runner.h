@@ -8,6 +8,7 @@
 #include "../../model/event.h"
 #include "../../observer/metrics.h"
 #include "../../observer/person_marker.h"
+#include "../../observer/robot_marker.h"
 #include "../../observer/ros.h"
 #include "../../runner/runner.h"
 #include "../../sim/ros/config.h"
@@ -72,4 +73,5 @@ private:
     std::thread m_simThread;
     std::shared_ptr<RosObserver> m_rosObserver;
     std::shared_ptr<PersonMarkerObserver> m_personMarkerObserver;
+    std::shared_ptr<RobotMarkerObserver> m_robotMarkerObserver;
 };
