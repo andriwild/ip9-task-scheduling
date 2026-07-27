@@ -12,6 +12,7 @@
 #include "model/i_sim_context.h"
 #include "model/robot_state.h"
 #include "plugins/accompany/states.h"
+#include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/events/start_drop_off_conversation_event.h"
 
 
@@ -42,8 +43,8 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
-        // TODO: add randomness
-        const bool arrived = true;
+        const auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx->getOrderPtr());
+        const bool arrived = accompany && ctx->getRobot()->getLocation() == accompany->roomName;
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "ArrivedWithPerson: %d", arrived);
         return arrived ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }

@@ -29,6 +29,7 @@ class SimulationContext : public ISimContext {
     EventBus m_eventBus;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
+    const IEvent* m_currentEvent = nullptr;
 
     std::unique_ptr<Scheduler> m_scheduler;
 

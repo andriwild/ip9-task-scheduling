@@ -142,7 +142,9 @@ void SimulationContext::startActivity(const std::shared_ptr<IEvent>& endEvent) {
 }
 
 void SimulationContext::executeEvent(const std::shared_ptr<IEvent>& event) {
+    m_currentEvent = event.get();
     event->execute(*this);
+    m_currentEvent = nullptr;
     if (m_robot->inFlight().lock() == event) {
         m_robot->clearInFlight();
     }
@@ -157,6 +159,13 @@ void SimulationContext::setBehaviorTree(std::shared_ptr<BT::Tree> tree) {
 }
 
 void SimulationContext::tickBT() {
+    const auto inFlight = m_robot->inFlight().lock();
+    const bool ownCompletionTick = !inFlight || inFlight.get() == m_currentEvent;
+    const bool interruptActive = m_missions.hasActiveInterrupt();
+
+    if (!ownCompletionTick && !interruptActive) {
+        return;
+    }
     m_behaviorTree->tickOnce();
 }
 

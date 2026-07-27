@@ -151,7 +151,7 @@ protected:
             auto e = eventQueue.top();
             eventQueue.pop();
             ctx.advanceTime(e->time);
-            e->execute(ctx);
+            ctx.executeEvent(e);
             processed++;
         }
     }
@@ -162,7 +162,7 @@ protected:
         auto e = eventQueue.top();
         eventQueue.pop();
         ctx.advanceTime(e->time);
-        e->execute(ctx);
+        ctx.executeEvent(e);
         return e;
     }
 
@@ -305,7 +305,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
     auto e = eventQueue.top();
     eventQueue.pop();
     ctx->advanceTime(e->time);
-    e->execute(*ctx);
+    ctx->executeEvent(e);
 
     EXPECT_EQ(ctx->getTime(), 1000);
 
