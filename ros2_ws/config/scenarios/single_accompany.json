@@ -1,0 +1,12 @@
+{
+    "orders": [
+        {
+            "id": 0,
+            "type": "accompany",
+            "personName": "Max",
+            "roomName": "5.2B03",
+            "appointmentTime": 36000,
+            "description": "Debug single accompany"
+        }
+    ]
+}
