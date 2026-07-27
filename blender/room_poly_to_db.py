@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, text
 POLYGON_COLLECTION = "RoomPolygons"
 WAYPOINT_COLLECTION = "Waypoints"
 DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr"
+MATCH_TOLERANCE = 0.15
 # ---------------------
 
 print("-" * 30)
@@ -39,6 +40,22 @@ def point_in_polygon(px, py, verts):
             inside = not inside
         j = i
     return inside
+
+
+def point_to_polygon_distance(px, py, verts):
+    if point_in_polygon(px, py, verts):
+        return 0.0
+    n = len(verts)
+    best = float("inf")
+    for i in range(n):
+        ax, ay = verts[i]
+        bx, by = verts[(i + 1) % n]
+        dx, dy = bx - ax, by - ay
+        seg2 = dx * dx + dy * dy
+        t = 0.0 if seg2 == 0.0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / seg2))
+        qx, qy = ax + t * dx, ay + t * dy
+        best = min(best, ((px - qx) ** 2 + (py - qy) ** 2) ** 0.5)
+    return best
 
 
 def classify_room(name):
@@ -162,12 +179,16 @@ else:
                     print(f"  SKIP: {obj.name} (not enough vertices)")
                     continue
 
-                # Find waypoint that lies inside this polygon
                 matched_name = None
+                best_d = float("inf")
+                best_name = None
                 for wp_name, (wx, wy) in waypoints.items():
-                    if point_in_polygon(wx, wy, verts):
-                        matched_name = wp_name
-                        break
+                    d = point_to_polygon_distance(wx, wy, verts)
+                    if d < best_d:
+                        best_d = d
+                        best_name = wp_name
+                if best_name is not None and best_d <= MATCH_TOLERANCE:
+                    matched_name = best_name
 
                 if not matched_name:
                     unmatched.append(obj.name)
