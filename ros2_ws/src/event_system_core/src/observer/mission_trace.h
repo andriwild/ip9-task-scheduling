@@ -46,7 +46,8 @@ public:
         if (!trace) {
             return;
         }
-        trace->robot.push_back(Pt{ time, m_ctx->getRobot()->getLocation(), position.m_x, position.m_y, "scan" });
+        const std::string event = m_ctx->getRobot()->getState()->getName() == "search" ? "scan" : "move";
+        trace->robot.push_back(Pt{ time, m_ctx->getRobot()->getLocation(), position.m_x, position.m_y, event });
     }
 
     void onStateChanged(const int time, const des::RobotStateType& /*type*/, const std::string& name, des::BatteryProps /*bat*/) override {
