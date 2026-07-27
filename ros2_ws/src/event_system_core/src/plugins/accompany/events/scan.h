@@ -11,16 +11,20 @@
 #include "plugins/accompany/accompany_order.h"
 
 class Scan final : public IEvent {
+public:
+    enum class Phase { Drive, Arrive, Detect };
+
+private:
     des::OrderPtr m_order;
     size_t m_index;
-    int m_startTime;
+    Phase m_phase;
 
 public:
-    explicit Scan(const int time, const des::OrderPtr& order, const size_t index, const int startTime)
+    explicit Scan(const int time, const des::OrderPtr& order, const size_t index, const Phase phase)
         : IEvent(time)
         , m_order(order)
         , m_index(index)
-        , m_startTime(startTime)
+        , m_phase(phase)
     {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -42,44 +46,65 @@ public:
         }
 
         const des::Point& p = tour->m_path[m_index];
-        ctx.robotMovedTo(p);
-        ctx.notifyEvent(*this);
 
-        const bool present = ctx.robotSeesPerson(personName);
-        const auto pos = ctx.getPersonPosition(personName);
-        const double radius = ctx.getConfig()->personDetectionRange;
-        double dist = -1.0;
-        if (pos) {
-            dist = std::hypot(pos->m_x - p.m_x, pos->m_y - p.m_y);
-        }
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
-            "Scan t=%d room=%s point=%zu/%zu at (%.2f,%.2f) | personInRoom=%d personPos=(%.2f,%.2f) dist=%.2f radius=%.2f",
-            this->time, room.c_str(), m_index, tour->m_path.size(), p.m_x, p.m_y,
-            present, pos ? pos->m_x : 0.0, pos ? pos->m_y : 0.0, dist, radius);
+        switch (m_phase) {
+            case Phase::Drive: {
+                const des::Point from = ctx.getRobot()->getPosition();
+                const double dist = std::hypot(p.m_x - from.m_x, p.m_y - from.m_y);
+                const double speed = ctx.getConfig()->robotSpeed;
+                const int travel = std::max(1, static_cast<int>(std::lround(dist / speed)));
+                ctx.getRobot()->setDriving(true);
+                ctx.notifyEvent(*this);
+                ctx.startActivity(std::make_shared<Scan>(this->time + travel, m_order, m_index, Phase::Arrive));
+                break;
+            }
+            case Phase::Arrive: {
+                ctx.robotMovedTo(p);
+                ctx.getRobot()->setDriving(false);
+                ctx.notifyEvent(*this);
+                ctx.startActivity(std::make_shared<Scan>(this->time, m_order, m_index, Phase::Detect));
+                break;
+            }
+            case Phase::Detect: {
+                ctx.notifyEvent(*this);
+                const bool present = ctx.robotSeesPerson(personName);
+                const auto pos = ctx.getPersonPosition(personName);
+                const double radius = ctx.getConfig()->personDetectionRange;
+                bool found = false;
+                if (present && pos) {
+                    const double dist = std::hypot(pos->m_x - p.m_x, pos->m_y - p.m_y);
+                    found = dist <= radius;
+                }
+                DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
+                    "Scan t=%d room=%s point=%zu/%zu found=%d", this->time, room.c_str(), m_index, tour->m_path.size(), found);
 
-        if (present && pos && dist <= radius) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Scan: FOUND %s at point %zu (dist %.2f <= %.2f)", personName.c_str(), m_index, dist, radius);
-            ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, true, 0));
-            return;
+                if (found) {
+                    ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, true, 0));
+                } else if (m_index + 1 >= tour->m_path.size()) {
+                    ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, present, 0));
+                } else {
+                    ctx.startActivity(std::make_shared<Scan>(this->time, m_order, m_index + 1, Phase::Drive));
+                }
+                break;
+            }
         }
-
-        if (m_index + 1 >= tour->m_path.size()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "Scan: last point reached, %s not found geometrically (personInRoom=%d)", personName.c_str(), present);
-            ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, present, 0));
-            return;
-        }
-
-        double cumulative = 0.0;
-        for (size_t k = 1; k <= m_index + 1; ++k) {
-            const des::Point& a = tour->m_path[k - 1];
-            const des::Point& b = tour->m_path[k];
-            cumulative += std::hypot(b.m_x - a.m_x, b.m_y - a.m_y);
-        }
-        const double speed = ctx.getConfig()->robotSpeed;
-        const int nextTime = std::max(this->time, m_startTime + static_cast<int>(std::lround(cumulative / speed)));
-        ctx.startActivity(std::make_shared<Scan>(nextTime, m_order, m_index + 1, m_startTime));
     }
 
-    std::string getName() const override { return "Scan"; }
-    des::EventType getType() const override { return des::EventType::SCAN; }
+    std::string getName() const override {
+        switch (m_phase) {
+            case Phase::Drive:  return "Scan Drive";
+            case Phase::Arrive: return "Scan Arrive";
+            case Phase::Detect: return "Scan";
+        }
+        return "Scan";
+    }
+
+    des::EventType getType() const override {
+        switch (m_phase) {
+            case Phase::Drive:  return des::EventType::START_DRIVE;
+            case Phase::Arrive: return des::EventType::STOP_DRIVE;
+            case Phase::Detect: return des::EventType::SCAN;
+        }
+        return des::EventType::SCAN;
+    }
 };

@@ -240,7 +240,7 @@ enum class EventType : int {
     PERSON_DEPARTURE = 17,
     MISSION_START = 18,
     APPOINTMENT_END = 19,
-    SCAN_AREA = 20,
+    ROOM_SEARCH = 20,
     SCAN_COMPLETE = 21,
     PERSON_ACCOMPANY_DEPARTURE = 22,
     PERSON_ACCOMPANY_ARRIVED = 23,
@@ -255,7 +255,8 @@ enum class EventType : int {
     CHARGE_MISSION = 32,
     CHARGE_PHASE_TRANSITION = 33,
     PERSON_ROOM_ARRIVED = 34,
-    BACKGROUND_RELEASE = 35
+    BACKGROUND_RELEASE = 35,
+    SCAN = 36
 };
 
 enum MissionState {
@@ -285,9 +286,17 @@ struct BatteryProps {
     double lowThreshold;
 };
 
-using PersonList        = std::vector<std::unique_ptr<Person>>;
-using PersonMap         = std::map<std::string, Person*>;
-using LocationMap       = std::map<std::string, Location>;  // name -> coordinates + optional area
+using PersonList  = std::vector<std::unique_ptr<Person>>;
+using PersonMap   = std::map<std::string, Person*>;
+using LocationMap = std::map<std::string, Location>;  // name -> coordinates + optional area
+
+struct RoomTour {
+    double m_distance = 0.0;
+    int m_steps = 0;
+    std::vector<Point> m_path;
+};
+
+using RoomTourMap = std::map<std::string, RoomTour>;
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
     const int hours   = static_cast<int>(sec / 3600.0);

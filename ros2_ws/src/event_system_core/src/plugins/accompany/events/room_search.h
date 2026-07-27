@@ -37,7 +37,8 @@ public:
 
         if (tour != nullptr && !tour->m_path.empty()) {
             DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d room=%s person=%s -> tour with %zu points (%.2fm)", this->time, room.c_str(), personName.c_str(), tour->m_path.size(), tour->m_distance);
-            ctx.startActivity(std::make_shared<Scan>(this->time, m_order, 0, this->time));
+            ctx.robotMovedTo(ctx.location(room).m_p);
+            ctx.startActivity(std::make_shared<Scan>(this->time, m_order, 0, Scan::Phase::Drive));
             return;
         }
 
