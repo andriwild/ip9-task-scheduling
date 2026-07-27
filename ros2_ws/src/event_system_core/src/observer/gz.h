@@ -21,4 +21,8 @@ public:
         const auto p = locationMap[location];  // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };
+
+    void onRobotMovedTo(int /*time*/, const des::Point& position) override {
+        sim::moveRobot(position.m_x, position.m_y);
+    };
 };

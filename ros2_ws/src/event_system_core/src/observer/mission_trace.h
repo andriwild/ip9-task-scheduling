@@ -41,6 +41,14 @@ public:
         snapshotPerson(*trace, time);
     }
 
+    void onRobotMovedTo(const int time, const des::Point& position) override {
+        auto* trace = active();
+        if (!trace) {
+            return;
+        }
+        trace->robot.push_back(Pt{ time, m_ctx->getRobot()->getLocation(), position.m_x, position.m_y, "scan" });
+    }
+
     void onStateChanged(const int time, const des::RobotStateType& /*type*/, const std::string& name, des::BatteryProps /*bat*/) override {
         auto* trace = active();
         if (!trace) {

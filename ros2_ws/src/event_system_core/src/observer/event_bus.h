@@ -58,6 +58,12 @@ public:
         }
     }
 
+    void notifyMovedTo(int time, const des::Point& position) const {
+        for (const auto& obs : m_observers) {
+            obs->onRobotMovedTo(time, position);
+        }
+    }
+
     void notifyMissionPublished(const des::OrderPtr& order, int time) const {
         for (const auto& obs : m_observers) {
             obs->onMissionPublished(order, time);
