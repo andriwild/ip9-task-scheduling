@@ -3,6 +3,7 @@
 #include "model/event/base.h"
 #include "model/event/mission_complete_event.h"
 #include "model/i_sim_context.h"
+#include "model/robot.h"
 #include "plugins/i_order.h"
 
 class EndInformationEvent final : public IEvent {
@@ -23,7 +24,10 @@ public:
         ctx.notifyEvent(*this);
         ctx.popInterrupt(m_order);
         ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
-        ctx.tickBT();
+
+        if (!ctx.getRobot()->inFlight().lock()) {
+            ctx.tickBT();
+        }
     }
 
     std::string getName() const override { return "End Information"; }

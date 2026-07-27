@@ -4,6 +4,7 @@
 
 #include "../i_sim_context.h"
 #include "../robot.h"
+#include "../robot_state.h"
 #include "../event_queue.h"
 #include "../event/mission_dispatch_event.h"
 #include "../../observer/event_bus.h"
@@ -114,8 +115,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
         return false;
     }
 
-    // Snapshots robot state, shifts the in-flight activity-end event by the interrupt's duration
-    auto suspendedState = robot->getState()->clone();
+    // Shifts the in-flight activity-end event by the interrupt's duration
     const bool wasDriving = robot->isDriving();
 
     auto& plugin = OrderRegistry::instance().get(order->type);
@@ -137,7 +137,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
         m_bus.notifyEvent(ctx.getTime(), des::EventType::STOP_DRIVE, "Drive paused: " + robot->getLocation(), false, robot->isCharging(), "", order->id);
     }
 
-    m_interrupt.suspend(std::move(suspendedState), wasDriving);
+    m_interrupt.suspend(wasDriving);
     plugin.onMissionStart(ctx, *order);
     return true;
 }
@@ -147,8 +147,12 @@ void MissionBoard::popInterrupt(ISimContext& ctx, const des::OrderPtr& completed
     m_interrupt.pop(completedOrder);
     bool resumeDrive = false;
     if (auto snap = m_interrupt.takeSuspended()) {
-        ctx.changeRobotState(std::move(snap->state));
         resumeDrive = snap->wasDriving;
+    }
+    if (m_current) {
+        OrderRegistry::instance().get(m_current->type).onMissionResume(ctx, *m_current);
+    } else {
+        ctx.changeRobotState(std::make_unique<IdleState>());
     }
     if (resumeDrive && robot->getLocation() != robot->getTargetLocation()) {
         robot->setDriving(true);

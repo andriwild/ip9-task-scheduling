@@ -126,6 +126,9 @@ public:
         const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
         searchState->locations.erase(searchState->locations.begin());
+        if (auto* accompany = dynamic_cast<AccompanyOrder*>(ctx->getOrderPtr().get())) {
+            accompany->remainingSearch = searchState->locations;
+        }
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "MoveToNextLocation: %s", nextLocation.c_str());
         requestDrive(*ctx, nextLocation);
         return BT::NodeStatus::SUCCESS;

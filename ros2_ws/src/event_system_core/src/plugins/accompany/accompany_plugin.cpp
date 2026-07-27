@@ -149,7 +149,34 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
     }
 
     accompanyOrder.plannedSearch = locations;
+    accompanyOrder.remainingSearch = locations;
+    accompanyOrder.phase = AccompanyPhase::SEARCH;
     ctx.changeRobotState(std::make_unique<SearchState>(locations));
+}
+
+void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, des::IOrder& order) {
+    auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
+    switch (accompanyOrder.phase) {
+        case AccompanyPhase::SEARCH: {
+            ctx.changeRobotState(std::make_unique<SearchState>(accompanyOrder.remainingSearch));
+            break;
+        }
+        case AccompanyPhase::ACCOMPANY: {
+            ctx.changeRobotState(std::make_unique<AccompanyState>());
+            break;
+        }
+        case AccompanyPhase::CONVERSATE_FOUND: {
+            ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+            break;
+        }
+        case AccompanyPhase::CONVERSATE_DROPOFF: {
+            ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+            break;
+        }
+        case AccompanyPhase::NONE: {
+            break;
+        }
+    }
 }
 
 void AccompanyOrderPlugin::onStartDriveEvent(ISimContext& ctx, des::IOrder& order) {

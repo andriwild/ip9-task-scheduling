@@ -23,6 +23,11 @@ public:
     // hooks
     virtual void onMissionStart(ISimContext& ctx, des::IOrder& order)    = 0;
     virtual void onMissionEnd(ISimContext& ctx, des::IOrder& order)      = 0;
+
+    virtual void onMissionResume(ISimContext& ctx, des::IOrder& order) {
+        onMissionStart(ctx, order);
+    }
+
     virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) = 0;
     virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order)  = 0;
 

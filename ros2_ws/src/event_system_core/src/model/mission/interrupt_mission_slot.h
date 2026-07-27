@@ -1,22 +1,18 @@
 #pragma once
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../../util/log.h"
 #include "../../plugins/i_order.h"
-#include "../robot_state.h"
 
 // Single-slot holder for a preemptive interrupt mission (at most one active),
-// together with the snapshot of the mission it suspended (for resume on pop).
+// remembering whether the preempted mission was mid-drive so it can resume on pop.
 class InterruptMissionSlot {
     des::OrderPtr m_mission = nullptr;
 
-    // Robot state captured when the interrupt preempted the running mission.
     struct Suspended {
-        std::unique_ptr<RobotState> state;
         bool wasDriving = false;
     };
     std::optional<Suspended> m_suspended;
@@ -55,12 +51,10 @@ public:
         }
     }
 
-    // Records the robot state the interrupt suspended, to be restored on takeSuspended().
-    void suspend(std::unique_ptr<RobotState> state, bool wasDriving) {
-        m_suspended = Suspended{std::move(state), wasDriving};
+    void suspend(bool wasDriving) {
+        m_suspended = Suspended{wasDriving};
     }
 
-    // Moves out the suspended snapshot (if any), clearing it.
     std::optional<Suspended> takeSuspended() {
         if (!m_suspended) { return std::nullopt; }
         auto snap = std::move(*m_suspended);

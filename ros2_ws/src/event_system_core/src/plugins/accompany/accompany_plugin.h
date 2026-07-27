@@ -33,6 +33,7 @@ public:
     des::ExecutionMode executionMode() const override { return des::ExecutionMode::SCHEDULED; }
 
     void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
+    void onMissionResume(ISimContext& ctx, des::IOrder& order) override;
     void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
     virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) override;
     virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order) override;

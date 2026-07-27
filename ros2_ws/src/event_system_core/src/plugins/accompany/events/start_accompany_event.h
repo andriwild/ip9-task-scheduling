@@ -30,6 +30,7 @@ public:
             ctx.pushEvent(std::make_shared<PersonAccompanyDepartureEvent>(time, person, currentRoom));
         }
         ctx.changeRobotState(std::make_unique<AccompanyState>());
+        static_cast<AccompanyOrder&>(*m_order).phase = AccompanyPhase::ACCOMPANY;
 
         const std::string currentRoom = ctx.getRobot()->getLocation();
         if (ctx.roomTour(currentRoom) != nullptr) {

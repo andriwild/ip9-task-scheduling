@@ -8,6 +8,7 @@
 #include "model/robot.h"
 #include "model/robot_state.h"
 #include "plugins/accompany/accompany_plugin.h"
+#include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"
 #include "util/rnd.h"
 
@@ -31,6 +32,9 @@ public:
             ctx.startActivity(std::make_shared<FailedFoundPersonConversationCompleteEvent>(eventTime));
         }
         ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+        if (auto* accompany = dynamic_cast<AccompanyOrder*>(ctx.getOrderPtr().get())) {
+            accompany->phase = AccompanyPhase::CONVERSATE_FOUND;
+        }
         ctx.notifyEvent(*this);
     }
 
