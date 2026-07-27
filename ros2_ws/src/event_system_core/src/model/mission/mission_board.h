@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
 #include "scheduled_mission_queue.h"
 #include "background_mission_pool.h"
@@ -34,6 +35,7 @@ public:
     des::OrderPtr popScheduled();
     std::optional<int> nextScheduledDispatchTime() const;
     des::OrderPtr peekNextScheduledOrder() const;
+    std::vector<des::OrderPtr> peekScheduledOrdersUntil(int untilTime) const;
 
     void addBackground(const des::OrderPtr& orderPtr);
     bool hasBackground() const;

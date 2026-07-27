@@ -23,7 +23,7 @@ SimulationContext::SimulationContext(
     , m_missions(m_queue, m_eventBus)
 {
     m_robot = std::make_unique<Robot>(m_simConfig);
-    DES_LOG_INFO(rclcpp::get_logger("des.context"), "Simulation Context created!");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Simulation Context created!");
 }
 
 Journey SimulationContext::scheduleArrival(const std::string& target) const {
@@ -59,10 +59,14 @@ des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
     return m_missions.peekNextScheduledOrder();
 }
 
+std::vector<des::OrderPtr> SimulationContext::peekScheduledOrdersUntil(const int untilTime) const {
+    return m_missions.peekScheduledOrdersUntil(untilTime);
+}
+
 void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
-    DES_LOG_INFO(rclcpp::get_logger("des.context"), "Config updated");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Config updated");
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {

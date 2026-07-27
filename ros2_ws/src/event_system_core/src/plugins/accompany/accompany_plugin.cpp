@@ -76,6 +76,7 @@ bool isPersonReachableRoom(const std::string& name, const std::vector<std::strin
 struct SearchPlan {
     std::vector<std::string> locations;
     double energyWh;
+    double durationSec;
 };
 
 std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc) {
@@ -125,13 +126,16 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 
     const auto cfg           = ctx.getConfig();
     const double driveWhPerM = cfg->energyConsumptionDrive / (3600.0 * cfg->robotSpeed);
-    double energyWh          = instance->routeDriveDistance(route) * driveWhPerM;
+    const double driveDist   = instance->routeDriveDistance(route);
+    double energyWh          = driveDist * driveWhPerM;
+    double durationSec       = cfg->robotSpeed > 0.0 ? driveDist / cfg->robotSpeed : 0.0;
     std::vector<std::string> locations;
     for (const int idx : route) {
         energyWh += instance->node(idx).serviceEnergy;
+        durationSec += instance->node(idx).serviceTime;
         locations.push_back(instance->node(idx).name);
     }
-    return SearchPlan{ std::move(locations), energyWh };
+    return SearchPlan{ std::move(locations), energyWh, durationSec };
 }
 }
 
@@ -234,7 +238,7 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
         return true;
     }
-    DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany"),
+    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"),
                  "Mission %u (%s -> %s) infeasible: deadline %d, optimistic mission %.0fs from %s, now %d → slack %ds",
                  order.id, a.personName.c_str(), a.roomName.c_str(),
                  *order.deadline, missionDuration, robotLocation.c_str(),
@@ -244,6 +248,15 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
 
 std::optional<std::string> AccompanyOrderPlugin::targetLocation(const des::IOrder& order) const {
     return static_cast<const AccompanyOrder&>(order).roomName;
+}
+
+std::string AccompanyOrderPlugin::outcomeDetail(const des::IOrder& order) const {
+    switch (static_cast<const AccompanyOrder&>(order).abortReason) {
+        case SearchAbortReason::OUTSIDE:                 return "person outside";
+        case SearchAbortReason::IN_BUILDING_FINDABLE:    return "missed in building";
+        case SearchAbortReason::IN_BUILDING_UNREACHABLE: return "unreachable room";
+        default:                                         return {};
+    }
 }
 
 double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
@@ -263,6 +276,23 @@ double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, con
     const double appointmentWh = accompanyConfig().appointmentDuration * cfg.energyConsumptionBase / 3600.0;
     const double driveBackWh   = sched.robotDriveTime(a.roomName, cfg.dockLocation) * cfg.energyConsumptionDrive / 3600.0;
     return searchWh + appointmentWh + driveBackWh;
+}
+
+double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto& a     = static_cast<const AccompanyOrder&>(order);
+    const auto& cfg   = *context.getConfig();
+    const auto& sched = context.getScheduler();
+
+    double searchSec;
+    if (auto plan = planPersonSearch(context, a, startLocation)) {
+        searchSec = plan->durationSec;
+    } else {
+        const auto person = context.getPersonByName(a.personName);
+        searchSec         = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
+    }
+
+    const double driveBackSec = sched.robotDriveTime(a.roomName, cfg.dockLocation);
+    return searchSec + accompanyConfig().appointmentDuration + driveBackSec;
 }
 
 void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

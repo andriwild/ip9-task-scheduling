@@ -13,7 +13,7 @@ class EventBus {
 
 public:
     void addObserver(const std::shared_ptr<IObserver>& observer) {
-        DES_LOG_INFO(rclcpp::get_logger("des.event_bus"), "Observer added: %s", observer->getName().c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.event_bus"), "Observer added: %s", observer->getName().c_str());
         m_observers.emplace_back(observer);
     }
 

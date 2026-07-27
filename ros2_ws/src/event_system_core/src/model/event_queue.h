@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <set>
+#include <vector>
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
@@ -96,6 +97,20 @@ public:
 
     std::shared_ptr<IEvent> nextDispatchEvent() const {
         return nextEvent(des::EventType::MISSION_DISPATCH);
+    }
+
+    // All queued MissionDispatchEvents up to `untilTime`, earliest first.
+    std::vector<std::shared_ptr<IEvent>> dispatchEventsUntil(const int untilTime) const {
+        std::vector<std::shared_ptr<IEvent>> events;
+        for (const auto& e : m_events) {
+            if (e->time > untilTime) {
+                break;
+            }
+            if (e->getType() == des::EventType::MISSION_DISPATCH && !e->cancelled) {
+                events.push_back(e);
+            }
+        }
+        return events;
     }
 
     void print() const {

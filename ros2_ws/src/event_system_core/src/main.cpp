@@ -38,7 +38,7 @@ int main(const int argc, char *argv[]) {
     if (mode == "build") {
         rclcpp::init(argc, argv);
         des::log::installOutputHandler();
-        DES_LOG_INFO(rclcpp::get_logger("des.main"), "\n----- Building Snapshot Generation -----");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "\n----- Building Snapshot Generation -----");
         SnapshotBuilder builder;
         const int rc = builder.run();
         rclcpp::shutdown();
@@ -67,7 +67,7 @@ int main(const int argc, char *argv[]) {
     bool running = true;
     bool batteryDepleted = false;
     auto sim_loop = [&] {
-        DES_LOG_INFO(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
         app->m_eventQueue.print();
         int lastEventTime = -1;
         while (running && rclcpp::ok()) {
@@ -140,7 +140,7 @@ int main(const int argc, char *argv[]) {
                     break;
             }
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.main"), "Simulation complete");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Simulation complete");
     };
 
     std::thread t(sim_loop); 

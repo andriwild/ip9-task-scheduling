@@ -34,7 +34,7 @@ bool Robot::isBusy() const {
 }
 
 void Robot::updateConfig(const des::SimConfig& config) {
-    DES_LOG_INFO(rclcpp::get_logger("des.robot"), "Robot: Updating configuration");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);
     m_dockLocation = config.dockLocation;
     m_bat->updateConfig(

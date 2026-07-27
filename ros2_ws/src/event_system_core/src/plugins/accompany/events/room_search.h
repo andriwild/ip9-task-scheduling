@@ -43,7 +43,7 @@ public:
             return;
         }
 
-        DES_LOG_WARN(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d No tour for room '%s'; using area-based scan estimate", this->time, room.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d No tour for room '%s'; using area-based scan estimate", this->time, room.c_str());
         const bool personPresent = ctx.robotSeesPerson(personName);
         const double areaToSearch = ctx.location(room).m_area.value_or(1.0);
         const double fieldOfView  = ctx.getConfig()->personDetectionRange * ctx.getConfig()->personDetectionRange;

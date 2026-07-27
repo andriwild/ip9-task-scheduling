@@ -1,5 +1,7 @@
 #include "mission_board.h"
 
+#include <format>
+#include <string>
 #include <utility>
 
 #include "../i_sim_context.h"
@@ -40,15 +42,35 @@ des::OrderPtr MissionBoard::effective() const {
 
 void MissionBoard::updateState(const des::MissionState& newState) {
     assert(m_current != nullptr);
-    DES_LOG_INFO(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), des::missionStateStr(m_current->state).c_str(), des::missionStateStr(newState).c_str());
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), des::missionStateStr(m_current->state).c_str(), des::missionStateStr(newState).c_str());
     m_current->state = newState;
 }
 
+// The one INFO line per mission: state, reason and lateness in a single place.
+// Everything leading up to it logs at DEBUG. Routine background and interrupt
+// successes stay at DEBUG too, only their failures surface at INFO.
 void MissionBoard::complete(ISimContext& ctx, const des::OrderPtr& order) {
     assert(order != nullptr);
     if (order->type != kChargeOrderType) {
         const int deadline = order->deadline.value_or(ctx.getTime());
         const int timeDiff = ctx.getTime() - deadline;
+
+        const std::string detail = OrderRegistry::instance().get(order->type).outcomeDetail(*order);
+        std::string summary = des::missionStateStr(order->state);
+        if (!detail.empty()) {
+            summary += " (" + detail + ")";
+        }
+        if (order->deadline.has_value()) {
+            summary += std::format(" [{:+d}s]", timeDiff);
+        }
+        const bool routine = order->execution != des::ExecutionMode::SCHEDULED
+            && order->state == des::MissionState::COMPLETED;
+        if (routine) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
+        } else {
+            DES_LOG_INFO(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
+        }
+
         m_bus.notifyMissionComplete(ctx.getTime(), order, timeDiff);
     }
     if (m_current == order) {
@@ -85,6 +107,17 @@ des::OrderPtr MissionBoard::peekNextScheduledOrder() const {
     return dispatch ? dispatch->orderPtr : nullptr;
 }
 
+std::vector<des::OrderPtr> MissionBoard::peekScheduledOrdersUntil(const int untilTime) const {
+    std::vector<des::OrderPtr> orders;
+    for (const auto& event : m_queue.dispatchEventsUntil(untilTime)) {
+        auto dispatch = std::dynamic_pointer_cast<MissionDispatchEvent>(event);
+        if (dispatch && dispatch->orderPtr) {
+            orders.push_back(dispatch->orderPtr);
+        }
+    }
+    return orders;
+}
+
 void MissionBoard::addBackground(const des::OrderPtr& orderPtr) {
     m_background.add(orderPtr);
 }
@@ -108,7 +141,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
     assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
     const auto robot = ctx.getRobot();
     if (robot->isBatteryLow()) {
-        DES_LOG_INFO(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), robot->batteryStats().soc * 100.0);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), robot->batteryStats().soc * 100.0);
         return false;
     }
     if (!m_interrupt.push(order, m_current)) {
@@ -169,7 +202,7 @@ bool MissionBoard::hasActiveInterrupt() const {
 }
 
 void MissionBoard::reset() {
-    DES_LOG_INFO(rclcpp::get_logger("des.context.mission"), "Reset (pending=%zu, background=%zu, interrupt=%s cleared)", m_scheduled.size(), m_background.size(), m_interrupt.has() ? "yes" : "no");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Reset (pending=%zu, background=%zu, interrupt=%s cleared)", m_scheduled.size(), m_background.size(), m_interrupt.has() ? "yes" : "no");
     m_current = nullptr;
     m_scheduled.clear();
     m_background.clear();

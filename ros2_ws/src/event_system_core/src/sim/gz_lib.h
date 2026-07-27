@@ -10,9 +10,9 @@ inline void getServices() {
     gz::transport::Node node;
     std::vector<std::string> services;
     node.ServiceList(services);
-    DES_LOG_INFO(rclcpp::get_logger("des.io.gz"), "Available Services:");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.io.gz"), "Available Services:");
     for (const auto& service : services) {
-        DES_LOG_INFO(rclcpp::get_logger("des.io.gz"), "  %s", service.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.io.gz"), "  %s", service.c_str());
     }
 }
 
@@ -32,7 +32,7 @@ inline void moveRobot(const double x, const double y) {
     bool executed = node.Request("/world/fhnw/set_pose", req, 5000, rep, result);
     if (executed) {
         if (!result) {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.gz"), "Service call failed");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.gz"), "Service call failed");
         }
     } else {
         DES_LOG_ERROR(rclcpp::get_logger("des.io.gz"), "Service call timed out");
@@ -76,9 +76,9 @@ inline void addMarker(const std::string id, const double x, const double y, cons
     bool executed = node.Request("/world/fhnw/create", req, 1000, res, result);
     if (executed) {
         if (result) {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.gz"), "Entity was created : [%s]", res.data() ? "true" : "false");  // res.data() for boolean is bool
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.gz"), "Entity was created : [%s]", res.data() ? "true" : "false");  // res.data() for boolean is bool
         } else {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.gz"), "Service call failed");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.gz"), "Service call failed");
             return;
         }
     } else {

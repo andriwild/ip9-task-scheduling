@@ -79,14 +79,14 @@ public:
     // `locations` must already carry coordinates + areas (the DB view from loadLocationsFromDB).
     static bool rebuild(const std::vector<des::Location>& locations, std::shared_ptr<PathPlannerNode> planner) {
         const size_t n = locations.size();
-        DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "--- REBUILD DISTANCE MATRIX (%zu x %zu) ---", n, n);
+        DES_LOG_DEBUG(rclcpp::get_logger("des.dist_mat"), "--- REBUILD DISTANCE MATRIX (%zu x %zu) ---", n, n);
 
         Mat mat(n, std::vector<float>(n, 0.0f));
         for (size_t i = 0; i < n; ++i) {
             for (size_t j = i + 1; j < n; ++j) {
                 const auto& p1 = locations.at(i);
                 const auto& p2 = locations.at(j);
-                DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "mat calc (%zu, %zu) %s | %s", i, j, p1.m_name.c_str(), p2.m_name.c_str());
+                DES_LOG_DEBUG(rclcpp::get_logger("des.dist_mat"), "mat calc (%zu, %zu) %s | %s", i, j, p1.m_name.c_str(), p2.m_name.c_str());
 
                 const auto d = planner->calcDistance(p1.m_name, p2.m_name, false);
                 if (!d.has_value()) {
@@ -99,7 +99,7 @@ public:
         }
 
         const bool ok = saveMat(mat, locations);
-        DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "Building snapshot %s", ok ? "written" : "FAILED");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.dist_mat"), "Building snapshot %s", ok ? "written" : "FAILED");
         return ok;
     }
 };

@@ -88,7 +88,7 @@ public:
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
             return std::nullopt;
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.io.db"), "personByName");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.io.db"), "personByName");
         QSqlQuery query;
         query.prepare("SELECT * FROM people WHERE first_name = :firstName AND last_name = :lastName");
         query.bindValue(":firstName", QString::fromStdString(firstName));

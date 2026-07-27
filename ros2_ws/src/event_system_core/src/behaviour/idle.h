@@ -50,7 +50,7 @@ public:
             requestDrive(*ctx, ctx->getRobot()->getIdleLocation());
             DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
         } else {
-            DES_LOG_INFO(rclcpp::get_logger("des.bt.idle"), "Already driving back to dock");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Already driving back to dock");
         }
         return BT::NodeStatus::FAILURE;
     }

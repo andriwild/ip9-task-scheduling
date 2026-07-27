@@ -164,6 +164,12 @@ public:
         return nextScheduledDispatchTime;
     }
     des::OrderPtr peekNextScheduledOrder() const override { return m_nextScheduledOrder; }
+    std::vector<des::OrderPtr> peekScheduledOrdersUntil(int /*untilTime*/) const override {
+        if (!m_nextScheduledOrder) {
+            return {};
+        }
+        return { m_nextScheduledOrder };
+    }
     std::optional<int> getSimulationEndTime() const override { return m_simulationEndTime; }
 
     void completeOrder(const des::OrderPtr& /*order*/) override {

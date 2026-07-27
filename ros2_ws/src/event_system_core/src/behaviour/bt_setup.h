@@ -206,10 +206,10 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
         if (file.is_open()) {
             file << xml_full_tree;
             file.close();
-            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "BehaviorTree and model written to file: %s", TREE_FILE.c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "BehaviorTree and model written to file: %s", TREE_FILE.c_str());
         }
     }
 
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Behaviour Tree created");
+    DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Behaviour Tree created");
     return tree;
 }

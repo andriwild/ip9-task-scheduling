@@ -102,6 +102,8 @@ private:
             config.employeesPath                = m_currentConfig->employeesPath;
             config.missionTraceExport           = m_currentConfig->missionTraceExport;
             config.searchRewardStrategy         = m_currentConfig->searchRewardStrategy;
+            config.energyReserveStrategy        = m_currentConfig->energyReserveStrategy;
+            config.energyReserveHorizon         = m_currentConfig->energyReserveHorizon;
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }

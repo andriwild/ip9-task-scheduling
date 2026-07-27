@@ -44,7 +44,9 @@ public:
     int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
     std::optional<std::string> targetLocation(const des::IOrder& order) const override;
+    std::string outcomeDetail(const des::IOrder& order) const override;
     double estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
+    double estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 
     const AccompanyConfig& config() const { return m_config; }

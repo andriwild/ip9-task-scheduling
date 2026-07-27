@@ -77,7 +77,7 @@ public:
 
         ctx->updateOrderState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.accompany.accompany"), "Abort Accompany!");
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "Abort Accompany!");
         return BT::NodeStatus::SUCCESS;
     }
 };

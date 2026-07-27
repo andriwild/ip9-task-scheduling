@@ -76,7 +76,7 @@ public:
         const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
-        DES_LOG_INFO(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
         // PENDING -> IN_PROGRESS transition happens in the plugin's StartXxxEvent,
@@ -99,7 +99,7 @@ public:
 
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
-        DES_LOG_INFO(rclcpp::get_logger("des.bt.mission_control"),
+        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"),
                      "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
                      order->id, order->type.c_str());
         order->state     = des::MissionState::REJECTED;
@@ -166,7 +166,7 @@ public:
         const double missionWh = plugin.estimateMissionEnergy(*order, *ctx, robot->getLocation());
         const bool energyFeasible = currentWh - missionWh >= reserveWh;
         if (!energyFeasible) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin"),
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin"),
                          "Mission %d infeasible: energy %.1fWh, mission needs %.1fWh, reserve %.1fWh — charge first",
                          order->id, currentWh, missionWh, reserveWh);
         }

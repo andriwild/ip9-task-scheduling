@@ -113,6 +113,7 @@ public:
 
     std::optional<int> getNextScheduledDispatchTime() const override;
     des::OrderPtr peekNextScheduledOrder() const override;
+    std::vector<des::OrderPtr> peekScheduledOrdersUntil(int untilTime) const override;
     std::optional<int> getSimulationEndTime() const override;
 
     void publishMission(const des::OrderPtr& order, int time) override;

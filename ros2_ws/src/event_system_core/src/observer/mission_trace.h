@@ -89,14 +89,9 @@ public:
             return;
         }
         it->second.outcome = des::missionStateStr(order->state);
-        if (order->type == "accompany") {
-            const auto& a = static_cast<const AccompanyOrder&>(*order);
-            switch (a.abortReason) {
-                case SearchAbortReason::OUTSIDE:                 it->second.outcome += " (person outside)"; break;
-                case SearchAbortReason::IN_BUILDING_FINDABLE:    it->second.outcome += " (missed in building)"; break;
-                case SearchAbortReason::IN_BUILDING_UNREACHABLE: it->second.outcome += " (unreachable room)"; break;
-                default: break;
-            }
+        const std::string detail = OrderRegistry::instance().get(order->type).outcomeDetail(*order);
+        if (!detail.empty()) {
+            it->second.outcome += " (" + detail + ")";
         }
     }
 

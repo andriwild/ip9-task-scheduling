@@ -93,6 +93,26 @@ inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& st
     return SearchRewardStrategy::BETA_SMOOTHED;
 }
 
+// NEXT_MISSION: background only reserves energy for the next scheduled mission.
+// HORIZON: background reserves for every scheduled mission within the horizon,
+// crediting the charge accrued in the gaps between them.
+enum class EnergyReserveStrategy {
+    NEXT_MISSION,
+    HORIZON
+};
+
+inline std::string energyReserveStrategyToString(const EnergyReserveStrategy strategy) {
+    switch (strategy) {
+        case EnergyReserveStrategy::NEXT_MISSION: return "next_mission";
+        default:                                  return "horizon";
+    }
+}
+
+inline EnergyReserveStrategy energyReserveStrategyFromString(const std::string& str) {
+    if (str == "next_mission") return EnergyReserveStrategy::NEXT_MISSION;
+    return EnergyReserveStrategy::HORIZON;
+}
+
 enum class ExecutionMode {
     SCHEDULED,
     BACKGROUND,
@@ -149,6 +169,8 @@ struct SimConfig {
     std::string employeesPath = "";
     bool missionTraceExport = false;
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
+    EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
+    int energyReserveHorizon = 4 * 3600;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -182,6 +204,8 @@ struct SimConfig {
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "missionTraceExport" << ": " << config.missionTraceExport << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
+        os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
+        os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;

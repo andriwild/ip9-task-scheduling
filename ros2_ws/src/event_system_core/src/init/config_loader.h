@@ -51,7 +51,7 @@ public:
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Use default appointment config file: %s", DEFAULT_ORDER_FILE.c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Use default appointment config file: %s", DEFAULT_ORDER_FILE.c_str());
             json = getJson(DEFAULT_ORDER_FILE);
             assert(json.has_value());
         }
@@ -126,7 +126,7 @@ public:
     static std::optional<std::vector<InterruptGeneratorConfig>> loadInterruptGenerators(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "No scenario file found at %s — skipping ad-hoc generators", filePath.c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "No scenario file found at %s — skipping ad-hoc generators", filePath.c_str());
             return std::vector<InterruptGeneratorConfig>{};
         }
         if (!json.value().contains("ad_hoc_generators")) {
@@ -209,7 +209,7 @@ public:
                     return std::nullopt;
                 }
                 j.merge_patch(overrideJson.value());
-                DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Applied config override: %s", resolved.c_str());
+                DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Applied config override: %s", resolved.c_str());
             }
             des::SimConfig config;
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
@@ -259,6 +259,8 @@ public:
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
             config.missionTraceExport = j.value("mission_trace_export", false);
             config.searchRewardStrategy = des::searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
+            config.energyReserveStrategy = des::energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
+            config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -404,6 +406,8 @@ public:
         j["search_excluded_rooms"] = config->searchExcludedRooms;
         j["mission_trace_export"] = config->missionTraceExport;
         j["search_reward_strategy"] = des::searchRewardStrategyToString(config->searchRewardStrategy);
+        j["energy_reserve_strategy"] = des::energyReserveStrategyToString(config->energyReserveStrategy);
+        j["energy_reserve_horizon"] = config->energyReserveHorizon;
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
@@ -491,7 +495,7 @@ public:
         }
 
         if (j.contains("generated_at")) {
-            DES_LOG_INFO(rclcpp::get_logger("des.io.config"), "Building snapshot generated at %s", j.at("generated_at").get<std::string>().c_str());
+            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Building snapshot generated at %s", j.at("generated_at").get<std::string>().c_str());
         } else {
             DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no generated_at stamp, consider re-baking via ./build_snapshot.sh", filePath.c_str());
         }

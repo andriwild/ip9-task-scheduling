@@ -65,7 +65,7 @@ bool DataAcquisition::isFeasible(const des::IOrder& order, const ISimContext& co
         context.getRobot()->getLocation(), o.roomName);
     const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
     if (slack < 0) {
-        DES_LOG_INFO(rclcpp::get_logger("des.plugin.data_acquisition"),
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"),
                      "Mission %d infeasible: deadline %d, driveTime %.0fs from %s, now %d → slack %ds",
                      o.id, *o.deadline, driveTime, context.getRobot()->getLocation().c_str(),
                      context.getTime(), slack);

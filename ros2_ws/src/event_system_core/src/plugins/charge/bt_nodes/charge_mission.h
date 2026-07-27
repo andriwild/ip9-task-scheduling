@@ -67,7 +67,7 @@ public:
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only start once.
         if (order && order->state == des::MissionState::PENDING) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: start");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: start");
             ctx->pushEvent(std::make_shared<StartChargeEvent>(ctx->getTime(), order));
         }
         return BT::NodeStatus::RUNNING;
@@ -77,7 +77,7 @@ public:
         const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == des::MissionState::COMPLETED) {
-            DES_LOG_INFO(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: done");
+            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: done");
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;
