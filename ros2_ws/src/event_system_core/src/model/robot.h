@@ -17,7 +17,7 @@ class Robot {
     std::string m_targetLocation;
     des::Point m_position;
 
-    std::vector<Sighting> m_sightings;
+    SightingLog m_sightings;
 
     double m_driveSpeed;
     double m_currentSpeed = 0;
@@ -97,5 +97,5 @@ public:
     void clearInFlight();
 
     void addSighting(const Sighting& sighting);
-    const std::vector<Sighting>& getSightings() const;
+    const SightingLog& getSightings() const;
 };

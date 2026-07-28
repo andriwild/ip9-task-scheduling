@@ -112,7 +112,7 @@ bool HeadlessRunner::loadNextBatch() {
 
 namespace {
 void logSightingSummary(const Robot& robot) {
-    const auto sightings = robot.getSightings();
+    const auto& sightings = robot.getSightings().entries();
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot.sightings"), "Sightings recorded: %zu", sightings.size());
 
     std::map<std::string, std::map<std::string, std::pair<int, int>>> counts;

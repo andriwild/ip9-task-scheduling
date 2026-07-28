@@ -227,7 +227,7 @@ private:
 
         std::vector<std::string> rooms;
         std::map<std::string, int> roomIndex;
-        for (const auto& s : m_ctx->getRobot()->getSightings()) {
+        for (const auto& s : m_ctx->getRobot()->getSightings().entries()) {
             auto [it, inserted] = roomIndex.try_emplace(s.location, static_cast<int>(rooms.size()));
             if (inserted) {
                 rooms.push_back(s.location);

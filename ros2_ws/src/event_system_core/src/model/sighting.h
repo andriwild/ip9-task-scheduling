@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 #include "algo/op_types.h"
@@ -10,6 +11,54 @@ struct Sighting {
     std::string personName;
     std::string location;
     SightingKind kind;
+};
+
+struct SightingCounts {
+    int hits = 0;
+    int misses = 0;
+};
+
+// Append-only log plus a running (person, room) tally. The tally makes a belief
+// query O(rooms) instead of O(rooms x log), the raw entries stay for the trace export.
+class SightingLog {
+    std::vector<Sighting> m_entries;
+    std::map<std::string, std::map<std::string, SightingCounts>> m_tally;
+
+public:
+    void add(const Sighting& sighting) {
+        m_entries.push_back(sighting);
+        SightingCounts& c = m_tally[sighting.personName][sighting.location];
+        if (sighting.kind == SightingKind::PRESENT) {
+            c.hits++;
+        } else {
+            c.misses++;
+        }
+    }
+
+    SightingCounts counts(const std::string& person, const std::string& room) const {
+        const auto p = m_tally.find(person);
+        if (p == m_tally.end()) {
+            return {};
+        }
+        const auto r = p->second.find(room);
+        if (r == p->second.end()) {
+            return {};
+        }
+        return r->second;
+    }
+
+    const std::vector<Sighting>& entries() const {
+        return m_entries;
+    }
+
+    std::size_t size() const {
+        return m_entries.size();
+    }
+
+    void clear() {
+        m_entries.clear();
+        m_tally.clear();
+    }
 };
 
 // calculate the probability of a room using beta-binomial model
@@ -23,30 +72,20 @@ inline float roomProbability(int hits, int misses, bool isWorkplace) {
     return (alpha + y) / (alpha + beta + n);
 }
 
-inline std::vector<OpNode> occupancyProbability(const std::vector<Sighting>& sightings, const std::string& person, const std::string& office, const std::vector<std::string>& allRooms) {
+inline std::vector<OpNode> occupancyProbability(const SightingLog& sightings, const std::string& person, const std::string& office, const std::vector<std::string>& allRooms) {
     std::vector<OpNode> nodes;
     for(const auto& room: allRooms) {
-        int hits = 0, misses = 0;
-        for(const auto& s: sightings) {
-            if(s.personName == person && s.location == room) {
-                s.kind == SightingKind::PRESENT ? hits ++ : misses++;
-            }
-        }
-        nodes.push_back({room, roomProbability(hits, misses, office == room)});
+        const SightingCounts c = sightings.counts(person, room);
+        nodes.push_back({room, roomProbability(c.hits, c.misses, office == room)});
     }
     return nodes;
 
 }
 
-inline std::vector<OpNode> frequencyReward(const std::vector<Sighting>& sightings, const std::string& person, const std::vector<std::string>& allRooms) {
+inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const std::string& person, const std::vector<std::string>& allRooms) {
     std::vector<OpNode> nodes;
     for(const auto& room: allRooms) {
-        int hits = 0;
-        for(const auto& s: sightings) {
-            if(s.personName == person && s.location == room && s.kind == SightingKind::PRESENT) {
-                hits++;
-            }
-        }
+        const int hits = sightings.counts(person, room).hits;
         if(hits > 0) {
             nodes.push_back({room, static_cast<float>(hits)});
         }

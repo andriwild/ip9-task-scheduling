@@ -215,9 +215,9 @@ void Robot::clearInFlight() {
 }
 
 void Robot::addSighting(const Sighting& sighting) {
-    m_sightings.push_back(sighting);
+    m_sightings.add(sighting);
 }
 
-const std::vector<Sighting>& Robot::getSightings() const {
+const SightingLog& Robot::getSightings() const {
     return m_sightings;
 }
