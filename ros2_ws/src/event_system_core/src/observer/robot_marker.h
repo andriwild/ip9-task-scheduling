@@ -38,7 +38,7 @@ public:
         publish();
     }
 
-    void onRobotMovedTo(int /*time*/, const des::Point& position) override {
+    void onRobotMovedTo(int /*time*/, const des::Point& position, double /*distance*/ = 0.0) override {
         m_position = position;
         publish();
     }

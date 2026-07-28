@@ -22,7 +22,7 @@ public:
         sim::moveRobot(p.m_x, p.m_y);
     };
 
-    void onRobotMovedTo(int /*time*/, const des::Point& position) override {
+    void onRobotMovedTo(int /*time*/, const des::Point& position, double /*distance*/ = 0.0) override {
         sim::moveRobot(position.m_x, position.m_y);
     };
 };

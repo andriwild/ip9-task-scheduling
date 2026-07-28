@@ -41,7 +41,7 @@ public:
         snapshotPerson(*trace, time);
     }
 
-    void onRobotMovedTo(const int time, const des::Point& position) override {
+    void onRobotMovedTo(const int time, const des::Point& position, double /*distance*/ = 0.0) override {
         auto* trace = active();
         if (!trace) {
             return;

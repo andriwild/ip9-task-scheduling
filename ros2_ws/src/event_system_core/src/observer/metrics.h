@@ -231,6 +231,10 @@ public:
         movedDistance += distance;
     }
 
+    void onRobotMovedTo(int /*time*/, const des::Point& /*position*/, double distance = 0.0) override {
+        movedDistance += distance;
+    }
+
     bool hasData() const { return hasLastState; }
 
     event_system_msgs::msg::MetricsReport buildReport() {
@@ -283,9 +287,7 @@ public:
         msg.energy_accompany_ah  = static_cast<float>(energyFor("accompany"));
         msg.energy_talk_ah       = static_cast<float>(energyFor("conversate"));
         msg.energy_charging_ah   = static_cast<float>(energyFor("charging"));
-        double energyTotal = 0.0;
-        for (const auto& [_, e] : energyPerStateName) energyTotal += e;
-        msg.energy_total_consumed_ah = static_cast<float>(energyTotal);
+        msg.energy_total_consumed_ah = static_cast<float>(dischargedAh);
 
         msg.total_distance = static_cast<float>(movedDistance);
 
@@ -328,9 +330,9 @@ public:
         DES_LOG_INFO(log, "Lateness    : avg=%.0fs  min=%ds  max=%ds  avg-early=%.0fs", m.avg_lateness, m.min_lateness, m.max_lateness, m.avg_early_arrival);
         DES_LOG_INFO(log, "Time [h]    : idle=%.1f  moving=%.1f  searching=%.1f  accompany=%.1f  charging=%.1f  talk=%.1f",
                      m.idle_time / 3600.0, m.moving_time / 3600.0, m.searching_time / 3600.0, m.accompany_time / 3600.0, m.charging_time / 3600.0, m.talk_time / 3600.0);
-        DES_LOG_INFO(log, "Battery     : cycles=%d (full=%d, partial=%d)  deep-discharge=%d  avg-DoD=%.2f  equiv-cycles=%.1f",
-                     m.charge_cycles_total, m.charge_cycles_complete, m.charge_cycles_partial, m.deep_discharge_count, m.avg_depth_of_discharge, m.equivalent_full_cycles);
-        DES_LOG_INFO(log, "Movement    : distance=%.0fm  energy=%.1fAh", m.total_distance, m.energy_total_consumed_ah);
+        DES_LOG_INFO(log, "Battery     : cycles=%d (full=%d, partial=%d)  deep-discharge=%d  avg-DoD=%.2f  equiv-cycles=%.1f  discharged=%.1fAh",
+                     m.charge_cycles_total, m.charge_cycles_complete, m.charge_cycles_partial, m.deep_discharge_count, m.avg_depth_of_discharge, m.equivalent_full_cycles, m.energy_total_consumed_ah);
+        DES_LOG_INFO(log, "Movement    : distance=%.0fm", m.total_distance);
         if (!scheduledPerDay.empty()) {
             int tCompl = 0, tOut = 0, tUnr = 0, tFind = 0;
             for (const auto& [day, s] : scheduledPerDay) {

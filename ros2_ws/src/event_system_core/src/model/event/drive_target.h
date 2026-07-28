@@ -70,13 +70,13 @@ public:
     std::pair<int, double> travel(ISimContext& ctx) const override {
         const des::Point from = ctx.getRobot()->getPosition();
         const double dist = std::hypot(m_point.m_x - from.m_x, m_point.m_y - from.m_y);
-        const double speed = ctx.getConfig()->robotSpeed;
+        const double speed = ctx.getRobot()->getCurrentSpeed();
         const int duration = std::max(1, static_cast<int>(std::lround(dist / speed)));
         return { duration, dist };
     }
 
-    void arrive(ISimContext& ctx, double /*distance*/) const override {
-        ctx.robotMovedTo(m_point);
+    void arrive(ISimContext& ctx, double distance) const override {
+        ctx.robotMovedTo(m_point, distance);
         recordSightings(ctx, ctx.getRobot()->getLocation());
     }
 

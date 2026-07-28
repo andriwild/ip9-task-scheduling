@@ -58,9 +58,9 @@ public:
         }
     }
 
-    void notifyMovedTo(int time, const des::Point& position) const {
+    void notifyMovedTo(int time, const des::Point& position, double distance = 0.0) const {
         for (const auto& obs : m_observers) {
-            obs->onRobotMovedTo(time, position);
+            obs->onRobotMovedTo(time, position, distance);
         }
     }
 

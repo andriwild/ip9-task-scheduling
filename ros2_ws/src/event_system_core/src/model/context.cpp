@@ -367,9 +367,9 @@ void SimulationContext::robotMoved(const std::string& location, const double dis
     m_eventBus.notifyMoved(m_currentTime, location, distance);
 }
 
-void SimulationContext::robotMovedTo(const des::Point& position) const {
+void SimulationContext::robotMovedTo(const des::Point& position, const double distance) const {
     m_robot->setPosition(position);
-    m_eventBus.notifyMovedTo(m_currentTime, position);
+    m_eventBus.notifyMovedTo(m_currentTime, position, distance);
 }
 
 double SimulationContext::getDriveTimeStd() const {

@@ -89,7 +89,7 @@ public:
     void robotMoved(const std::string& location, double /*distance*/) const override {
         robot->setLocation(location);
     }
-    void robotMovedTo(const des::Point& position) const override {
+    void robotMovedTo(const des::Point& position, double /*distance*/ = 0.0) const override {
         robot->setPosition(position);
     }
 

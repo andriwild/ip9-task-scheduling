@@ -118,14 +118,12 @@ public:
     void execute(ISimContext& ctx) override {
         // accompany guard
         if (this->person->busy) {
-            DES_LOG_WARN(rclcpp::get_logger("dbg"), "DEPART-RETRY %s t=%d busy", this->person->firstName.c_str(), this->time);
             ctx.pushEvent(this->withTime(busyRetryAt(ctx, this->time)));
             return;
         }
-        DES_LOG_WARN(rclcpp::get_logger("dbg"), "DEPART-OK %s t=%d", this->person->firstName.c_str(), this->time);
         targetRoom = "OUTDOOR";
-        ctx.notifyEvent(*this);
         ctx.setPersonLocation(this->person->firstName, "OUTDOOR");
+        ctx.notifyEvent(*this);
 
         const int nextDayBase = (this->time / SECONDS_PER_DAY + 1) * SECONDS_PER_DAY;
         des::sampleOccupancy(*ctx.getConfig(), ctx.rng(), nextDayBase, *this->person);
@@ -260,7 +258,6 @@ public:
                 ctx.setPersonLocation(p.firstName, *elevatorIt);
             }
             const int departAt = std::max(p.departureTime, this->time);
-            DES_LOG_WARN(rclcpp::get_logger("dbg"), "DEPART-SCHED %s now=%d departureTime=%d departAt=%d", p.firstName.c_str(), this->time, p.departureTime, departAt);
             ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
         } else {
             ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
