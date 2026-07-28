@@ -18,6 +18,9 @@ def generate_launch_description():
     mode = LaunchConfiguration("mode", default="full")
     rounds = LaunchConfiguration("rounds", default="1")
     config = LaunchConfiguration("config", default="")
+    base_config = LaunchConfiguration("base_config", default="")
+    out_dir = LaunchConfiguration("out_dir", default="")
+    run_id = LaunchConfiguration("run_id", default="")
 
     # RViz only in the interactive full mode (not headless, not the build tool).
     is_full_mode = launch.substitutions.PythonExpression(["'", mode, "' == 'full'"])
@@ -36,6 +39,9 @@ def generate_launch_description():
         DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless or build"),
         DeclareLaunchArgument("rounds", default_value=rounds, description="Number of rounds in headless mode"),
         DeclareLaunchArgument("config", default_value=config, description="Optional override config merged onto sim_config.json (path relative to config/ or absolute)"),
+        DeclareLaunchArgument("base_config", default_value=base_config, description="Replaces sim_config.json as the merge base (path relative to config/ or absolute)"),
+        DeclareLaunchArgument("out_dir", default_value=out_dir, description="Directory for metrics.csv, metrics_daily.csv and mission_trace.json (default: results/ with a timestamp)"),
+        DeclareLaunchArgument("run_id", default_value=run_id, description="Run identifier written into the metrics CSVs"),
 
         Node(
             package='rviz2',
@@ -53,7 +59,8 @@ def generate_launch_description():
             parameters=[{
                 'use_sim_time': use_sim_time,
             }],
-            arguments=['--mode', mode, '--rounds', rounds, '--config', config],
+            arguments=['--mode', mode, '--rounds', rounds, '--config', config,
+                       '--base-config', base_config, '--out-dir', out_dir, '--run-id', run_id],
             ros_arguments=[
                 # All DES-internal loggers live under the `des.*` hierarchy,
                 # so one switch covers the whole engine. More specific entries

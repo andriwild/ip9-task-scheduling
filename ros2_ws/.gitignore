@@ -9,3 +9,4 @@ build
 bt_config.xml
 CLAUDE.md
 **/__pycache__
+bench/out/
