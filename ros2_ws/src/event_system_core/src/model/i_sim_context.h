@@ -95,8 +95,6 @@ public:
     // OrderPtr of the next scheduled mission still queued, or nullptr.
     virtual des::OrderPtr peekNextScheduledOrder() const = 0;
 
-    // All scheduled missions dispatching up to `untilTime`, earliest first.
-    // Used to reserve energy for a whole block instead of a single mission.
     virtual std::vector<des::OrderPtr> peekScheduledOrdersUntil(int untilTime) const = 0;
 
     virtual void addBackgroundMission(const des::OrderPtr orderPtr) = 0;

@@ -118,6 +118,7 @@ private:
 
     struct PersonTrack {
         std::string color;
+        std::string workplace;
         std::string lastLoc;
         std::vector<Pt> path;
     };
@@ -186,6 +187,7 @@ private:
             if (inserted) {
                 if (const auto person = m_ctx->getPersonByName(name)) {
                     track.color = person->color;
+                    track.workplace = person->workplace;
                 }
             }
             if (loc == track.lastLoc) {
@@ -213,6 +215,32 @@ private:
             default:
                 return false;
         }
+    }
+
+    nlohmann::json sightingsToJson() const {
+        nlohmann::json out;
+        out["rooms"] = nlohmann::json::array();
+        out["byPerson"] = nlohmann::json::object();
+        if (!m_ctx || !m_ctx->getRobot()) {
+            return out;
+        }
+
+        std::vector<std::string> rooms;
+        std::map<std::string, int> roomIndex;
+        for (const auto& s : m_ctx->getRobot()->getSightings()) {
+            auto [it, inserted] = roomIndex.try_emplace(s.location, static_cast<int>(rooms.size()));
+            if (inserted) {
+                rooms.push_back(s.location);
+            }
+            if (!out["byPerson"].contains(s.personName)) {
+                out["byPerson"][s.personName] = nlohmann::json::array();
+            }
+            out["byPerson"][s.personName].push_back(nlohmann::json::array({
+                s.time, it->second, s.kind == SightingKind::PRESENT ? 1 : 0,
+            }));
+        }
+        out["rooms"] = std::move(rooms);
+        return out;
     }
 
     static nlohmann::json stepsToJson(const std::vector<Pt>& steps) {
@@ -276,6 +304,9 @@ private:
                 if (!track.color.empty()) {
                     p["color"] = track.color;
                 }
+                if (!track.workplace.empty()) {
+                    p["workplace"] = track.workplace;
+                }
                 p["path"] = stepsToJson(track.path);
                 persons.push_back(std::move(p));
             }
@@ -283,6 +314,10 @@ private:
             nlohmann::json root;
             root["missions"] = std::move(missions);
             root["persons"] = std::move(persons);
+            root["sightings"] = sightingsToJson();
+            root["meta"] = {
+                { "search_reward_strategy", des::searchRewardStrategyToString(m_ctx->getConfig()->searchRewardStrategy) },
+            };
 
             const std::string path = pathForFlush();
             std::ofstream out(path);

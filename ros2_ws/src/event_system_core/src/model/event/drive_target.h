@@ -20,6 +20,17 @@ public:
     virtual std::string label() const = 0;
 };
 
+inline void recordSightings(ISimContext& ctx, const std::string& room) {
+    for (const auto& [name, personRoom] : ctx.getAllPersonLocations()) {
+        ctx.getRobot()->addSighting({
+            ctx.getTime(),
+            name,
+            room,
+            ctx.robotSeesPerson(name) ? SightingKind::PRESENT : SightingKind::ABSENT
+        });
+    }
+}
+
 class RoomTarget final : public DriveTarget {
     std::string m_room;
 
@@ -44,14 +55,7 @@ public:
         if (const auto order = ctx.getOrderPtr()) {
             OrderRegistry::instance().get(order->type).onStopDriveEvent(ctx, *order);
         }
-        for (const auto& [name, personLocation] : ctx.getAllPersonLocations()) {
-            ctx.getRobot()->addSighting({
-                ctx.getTime(),
-                name,
-                m_room,
-                personLocation == m_room ? SightingKind::PRESENT : SightingKind::ABSENT
-            });
-        }
+        recordSightings(ctx, m_room);
     }
 
     std::string label() const override { return m_room; }
@@ -73,6 +77,7 @@ public:
 
     void arrive(ISimContext& ctx, double /*distance*/) const override {
         ctx.robotMovedTo(m_point);
+        recordSightings(ctx, ctx.getRobot()->getLocation());
     }
 
     std::string label() const override {

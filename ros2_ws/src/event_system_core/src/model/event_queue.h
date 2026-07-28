@@ -99,7 +99,6 @@ public:
         return nextEvent(des::EventType::MISSION_DISPATCH);
     }
 
-    // All queued MissionDispatchEvents up to `untilTime`, earliest first.
     std::vector<std::shared_ptr<IEvent>> dispatchEventsUntil(const int untilTime) const {
         std::vector<std::shared_ptr<IEvent>> events;
         for (const auto& e : m_events) {

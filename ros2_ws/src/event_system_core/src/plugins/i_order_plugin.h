@@ -40,8 +40,6 @@ public:
     virtual int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const = 0;
     virtual bool isFeasible(const des::IOrder& order, const ISimContext& context) const = 0;
 
-    // Qualifier appended to the mission state when the mission ends, e.g. why a
-    // search was aborted. Empty = the state alone describes the outcome.
     virtual std::string outcomeDetail(const des::IOrder& /*order*/) const {
         return {};
     }

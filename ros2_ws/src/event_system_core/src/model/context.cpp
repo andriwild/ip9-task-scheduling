@@ -202,7 +202,15 @@ std::optional<des::Point> SimulationContext::getPersonPosition(const std::string
 }
 
 bool SimulationContext::robotSeesPerson(const std::string& name) const {
-    return m_persons.isAt(name, m_robot->getLocation());
+    if (!m_persons.isAt(name, m_robot->getLocation())) {
+        return false;
+    }
+    const auto pos = m_persons.position(name);
+    if (!pos) {
+        return false;
+    }
+    const des::Point robotPos = m_robot->getPosition();
+    return std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) <= m_simConfig->personDetectionRange;
 }
 
 std::optional<int> SimulationContext::lastServiced(const std::string& room, const std::string& type) const {
@@ -352,6 +360,10 @@ void SimulationContext::notifyChargeStarted() const {
 
 void SimulationContext::robotMoved(const std::string& location, const double distance) const {
     m_robot->setLocation(location);
+    const auto it = m_locationMap.find(location);
+    if (it != m_locationMap.end()) {
+        m_robot->setPosition(it->second.m_p);
+    }
     m_eventBus.notifyMoved(m_currentTime, location, distance);
 }
 

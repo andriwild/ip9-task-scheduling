@@ -27,26 +27,12 @@ constexpr int kGraspIterations = 200;
 constexpr float kGraspAlpha    = 0.3f;
 constexpr int kGraspSeed       = 42;
 
-// Energy the robot must still hold when the next scheduled block starts, plus the
-// handover location the background tour has to end at.
 struct MissionReserve {
     double requiredWh = 0.0;
     std::string endLoc;
     std::size_t missionCount = 0;
 };
 
-// Backward recursion over the scheduled missions the strategy exposes:
-//
-//   req_n = socThreshold
-//   req_i = max(socThreshold, req_{i+1} + e_i - c_i)
-//
-// where e_i is the mission's energy estimate and c_i the energy the robot can
-// recharge while idling at the dock between mission i and mission i+1.
-//
-// EnergyReserveStrategy::NEXT_MISSION feeds a single mission into the same
-// recursion, which collapses it to socThreshold + e_0 and reproduces the
-// behaviour that predates the horizon reserve. That leaves missions 2..n of a
-// burst unprotected and lets background drain the battery below what they need.
 inline MissionReserve computeMissionReserve(
     const ISimContext& ctx,
     const double socThreshold,
@@ -74,8 +60,6 @@ inline MissionReserve computeMissionReserve(
 
     for (std::size_t i = 0; i < orders.size(); ++i) {
         const auto& plugin = OrderRegistry::instance().get(orders[i]->type);
-        // The tour is routed to end at the first mission's target, every later
-        // mission is estimated from the dock because its predecessor returns there.
         const std::string startLoc = i == 0
             ? plugin.targetLocation(*orders[i]).value_or(dockLoc)
             : dockLoc;
@@ -93,7 +77,6 @@ inline MissionReserve computeMissionReserve(
     for (std::size_t k = orders.size(); k > 0; --k) {
         const std::size_t i = k - 1;
         double creditWh = 0.0;
-        // No duration estimate means the gap is unknown, so no charge is credited.
         if (i + 1 < orders.size() && hasDuration[i] && netChargeW > 0.0) {
             const double gapSec = orders[i + 1]->dispatchTime - endTime[i];
             creditWh = std::max(0.0, gapSec) * netChargeW / 3600.0;
@@ -176,9 +159,7 @@ public:
         const auto reserve = computeMissionReserve(ctx, socThreshold, capacityWh, dockLoc);
         const std::string& endLoc = reserve.endLoc;
 
-        // energy budget [Wh]: spendable on background before hitting the block reserve.
-        // The margin grows with the block length because every mission estimate carries
-        // its own error and those errors accumulate over the horizon.
+        // energy budget [Wh]: spendable on background before hitting the next-mission reserve.
         const double blockMarginWh = safetyMarginWh
             + kReserveMarginPerMissionWh * static_cast<double>(reserve.missionCount > 0 ? reserve.missionCount - 1 : 0);
         const double requiredWh   = std::min(capacityWh, reserve.requiredWh + blockMarginWh);

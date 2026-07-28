@@ -41,22 +41,14 @@ public:
             return;
         }
 
-        const des::Point& p = tour->m_path[m_index];
-        const bool present = ctx.robotSeesPerson(personName);
-        const auto pos = ctx.getPersonPosition(personName);
-        const double radius = ctx.getConfig()->personDetectionRange;
-        bool found = false;
-        if (present && pos) {
-            const double dist = std::hypot(pos->m_x - p.m_x, pos->m_y - p.m_y);
-            found = dist <= radius;
-        }
+        const bool found = ctx.robotSeesPerson(personName);
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
             "Scan t=%d room=%s point=%zu/%zu found=%d", this->time, room.c_str(), m_index, tour->m_path.size(), found);
 
         if (found) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, true, 0));
         } else if (m_index + 1 >= tour->m_path.size()) {
-            ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, present, 0));
+            ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, found, 0));
         } else {
             requestDrive(ctx, tour->m_path[m_index + 1], std::make_shared<Scan>(this->time, m_order, m_index + 1));
         }

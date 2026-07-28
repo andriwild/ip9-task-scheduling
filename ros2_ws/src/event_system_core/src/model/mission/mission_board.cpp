@@ -46,9 +46,6 @@ void MissionBoard::updateState(const des::MissionState& newState) {
     m_current->state = newState;
 }
 
-// The one INFO line per mission: state, reason and lateness in a single place.
-// Everything leading up to it logs at DEBUG. Routine background and interrupt
-// successes stay at DEBUG too, only their failures surface at INFO.
 void MissionBoard::complete(ISimContext& ctx, const des::OrderPtr& order) {
     assert(order != nullptr);
     if (order->type != kChargeOrderType) {

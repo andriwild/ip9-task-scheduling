@@ -93,9 +93,6 @@ inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& st
     return SearchRewardStrategy::BETA_SMOOTHED;
 }
 
-// NEXT_MISSION: background only reserves energy for the next scheduled mission.
-// HORIZON: background reserves for every scheduled mission within the horizon,
-// crediting the charge accrued in the gaps between them.
 enum class EnergyReserveStrategy {
     NEXT_MISSION,
     HORIZON
