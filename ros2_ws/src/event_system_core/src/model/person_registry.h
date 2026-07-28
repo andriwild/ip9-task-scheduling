@@ -19,8 +19,11 @@ public:
 
     PersonRegistry(
         des::PersonMap employees,
-        const des::LocationMap& rooms
+        const des::LocationMap& rooms,
+        unsigned int seed = PLACEMENT_SEED
     );
+
+    void reseed(unsigned int seed);
 
     bool hasEmployee(const std::string& name) const;
     des::Person* getByName(const std::string& name) const;

@@ -25,7 +25,6 @@ constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 constexpr double kReserveMarginPerMissionWh      = 1.5;
 constexpr int kGraspIterations = 200;
 constexpr float kGraspAlpha    = 0.3f;
-constexpr int kGraspSeed       = 42;
 
 struct MissionReserve {
     double requiredWh = 0.0;
@@ -199,7 +198,8 @@ public:
         }
 
         // index based route (tour)
-        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, kGraspSeed);
+        const int graspSeed = static_cast<int>(ctx.getConfig()->seed + des::GRASP_SEED_OFFSET);
+        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
 
         DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 

@@ -41,10 +41,18 @@ struct BackgroundTemplate {
 class ConfigLoader {
 public:
     static inline std::string s_overridePath = "";
+    static inline std::string s_baseConfigPath = "";
 
     static std::string configDir() {
         const auto slash = SIM_CONFIG_FILE.rfind('/');
         return slash == std::string::npos ? "" : SIM_CONFIG_FILE.substr(0, slash + 1);
+    }
+
+    static std::string baseConfigPath() {
+        if (s_baseConfigPath.empty()) {
+            return SIM_CONFIG_FILE;
+        }
+        return s_baseConfigPath.front() == '/' ? s_baseConfigPath : configDir() + s_baseConfigPath;
     }
 
     static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY_CFG) {
@@ -192,7 +200,7 @@ public:
         return employees;
     }
 
-    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = SIM_CONFIG_FILE, const std::string& overridePath = s_overridePath) {
+    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -258,9 +266,18 @@ public:
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
             config.missionTraceExport = j.value("mission_trace_export", false);
+            config.missionTraceRounds = j.value("mission_trace_rounds", std::vector<int>{});
+            config.missionTraceWindow = j.value("mission_trace_window", std::vector<int>{});
             config.searchRewardStrategy = des::searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.energyReserveStrategy = des::energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
+            config.seed = j.value("seed", 42u);
+            config.roundMode = des::roundModeFromString(j.value("round_mode", "replication"));
+
+            if (config.missionTraceWindow.size() != 0 && config.missionTraceWindow.size() != 2) {
+                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "mission_trace_window must be [from, to], got %zu entries", config.missionTraceWindow.size());
+                return std::nullopt;
+            }
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -405,9 +422,13 @@ public:
         j["replan_background_on_interrupt"] = config->replanBackgroundOnInterrupt;
         j["search_excluded_rooms"] = config->searchExcludedRooms;
         j["mission_trace_export"] = config->missionTraceExport;
+        j["mission_trace_rounds"] = config->missionTraceRounds;
+        j["mission_trace_window"] = config->missionTraceWindow;
         j["search_reward_strategy"] = des::searchRewardStrategyToString(config->searchRewardStrategy);
         j["energy_reserve_strategy"] = des::energyReserveStrategyToString(config->energyReserveStrategy);
         j["energy_reserve_horizon"] = config->energyReserveHorizon;
+        j["seed"] = config->seed;
+        j["round_mode"] = des::roundModeToString(config->roundMode);
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {

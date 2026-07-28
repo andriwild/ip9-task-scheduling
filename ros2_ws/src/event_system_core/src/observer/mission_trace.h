@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <fstream>
+#include <limits>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -24,15 +27,27 @@ public:
     MissionTraceObserver(
         const ISimContext* ctx,
         des::LocationMap locationMap,
-        std::string outputPath) 
+        std::string outputPath,
+        std::shared_ptr<const des::SimConfig> config = nullptr)
         : m_ctx(ctx)
         , m_locationMap(std::move(locationMap))
-        , m_outputPath(std::move(outputPath)) 
-    {}
+        , m_outputPath(std::move(outputPath))
+    {
+        if (config) {
+            m_enabledRounds.assign(config->missionTraceRounds.begin(), config->missionTraceRounds.end());
+            if (config->missionTraceWindow.size() == 2) {
+                m_windowFrom = config->missionTraceWindow[0];
+                m_windowTo   = config->missionTraceWindow[1];
+            }
+        }
+    }
 
     std::string getName() override { return "MissionTrace"; }
 
     void onRobotMoved(const int time, const std::string& location, const double /*distance*/) override {
+        if (!recording(time)) {
+            return;
+        }
         auto* trace = active();
         if (!trace) {
             return;
@@ -42,6 +57,9 @@ public:
     }
 
     void onRobotMovedTo(const int time, const des::Point& position, double /*distance*/ = 0.0) override {
+        if (!recording(time)) {
+            return;
+        }
         auto* trace = active();
         if (!trace) {
             return;
@@ -51,6 +69,9 @@ public:
     }
 
     void onStateChanged(const int time, const des::RobotStateType& /*type*/, const std::string& name, des::BatteryProps /*bat*/) override {
+        if (!recording(time)) {
+            return;
+        }
         auto* trace = active();
         if (!trace) {
             return;
@@ -65,6 +86,9 @@ public:
         if (type == des::EventType::SIMULATION_END) {
             snapshotAllPersons(time);
             flush();
+            return;
+        }
+        if (!recording(time)) {
             return;
         }
         if (isPersonEvent(type)) {
@@ -96,6 +120,16 @@ public:
     }
 
 private:
+    bool recording(const int time) const {
+        if (time < m_windowFrom || time > m_windowTo) {
+            return false;
+        }
+        if (m_enabledRounds.empty()) {
+            return true;
+        }
+        return std::find(m_enabledRounds.begin(), m_enabledRounds.end(), m_flushCount + 1) != m_enabledRounds.end();
+    }
+
     struct Pt {
         int time;
         std::string location;
@@ -339,4 +373,7 @@ private:
     std::map<int, Trace> m_traces;
     std::map<std::string, PersonTrack> m_persons;
     int m_flushCount = 0;
+    std::vector<int> m_enabledRounds;
+    int m_windowFrom = std::numeric_limits<int>::min();
+    int m_windowTo   = std::numeric_limits<int>::max();
 };

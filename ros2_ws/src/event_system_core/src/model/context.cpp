@@ -19,11 +19,23 @@ SimulationContext::SimulationContext(
     , m_plannerNode(std::move(plannerNode))
     , m_locationMap(std::move(locationMap))
     , m_roomTours(std::move(roomTours))
-    , m_persons(std::move(employees), m_locationMap)
+    , m_persons(std::move(employees), m_locationMap, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
     , m_missions(m_queue, m_eventBus)
 {
+    reseed(m_simConfig->seed);
     m_robot = std::make_unique<Robot>(m_simConfig);
     DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Simulation Context created!");
+}
+
+void SimulationContext::reseed(const unsigned int seed) {
+    m_activeSeed = seed;
+    m_rng.seed(seed);
+    m_persons.reseed(seed + des::PLACEMENT_SEED_OFFSET);
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "RNG seeded with %u", seed);
+}
+
+unsigned int SimulationContext::activeSeed() const {
+    return m_activeSeed;
 }
 
 Journey SimulationContext::scheduleArrival(const std::string& target) const {

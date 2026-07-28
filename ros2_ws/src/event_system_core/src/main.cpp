@@ -23,14 +23,32 @@ int main(const int argc, char *argv[]) {
     OrderRegistry::instance().registerPlugin(std::make_unique<ChargePlugin>());
     OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
 
-    // ros parameter requires searching the flag (stability)
+    // ros parameter requires searching the flag (stability). ros2 launch drops
+    // empty-string arguments, so a flag may be followed by the next flag.
     std::string mode = "full";
-    for (int i = 1; i + 1 < argc; ++i) {
-        if (std::string(argv[i]) == "--mode") {
-            mode = argv[i + 1];
+    auto valueOf = [&](const int i) -> std::string {
+        if (i + 1 >= argc) {
+            return "";
         }
-        if (std::string(argv[i]) == "--config") {
-            ConfigLoader::s_overridePath = argv[i + 1];
+        const std::string next = argv[i + 1];
+        return next.rfind("--", 0) == 0 ? "" : next;
+    };
+    for (int i = 1; i < argc; ++i) {
+        const std::string flag = argv[i];
+        if (flag == "--mode" && !valueOf(i).empty()) {
+            mode = valueOf(i);
+        }
+        if (flag == "--config") {
+            ConfigLoader::s_overridePath = valueOf(i);
+        }
+        if (flag == "--base-config") {
+            ConfigLoader::s_baseConfigPath = valueOf(i);
+        }
+        if (flag == "--out-dir") {
+            IAppRunner::s_outDir = valueOf(i);
+        }
+        if (flag == "--run-id") {
+            IAppRunner::s_runId = valueOf(i);
         }
     }
 
@@ -124,6 +142,10 @@ int main(const int argc, char *argv[]) {
                         DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Robot battery reached SoC 0 at %s — aborting simulation", des::toHumanReadableTime(e->time).c_str());
                         batteryDepleted = true;
                         running = false;
+                        if (const auto metrics = app->metricsNode()) {
+                            metrics->setTerminatedReason("battery_depleted");
+                            metrics->publishReport();
+                        }
                         break;
                     }
                     if (e->getType() == des::EventType::SIMULATION_END) {

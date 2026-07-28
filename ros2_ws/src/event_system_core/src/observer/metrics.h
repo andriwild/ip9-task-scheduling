@@ -18,6 +18,8 @@
 #include "event_system_msgs/msg/metrics_report.hpp"
 
 class MetricsNode final : public rclcpp::Node, public IObserver {
+    static constexpr int kSecondsPerDay = 86400;
+
     std::map<std::string, int>    timePerStateName;
     std::map<std::string, double> energyPerStateName;
     std::map<des::RobotStateType, int>    timePerCategory;
@@ -34,8 +36,21 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
         int failUnreachable = 0;
         int failFindable    = 0;
     };
+    struct DayStats {
+        MissionStats scheduled;
+        MissionStats background;
+        MissionStats interrupt;
+        double distance     = 0.0;
+        double energyAh     = 0.0;
+        int chargeCycles    = 0;
+        double minSoc       = -1.0;
+        int idleTime        = 0;
+        int missionTime     = 0;
+        int chargingTime    = 0;
+        int totalTime       = 0;
+    };
     std::map<des::ExecutionMode, MissionStats> missionsByMode;
-    std::map<int, MissionStats> scheduledPerDay;
+    std::map<int, DayStats> perDay;
 
     int moveTime              = 0;
     int lastTimeStateChanged  = 0;
@@ -64,9 +79,13 @@ class MetricsNode final : public rclcpp::Node, public IObserver {
 
     std::shared_ptr<const des::SimConfig> m_csvConfig;
     std::string m_csvPath;
+    std::string m_dailyCsvPath;
     std::string m_csvScenario;
-    int m_csvRound    = 0;
-    int m_csvRunIndex = 0;
+    std::string m_runId;
+    std::string m_terminatedReason = "completed";
+    int m_csvRound        = 0;
+    int m_csvRunIndex     = 0;
+    unsigned int m_roundSeed = 0;
 
     rclcpp::Publisher<event_system_msgs::msg::MetricsReport>::SharedPtr m_publisher;
 
@@ -85,9 +104,22 @@ public:
         m_csvConfig = std::move(config);
     }
 
-    void setRunInfo(const std::string& scenario, const int round) {
+    void enableDailyCsv(std::string path) {
+        m_dailyCsvPath = std::move(path);
+    }
+
+    void setRunId(const std::string& runId) {
+        m_runId = runId;
+    }
+
+    void setTerminatedReason(const std::string& reason) {
+        m_terminatedReason = reason;
+    }
+
+    void setRunInfo(const std::string& scenario, const int round, const unsigned int roundSeed) {
         m_csvScenario = scenario;
         m_csvRound    = round;
+        m_roundSeed   = roundSeed;
     }
 
     void clear() {
@@ -104,7 +136,7 @@ public:
         maxLateness           = 0;
         hasLateMission        = false;
         missionsByMode.clear();
-        scheduledPerDay.clear();
+        perDay.clear();
         movedDistance         = 0.0;
         lastSoc               = -1.0;
         batteryCapacity       = 0.0;
@@ -132,6 +164,7 @@ public:
 
         if (type == des::EventType::CHARGE_MISSION_START) {
             chargeCyclesTotal++;
+            perDay[time / kSecondsPerDay].chargeCycles++;
         }
         if (type == des::EventType::BATTERY_FULL || type == des::EventType::CHARGE_MISSION) {
             chargeCyclesComplete++;
@@ -155,6 +188,14 @@ public:
             energyPerStateName[lastStateName] += consumedAh;
             timePerCategory[lastCategory]     += passedTime;
             energyPerCategory[lastCategory]   += consumedAh;
+            bookDailySpan(lastTimeStateChanged, time, lastCategory, lastStateName, consumedAh);
+        }
+
+        {
+            auto& day = perDay[time / kSecondsPerDay];
+            if (day.minSoc < 0.0 || batStats.soc < day.minSoc) {
+                day.minSoc = batStats.soc;
+            }
         }
 
         if (consumedAh > 0.0) {
@@ -182,6 +223,31 @@ public:
         lastTimeStateChanged = time;
     }
 
+    void bookDailySpan(const int from, const int to, const des::RobotStateType category, const std::string& stateName, const double consumedAh) {
+        const int span = to - from;
+        if (span <= 0) {
+            return;
+        }
+        int cursor = from;
+        while (cursor < to) {
+            const int dayIndex = cursor / kSecondsPerDay;
+            const int dayEnd   = std::min(to, (dayIndex + 1) * kSecondsPerDay);
+            const int slice    = dayEnd - cursor;
+            auto& day = perDay[dayIndex];
+            day.totalTime += slice;
+            day.energyAh  += consumedAh * slice / span;
+            if (category == des::RobotStateType::MISSION) {
+                day.missionTime += slice;
+            } else if (category == des::RobotStateType::CHARGING) {
+                day.chargingTime += slice;
+            }
+            if (stateName == "idle") {
+                day.idleTime += slice;
+            }
+            cursor = dayEnd;
+        }
+    }
+
     void onMissionRegistered(const des::OrderPtr& order) override {
         if (!order) return;
         missionsByMode[order->execution].registered++;
@@ -191,48 +257,64 @@ public:
         const auto state     = order->state;
         const auto execution = order->execution;
         auto& s = missionsByMode[execution];
-        MissionStats* perDay = (execution == des::ExecutionMode::SCHEDULED) ? &scheduledPerDay[time / 86400] : nullptr;
+        auto& day = perDay[time / kSecondsPerDay];
+        MissionStats* dayStats = &day.background;
+        switch (execution) {
+            case des::ExecutionMode::SCHEDULED:  dayStats = &day.scheduled;  break;
+            case des::ExecutionMode::BACKGROUND: dayStats = &day.background; break;
+            case des::ExecutionMode::INTERRUPT:  dayStats = &day.interrupt;  break;
+        }
         switch (state) {
             case des::MissionState::COMPLETED:
                 if (timeDiff > 0) {
                     s.late++;
-                    if (perDay) perDay->late++;
+                    dayStats->late++;
                     accMissionToLateTime += timeDiff;
-                    if (!hasLateMission || timeDiff < minLateness) minLateness = timeDiff;
-                    if (!hasLateMission || timeDiff > maxLateness) maxLateness = timeDiff;
+                    if (!hasLateMission || timeDiff < minLateness) {
+                        minLateness = timeDiff;
+                    }
+                    if (!hasLateMission || timeDiff > maxLateness) {
+                        maxLateness = timeDiff;
+                    }
                     hasLateMission = true;
                 } else {
                     s.onTime++;
-                    if (perDay) perDay->onTime++;
+                    dayStats->onTime++;
                     accMissionToEarlyTime += timeDiff;
                 }
                 break;
-            case des::MissionState::CANCELLED: s.cancelled++; if (perDay) perDay->cancelled++; break;
+            case des::MissionState::CANCELLED:
+                s.cancelled++;
+                dayStats->cancelled++;
+                break;
             case des::MissionState::FAILED:
                 s.failed++;
-                if (perDay) {
-                    perDay->failed++;
-                    if (order->type == "accompany") {
-                        switch (static_cast<const AccompanyOrder&>(*order).abortReason) {
-                            case SearchAbortReason::OUTSIDE:                 perDay->failOutside++;     break;
-                            case SearchAbortReason::IN_BUILDING_UNREACHABLE: perDay->failUnreachable++; break;
-                            case SearchAbortReason::IN_BUILDING_FINDABLE:    perDay->failFindable++;    break;
-                            default: break;
-                        }
+                dayStats->failed++;
+                if (order->type == "accompany") {
+                    switch (static_cast<const AccompanyOrder&>(*order).abortReason) {
+                        case SearchAbortReason::OUTSIDE:                 dayStats->failOutside++;     break;
+                        case SearchAbortReason::IN_BUILDING_UNREACHABLE: dayStats->failUnreachable++; break;
+                        case SearchAbortReason::IN_BUILDING_FINDABLE:    dayStats->failFindable++;    break;
+                        default: break;
                     }
                 }
                 break;
-            case des::MissionState::REJECTED:  s.rejected++;  if (perDay) perDay->rejected++;  break;
+            case des::MissionState::REJECTED:
+                s.rejected++;
+                dayStats->rejected++;
+                break;
             default: break;
         }
     }
 
-    void onRobotMoved(int /*time*/, const std::string& /*location*/, double distance) override {
+    void onRobotMoved(const int time, const std::string& /*location*/, double distance) override {
         movedDistance += distance;
+        perDay[time / kSecondsPerDay].distance += distance;
     }
 
-    void onRobotMovedTo(int /*time*/, const des::Point& /*position*/, double distance = 0.0) override {
+    void onRobotMovedTo(const int time, const des::Point& /*position*/, double distance = 0.0) override {
         movedDistance += distance;
+        perDay[time / kSecondsPerDay].distance += distance;
     }
 
     bool hasData() const { return hasLastState; }
@@ -333,9 +415,10 @@ public:
         DES_LOG_INFO(log, "Battery     : cycles=%d (full=%d, partial=%d)  deep-discharge=%d  avg-DoD=%.2f  equiv-cycles=%.1f  discharged=%.1fAh",
                      m.charge_cycles_total, m.charge_cycles_complete, m.charge_cycles_partial, m.deep_discharge_count, m.avg_depth_of_discharge, m.equivalent_full_cycles, m.energy_total_consumed_ah);
         DES_LOG_INFO(log, "Movement    : distance=%.0fm", m.total_distance);
-        if (!scheduledPerDay.empty()) {
+        if (!perDay.empty()) {
             int tCompl = 0, tOut = 0, tUnr = 0, tFind = 0;
-            for (const auto& [day, s] : scheduledPerDay) {
+            for (const auto& [day, d] : perDay) {
+                const auto& s = d.scheduled;
                 tCompl += s.onTime + s.late; tOut += s.failOutside; tUnr += s.failUnreachable; tFind += s.failFindable;
             }
             const int findDenTot = tCompl + tFind;
@@ -343,7 +426,8 @@ public:
                          findDenTot > 0 ? 100.0 * tCompl / findDenTot : 0.0, tCompl, tFind, tOut, tUnr);
             DES_LOG_INFO(log, "--- Accompany per day (find%% ignores outside + unreachable) ---");
             DES_LOG_INFO(log, "day  compl  fail  outside  unreach  findFail  raw%%  find%%");
-            for (const auto& [day, s] : scheduledPerDay) {
+            for (const auto& [day, d] : perDay) {
+                const auto& s = d.scheduled;
                 const int completed = s.onTime + s.late;
                 const int dispatched = completed + s.failed;
                 const int findDen = completed + s.failFindable;
@@ -361,6 +445,7 @@ public:
         logSummary(msg);
         if (!m_csvPath.empty() && m_csvConfig && hasLastState) {
             writeCsvRow(msg);
+            writeDailyCsv();
         }
         m_publisher->publish(msg);
         clear();
@@ -377,9 +462,13 @@ private:
             fields.emplace_back(key, os.str());
         };
 
+        add("run_id", m_runId);
         add("run_index", m_csvRunIndex);
         add("scenario", m_csvScenario);
         add("round", m_csvRound);
+        add("seed", m_csvConfig->seed);
+        add("round_seed", m_roundSeed);
+        add("terminated_reason", m_terminatedReason);
 
         add("always_charge_at_dock", m_csvConfig->alwaysChargeAtDock ? 1 : 0);
         add("charge_to_full", m_csvConfig->chargeToFull ? 1 : 0);
@@ -461,5 +550,58 @@ private:
 
         DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "CSV row written: scenario=%s round=%d -> %s", m_csvScenario.c_str(), m_csvRound, m_csvPath.c_str());
         m_csvRunIndex++;
+    }
+
+    // Appends one CSV row per simulated day (L1 time series). Keeps long runs
+    // analysable without the full mission trace.
+    void writeDailyCsv() {
+        if (m_dailyCsvPath.empty() || perDay.empty()) {
+            return;
+        }
+
+        static const std::vector<std::string> header = {
+            "run_id", "scenario", "round", "seed", "round_seed", "day",
+            "scheduled_on_time", "scheduled_late", "scheduled_failed", "scheduled_cancelled", "scheduled_rejected",
+            "scheduled_fail_outside", "scheduled_fail_unreachable", "scheduled_fail_findable",
+            "background_completed", "background_failed", "background_cancelled",
+            "interrupt_completed",
+            "distance", "energy_ah", "charge_cycles", "min_soc",
+            "idle_time", "mission_time", "charging_time", "total_time", "utilization"
+        };
+
+        std::error_code ec;
+        const auto parent = std::filesystem::path(m_dailyCsvPath).parent_path();
+        if (!parent.empty()) {
+            std::filesystem::create_directories(parent, ec);
+        }
+        const bool writeHeader = !std::filesystem::exists(m_dailyCsvPath) || std::filesystem::file_size(m_dailyCsvPath, ec) == 0;
+
+        std::ofstream out(m_dailyCsvPath, std::ios::app);
+        if (!out.is_open()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.observer.metrics"), "Could not open daily CSV file: %s", m_dailyCsvPath.c_str());
+            return;
+        }
+        if (writeHeader) {
+            for (size_t i = 0; i < header.size(); ++i) {
+                out << (i ? "," : "") << header[i];
+            }
+            out << "\n";
+        }
+
+        for (const auto& [day, d] : perDay) {
+            const double utilization = d.totalTime > 0 ? 100.0 * d.missionTime / d.totalTime : 0.0;
+            out << m_runId << ',' << m_csvScenario << ',' << m_csvRound << ','
+                << m_csvConfig->seed << ',' << m_roundSeed << ',' << day << ','
+                << d.scheduled.onTime << ',' << d.scheduled.late << ',' << d.scheduled.failed << ','
+                << d.scheduled.cancelled << ',' << d.scheduled.rejected << ','
+                << d.scheduled.failOutside << ',' << d.scheduled.failUnreachable << ',' << d.scheduled.failFindable << ','
+                << (d.background.onTime + d.background.late) << ',' << d.background.failed << ',' << d.background.cancelled << ','
+                << (d.interrupt.onTime + d.interrupt.late) << ','
+                << d.distance << ',' << d.energyAh << ',' << d.chargeCycles << ',' << d.minSoc << ','
+                << d.idleTime << ',' << d.missionTime << ',' << d.chargingTime << ',' << d.totalTime << ','
+                << utilization << "\n";
+        }
+
+        DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Daily CSV written: %zu days -> %s", perDay.size(), m_dailyCsvPath.c_str());
     }
 };

@@ -21,6 +21,21 @@ class HeadlessRunner final : public IAppRunner {
         m_orderFiles.push(m_config->appointmentsPath);
     }
 
+    unsigned int roundSeed(const int round) const {
+        return m_config->seed + des::ROUND_SEED_STRIDE * static_cast<unsigned int>(round);
+    }
+
+    static std::string outputPath(const std::string& stem, const std::string& extension) {
+        if (!s_outDir.empty()) {
+            const std::string dir = s_outDir.back() == '/' ? s_outDir : s_outDir + "/";
+            return dir + stem + extension;
+        }
+        const std::time_t now = std::time(nullptr);
+        char stamp[32];
+        std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&now));
+        return CONFIG_PATH + "../results/" + stem + "_" + stamp + extension;
+    }
+
 public:
     explicit HeadlessRunner() {
         m_locationMap = loadLocations();
@@ -50,8 +65,8 @@ public:
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
 
         auto runner = std::make_unique<HeadlessRunner>();
-        for (int i = 1; i < argc; ++i) {
-            if (std::string(argv[i]) == "--rounds" && i + 1 < argc) {
+        for (int i = 1; i + 1 < argc; ++i) {
+            if (std::string(argv[i]) == "--rounds" && std::string(argv[i + 1]).rfind("--", 0) != 0) {
                 int rounds = std::atoi(argv[i + 1]);
                 runner->m_totalRounds = std::max(1, rounds);
             }

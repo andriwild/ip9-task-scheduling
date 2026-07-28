@@ -73,6 +73,9 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
 
 class IAppRunner {
 public:
+    static inline std::string s_outDir = "";
+    static inline std::string s_runId  = "";
+
     IAppRunner() : m_db({DB_USER, DB_PASSWORD}) {};
 
     virtual ~IAppRunner() = default;
@@ -86,6 +89,10 @@ public:
 
     EventQueue m_eventQueue;
     std::shared_ptr<SimulationContext> m_ctx;
+
+    std::shared_ptr<MetricsNode> metricsNode() const {
+        return m_metricsNode;
+    }
 
     static SortedEventQueue createMissionQueue(
         des::OrderList& orders,

@@ -6,12 +6,17 @@
 
 PersonRegistry::PersonRegistry(
     des::PersonMap employees,
-    const des::LocationMap& rooms
+    const des::LocationMap& rooms,
+    const unsigned int seed
 )
     : m_employees(std::move(employees))
     , m_rooms(rooms)
-    , m_placementRng(PLACEMENT_SEED)
+    , m_placementRng(seed)
 {
+}
+
+void PersonRegistry::reseed(const unsigned int seed) {
+    m_placementRng.seed(seed);
 }
 
 bool PersonRegistry::hasEmployee(const std::string& name) const {

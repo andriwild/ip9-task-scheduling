@@ -110,6 +110,27 @@ inline EnergyReserveStrategy energyReserveStrategyFromString(const std::string& 
     return EnergyReserveStrategy::HORIZON;
 }
 
+constexpr unsigned int PLACEMENT_SEED_OFFSET = 1;
+constexpr unsigned int GRASP_SEED_OFFSET     = 2;
+constexpr unsigned int ROUND_SEED_STRIDE     = 1000;
+
+enum class RoundMode {
+    REPLICATION,
+    CONTINUATION
+};
+
+inline std::string roundModeToString(const RoundMode mode) {
+    switch (mode) {
+        case RoundMode::CONTINUATION: return "continuation";
+        default:                      return "replication";
+    }
+}
+
+inline RoundMode roundModeFromString(const std::string& str) {
+    if (str == "continuation") return RoundMode::CONTINUATION;
+    return RoundMode::REPLICATION;
+}
+
 enum class ExecutionMode {
     SCHEDULED,
     BACKGROUND,
@@ -165,9 +186,13 @@ struct SimConfig {
     std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
     std::string employeesPath = "";
     bool missionTraceExport = false;
+    std::vector<int> missionTraceRounds = {};
+    std::vector<int> missionTraceWindow = {};
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
+    unsigned int seed = 42;
+    RoundMode roundMode = RoundMode::REPLICATION;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
         const int W = 30;
@@ -203,6 +228,8 @@ struct SimConfig {
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;
+        os << std::left << std::setw(W) << "seed" << ": " << config.seed << std::endl;
+        os << std::left << std::setw(W) << "roundMode" << ": " << roundModeToString(config.roundMode) << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;

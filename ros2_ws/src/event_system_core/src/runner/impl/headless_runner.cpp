@@ -44,19 +44,14 @@ void HeadlessRunner::setupApplication() {
     rebuildFileQueue();
 
     if (m_config->metricsCsvExport) {
-        const std::time_t now = std::time(nullptr);
-        char stamp[32];
-        std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", std::localtime(&now));
-        m_metricsNode->enableCsv(CONFIG_PATH + "../results/metrics_" + stamp + ".csv", m_config);
+        m_metricsNode->setRunId(s_runId);
+        m_metricsNode->enableCsv(outputPath("metrics", ".csv"), m_config);
+        m_metricsNode->enableDailyCsv(outputPath("metrics_daily", ".csv"));
     }
     m_ctx->addObserver(m_metricsNode);
 
     if (m_config->missionTraceExport) {
-        const std::time_t traceNow = std::time(nullptr);
-        char traceStamp[32];
-        std::strftime(traceStamp, sizeof(traceStamp), "%Y%m%d_%H%M%S", std::localtime(&traceNow));
-        const std::string tracePath = CONFIG_PATH + "../results/mission_trace_" + traceStamp + ".json";
-        m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_locationMap, tracePath));
+        m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_locationMap, outputPath("mission_trace", ".json"), m_config));
     }
 
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
@@ -84,11 +79,15 @@ bool HeadlessRunner::loadNextBatch() {
         m_eventQueue.pop();
     }
 
+    if (m_config->roundMode == des::RoundMode::REPLICATION) {
+        m_ctx->reseed(roundSeed(m_currentRound));
+    }
+
     auto path = m_orderFiles.front();
     m_orderFiles.pop();
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loading batch: %s (round %d/%d)",
                 path.c_str(), m_currentRound + 1, m_totalRounds);
-    m_metricsNode->setRunInfo(std::filesystem::path(path).stem().string(), m_currentRound + 1);
+    m_metricsNode->setRunInfo(std::filesystem::path(path).stem().string(), m_currentRound + 1, m_ctx->activeSeed());
 
     auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     if (!appts.has_value()) {
