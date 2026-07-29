@@ -1,4 +1,6 @@
 #pragma once
+#include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -48,11 +50,24 @@ public:
         return slash == std::string::npos ? "" : SIM_CONFIG_FILE.substr(0, slash + 1);
     }
 
+    // Relative paths are tried against the working directory first, then against
+    // config/. Without the first rule a path typed from the workspace root
+    // silently resolves to a non-existent file under config/.
+    static std::string resolvePath(const std::string& path) {
+        if (path.empty() || path.front() == '/') {
+            return path;
+        }
+        if (std::filesystem::exists(path)) {
+            return std::filesystem::absolute(path).string();
+        }
+        return configDir() + path;
+    }
+
     static std::string baseConfigPath() {
         if (s_baseConfigPath.empty()) {
             return SIM_CONFIG_FILE;
         }
-        return s_baseConfigPath.front() == '/' ? s_baseConfigPath : configDir() + s_baseConfigPath;
+        return resolvePath(s_baseConfigPath);
     }
 
     static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY_CFG) {
@@ -203,6 +218,7 @@ public:
     static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Base config not readable: %s", filePath.c_str());
             return std::nullopt;
         }
 
@@ -210,7 +226,7 @@ public:
             auto j = json.value();
 
             if (!overridePath.empty()) {
-                const std::string resolved = overridePath.front() == '/' ? overridePath : configDir() + overridePath;
+                const std::string resolved = resolvePath(overridePath);
                 const auto overrideJson = getJson(resolved);
                 if (!overrideJson.has_value()) {
                     DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not read override config: %s", resolved.c_str());
@@ -379,56 +395,59 @@ public:
         }
     }
 
-    static bool saveSimConfig(std::string filePath, std::shared_ptr<des::SimConfig> config) {
-        nlohmann::json j = getJson(filePath).value_or(nlohmann::json::object());
-        j["drive_time_std"] = config->driveTimeStd;
-        j["robot_speed"] = config->robotSpeed;
-        j["timeBuffer"] = config->timeBuffer;
-        j["energy_consumption_drive"] = config->energyConsumptionDrive;
-        j["energy_consumption_base"] = config->energyConsumptionBase;
-        j["battery_capacity"] = config->batteryCapacity;
-        j["initial_battery_capacity"] = config->initialBatteryCapacity;
-        j["charging_rate"] = config->chargingRate;
-        j["low_battery_threshold"] = config->lowBatteryThreshold;
-        j["full_battery_threshold"] = config->fullBatteryThreshold;
-        j["arrival_mean"] = config->arrivalMean;
-        j["arrival_std"] = config->arrivalStd;
-        j["departure_mean"] = config->departureMean;
-        j["departure_std"] = config->departureStd;
-        j["arrival_distribution"] = des::distributionTypeToString(config->arrivalDistribution);
-        j["departure_distribution"] = des::distributionTypeToString(config->departureDistribution);
-        j["lunch_mean"] = config->lunchMean;
-        j["lunch_std"] = config->lunchStd;
-        j["lunch_distribution"] = des::distributionTypeToString(config->lunchDistribution);
-        j["lunch_duration_mean"] = config->lunchDurationMean;
-        j["lunch_duration_std"] = config->lunchDurationStd;
-        j["sim_speed_factor"] = config->simSpeedFactor;
-        j["dock_location"] = config->dockLocation;
-        j["cacheEnabled"] = config->cacheEnabled;
-        j["appointments_path"] = config->appointmentsPath;
-        j["employees_path"] = config->employeesPath;
-        j["people_spawn_location"] = config->peopleSpawnLocation;
-        j["person_detection_range"] = config->personDetectionRange;
-        j["person_speed"] = config->personSpeed;
-        j["sim_start_time"] = config->simStartTime;
-        j["sim_duration"]   = config->simDuration;
-        j["use_distance_matrix"] = config->useDistanceMatrix;
-        j["battery_voltage"] = config->batteryVoltage;
-        j["cv_threshold"] = config->cvThreshold;
-        j["taper_fraction"] = config->taperFraction;
-        j["charge_to_full"] = config->chargeToFull;
-        j["always_charge_at_dock"] = config->alwaysChargeAtDock;
-        j["metrics_csv_export"] = config->metricsCsvExport;
-        j["replan_background_on_interrupt"] = config->replanBackgroundOnInterrupt;
-        j["search_excluded_rooms"] = config->searchExcludedRooms;
-        j["mission_trace_export"] = config->missionTraceExport;
-        j["mission_trace_rounds"] = config->missionTraceRounds;
-        j["mission_trace_window"] = config->missionTraceWindow;
-        j["search_reward_strategy"] = des::searchRewardStrategyToString(config->searchRewardStrategy);
-        j["energy_reserve_strategy"] = des::energyReserveStrategyToString(config->energyReserveStrategy);
-        j["energy_reserve_horizon"] = config->energyReserveHorizon;
-        j["seed"] = config->seed;
-        j["round_mode"] = des::roundModeToString(config->roundMode);
+    static double roundValue(const double value) {
+        return std::round(value * 1000.0) / 1000.0;
+    }
+
+    static nlohmann::json configToJson(const des::SimConfig& config, nlohmann::json j = nlohmann::json::object()) {
+        j["drive_time_std"] = roundValue(config.driveTimeStd);
+        j["robot_speed"] = roundValue(config.robotSpeed);
+        j["timeBuffer"] = roundValue(config.timeBuffer);
+        j["energy_consumption_drive"] = roundValue(config.energyConsumptionDrive);
+        j["energy_consumption_base"] = roundValue(config.energyConsumptionBase);
+        j["battery_capacity"] = roundValue(config.batteryCapacity);
+        j["initial_battery_capacity"] = roundValue(config.initialBatteryCapacity);
+        j["charging_rate"] = roundValue(config.chargingRate);
+        j["low_battery_threshold"] = roundValue(config.lowBatteryThreshold);
+        j["full_battery_threshold"] = roundValue(config.fullBatteryThreshold);
+        j["arrival_mean"] = roundValue(config.arrivalMean);
+        j["arrival_std"] = roundValue(config.arrivalStd);
+        j["departure_mean"] = roundValue(config.departureMean);
+        j["departure_std"] = roundValue(config.departureStd);
+        j["arrival_distribution"] = des::distributionTypeToString(config.arrivalDistribution);
+        j["departure_distribution"] = des::distributionTypeToString(config.departureDistribution);
+        j["lunch_mean"] = roundValue(config.lunchMean);
+        j["lunch_std"] = roundValue(config.lunchStd);
+        j["lunch_distribution"] = des::distributionTypeToString(config.lunchDistribution);
+        j["lunch_duration_mean"] = roundValue(config.lunchDurationMean);
+        j["lunch_duration_std"] = roundValue(config.lunchDurationStd);
+        j["sim_speed_factor"] = roundValue(config.simSpeedFactor);
+        j["dock_location"] = config.dockLocation;
+        j["cacheEnabled"] = config.cacheEnabled;
+        j["appointments_path"] = config.appointmentsPath;
+        j["employees_path"] = config.employeesPath;
+        j["people_spawn_location"] = config.peopleSpawnLocation;
+        j["person_detection_range"] = roundValue(config.personDetectionRange);
+        j["person_speed"] = roundValue(config.personSpeed);
+        j["sim_start_time"] = config.simStartTime;
+        j["sim_duration"]   = config.simDuration;
+        j["use_distance_matrix"] = config.useDistanceMatrix;
+        j["battery_voltage"] = roundValue(config.batteryVoltage);
+        j["cv_threshold"] = roundValue(config.cvThreshold);
+        j["taper_fraction"] = roundValue(config.taperFraction);
+        j["charge_to_full"] = config.chargeToFull;
+        j["always_charge_at_dock"] = config.alwaysChargeAtDock;
+        j["metrics_csv_export"] = config.metricsCsvExport;
+        j["replan_background_on_interrupt"] = config.replanBackgroundOnInterrupt;
+        j["search_excluded_rooms"] = config.searchExcludedRooms;
+        j["mission_trace_export"] = config.missionTraceExport;
+        j["mission_trace_rounds"] = config.missionTraceRounds;
+        j["mission_trace_window"] = config.missionTraceWindow;
+        j["search_reward_strategy"] = des::searchRewardStrategyToString(config.searchRewardStrategy);
+        j["energy_reserve_strategy"] = des::energyReserveStrategyToString(config.energyReserveStrategy);
+        j["energy_reserve_horizon"] = config.energyReserveHorizon;
+        j["seed"] = config.seed;
+        j["round_mode"] = des::roundModeToString(config.roundMode);
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
@@ -437,6 +456,11 @@ public:
                 j[plugin->typeName()] = std::move(sub);
             }
         }
+        return j;
+    }
+
+    static bool saveSimConfig(const std::string& filePath, const std::shared_ptr<des::SimConfig>& config) {
+        const nlohmann::json j = configToJson(*config, getJson(filePath).value_or(nlohmann::json::object()));
 
         std::ofstream file(filePath);
         if (!file.is_open()) {

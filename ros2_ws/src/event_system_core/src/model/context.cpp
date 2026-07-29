@@ -29,9 +29,14 @@ SimulationContext::SimulationContext(
 
 void SimulationContext::reseed(const unsigned int seed) {
     m_activeSeed = seed;
-    m_rng.seed(seed);
+    m_worldRng.seed(seed);
+    m_robotRng.seed(seed + des::ROBOT_SEED_OFFSET);
     m_persons.reseed(seed + des::PLACEMENT_SEED_OFFSET);
     DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "RNG seeded with %u", seed);
+}
+
+void SimulationContext::reseedPersons() {
+    m_persons.reseedPersons(m_activeSeed + des::PERSON_SEED_BASE);
 }
 
 unsigned int SimulationContext::activeSeed() const {
@@ -47,7 +52,7 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     assert(distance.has_value());
 
     const double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
-    double travelTimeRnd = rnd::normal(m_rng, travelTime, getDriveTimeStd());
+    double travelTimeRnd = rnd::normal(m_robotRng, travelTime, getDriveTimeStd());
     if (travelTimeRnd < 0) {
         travelTimeRnd = travelTime;
     }
@@ -144,8 +149,12 @@ Robot* SimulationContext::getRobot() const {
     return m_robot.get();
 }
 
-std::mt19937& SimulationContext::rng() const {
-    return m_rng;
+std::mt19937& SimulationContext::worldRng() const {
+    return m_worldRng;
+}
+
+std::mt19937& SimulationContext::robotRng() const {
+    return m_robotRng;
 }
 
 void SimulationContext::pushEvent(const std::shared_ptr<IEvent>& event) {

@@ -13,17 +13,17 @@
 class PersonDepartureEvent;
 
 inline int busyRetryAt(ISimContext& ctx, const int now) {
-    return now + static_cast<int>(rnd::uni(ctx.rng(), 60, 300));
+    return now + static_cast<int>(rnd::uni(ctx.robotRng(), 60, 300));
 }
 
-inline double personWalkTime(ISimContext& ctx, const std::string& from, const std::string& to) {
+inline double personWalkTime(ISimContext& ctx, des::Person& person, const std::string& from, const std::string& to) {
     const std::optional<double> dist = ctx.getDistance(from, to);
     const double speed = ctx.getConfig()->personSpeed;
     if (!dist.has_value() || speed <= 0.0) {
         return 0.0;
     }
     const double t = dist.value() / speed;
-    const double tRnd = rnd::normal(ctx.rng(), t, t * 0.1);
+    const double tRnd = rnd::normal(person.rng, t, t * 0.1);
     return tRnd < 0 ? t : tRnd;
 }
 
@@ -83,16 +83,16 @@ public:
         if (it == p.roomLabels.end()) {
             ctx.setPersonLocation(p.firstName, p.workplace);
             ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
-                this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
+                this->time + rnd::uni(p.rng, 60, ONE_HOUR), this->person));
             return;
         }
 
         int currentIndex = std::distance(p.roomLabels.begin(), it);
         const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-        int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
+        int nextRoomIdx = rnd::discrete_dist(p.rng, row);
 
         ctx.setPersonLocation(p.firstName, p.roomLabels.at(nextRoomIdx));
-        double nextExecutionTime = this->time + rnd::uni(ctx.rng(), 10, 30);
+        double nextExecutionTime = this->time + rnd::uni(p.rng, 10, 30);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
     }
 
@@ -126,7 +126,7 @@ public:
         ctx.notifyEvent(*this);
 
         const int nextDayBase = (this->time / SECONDS_PER_DAY + 1) * SECONDS_PER_DAY;
-        des::sampleOccupancy(*ctx.getConfig(), ctx.rng(), nextDayBase, *this->person);
+        des::sampleOccupancy(*ctx.getConfig(), this->person->rng, nextDayBase, *this->person);
         const auto simEnd = ctx.getSimulationEndTime();
         if (simEnd.has_value() && this->person->arrivalTime < simEnd.value()) {
             ctx.pushEvent(std::make_shared<PersonArrivedEvent>(this->person->arrivalTime, this->person));
@@ -201,7 +201,7 @@ public:
         const std::string currentRoom = ctx.getPersonLocation(p.firstName);
         ctx.notifyEvent(*this);
 
-        const double walkTime = personWalkTime(ctx, currentRoom, targetRoom);
+        const double walkTime = personWalkTime(ctx, p, currentRoom, targetRoom);
         ctx.setPersonLocation(p.firstName, IN_TRANSIT);
         ctx.pushEvent(std::make_shared<PersonLunchArrivedEvent>(
             static_cast<int>(this->time + walkTime), this->person, targetRoom));
@@ -238,7 +238,7 @@ public:
         ctx.setPersonLocation(p.firstName, targetRoom);
         ctx.notifyEvent(*this);
 
-        double nextExecutionTime = this->time + p.getStayDuration(targetRoom, ctx.rng());
+        double nextExecutionTime = this->time + p.getStayDuration(targetRoom, p.rng);
 
         if (p.lunchPending && p.lunchTime < nextExecutionTime && p.lunchTime < p.departureTime) {
             const auto kitchenIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
@@ -297,19 +297,19 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
         ctx.notifyEvent(*this);
         ctx.setPersonLocation(p.firstName, p.workplace);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
-            this->time + rnd::uni(ctx.rng(), 60, ONE_HOUR), this->person));
+            this->time + rnd::uni(p.rng, 60, ONE_HOUR), this->person));
         return;
     }
 
     int currentIndex = std::distance(p.roomLabels.begin(), it);
     const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
-    int nextRoomIdx = rnd::discrete_dist(ctx.rng(), row);
+    int nextRoomIdx = rnd::discrete_dist(p.rng, row);
 
     const std::string nextRoom = p.roomLabels.at(nextRoomIdx);
     targetRoom = nextRoom;
     ctx.notifyEvent(*this);
 
-    const double walkTime = personWalkTime(ctx, currentRoom, nextRoom);
+    const double walkTime = personWalkTime(ctx, p, currentRoom, nextRoom);
     ctx.setPersonLocation(p.firstName, IN_TRANSIT);
     ctx.pushEvent(std::make_shared<PersonRoomArrivedEvent>(
         static_cast<int>(this->time + walkTime), this->person, nextRoom));

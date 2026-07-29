@@ -35,7 +35,8 @@ class SimulationContext : public ISimContext {
 
     static constexpr unsigned int DEFAULT_SEED = 42;
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
-    mutable std::mt19937 m_rng{DEFAULT_SEED};
+    mutable std::mt19937 m_worldRng{DEFAULT_SEED};
+    mutable std::mt19937 m_robotRng{DEFAULT_SEED + des::ROBOT_SEED_OFFSET};
     unsigned int m_activeSeed = DEFAULT_SEED;
 
     std::shared_ptr<IPathPlanner> m_plannerNode;
@@ -72,8 +73,10 @@ public:
     int getTime() const override;
     std::shared_ptr<des::SimConfig> getConfig() const override;
     Robot* getRobot() const override;
-    std::mt19937& rng() const override;
+    std::mt19937& worldRng() const override;
+    std::mt19937& robotRng() const override;
     void reseed(unsigned int seed);
+    void reseedPersons();
     unsigned int activeSeed() const;
 
     void pushEvent(const std::shared_ptr<IEvent>& event) override;

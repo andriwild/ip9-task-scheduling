@@ -110,8 +110,10 @@ inline EnergyReserveStrategy energyReserveStrategyFromString(const std::string& 
     return EnergyReserveStrategy::HORIZON;
 }
 
-constexpr unsigned int PLACEMENT_SEED_OFFSET = 1;
-constexpr unsigned int GRASP_SEED_OFFSET     = 2;
+constexpr unsigned int ROBOT_SEED_OFFSET     = 1;
+constexpr unsigned int PLACEMENT_SEED_OFFSET = 2;
+constexpr unsigned int GRASP_SEED_OFFSET     = 3;
+constexpr unsigned int PERSON_SEED_BASE      = 100;
 constexpr unsigned int ROUND_SEED_STRIDE     = 1000;
 
 enum class RoundMode {

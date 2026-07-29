@@ -2,6 +2,9 @@
 
 #include <memory>
 #include "../../util/log.h"
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <queue>
 #include <string>
 #include <vector>
@@ -23,6 +26,21 @@ class HeadlessRunner final : public IAppRunner {
 
     unsigned int roundSeed(const int round) const {
         return m_config->seed + des::ROUND_SEED_STRIDE * static_cast<unsigned int>(round);
+    }
+
+    void writeEffectiveConfig(const std::string& path) const {
+        std::error_code ec;
+        const auto parent = std::filesystem::path(path).parent_path();
+        if (!parent.empty()) {
+            std::filesystem::create_directories(parent, ec);
+        }
+        std::ofstream out(path);
+        if (!out.is_open()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Could not write effective config: %s", path.c_str());
+            return;
+        }
+        out << std::setw(4) << ConfigLoader::configToJson(*m_config) << std::endl;
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Effective config written: %s", path.c_str());
     }
 
     static std::string outputPath(const std::string& stem, const std::string& extension) {

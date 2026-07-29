@@ -43,6 +43,7 @@ public:
     std::optional<int> m_simulationEndTime;
     int currentTime = 0;
     mutable std::mt19937 m_rng{42};
+    mutable std::mt19937 m_robotRng{43};
 
     MockSimContext() {
         simConfig = std::make_shared<des::SimConfig>();
@@ -188,7 +189,8 @@ public:
     }
 
     std::shared_ptr<des::SimConfig> getConfig() const override { return simConfig; }
-    std::mt19937& rng() const override { return m_rng; }
+    std::mt19937& worldRng() const override { return m_rng; }
+    std::mt19937& robotRng() const override { return m_robotRng; }
 
     std::string getPersonLocation(const std::string& name) const override {
         return personLocations.at(name);

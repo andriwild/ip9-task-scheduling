@@ -60,6 +60,11 @@ public:
     std::vector<std::string> roomLabels;
     std::vector<std::vector<double>> transitionMatrix;
     StayDurationConfig stayDuration;
+    std::mt19937 rng{};
+
+    void reseed(const unsigned int seed) {
+        rng.seed(seed + static_cast<unsigned int>(id));
+    }
 
     double getStayDuration(const std::string& roomName, std::mt19937& rng) const {
         RoomType roomType = parseRoomName(roomName);

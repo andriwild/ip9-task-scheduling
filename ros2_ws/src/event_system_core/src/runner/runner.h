@@ -124,11 +124,10 @@ public:
 
     static void scheduleOccupancy(
         const des::SimConfig& config,
-        const des::PersonList& people,
-        std::mt19937& rng
+        const des::PersonList& people
     ) {
         for (const auto& p: people) {
-            des::sampleOccupancy(config, rng, 0, *p);
+            des::sampleOccupancy(config, p->rng, 0, *p);
         }
     }
 
@@ -148,8 +147,13 @@ protected:
     DBClient m_db;
 
     void createPlanner() {
-        const bool useMatrix = ConfigLoader::loadSimConfig().value_or(des::SimConfig{}).useDistanceMatrix;
-        if (useMatrix) {
+        const auto config = ConfigLoader::loadSimConfig();
+        if (!config.has_value()) {
+            throw std::runtime_error(
+                "Could not load simulation config (base: " + ConfigLoader::baseConfigPath() +
+                ", override: " + (ConfigLoader::s_overridePath.empty() ? "none" : ConfigLoader::s_overridePath) + ")");
+        }
+        if (config->useDistanceMatrix) {
             auto data = ConfigLoader::loadDistanceMatrix(BUILDING_FILE);
             if (!data.has_value()) {
                 throw std::runtime_error("use_distance_matrix=true but no matrix in " + BUILDING_FILE);
@@ -168,7 +172,8 @@ protected:
             throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
         }
 
-        scheduleOccupancy(*m_config, m_people.value(), m_ctx->rng());
+        m_ctx->reseedPersons();
+        scheduleOccupancy(*m_config, m_people.value());
         m_eventQueue.extend(personArrivalGenerator(m_people.value()));
         m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
@@ -222,7 +227,7 @@ protected:
                 while (t < winTo) {
                     // TODO: not only exponential supported
                     // rnd::exponential takes the mean (sec/event), not the rate (event/sec).
-                    const double dt = rnd::exponential(m_ctx->rng(), 1.0 / gen.ratePerSecond);
+                    const double dt = rnd::exponential(m_ctx->worldRng(), 1.0 / gen.ratePerSecond);
                     t += static_cast<int>(dt);
                     if (t < winTo && t >= simStart && t < simEnd) {
                         nlohmann::json params = gen.params;

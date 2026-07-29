@@ -47,6 +47,7 @@ void HeadlessRunner::setupApplication() {
         m_metricsNode->setRunId(s_runId);
         m_metricsNode->enableCsv(outputPath("metrics", ".csv"), m_config);
         m_metricsNode->enableDailyCsv(outputPath("metrics_daily", ".csv"));
+        writeEffectiveConfig(outputPath("config", ".json"));
     }
     m_ctx->addObserver(m_metricsNode);
 

@@ -27,7 +27,7 @@ public:
         double sampled = static_cast<const InformationOrder&>(*m_order).sampledDuration;
         if (sampled < 0.0) {
             const auto& cfg = informationConfig();
-            sampled = rnd::uni(ctx.rng(), cfg.informationDurationMin, cfg.informationDurationMax);
+            sampled = rnd::uni(ctx.robotRng(), cfg.informationDurationMin, cfg.informationDurationMax);
         }
         const int duration = static_cast<int>(sampled < 1.0 ? 1.0 : sampled);
         ctx.pushEvent(std::make_shared<EndInformationEvent>(this->time + duration, m_order));

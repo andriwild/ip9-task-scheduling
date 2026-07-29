@@ -43,7 +43,7 @@ double InformationPlugin::estimateMissionDuration(const des::IOrder& order, cons
     const auto& info = static_cast<const InformationOrder&>(order);
     if (info.sampledDuration < 0.0) {
         const auto& cfg = informationConfig();
-        info.sampledDuration = std::max(1.0, rnd::uni(context.rng(), cfg.informationDurationMin, cfg.informationDurationMax));
+        info.sampledDuration = std::max(1.0, rnd::uni(context.robotRng(), cfg.informationDurationMin, cfg.informationDurationMax));
     }
     return info.sampledDuration;
 }

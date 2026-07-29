@@ -50,7 +50,7 @@ public:
         assert(fieldOfView != 0);
         const double steps = (areaToSearch / fieldOfView) + 1;
         const int scanTime = std::max(1, static_cast<int>(steps * (2 * ctx.getConfig()->personDetectionRange / ctx.getConfig()->robotSpeed)));
-        const int foundAt = rnd::uni(ctx.rng(), 1, scanTime);
+        const int foundAt = rnd::uni(ctx.robotRng(), 1, scanTime);
 
         if (personPresent) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time + foundAt, m_order, personPresent, scanTime - foundAt));

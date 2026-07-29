@@ -24,6 +24,7 @@ public:
     );
 
     void reseed(unsigned int seed);
+    void reseedPersons(unsigned int seed);
 
     bool hasEmployee(const std::string& name) const;
     des::Person* getByName(const std::string& name) const;

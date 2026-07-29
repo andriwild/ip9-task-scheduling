@@ -25,8 +25,8 @@ public:
 
     void execute(ISimContext& ctx) override {
         assert(!ctx.getRobot()->isDriving());
-        double eventTime = this->time + rndAccompanyConversationTime(ctx.rng());
-        if (rnd::uni(ctx.rng()) < accompanyConfig().conversationProbability) {
+        double eventTime = this->time + rndAccompanyConversationTime(ctx.robotRng());
+        if (rnd::uni(ctx.robotRng()) < accompanyConfig().conversationProbability) {
             ctx.startActivity(std::make_shared<SuccessDropOffConversationCompleteEvent>(eventTime));
         } else {
             ctx.startActivity(std::make_shared<FailedDropOffConversationCompleteEvent>(eventTime));

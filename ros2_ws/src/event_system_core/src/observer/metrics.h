@@ -5,6 +5,7 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -452,8 +453,43 @@ public:
     }
 
 private:
-    // Appends one CSV row per finished simulation: run metadata + config
-    // parameters + outcome metrics. Enabled via enableCsv() (headless only).
+    static std::string csvEscape(const std::string& value) {
+        if (value.find(',') == std::string::npos && value.find('"') == std::string::npos) {
+            return value;
+        }
+        std::string escaped = "\"";
+        for (const char c : value) {
+            if (c == '"') {
+                escaped += '"';
+            }
+            escaped += c;
+        }
+        escaped += '"';
+        return escaped;
+    }
+
+    static std::string headerLine(const std::vector<std::pair<std::string, std::string>>& fields) {
+        std::string line;
+        for (const auto& [key, _] : fields) {
+            if (!line.empty()) {
+                line += ",";
+            }
+            line += key;
+        }
+        return line;
+    }
+
+    static std::optional<std::string> existingHeader(const std::string& path) {
+        std::ifstream in(path);
+        std::string line;
+        if (!in.is_open() || !std::getline(in, line)) {
+            return std::nullopt;
+        }
+        return line;
+    }
+
+    // Appends one CSV row per finished simulation: run metadata + the complete
+    // effective config + outcome metrics. Enabled via enableCsv() (headless only).
     void writeCsvRow(const event_system_msgs::msg::MetricsReport& r) {
         std::vector<std::pair<std::string, std::string>> fields;
         auto add = [&](const std::string& key, const auto& value) {
@@ -469,20 +505,6 @@ private:
         add("seed", m_csvConfig->seed);
         add("round_seed", m_roundSeed);
         add("terminated_reason", m_terminatedReason);
-
-        add("always_charge_at_dock", m_csvConfig->alwaysChargeAtDock ? 1 : 0);
-        add("charge_to_full", m_csvConfig->chargeToFull ? 1 : 0);
-        add("cv_threshold", m_csvConfig->cvThreshold);
-        add("taper_fraction", m_csvConfig->taperFraction);
-        add("battery_voltage", m_csvConfig->batteryVoltage);
-        add("charging_rate", m_csvConfig->chargingRate);
-        add("low_battery_threshold", m_csvConfig->lowBatteryThreshold);
-        add("full_battery_threshold", m_csvConfig->fullBatteryThreshold);
-        add("battery_capacity", m_csvConfig->batteryCapacity);
-        add("initial_battery_capacity", m_csvConfig->initialBatteryCapacity);
-        add("energy_consumption_base", m_csvConfig->energyConsumptionBase);
-        add("energy_consumption_drive", m_csvConfig->energyConsumptionDrive);
-        add("robot_speed", m_csvConfig->robotSpeed);
 
         add("idle_time", r.idle_time);
         add("moving_time", r.moving_time);
@@ -525,26 +547,37 @@ private:
         add("equivalent_full_cycles", r.equivalent_full_cycles);
         add("avg_depth_of_discharge", r.avg_depth_of_discharge);
 
+        std::set<std::string> seen;
+        for (const auto& [key, _] : fields) {
+            if (!seen.insert(key).second) {
+                DES_LOG_ERROR(rclcpp::get_logger("des.observer.metrics"), "Duplicate CSV column '%s' — config key collides with a metric name, refusing to write", key.c_str());
+                return;
+            }
+        }
+
         std::error_code ec;
         const auto parent = std::filesystem::path(m_csvPath).parent_path();
         if (!parent.empty()) {
             std::filesystem::create_directories(parent, ec);
         }
-        const bool writeHeader = !std::filesystem::exists(m_csvPath) || std::filesystem::file_size(m_csvPath, ec) == 0;
+
+        const std::string header = headerLine(fields);
+        const auto present = existingHeader(m_csvPath);
+        if (present.has_value() && present.value() != header) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.observer.metrics"), "Header of %s does not match the current column set, refusing to append", m_csvPath.c_str());
+            return;
+        }
 
         std::ofstream out(m_csvPath, std::ios::app);
         if (!out.is_open()) {
             DES_LOG_WARN(rclcpp::get_logger("des.observer.metrics"), "Could not open CSV file: %s", m_csvPath.c_str());
             return;
         }
-        if (writeHeader) {
-            for (size_t i = 0; i < fields.size(); ++i) {
-                out << (i ? "," : "") << fields[i].first;
-            }
-            out << "\n";
+        if (!present.has_value()) {
+            out << header << "\n";
         }
         for (size_t i = 0; i < fields.size(); ++i) {
-            out << (i ? "," : "") << fields[i].second;
+            out << (i ? "," : "") << csvEscape(fields[i].second);
         }
         out << "\n";
 
@@ -552,54 +585,82 @@ private:
         m_csvRunIndex++;
     }
 
-    // Appends one CSV row per simulated day (L1 time series). Keeps long runs
-    // analysable without the full mission trace.
     void writeDailyCsv() {
         if (m_dailyCsvPath.empty() || perDay.empty()) {
             return;
         }
 
-        static const std::vector<std::string> header = {
-            "run_id", "scenario", "round", "seed", "round_seed", "day",
-            "scheduled_on_time", "scheduled_late", "scheduled_failed", "scheduled_cancelled", "scheduled_rejected",
-            "scheduled_fail_outside", "scheduled_fail_unreachable", "scheduled_fail_findable",
-            "background_completed", "background_failed", "background_cancelled",
-            "interrupt_completed",
-            "distance", "energy_ah", "charge_cycles", "min_soc",
-            "idle_time", "mission_time", "charging_time", "total_time", "utilization"
-        };
+        std::vector<std::vector<std::pair<std::string, std::string>>> dayRows;
+        for (const auto& [day, d] : perDay) {
+            std::vector<std::pair<std::string, std::string>> fields;
+            auto add = [&](const std::string& key, const auto& value) {
+                std::ostringstream os;
+                os << value;
+                fields.emplace_back(key, os.str());
+            };
+
+            add("run_id", m_runId);
+            add("scenario", m_csvScenario);
+            add("round", m_csvRound);
+            add("seed", m_csvConfig->seed);
+            add("seed", m_csvConfig->seed);
+        add("round_seed", m_roundSeed);
+            add("day", day);
+
+            add("scheduled_on_time", d.scheduled.onTime);
+            add("scheduled_late", d.scheduled.late);
+            add("scheduled_failed", d.scheduled.failed);
+            add("scheduled_cancelled", d.scheduled.cancelled);
+            add("scheduled_rejected", d.scheduled.rejected);
+            add("scheduled_fail_outside", d.scheduled.failOutside);
+            add("scheduled_fail_unreachable", d.scheduled.failUnreachable);
+            add("scheduled_fail_findable", d.scheduled.failFindable);
+
+            add("background_completed", d.background.onTime + d.background.late);
+            add("background_failed", d.background.failed);
+            add("background_cancelled", d.background.cancelled);
+            add("interrupt_completed", d.interrupt.onTime + d.interrupt.late);
+
+            add("distance", d.distance);
+            add("energy_ah", d.energyAh);
+            add("charge_cycles", d.chargeCycles);
+            add("min_soc", d.minSoc);
+            add("idle_time", d.idleTime);
+            add("mission_time", d.missionTime);
+            add("charging_time", d.chargingTime);
+            add("total_time", d.totalTime);
+            add("utilization", d.totalTime > 0 ? 100.0 * d.missionTime / d.totalTime : 0.0);
+
+            dayRows.push_back(std::move(fields));
+        }
 
         std::error_code ec;
         const auto parent = std::filesystem::path(m_dailyCsvPath).parent_path();
         if (!parent.empty()) {
             std::filesystem::create_directories(parent, ec);
         }
-        const bool writeHeader = !std::filesystem::exists(m_dailyCsvPath) || std::filesystem::file_size(m_dailyCsvPath, ec) == 0;
+
+        const std::string header = headerLine(dayRows.front());
+        const auto present = existingHeader(m_dailyCsvPath);
+        if (present.has_value() && present.value() != header) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.observer.metrics"), "Header of %s does not match the current column set, refusing to append", m_dailyCsvPath.c_str());
+            return;
+        }
 
         std::ofstream out(m_dailyCsvPath, std::ios::app);
         if (!out.is_open()) {
             DES_LOG_WARN(rclcpp::get_logger("des.observer.metrics"), "Could not open daily CSV file: %s", m_dailyCsvPath.c_str());
             return;
         }
-        if (writeHeader) {
-            for (size_t i = 0; i < header.size(); ++i) {
-                out << (i ? "," : "") << header[i];
-            }
-            out << "\n";
+        if (!present.has_value()) {
+            out << header << "\n";
         }
 
-        for (const auto& [day, d] : perDay) {
-            const double utilization = d.totalTime > 0 ? 100.0 * d.missionTime / d.totalTime : 0.0;
-            out << m_runId << ',' << m_csvScenario << ',' << m_csvRound << ','
-                << m_csvConfig->seed << ',' << m_roundSeed << ',' << day << ','
-                << d.scheduled.onTime << ',' << d.scheduled.late << ',' << d.scheduled.failed << ','
-                << d.scheduled.cancelled << ',' << d.scheduled.rejected << ','
-                << d.scheduled.failOutside << ',' << d.scheduled.failUnreachable << ',' << d.scheduled.failFindable << ','
-                << (d.background.onTime + d.background.late) << ',' << d.background.failed << ',' << d.background.cancelled << ','
-                << (d.interrupt.onTime + d.interrupt.late) << ','
-                << d.distance << ',' << d.energyAh << ',' << d.chargeCycles << ',' << d.minSoc << ','
-                << d.idleTime << ',' << d.missionTime << ',' << d.chargingTime << ',' << d.totalTime << ','
-                << utilization << "\n";
+        for (const auto& fields : dayRows) {
+            for (size_t i = 0; i < fields.size(); ++i) {
+                out << (i ? "," : "") << csvEscape(fields[i].second);
+            }
+            out << "\n";
         }
 
         DES_LOG_INFO(rclcpp::get_logger("des.observer.metrics"), "Daily CSV written: %zu days -> %s", perDay.size(), m_dailyCsvPath.c_str());

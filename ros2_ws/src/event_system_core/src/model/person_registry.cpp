@@ -19,6 +19,12 @@ void PersonRegistry::reseed(const unsigned int seed) {
     m_placementRng.seed(seed);
 }
 
+void PersonRegistry::reseedPersons(const unsigned int seed) {
+    for (const auto& [name, person] : m_employees) {
+        person->reseed(seed);
+    }
+}
+
 bool PersonRegistry::hasEmployee(const std::string& name) const {
     return m_employees.contains(name);
 }
