@@ -1,5 +1,5 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/single_accompany.json",
-    "use_distance_matrix": true,
-    "cacheEnabled": true
+    "appointments_path": "scenarios/single_accompany.json",
+    "cacheEnabled": true,
+    "use_distance_matrix": true
 }

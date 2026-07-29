@@ -1,6 +1,7 @@
 #!/bin/zsh
 source /opt/ros/jazzy/setup.zsh
-source /home/andri/repos/ip9-task-scheduling/ros2_ws/install/setup.zsh
+WS_DIR=${0:A:h}
+source $WS_DIR/install/setup.zsh
 
 args=()
 [ -n "${1:-}" ] && args+=("config:=$1")

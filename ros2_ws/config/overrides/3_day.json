@@ -1,6 +1,6 @@
 {
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
+    "appointments_path": "scenarios/realistic_3day.json",
+    "cacheEnabled": true,
     "sim_duration": 259200,
-    "use_distance_matrix": true, 
-    "cacheEnabled": true
+    "use_distance_matrix": true
 }

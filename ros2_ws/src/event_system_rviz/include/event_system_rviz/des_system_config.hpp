@@ -16,7 +16,13 @@
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
 
-const QString DEFAULT_CONFIG_FILE_LOCATION = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config";
+#ifndef DES_CONFIG_DIR
+#define DES_CONFIG_DIR "config"
+#endif
+
+const QString DEFAULT_CONFIG_FILE_LOCATION = qEnvironmentVariableIsSet("DES_CONFIG_DIR")
+    ? qEnvironmentVariable("DES_CONFIG_DIR")
+    : QString(DES_CONFIG_DIR);
 
 using ServiceResponseFuture = rclcpp::Client<event_system_msgs::srv::SetSystemConfig>::SharedFuture;
 namespace des_system_config {

@@ -18,7 +18,7 @@
 #include "../plugins/order_registry.h"
 
 class MetricsNode;
-const std::string CONFIG_PATH = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/";
+const std::string CONFIG_PATH = CONFIG_DIR;
 const std::string DB_USER     = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
 

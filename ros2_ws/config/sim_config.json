@@ -7,7 +7,7 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/single_accompany.json",
+    "appointments_path": "scenarios/single_accompany.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 1800.0,
@@ -31,7 +31,7 @@
     "departure_std": 1800.0,
     "dock_location": "IMVS_Dock",
     "drive_time_std": 0.1,
-    "employees_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json",
+    "employees_path": "employee.json",
     "energy_consumption_base": 56.0,
     "energy_consumption_drive": 26.0,
     "energy_reserve_horizon": 14400,

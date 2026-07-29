@@ -41,6 +41,11 @@ target_include_directories(event_system_rviz PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
+get_filename_component(DES_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../config" ABSOLUTE)
+target_compile_definitions(event_system_rviz PRIVATE
+  DES_CONFIG_DIR="${DES_CONFIG_DIR}"
+)
+
 ament_target_dependencies(event_system_rviz
   pluginlib
   rviz_common

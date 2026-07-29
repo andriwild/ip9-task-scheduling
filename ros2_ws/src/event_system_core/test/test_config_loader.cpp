@@ -128,7 +128,8 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_DOUBLE_EQ(result->fullBatteryThreshold, 95.0);
     EXPECT_EQ(result->dockLocation, "IMVS_Dock");
     EXPECT_FALSE(result->cacheEnabled);
-    EXPECT_EQ(result->appointmentsPath, "test.json");
+    EXPECT_TRUE(std::filesystem::path(result->appointmentsPath).is_absolute());
+    EXPECT_EQ(std::filesystem::path(result->appointmentsPath).filename(), "test.json");
 
     // Plugin-owned parameters live under their typeName() sub-object now.
     EXPECT_DOUBLE_EQ(accompanyConfig().accompanySpeed, 0.3);
@@ -183,6 +184,12 @@ TEST(ConfigLoaderSimConfig, OverrideSetsSeedAndRoundMode) {
     EXPECT_DOUBLE_EQ(result->robotSpeed, 0.5);
 
     std::filesystem::remove(overridePath);
+}
+
+TEST(ConfigLoaderSimConfig, PathResolutionIsIdempotent) {
+    const std::string relative = ConfigLoader::resolvePath("scenarios/single_accompany.json");
+    EXPECT_TRUE(std::filesystem::path(relative).is_absolute());
+    EXPECT_EQ(ConfigLoader::resolvePath(relative), relative);
 }
 
 TEST(ConfigLoaderSimConfig, MalformedTraceWindowReturnsNullopt) {

@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -16,10 +17,23 @@
 #include "../plugins/accompany/accompany_order.h"
 
 
-const std::string DEFAULT_ORDER_FILE    = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/appointments.json";
-const std::string DEFAULT_EMPLOYEE_FILE = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/employee.json";
-const std::string SIM_CONFIG_FILE       = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/sim_config.json";
-const std::string BUILDING_FILE         = "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/building.json";
+// Baked in by CMake from the workspace layout, overridable at runtime via the
+// DES_CONFIG_DIR environment variable.
+#ifndef DES_CONFIG_DIR
+#define DES_CONFIG_DIR "config"
+#endif
+
+inline std::string configRoot() {
+    const char* fromEnv = std::getenv("DES_CONFIG_DIR");
+    const std::string root = (fromEnv != nullptr && *fromEnv != '\0') ? fromEnv : DES_CONFIG_DIR;
+    return root.back() == '/' ? root : root + "/";
+}
+
+const std::string CONFIG_DIR            = configRoot();
+const std::string DEFAULT_ORDER_FILE    = CONFIG_DIR + "appointments.json";
+const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "employee.json";
+const std::string SIM_CONFIG_FILE       = CONFIG_DIR + "sim_config.json";
+const std::string BUILDING_FILE         = CONFIG_DIR + "building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
 constexpr int SIM_DURATION   = 43200;
@@ -53,6 +67,9 @@ public:
     // Relative paths are tried against the working directory first, then against
     // config/. Without the first rule a path typed from the workspace root
     // silently resolves to a non-existent file under config/.
+    // Always returns an absolute path so that resolving an already resolved path
+    // is a no-op. Relative input is tried against the working directory first,
+    // then against config/.
     static std::string resolvePath(const std::string& path) {
         if (path.empty() || path.front() == '/') {
             return path;
@@ -60,7 +77,7 @@ public:
         if (std::filesystem::exists(path)) {
             return std::filesystem::absolute(path).string();
         }
-        return configDir() + path;
+        return std::filesystem::absolute(configDir() + path).string();
     }
 
     static std::string baseConfigPath() {
@@ -261,12 +278,8 @@ public:
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
-            if (j.contains("appointments_path")) {
-                config.appointmentsPath = j.at("appointments_path").get<std::string>();
-            } else {
-                config.appointmentsPath = "appointments.json";
-            }
-            config.employeesPath = j.value("employees_path", DEFAULT_EMPLOYEE_FILE);
+            config.appointmentsPath = resolvePath(j.value("appointments_path", std::string("appointments.json")));
+            config.employeesPath    = resolvePath(j.value("employees_path", DEFAULT_EMPLOYEE_FILE));
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personDetectionRange = j.value("person_detection_range", 5.0);
             config.personSpeed = j.value("person_speed", 1.4);

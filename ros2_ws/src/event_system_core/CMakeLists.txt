@@ -27,6 +27,9 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Charts Sql REQUIRED)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h" "src/*.hpp")
 
+get_filename_component(DES_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../config" ABSOLUTE)
+add_compile_definitions(DES_CONFIG_DIR="${DES_CONFIG_DIR}")
+
 add_executable(event_system_core ${SOURCES} ${HEADERS})
 
 target_include_directories(event_system_core PUBLIC
