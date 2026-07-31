@@ -8,6 +8,9 @@ POLYGON_COLLECTION = "RoomPolygons"
 WAYPOINT_COLLECTION = "Waypoints"
 DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr"
 MATCH_TOLERANCE = 0.15
+TYPE_COLLECTIONS = {
+    "Classrooms": "CLASSROOM",
+}
 # ---------------------
 
 print("-" * 30)
@@ -58,8 +61,31 @@ def point_to_polygon_distance(px, py, verts):
     return best
 
 
+def type_from_collection(obj):
+    """Room type from an explicitly marked collection, None if the object is in none of them."""
+    for coll in obj.users_collection:
+        if coll.name in TYPE_COLLECTIONS:
+            return TYPE_COLLECTIONS[coll.name]
+    return None
+
+
+def collect_polygon_objects():
+    """All room polygons, from POLYGON_COLLECTION and from every type collection.
+    Works regardless of whether the type collections are nested under POLYGON_COLLECTION
+    or sit next to it, since 'Move to Collection' unlinks the object from the old one."""
+    found = {}
+    for coll_name in [POLYGON_COLLECTION] + list(TYPE_COLLECTIONS):
+        coll = bpy.data.collections.get(coll_name)
+        if coll is None:
+            print(f"  WARNING: collection '{coll_name}' not found, skipped")
+            continue
+        for obj in coll.all_objects:
+            found[obj.name] = obj
+    return sorted(found.values(), key=lambda o: o.name)
+
+
 def classify_room(name):
-    """Classify room type based on name (matches C++ parseRoomName logic)."""
+    """Fallback classification by name for objects not in a type collection."""
     if "Toilet" in name:
         return "TOILET"
     if "Kitchen" in name:
@@ -162,9 +188,8 @@ else:
             # Clear existing search zones for clean re-import
             conn.execute(text("DELETE FROM search_zones"))
 
-            polygon_objects = sorted(
-                bpy.data.collections[POLYGON_COLLECTION].objects, key=lambda o: o.name
-            )
+            polygon_objects = collect_polygon_objects()
+            print(f"Found: {len(polygon_objects)} polygon objects")
 
             matched = 0
             unmatched = []
@@ -212,7 +237,7 @@ else:
                     print(f"  WARNING: {matched_name} not in points_of_interest table!")
                     continue
 
-                room_type = classify_room(matched_name)
+                room_type = type_from_collection(obj) or classify_room(matched_name)
                 wkt = verts_to_wkt(verts)
                 poi_id = poi_ids[matched_name]
 
