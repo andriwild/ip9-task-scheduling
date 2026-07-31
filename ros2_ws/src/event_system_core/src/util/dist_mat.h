@@ -37,8 +37,10 @@ public:
         nlohmann::json locations  = nlohmann::json::array();
         nlohmann::json areas      = nlohmann::json::array();
         nlohmann::json footprints = nlohmann::json::array();
+        nlohmann::json types      = nlohmann::json::array();
         for (const auto& p : points) {
             names.push_back(p.m_name);
+            types.push_back(des::roomTypeToString(p.m_roomType));
             locations.push_back({
                 {"x",   p.m_p.m_x},
                 {"y",   p.m_p.m_y},
@@ -60,6 +62,7 @@ public:
         j["locations"]  = locations;
         j["areas"]      = areas;
         j["footprints"] = footprints;
+        j["types"]      = types;
 
         const std::time_t now = std::time(nullptr);
         char stamp[32];
@@ -79,14 +82,14 @@ public:
     // `locations` must already carry coordinates + areas (the DB view from loadLocationsFromDB).
     static bool rebuild(const std::vector<des::Location>& locations, std::shared_ptr<PathPlannerNode> planner) {
         const size_t n = locations.size();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.dist_mat"), "--- REBUILD DISTANCE MATRIX (%zu x %zu) ---", n, n);
+        DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "--- REBUILD DISTANCE MATRIX (%zu x %zu) ---", n, n);
 
         Mat mat(n, std::vector<float>(n, 0.0f));
         for (size_t i = 0; i < n; ++i) {
             for (size_t j = i + 1; j < n; ++j) {
                 const auto& p1 = locations.at(i);
                 const auto& p2 = locations.at(j);
-                DES_LOG_DEBUG(rclcpp::get_logger("des.dist_mat"), "mat calc (%zu, %zu) %s | %s", i, j, p1.m_name.c_str(), p2.m_name.c_str());
+                DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "mat calc (%zu, %zu) %s | %s", i, j, p1.m_name.c_str(), p2.m_name.c_str());
 
                 const auto d = planner->calcDistance(p1.m_name, p2.m_name, false);
                 if (!d.has_value()) {
