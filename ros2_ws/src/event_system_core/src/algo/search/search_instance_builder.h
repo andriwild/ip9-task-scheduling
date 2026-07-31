@@ -4,11 +4,14 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <rclcpp/rclcpp.hpp>
 
 #include "../op.h"
 #include "../op_types.h"
 #include "../op_build.h"
 #include "../../model/i_sim_context.h"
+#include "../../util/log.h"
+#include "../../util/types.h"
 
 inline std::optional<OpInstance> buildSearchInstance(
     const ISimContext& ctx,
@@ -29,16 +32,17 @@ inline std::optional<OpInstance> buildSearchInstance(
     }
     const std::size_t anchorCount = planned.size();
 
-    const double range       = cfg->personDetectionRange;
-    const double fieldOfView = range * range;
     for (const auto& room : roomNodes) {
         if (room.name == startLoc || room.name == endLoc) {
             continue;
         }
-        const double area        = ctx.location(room.name).m_area.value_or(1.0);
-        const double steps       = (area / fieldOfView) + 1.0;
-        const double scanTime    = steps * (2.0 * range / cfg->robotSpeed);
-        const double scanEnergy  = scanTime * cfg->energyConsumptionBase / 3600.0;
+        const des::RoomTour* tour = ctx.roomTour(room.name);
+        if (tour == nullptr || tour->m_path.empty()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.algo.search"), "No room tour for '%s'; excluded from search plan", room.name.c_str());
+            continue;
+        }
+        const double scanTime    = tour->m_distance / cfg->robotSpeed;
+        const double scanEnergy  = scanTime * cfg->energyConsumptionDrive / 3600.0;
         planned.push_back(op_build::PlannedNode{
             OpNode{ room.name, room.reward, static_cast<float>(scanTime), static_cast<float>(scanEnergy) },
             nullptr,

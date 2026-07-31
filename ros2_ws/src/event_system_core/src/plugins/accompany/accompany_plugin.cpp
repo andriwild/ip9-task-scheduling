@@ -16,6 +16,7 @@
 #include "algo/search/search_instance_builder.h"
 #include "algo/search/search_solver.h"
 #include "observer/ros.h"
+#include "search_exclusion.h"
 #include "states.h"
 
 void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
@@ -64,15 +65,6 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
 
 namespace {
 
-bool isPersonReachableRoom(const std::string& name, const std::vector<std::string>& excluded, const std::string& sex) {
-    for (const auto& pattern : excluded) {
-        if (name.find(pattern) != std::string::npos) {
-            return false;
-        }
-    }
-    return true;
-}
-
 struct SearchPlan {
     std::vector<std::string> locations;
     double energyWh;
@@ -86,7 +78,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const auto& excluded = ctx.getConfig()->searchExcludedRooms;
     std::vector<std::string> universe;
     for (const auto& name : ctx.roomNames()) {
-        if (isPersonReachableRoom(name, excluded, person->sex)) {
+        if (!isSearchExcluded(excluded, name)) {
             universe.push_back(name);
         }
     }

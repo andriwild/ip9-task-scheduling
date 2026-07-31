@@ -208,8 +208,13 @@ public:
         static const des::Location none{"", des::Point{}, 0.0};
         return none;
     }
-    const des::RoomTour* roomTour(const std::string& /*room*/) const override {
-        return nullptr;
+    des::RoomTourMap roomTours;
+    const des::RoomTour* roomTour(const std::string& room) const override {
+        const auto it = roomTours.find(room);
+        if (it == roomTours.end()) {
+            return nullptr;
+        }
+        return &it->second;
     }
 
     bool robotSeesPerson(const std::string& name) const override {
@@ -338,6 +343,9 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     person->workplace = "Office";
     ctx.employees["Max"] = person.get();
     ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
+    for (const auto& room : ctx.roomNamesList) {
+        ctx.roomTours[room] = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} } };
+    }
 
     auto order = makeAccompanyOrder(1, "Max", "Room1", 40000);
     ctx.setOrderPtr(order);

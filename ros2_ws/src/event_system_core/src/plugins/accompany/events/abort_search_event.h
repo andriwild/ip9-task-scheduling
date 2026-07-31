@@ -8,6 +8,7 @@
 #include "model/robot_state.h"
 #include "plugins/i_order.h"
 #include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/search_exclusion.h"
 #include "util/log.h"
 
 class AbortSearchEvent final : public IEvent {
@@ -32,9 +33,7 @@ public:
                 DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
                              "Abort Search for %s: person is OUTSIDE the building", personName.c_str());
             } else {
-                const auto& excluded = ctx.getConfig()->searchExcludedRooms;
-                const bool unreachable = std::any_of(excluded.begin(), excluded.end(),
-                                                     [&](const std::string& p) { return loc.find(p) != std::string::npos; });
+                const bool unreachable = isSearchExcluded(ctx.getConfig()->searchExcludedRooms, loc);
                 accompany->abortReason = unreachable ? SearchAbortReason::IN_BUILDING_UNREACHABLE
                                                      : SearchAbortReason::IN_BUILDING_FINDABLE;
                 const auto& plan    = accompany->plannedSearch;
