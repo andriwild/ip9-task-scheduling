@@ -65,6 +65,22 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu footprints into locations", matchedFootprints, footprints.value().size());
 
+    const auto roomTypes = db.allRoomTypes();
+    if (!roomTypes.has_value()) {
+        throw std::runtime_error("Could not load room types from DB");
+    }
+    size_t matchedTypes = 0;
+    for (const auto& [name, type] : roomTypes.value()) {
+        const auto it = locationMap.find(name);
+        if (it == locationMap.end()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; room type dropped", name.c_str());
+            continue;
+        }
+        it->second.m_roomType = type;
+        ++matchedTypes;
+    }
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu room types into locations", matchedTypes, roomTypes.value().size());
+
     for (const auto& [_, loc] : locationMap) {
         DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
     }
@@ -277,7 +293,7 @@ protected:
     }
 
     des::RoomTourMap loadRoomTours() {
-        const std::string path = ConfigLoader::toursFilePath(m_config->personDetectionRange);
+        const std::string path = ConfigLoader::toursFilePath(m_config->personDetectionRange, m_config->useTspTours);
         auto tours = ConfigLoader::loadRoomTours(path);
         if (!tours.has_value()) {
             DES_LOG_WARN(rclcpp::get_logger("des.runner"), "No room tours at %s; scan falls back to area estimate", path.c_str());

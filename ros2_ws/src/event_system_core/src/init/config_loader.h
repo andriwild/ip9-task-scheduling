@@ -213,6 +213,7 @@ public:
                 p.lastName         = item.at("lastName").get<std::string>();
                 p.birthDate        = item.at("birthDate").get<std::string>();
                 p.sex              = item.at("sex").get<std::string>();
+                p.roles            = item.value("roles", std::vector<std::string>{});
                 p.workplace        = item.at("workplace").get<std::string>();
                 p.color            = item.value("color", "");
                 p.roomLabels       = item.at("roomLabels").get<std::vector<std::string>>();
@@ -286,6 +287,7 @@ public:
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
+            config.useTspTours = j.value("use_tsp_tours", false);
             config.batteryVoltage = j.value("battery_voltage", 12.0);
             config.cvThreshold    = j.value("cv_threshold", 0.8);
             config.taperFraction  = j.value("taper_fraction", 0.5);
@@ -445,6 +447,7 @@ public:
         j["sim_start_time"] = config.simStartTime;
         j["sim_duration"]   = config.simDuration;
         j["use_distance_matrix"] = config.useDistanceMatrix;
+        j["use_tsp_tours"] = config.useTspTours;
         j["battery_voltage"] = roundValue(config.batteryVoltage);
         j["cv_threshold"] = roundValue(config.cvThreshold);
         j["taper_fraction"] = roundValue(config.taperFraction);
@@ -504,9 +507,9 @@ public:
     }
 
     // Loads the building snapshot into a name -> Location map (coords + optional area) 
-    static std::string toursFilePath(double radius) {
+    static std::string toursFilePath(double radius, const bool tsp) {
         std::ostringstream oss;
-        oss << "tours_r" << radius << ".json";
+        oss << "tours_r" << radius << (tsp ? "_tsp" : "") << ".json";
         const auto slash = BUILDING_FILE.rfind('/');
         const std::string dir = slash == std::string::npos ? "" : BUILDING_FILE.substr(0, slash + 1);
         return dir + oss.str();
@@ -562,6 +565,10 @@ public:
         const auto& locs  = j.at("locations");
         const bool hasAreas      = j.contains("areas");
         const bool hasFootprints = j.contains("footprints");
+        const bool hasTypes      = j.contains("types");
+        if (!hasTypes) {
+            DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no 'types', falling back to name-based room types; re-bake via ./build_snapshot.sh", filePath.c_str());
+        }
 
         des::LocationMap map;
         for (size_t i = 0; i < names.size() && i < locs.size(); ++i) {
@@ -575,6 +582,11 @@ public:
             }
 
             des::Location location(name, p, area);
+            if (hasTypes && i < j.at("types").size() && j.at("types").at(i).is_string()) {
+                location.m_roomType = des::roomTypeFromString(j.at("types").at(i).get<std::string>());
+            } else {
+                location.m_roomType = des::parseRoomName(name);
+            }
             if (hasFootprints && i < j.at("footprints").size() && j.at("footprints").at(i).is_array()) {
                 for (const auto& v : j.at("footprints").at(i)) {
                     location.m_footprint.push_back(des::Point{v.at(0).get<double>(), v.at(1).get<double>(), 0.0});

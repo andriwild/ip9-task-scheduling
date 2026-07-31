@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iomanip>
 #include <random>
 #include <regex>
@@ -16,6 +17,29 @@ enum class RoomType {
     KITCHEN,
     OTHER
 };
+
+inline RoomType roomTypeFromString(const std::string& type) {
+    if (type == "WORKPLACE") {
+        return RoomType::WORKPLACE;
+    }
+    if (type == "TOILET") {
+        return RoomType::TOILET;
+    }
+    if (type == "KITCHEN") {
+        return RoomType::KITCHEN;
+    }
+    return RoomType::OTHER;
+}
+
+inline std::string roomTypeToString(const RoomType type) {
+    switch (type) {
+        case RoomType::WORKPLACE: return "WORKPLACE";
+        case RoomType::TOILET:    return "TOILET";
+        case RoomType::KITCHEN:   return "KITCHEN";
+        case RoomType::OTHER:     return "OTHER";
+    }
+    return "OTHER";
+}
 
 inline RoomType parseRoomName(const std::string& roomName) {
     if (roomName.find("Toilet") != std::string::npos) return RoomType::TOILET;
@@ -49,6 +73,7 @@ public:
     std::string lastName;
     std::string birthDate;
     std::string sex;
+    std::vector<std::string> roles;
     std::string workplace;
     std::string color;
     bool busy = false;
@@ -66,8 +91,11 @@ public:
         rng.seed(seed + static_cast<unsigned int>(id));
     }
 
-    double getStayDuration(const std::string& roomName, std::mt19937& rng) const {
-        RoomType roomType = parseRoomName(roomName);
+    bool hasRole(const std::string& role) const {
+        return std::find(roles.begin(), roles.end(), role) != roles.end();
+    }
+
+    double getStayDuration(const RoomType roomType, std::mt19937& rng) const {
         switch (roomType) {
             case RoomType::WORKPLACE:
                 return rnd::uni(rng, stayDuration.workplaceMin, stayDuration.workplaceMax);

@@ -160,6 +160,25 @@ public:
         return footprints;
     }
 
+    std::optional<std::map<std::string, des::RoomType>> allRoomTypes() {
+        if (!m_db.isOpen() && !m_db.open()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        QSqlQuery query;
+        if (!query.exec("SELECT DISTINCT ON (name) name, type FROM search_zones ORDER BY name, id")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allRoomTypes Query failed: %s", query.lastError().text().toStdString().c_str());
+            return std::nullopt;
+        }
+        std::map<std::string, des::RoomType> types;
+        while (query.next()) {
+            const std::string name = query.value(0).toString().toStdString();
+            const std::string type = query.value(1).toString().toStdString();
+            types[name] = des::roomTypeFromString(type);
+        }
+        return types;
+    }
+
     std::optional<std::map<std::string, double>> allAreas() {
         if (!m_db.isOpen() && !m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());

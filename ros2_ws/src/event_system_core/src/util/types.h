@@ -42,12 +42,14 @@ struct Location {
     Point m_p;
     std::optional<double> m_area;
     std::vector<Point> m_footprint;
+    RoomType m_roomType = RoomType::OTHER;
 
     explicit Location(const std::string& name, const Point p, const std::optional<double> area = std::nullopt) : m_name(name), m_p(p), m_area(area) {}
 
     friend std::ostream& operator<<(std::ostream& os, const Location& l) {
         os << l.m_name << l.m_p;
         if (l.m_area) os << " area=" << *l.m_area;
+        os << " type=" << roomTypeToString(l.m_roomType);
         return os;
     }
 };
@@ -172,6 +174,7 @@ struct SimConfig {
     int simStartTime = 25200;  // 07:00
     int simDuration  = 43200;
     bool useDistanceMatrix = false;
+    bool useTspTours = false;
     double batteryVoltage = 12.0;
     double cvThreshold = 0.8;
     double taperFraction = 0.5;
@@ -238,6 +241,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simDuration" << ": " << config.simDuration << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
+        os << std::left << std::setw(W) << "useTspTours" << ": " << config.useTspTours << std::endl;
         os << std::left << std::setw(W) << "batteryVoltage" << ": " << config.batteryVoltage << std::endl;
         os << std::left << std::setw(W) << "cvThreshold" << ": " << config.cvThreshold << std::endl;
         os << std::left << std::setw(W) << "taperFraction" << ": " << config.taperFraction << std::endl;

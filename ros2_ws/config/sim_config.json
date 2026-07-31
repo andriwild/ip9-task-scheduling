@@ -67,5 +67,6 @@
     "sim_start_time": 25200,
     "taper_fraction": 0.6,
     "timeBuffer": 1200.0,
-    "use_distance_matrix": true
+    "use_distance_matrix": true,
+    "use_tsp_tours": true
 }
