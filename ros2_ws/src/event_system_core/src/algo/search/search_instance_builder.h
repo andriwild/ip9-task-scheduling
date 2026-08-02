@@ -36,12 +36,12 @@ inline std::optional<OpInstance> buildSearchInstance(
         if (room.name == startLoc || room.name == endLoc) {
             continue;
         }
-        const des::RoomTour* tour = ctx.roomTour(room.name);
-        if (tour == nullptr || tour->m_path.empty()) {
+        const des::RoomTour& tour = ctx.room(room.name).m_tour;
+        if (tour.empty()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.algo.search"), "No room tour for '%s'; excluded from search plan", room.name.c_str());
             continue;
         }
-        const double scanTime    = tour->m_distance / cfg->robotSpeed;
+        const double scanTime    = tour.m_distance / cfg->robotSpeed;
         const double scanEnergy  = scanTime * cfg->energyConsumptionDrive / 3600.0;
         planned.push_back(op_build::PlannedNode{
             OpNode{ room.name, room.reward, static_cast<float>(scanTime), static_cast<float>(scanEnergy) },

@@ -48,7 +48,7 @@ protected:
     std::shared_ptr<des::SimConfig> config;
     des::PersonMap employees;
     des::PersonList ownedPeople;
-    des::LocationMap locationMap;
+    des::RoomMap locationMap;
 
     static void SetUpTestSuite() {
         static bool registered = false;
@@ -82,9 +82,9 @@ protected:
         ownedPeople.push_back(std::move(anna));
 
         // scanTime is part of the accompany plugin's pessimistic meeting calc; keep zero for clean drive-time assertions.
-        locationMap.emplace("Office", des::Location("Office", {}, 0.0));
-        locationMap.emplace("Lab", des::Location("Lab", {}, 0.0));
-        locationMap.emplace("Kitchen", des::Location("Kitchen", {}, 0.0));
+        locationMap.emplace("Office", des::Room("Office", {}, 0.0));
+        locationMap.emplace("Lab", des::Room("Lab", {}, 0.0));
+        locationMap.emplace("Kitchen", des::Room("Kitchen", {}, 0.0));
 
         // Dock -> Office = 10m, Office -> MeetingRoom = 20m
         planner->setDistance("Dock", "Office", 10.0);

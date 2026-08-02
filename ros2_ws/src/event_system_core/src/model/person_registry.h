@@ -11,7 +11,7 @@ class PersonRegistry {
     des::PersonMap m_employees;
     std::map<std::string, std::string> m_roomByPerson;
     std::map<std::string, des::Point> m_positionByPerson;
-    const des::LocationMap& m_rooms;
+    const des::RoomMap& m_rooms;
     std::mt19937 m_placementRng;
 
 public:
@@ -19,7 +19,7 @@ public:
 
     PersonRegistry(
         des::PersonMap employees,
-        const des::LocationMap& rooms,
+        const des::RoomMap& rooms,
         unsigned int seed = PLACEMENT_SEED
     );
 

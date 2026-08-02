@@ -53,7 +53,7 @@ public:
     // OP reward for visiting this mission's location. Default: the room area.
     virtual double estimateReward(const des::IOrder& order, const ISimContext& context) const {
         const auto target = targetLocation(order);
-        return target ? context.location(*target).m_area.value_or(1.0) : 0.0;
+        return target ? context.room(*target).m_area.value_or(1.0) : 0.0;
     }
 
     // On-site execution time in seconds — no drive legs.

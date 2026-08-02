@@ -33,9 +33,9 @@ public:
         static_cast<AccompanyOrder&>(*m_order).phase = AccompanyPhase::ACCOMPANY;
 
         const std::string currentRoom = ctx.getRobot()->getLocation();
-        if (ctx.roomTour(currentRoom) != nullptr) {
+        if (!ctx.room(currentRoom).m_tour.empty()) {
             auto roomDrive = std::make_shared<StartDriveEvent>(time, std::make_shared<RoomTarget>(accompany.roomName));
-            requestDrive(ctx, ctx.location(currentRoom).m_p, roomDrive);
+            requestDrive(ctx, ctx.room(currentRoom).m_p, roomDrive);
         } else {
             requestDrive(ctx, accompany.roomName);
         }

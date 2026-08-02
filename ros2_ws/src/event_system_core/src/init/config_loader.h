@@ -342,7 +342,7 @@ public:
     static void validateConfig(
         const des::OrderList& orders,
         const des::PersonList& employees,
-        const des::LocationMap& locationMap,
+        const des::RoomMap& rooms,
         const std::string& arrivalLocation
     ) {
         std::vector<std::string> errors;
@@ -362,7 +362,7 @@ public:
                 errors.push_back("Order '" + accompany->description +
                     "': personName '" + accompany->personName + "' does not match any employee");
             }
-            if (!locationMap.contains(accompany->roomName)) {
+            if (!rooms.contains(accompany->roomName)) {
                 errors.push_back("Order '" + accompany->description +
                     "': roomName '" + accompany->roomName + "' is not a known location");
             }
@@ -371,7 +371,7 @@ public:
         // Check employee roomLabels reference valid rooms and arrival location is reachable
         for (const auto& p : employees) {
             for (const auto& room : p->roomLabels) {
-                if (!locationMap.contains(room)) {
+                if (!rooms.contains(room)) {
                     errors.push_back("Employee '" + p->firstName +
                         "': roomLabel '" + room + "' is not a known location");
                 }
@@ -515,7 +515,7 @@ public:
         return dir + oss.str();
     }
 
-    static std::optional<des::RoomTourMap> loadRoomTours(const std::string& filePath) {
+    static std::optional<std::size_t> mergeRoomTours(const std::string& filePath, des::RoomMap& rooms) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -526,9 +526,14 @@ public:
             return std::nullopt;
         }
 
-        des::RoomTourMap tours;
+        std::size_t merged = 0;
         for (const auto& [name, entry] : j.at("rooms").items()) {
             if (!entry.value("ok", false)) {
+                continue;
+            }
+            const auto it = rooms.find(name);
+            if (it == rooms.end()) {
+                DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Tour for unknown room '%s'; dropped", name.c_str());
                 continue;
             }
             des::RoomTour tour;
@@ -539,12 +544,13 @@ public:
                     tour.m_path.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
                 }
             }
-            tours.emplace(name, tour);
+            it->second.m_tour = std::move(tour);
+            ++merged;
         }
-        return tours;
+        return merged;
     }
 
-    static std::optional<des::LocationMap> loadBuildingSnapshot(const std::string& filePath) {
+    static std::optional<des::RoomMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -570,7 +576,7 @@ public:
             DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no 'types', falling back to name-based room types; re-bake via ./build_snapshot.sh", filePath.c_str());
         }
 
-        des::LocationMap map;
+        des::RoomMap map;
         for (size_t i = 0; i < names.size() && i < locs.size(); ++i) {
             const std::string name = names.at(i).get<std::string>();
             const auto& l = locs.at(i);
@@ -581,7 +587,7 @@ public:
                 area = j.at("areas").at(i).get<double>();
             }
 
-            des::Location location(name, p, area);
+            des::Room location(name, p, area);
             if (hasTypes && i < j.at("types").size() && j.at("types").at(i).is_string()) {
                 location.m_roomType = des::roomTypeFromString(j.at("types").at(i).get<std::string>());
             } else {

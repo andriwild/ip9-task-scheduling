@@ -304,11 +304,11 @@ TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
     ASSERT_TRUE(employees.has_value());
     ASSERT_TRUE(orders.has_value());
 
-    des::LocationMap locationMap;
-    locationMap.emplace("5.2B03", des::Location("5.2B03", des::Point(0, 0, 0)));
-    locationMap.emplace("5.2B01", des::Location("5.2B01", des::Point(1, 1, 0)));
-    locationMap.emplace("5.2B10", des::Location("5.2B10", des::Point(2, 2, 0)));
-    locationMap.emplace("5.2B_Elevator", des::Location("5.2B_Elevator", des::Point(3, 3, 0)));
+    des::RoomMap locationMap;
+    locationMap.emplace("5.2B03", des::Room("5.2B03", des::Point(0, 0, 0)));
+    locationMap.emplace("5.2B01", des::Room("5.2B01", des::Point(1, 1, 0)));
+    locationMap.emplace("5.2B10", des::Room("5.2B10", des::Point(2, 2, 0)));
+    locationMap.emplace("5.2B_Elevator", des::Room("5.2B_Elevator", des::Point(3, 3, 0)));
 
     EXPECT_NO_THROW(ConfigLoader::validateConfig(*orders, *employees, locationMap, "5.2B_Elevator"));
 }
@@ -323,8 +323,8 @@ TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
 
     des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomA") };
 
-    des::LocationMap locationMap;
-    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
+    des::RoomMap locationMap;
+    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
 
     EXPECT_THROW(ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"), std::runtime_error);
 }
@@ -337,8 +337,8 @@ TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
 
     des::OrderList orders = { makeAccompanyOrder("Max", "NonexistentRoom") };
 
-    des::LocationMap locationMap;
-    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
+    des::RoomMap locationMap;
+    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
 
     des::PersonList employees;
     employees.push_back(std::move(emp));
@@ -354,9 +354,9 @@ TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
     emp->roomLabels = {"RoomA", "RoomB"};
     emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
 
-    des::LocationMap locationMap;
-    locationMap.emplace("RoomA", des::Location("RoomA", des::Point(0, 0, 0)));
-    locationMap.emplace("RoomB", des::Location("RoomB", des::Point(1, 1, 0)));
+    des::RoomMap locationMap;
+    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
+    locationMap.emplace("RoomB", des::Room("RoomB", des::Point(1, 1, 0)));
 
     des::PersonList employees;
     employees.push_back(std::move(emp));

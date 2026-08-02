@@ -33,9 +33,9 @@ public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode(des::LocationMap locationMap):
+    PathPlannerNode(des::RoomMap rooms):
         Node("event_system_planner_node"),
-        m_locationMap(std::move(locationMap)) 
+        m_rooms(std::move(rooms)) 
     {
 
         m_cache = {};
@@ -102,12 +102,12 @@ public:
             }
         }
 
-        auto fromIt = m_locationMap.find(from);
-        auto toIt   = m_locationMap.find(to);
+        auto fromIt = m_rooms.find(from);
+        auto toIt   = m_rooms.find(to);
 
-        if (fromIt == m_locationMap.end() || toIt == m_locationMap.end()) {
+        if (fromIt == m_rooms.end() || toIt == m_rooms.end()) {
             RCLCPP_ERROR(this->get_logger(), "ERROR\t%s or %s not found in map!", from.c_str(), to.c_str());
-            for (auto [k, _] : m_locationMap) {
+            for (auto [k, _] : m_rooms) {
                 RCLCPP_INFO(this->get_logger(), "%s", k.c_str());
             }
             return std::nullopt;
@@ -166,5 +166,5 @@ private:
     std::condition_variable m_cv;
     bool m_resultReady{false};
     PathResult m_currentResult{false, 0.0};
-    des::LocationMap m_locationMap;
+    des::RoomMap m_rooms;
 };

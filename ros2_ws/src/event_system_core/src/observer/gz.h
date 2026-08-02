@@ -8,17 +8,17 @@
 #include "../util/types.h"
 
 class GazeboView final : public IObserver {
-    std::map<std::string, des::Point> locationMap;
+    std::map<std::string, des::Point> rooms;
 
 public:
     std::string getName() override {
         return "Gazebo";
     }
 
-    explicit GazeboView(const std::map<std::string, des::Point> &locationMap) : locationMap(locationMap) {}
+    explicit GazeboView(const std::map<std::string, des::Point> &rooms) : rooms(rooms) {}
 
     void onRobotMoved(int /*time*/, const std::string& location, double /*distance*/) override {
-        const auto p = locationMap[location];  // TODO: robustness?
+        const auto p = rooms[location];  // TODO: robustness?
         sim::moveRobot(p.m_x, p.m_y);
     };
 

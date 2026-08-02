@@ -24,7 +24,7 @@ void SimRunner::reloadSimulationData() {
         throw std::runtime_error("No employees loaded");
     }
 
-    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_locationMap, "5.2B_Elevator");
+    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_rooms, "5.2B_Elevator");
 
     m_people = std::move(allPeople.value());
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", m_people.value().size());
@@ -40,9 +40,10 @@ void SimRunner::rebuildEventQueue() {
 }
 
 void SimRunner::buildSimulation() {
-    m_roomTours = loadRoomTours();
+    mergeRoomTours();
+
     m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue, m_config, m_planner, m_employees, m_locationMap, m_roomTours
+        m_eventQueue, m_config, m_planner, m_employees, m_rooms
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
@@ -84,8 +85,8 @@ void SimRunner::setupApplication() {
 
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
-    m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_locationMap);
-    m_robotMarkerObserver = std::make_shared<RobotMarkerObserver>(m_systemConfigNode, m_locationMap);
+    m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_rooms);
+    m_robotMarkerObserver = std::make_shared<RobotMarkerObserver>(m_systemConfigNode, m_rooms);
     buildSimulation();
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");

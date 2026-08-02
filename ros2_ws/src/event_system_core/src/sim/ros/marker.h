@@ -92,10 +92,10 @@ public:
     marker_pub_->publish(marker_array);
   }
 
-  void publishMarkers(std::map<std::string, des::Point> locationMap)
+  void publishMarkers(std::map<std::string, des::Point> rooms)
   {
     std::vector<MapLocation> rosLocations = {};
-    for (auto [name, p] : locationMap) {
+    for (auto [name, p] : rooms) {
       rosLocations.emplace_back(name, p.m_x, p.m_y);
     }
     this->publishLocations(rosLocations);

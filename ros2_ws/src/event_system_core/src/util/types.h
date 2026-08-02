@@ -8,51 +8,10 @@
 #include <vector>
 
 #include "../model/person.h"
+#include "../model/room.h"
+#include "point.h"
 
 namespace des {
-
-struct Point {
-    double m_x, m_y, m_yaw;
-    Point() = default;
-
-    Point(const double pnt, const double pnt1, const double yaw) : m_x(pnt), m_y(pnt1), m_yaw(yaw) {}
-
-    friend std::ostream& operator<<(std::ostream& os, const Point& s) {
-        os << "(" << s.m_x << ", " << s.m_y << ", " << s.m_yaw << ")";
-        return os;
-    }
-};
-
-struct Segment {
-    int id;
-    Point m_points[2];
-
-    Segment() = default;
-
-    Segment(const int segment_id, const Point& p1, const Point& p2) : id(segment_id), m_points{p1, p2} {}
-
-    friend std::ostream& operator<<(std::ostream& os, const Segment& s) {
-        os << "Segment id=" << s.id << ", p1=" << s.m_points[0] << ", p2=" << s.m_points[1];
-        return os;
-    }
-};
-
-struct Location {
-    std::string m_name;
-    Point m_p;
-    std::optional<double> m_area;
-    std::vector<Point> m_footprint;
-    RoomType m_roomType = RoomType::OTHER;
-
-    explicit Location(const std::string& name, const Point p, const std::optional<double> area = std::nullopt) : m_name(name), m_p(p), m_area(area) {}
-
-    friend std::ostream& operator<<(std::ostream& os, const Location& l) {
-        os << l.m_name << l.m_p;
-        if (l.m_area) os << " area=" << *l.m_area;
-        os << " type=" << roomTypeToString(l.m_roomType);
-        return os;
-    }
-};
 
 enum class DistributionType {
     NORMAL,
@@ -342,15 +301,6 @@ struct BatteryProps {
 
 using PersonList  = std::vector<std::unique_ptr<Person>>;
 using PersonMap   = std::map<std::string, Person*>;
-using LocationMap = std::map<std::string, Location>;  // name -> coordinates + optional area
-
-struct RoomTour {
-    double m_distance = 0.0;
-    int m_steps = 0;
-    std::vector<Point> m_path;
-};
-
-using RoomTourMap = std::map<std::string, RoomTour>;
 
 inline std::string toHumanReadableTime(const int sec, const bool includeSeconds = true) {
     const int hours   = static_cast<int>(sec / 3600.0);

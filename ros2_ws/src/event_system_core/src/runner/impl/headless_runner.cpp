@@ -31,14 +31,14 @@ void HeadlessRunner::setupApplication() {
         m_employees[p->firstName] = p.get();
     }
 
-    m_roomTours = loadRoomTours();
+    mergeRoomTours();
+
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_planner,
         m_employees,
-        m_locationMap,
-        m_roomTours
+        m_rooms
     );
 
     rebuildFileQueue();
@@ -52,7 +52,7 @@ void HeadlessRunner::setupApplication() {
     m_ctx->addObserver(m_metricsNode);
 
     if (m_config->missionTraceExport) {
-        m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_locationMap, outputPath("mission_trace", ".json"), m_config));
+        m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_rooms, outputPath("mission_trace", ".json"), m_config));
     }
 
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
@@ -100,7 +100,7 @@ bool HeadlessRunner::loadNextBatch() {
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
-    ConfigLoader::validateConfig(m_orders, m_people.value(), m_locationMap, "5.2B_Elevator");
+    ConfigLoader::validateConfig(m_orders, m_people.value(), m_rooms, "5.2B_Elevator");
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees",
                 m_people.value().size());

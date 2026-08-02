@@ -3,55 +3,19 @@
 #include <algorithm>
 #include <iomanip>
 #include <random>
-#include <regex>
 #include <string>
 #include <vector>
 
 #include "../util/rnd.h"
+#include "room.h"
 
 namespace des {
-
-enum class RoomType {
-    WORKPLACE,
-    TOILET,
-    KITCHEN,
-    OTHER
-};
-
-inline RoomType roomTypeFromString(const std::string& type) {
-    if (type == "WORKPLACE") {
-        return RoomType::WORKPLACE;
-    }
-    if (type == "TOILET") {
-        return RoomType::TOILET;
-    }
-    if (type == "KITCHEN") {
-        return RoomType::KITCHEN;
-    }
-    return RoomType::OTHER;
-}
-
-inline std::string roomTypeToString(const RoomType type) {
-    switch (type) {
-        case RoomType::WORKPLACE: return "WORKPLACE";
-        case RoomType::TOILET:    return "TOILET";
-        case RoomType::KITCHEN:   return "KITCHEN";
-        case RoomType::OTHER:     return "OTHER";
-    }
-    return "OTHER";
-}
-
-inline RoomType parseRoomName(const std::string& roomName) {
-    if (roomName.find("Toilet") != std::string::npos) return RoomType::TOILET;
-    if (roomName.find("Kitchen") != std::string::npos) return RoomType::KITCHEN;
-    static const std::regex workplacePattern(R"(5\.2[A-Z]\d+)");
-    if (std::regex_match(roomName, workplacePattern)) return RoomType::WORKPLACE;
-    return RoomType::OTHER;
-}
 
 struct StayDurationConfig {
     double workplaceMin = 60 * 10;
     double workplaceMax = 3600 * 2;
+    double classroomMin = 60 * 45;
+    double classroomMax = 60 * 90;
     double kitchenMin = 30;
     double kitchenMax = 1800;
     double toiletMu = 4.8;
@@ -99,6 +63,8 @@ public:
         switch (roomType) {
             case RoomType::WORKPLACE:
                 return rnd::uni(rng, stayDuration.workplaceMin, stayDuration.workplaceMax);
+            case RoomType::CLASSROOM:
+                return rnd::uni(rng, stayDuration.classroomMin, stayDuration.classroomMax);
             case RoomType::TOILET:
                 return rnd::logNormal(rng, stayDuration.toiletMu, stayDuration.toiletSigma);
             case RoomType::KITCHEN:

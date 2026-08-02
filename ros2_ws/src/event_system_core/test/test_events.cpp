@@ -204,17 +204,14 @@ public:
     std::optional<des::Point> getPersonPosition(const std::string& /*name*/) const override {
         return std::nullopt;
     }
-    const des::Location& location(const std::string& /*room*/) const override {
-        static const des::Location none{"", des::Point{}, 0.0};
-        return none;
-    }
-    des::RoomTourMap roomTours;
-    const des::RoomTour* roomTour(const std::string& room) const override {
-        const auto it = roomTours.find(room);
-        if (it == roomTours.end()) {
-            return nullptr;
+    des::RoomMap rooms;
+    const des::Room& room(const std::string& name) const override {
+        static const des::Room none{"", des::Point{}, 0.0};
+        const auto it = rooms.find(name);
+        if (it == rooms.end()) {
+            return none;
         }
-        return &it->second;
+        return it->second;
     }
 
     bool robotSeesPerson(const std::string& name) const override {
@@ -343,8 +340,10 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     person->workplace = "Office";
     ctx.employees["Max"] = person.get();
     ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
-    for (const auto& room : ctx.roomNamesList) {
-        ctx.roomTours[room] = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} } };
+    for (const auto& name : ctx.roomNamesList) {
+        des::Room room{ name, des::Point{}, 0.0 };
+        room.m_tour = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} } };
+        ctx.rooms.emplace(name, std::move(room));
     }
 
     auto order = makeAccompanyOrder(1, "Max", "Room1", 40000);

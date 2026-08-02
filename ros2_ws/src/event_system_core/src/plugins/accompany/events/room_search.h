@@ -38,16 +38,16 @@ public:
             return;
         }
 
-        const des::RoomTour* tour = ctx.roomTour(room);
-        if (tour == nullptr || tour->m_path.empty()) {
+        const des::RoomTour& tour = ctx.room(room).m_tour;
+        if (tour.empty()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d No tour for room '%s'; skipping scan", this->time, room.c_str());
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, ctx.robotSeesPerson(personName), 0));
             return;
         }
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d room=%s person=%s -> tour with %zu points (%.2fm)", this->time, room.c_str(), personName.c_str(), tour->m_path.size(), tour->m_distance);
-        ctx.robotMovedTo(ctx.location(room).m_p);
-        requestDrive(ctx, tour->m_path[0], std::make_shared<Scan>(this->time, m_order, 0));
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d room=%s person=%s -> tour with %zu points (%.2fm)", this->time, room.c_str(), personName.c_str(), tour.m_path.size(), tour.m_distance);
+        ctx.robotMovedTo(ctx.room(room).m_p);
+        requestDrive(ctx, tour.m_path[0], std::make_shared<Scan>(this->time, m_order, 0));
     }
 
     std::string getName() const override { return "Room Search"; }

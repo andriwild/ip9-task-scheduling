@@ -34,23 +34,23 @@ public:
         const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
         const std::string& personName = accompany.personName;
         const std::string room = ctx.getRobot()->getLocation();
-        const des::RoomTour* tour = ctx.roomTour(room);
+        const des::RoomTour& tour = ctx.room(room).m_tour;
 
-        if (tour == nullptr || m_index >= tour->m_path.size()) {
+        if (m_index >= tour.m_path.size()) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, ctx.robotSeesPerson(personName), 0));
             return;
         }
 
         const bool found = ctx.robotSeesPerson(personName);
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
-            "Scan t=%d room=%s point=%zu/%zu found=%d", this->time, room.c_str(), m_index, tour->m_path.size(), found);
+            "Scan t=%d room=%s point=%zu/%zu found=%d", this->time, room.c_str(), m_index, tour.m_path.size(), found);
 
         if (found) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, true, 0));
-        } else if (m_index + 1 >= tour->m_path.size()) {
+        } else if (m_index + 1 >= tour.m_path.size()) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, found, 0));
         } else {
-            requestDrive(ctx, tour->m_path[m_index + 1], std::make_shared<Scan>(this->time, m_order, m_index + 1));
+            requestDrive(ctx, tour.m_path[m_index + 1], std::make_shared<Scan>(this->time, m_order, m_index + 1));
         }
     }
 

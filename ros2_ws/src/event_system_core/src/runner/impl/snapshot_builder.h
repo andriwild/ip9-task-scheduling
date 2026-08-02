@@ -23,9 +23,9 @@ public:
     ~SnapshotBuilder() { shutdown(); }
 
     int run() {
-        const des::LocationMap locationMap = loadLocationsFromDB(m_db);
+        const des::RoomMap rooms = loadRoomsFromDB(m_db);
 
-        m_planner = std::make_shared<PathPlannerNode>(locationMap);
+        m_planner = std::make_shared<PathPlannerNode>(rooms);
         if (!m_planner->isReady()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.snapshot"), "Nav2 planner not available — is planner.sh running?");
             return 1;
@@ -38,10 +38,10 @@ public:
             m_executor->remove_node(m_planner);
         });
 
-        // Matrix index order follows the (name-sorted) LocationMap iteration.
-        std::vector<des::Location> locations;
-        locations.reserve(locationMap.size());
-        for (const auto& [_, loc] : locationMap) {
+        // Matrix index order follows the (name-sorted) RoomMap iteration.
+        std::vector<des::Room> locations;
+        locations.reserve(rooms.size());
+        for (const auto& [_, loc] : rooms) {
             locations.push_back(loc);
         }
 

@@ -18,8 +18,8 @@
 
 class RobotMarkerObserver final : public IObserver {
 public:
-    RobotMarkerObserver(const rclcpp::Node::SharedPtr& node, des::LocationMap locationMap)
-        : m_locationMap(std::move(locationMap))
+    RobotMarkerObserver(const rclcpp::Node::SharedPtr& node, des::RoomMap rooms)
+        : m_rooms(std::move(rooms))
     {
         auto qos = rclcpp::QoS(1).transient_local();
         m_publisher = node->create_publisher<visualization_msgs::msg::MarkerArray>("visualization_marker_array", qos);
@@ -30,8 +30,8 @@ public:
     }
 
     void onRobotMoved(int /*time*/, const std::string& location, double /*distance*/) override {
-        const auto it = m_locationMap.find(location);
-        if (it == m_locationMap.end()) {
+        const auto it = m_rooms.find(location);
+        if (it == m_rooms.end()) {
             return;
         }
         m_position = it->second.m_p;
@@ -70,6 +70,6 @@ private:
     }
 
     des::Point m_position;
-    des::LocationMap m_locationMap;
+    des::RoomMap m_rooms;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_publisher;
 };

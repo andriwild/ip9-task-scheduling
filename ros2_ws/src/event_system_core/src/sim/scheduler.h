@@ -16,7 +16,7 @@
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<IPathPlanner> m_plannerNode;
-    const des::LocationMap& m_locationMap;
+    const des::RoomMap& m_rooms;
     std::string m_startPosition = "IMVS_Dock";
 
 public:
@@ -24,11 +24,11 @@ public:
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
         const std::shared_ptr<IPathPlanner> &plannerNode,
-        const des::LocationMap& locationMap
+        const des::RoomMap& rooms
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
-        , m_locationMap(locationMap)
+        , m_rooms(rooms)
     {}
 
     std::string startPos() const {
@@ -67,8 +67,8 @@ public:
 
     // Time it takes to scan the given area in seconds
     [[nodiscard]] double getScanTime(const std::string& area) const {
-        auto it = m_locationMap.find(area);
-        if (it == m_locationMap.end() || !it->second.m_area.has_value()) {
+        auto it = m_rooms.find(area);
+        if (it == m_rooms.end() || !it->second.m_area.has_value()) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "Location area not found for '%s', defaulting to 1.0", area.c_str());
             return 1.0;
         }

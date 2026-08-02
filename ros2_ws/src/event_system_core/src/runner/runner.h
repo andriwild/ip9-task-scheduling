@@ -22,16 +22,16 @@ const std::string CONFIG_PATH = CONFIG_DIR;
 const std::string DB_USER     = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
 
-inline des::LocationMap loadLocationsFromDB(DBClient& db) {
+inline des::RoomMap loadRoomsFromDB(DBClient& db) {
     const auto pois = db.waypoints();
     if (!pois.has_value()) {
         throw std::runtime_error("Could not load points of interest from DB");
     }
-    des::LocationMap locationMap;
+    des::RoomMap rooms;
     for (const auto& poi : pois.value()) {
-        locationMap.emplace(poi.m_name, poi);
+        rooms.emplace(poi.m_name, poi);
     }
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", locationMap.size());
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu points of interest", rooms.size());
 
     const auto areas = db.allAreas();
     if (!areas.has_value()) {
@@ -39,8 +39,8 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     size_t matched = 0;
     for (const auto& [name, area] : areas.value()) {
-        const auto it = locationMap.find(name);
-        if (it == locationMap.end()) {
+        const auto it = rooms.find(name);
+        if (it == rooms.end()) {
             DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; area dropped", name.c_str());
             continue;
         }
@@ -55,8 +55,8 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     size_t matchedFootprints = 0;
     for (const auto& [name, ring] : footprints.value()) {
-        const auto it = locationMap.find(name);
-        if (it == locationMap.end()) {
+        const auto it = rooms.find(name);
+        if (it == rooms.end()) {
             DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; footprint dropped", name.c_str());
             continue;
         }
@@ -71,8 +71,8 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     size_t matchedTypes = 0;
     for (const auto& [name, type] : roomTypes.value()) {
-        const auto it = locationMap.find(name);
-        if (it == locationMap.end()) {
+        const auto it = rooms.find(name);
+        if (it == rooms.end()) {
             DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Search zone '%s' has no point of interest; room type dropped", name.c_str());
             continue;
         }
@@ -81,10 +81,10 @@ inline des::LocationMap loadLocationsFromDB(DBClient& db) {
     }
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu/%zu room types into locations", matchedTypes, roomTypes.value().size());
 
-    for (const auto& [_, loc] : locationMap) {
+    for (const auto& [_, loc] : rooms) {
         DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), loc);
     }
-    return locationMap;
+    return rooms;
 }
 
 class IAppRunner {
@@ -148,8 +148,7 @@ public:
     }
 
 protected:
-    des::LocationMap m_locationMap;
-    des::RoomTourMap m_roomTours;
+    des::RoomMap m_rooms;
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
@@ -177,7 +176,7 @@ protected:
             m_planner = std::make_shared<MatrixPlanner>(std::move(data->first), std::move(data->second));
             DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: matrix (%s)", BUILDING_FILE.c_str());
         } else {
-            m_plannerNode = std::make_shared<PathPlannerNode>(m_locationMap);
+            m_plannerNode = std::make_shared<PathPlannerNode>(m_rooms);
             m_planner = m_plannerNode;
             DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: Nav2 planner");
         }
@@ -283,24 +282,37 @@ protected:
     }
 
     // Runtime building geometry comes from the generated snapshot (json file), not the DB.
-    des::LocationMap loadLocations() {
+    des::RoomMap loadRooms() {
         auto map = ConfigLoader::loadBuildingSnapshot(BUILDING_FILE);
         if (!map.has_value()) {
             throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE + ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu locations from building snapshot", map.value().size());
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu rooms from building snapshot", map.value().size());
         return map.value();
     }
 
-    des::RoomTourMap loadRoomTours() {
+    void mergeRoomTours() {
         const std::string path = ConfigLoader::toursFilePath(m_config->personDetectionRange, m_config->useTspTours);
-        auto tours = ConfigLoader::loadRoomTours(path);
-        if (!tours.has_value()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "No room tours at %s; scan falls back to area estimate", path.c_str());
-            return {};
+        const auto merged = ConfigLoader::mergeRoomTours(path, m_rooms);
+        if (!merged.has_value()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.runner"), "No room tours at %s; no room can be searched", path.c_str());
+            return;
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu room tours from %s", tours.value().size(), path.c_str());
-        return tours.value();
+        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu room tours from %s", merged.value(), path.c_str());
+
+        std::vector<std::string> withoutTour;
+        for (const auto& [name, room] : m_rooms) {
+            if (room.m_tour.empty()) {
+                withoutTour.push_back(name);
+            }
+        }
+        if (!withoutTour.empty()) {
+            std::ostringstream oss;
+            for (std::size_t i = 0; i < withoutTour.size(); ++i) {
+                oss << (i ? ", " : "") << withoutTour[i];
+            }
+            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "%zu room(s) without tour: %s", withoutTour.size(), oss.str().c_str());
+        }
     }
 
     virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {

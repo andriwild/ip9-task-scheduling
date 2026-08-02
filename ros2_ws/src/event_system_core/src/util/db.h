@@ -60,12 +60,12 @@ public:
         return true;
     }
 
-    std::optional<std::vector<des::Location>> waypoints() {
+    std::optional<std::vector<des::Room>> waypoints() {
         if (!m_db.isOpen() && !m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
-        std::vector<des::Location> locations;
+        std::vector<des::Room> locations;
         QSqlQuery query;
         if (!query.exec("SELECT name, ST_X(coordinate), ST_Y(coordinate), yaw FROM points_of_interest")) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Query failed: %s", query.lastError().text().toStdString().c_str());

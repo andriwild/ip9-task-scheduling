@@ -6,7 +6,7 @@
 
 PersonRegistry::PersonRegistry(
     des::PersonMap employees,
-    const des::LocationMap& rooms,
+    const des::RoomMap& rooms,
     const unsigned int seed
 )
     : m_employees(std::move(employees))

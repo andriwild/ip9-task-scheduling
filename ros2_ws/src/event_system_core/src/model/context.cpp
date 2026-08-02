@@ -10,16 +10,14 @@ SimulationContext::SimulationContext(
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<IPathPlanner> plannerNode,
     des::PersonMap employees,
-    des::LocationMap locationMap,
-    des::RoomTourMap roomTours
+    des::RoomMap rooms
 )
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)
-    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_locationMap))
+    , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_rooms))
     , m_plannerNode(std::move(plannerNode))
-    , m_locationMap(std::move(locationMap))
-    , m_roomTours(std::move(roomTours))
-    , m_persons(std::move(employees), m_locationMap, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
+    , m_rooms(std::move(rooms))
+    , m_persons(std::move(employees), m_rooms, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
     , m_missions(m_queue, m_eventBus)
 {
     reseed(m_simConfig->seed);
@@ -244,29 +242,21 @@ void SimulationContext::recordServiced(const std::string& room, const std::strin
 
 std::vector<std::string> SimulationContext::roomNames() const {
     std::vector<std::string> names;
-    names.reserve(m_locationMap.size());
-    for (const auto& [name, loc] : m_locationMap) {
+    names.reserve(m_rooms.size());
+    for (const auto& [name, loc] : m_rooms) {
         names.push_back(name);
     }
     return names;
 }
 
-const des::Location& SimulationContext::location(const std::string& room) const {
-    static const des::Location unknown{"", des::Point{}};
-    const auto it = m_locationMap.find(room);
-    if (it == m_locationMap.end()) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Location '%s' not found", room.c_str());
+const des::Room& SimulationContext::room(const std::string& name) const {
+    static const des::Room unknown{"", des::Point{}};
+    const auto it = m_rooms.find(name);
+    if (it == m_rooms.end()) {
+        DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Room '%s' not found", name.c_str());
         return unknown;
     }
     return it->second;
-}
-
-const des::RoomTour* SimulationContext::roomTour(const std::string& room) const {
-    const auto it = m_roomTours.find(room);
-    if (it == m_roomTours.end()) {
-        return nullptr;
-    }
-    return &it->second;
 }
 
 void SimulationContext::setOrderPtr(const des::OrderPtr& orderPtr) {
@@ -381,8 +371,8 @@ void SimulationContext::notifyChargeStarted() const {
 
 void SimulationContext::robotMoved(const std::string& location, const double distance) const {
     m_robot->setLocation(location);
-    const auto it = m_locationMap.find(location);
-    if (it != m_locationMap.end()) {
+    const auto it = m_rooms.find(location);
+    if (it != m_rooms.end()) {
         m_robot->setPosition(it->second.m_p);
     }
     m_eventBus.notifyMoved(m_currentTime, location, distance);

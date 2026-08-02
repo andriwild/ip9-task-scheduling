@@ -20,7 +20,7 @@ class SimRunner final : public IAppRunner {
 public:
 
     explicit SimRunner() {
-        m_locationMap = loadLocations();
+        m_rooms = loadRooms();
 
         createPlanner();
         m_controllerNode   = std::make_shared<ControllerNode>();

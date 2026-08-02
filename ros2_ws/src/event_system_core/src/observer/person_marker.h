@@ -18,8 +18,8 @@
 
 class PersonMarkerObserver final : public IObserver {
 public:
-    PersonMarkerObserver(const rclcpp::Node::SharedPtr& node, des::LocationMap locationMap)
-        : m_locationMap(std::move(locationMap))
+    PersonMarkerObserver(const rclcpp::Node::SharedPtr& node, des::RoomMap rooms)
+        : m_rooms(std::move(rooms))
     {
         auto qos = rclcpp::QoS(1).transient_local();
         m_publisher = node->create_publisher<visualization_msgs::msg::MarkerArray>("visualization_marker_array", qos);
@@ -120,6 +120,6 @@ private:
 
     const IPersonRegistry* m_ctx = nullptr;
     des::PersonMap m_employees;
-    des::LocationMap m_locationMap;
+    des::RoomMap m_rooms;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_publisher;
 };

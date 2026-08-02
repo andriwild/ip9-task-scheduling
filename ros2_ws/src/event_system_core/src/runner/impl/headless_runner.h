@@ -56,7 +56,7 @@ class HeadlessRunner final : public IAppRunner {
 
 public:
     explicit HeadlessRunner() {
-        m_locationMap = loadLocations();
+        m_rooms = loadRooms();
 
         createPlanner();
         m_metricsNode = std::make_shared<MetricsNode>();

@@ -238,7 +238,7 @@ public:
         ctx.setPersonLocation(p.firstName, targetRoom);
         ctx.notifyEvent(*this);
 
-        double nextExecutionTime = this->time + p.getStayDuration(ctx.location(targetRoom).m_roomType, p.rng);
+        double nextExecutionTime = this->time + p.getStayDuration(ctx.room(targetRoom).m_roomType, p.rng);
 
         if (p.lunchPending && p.lunchTime < nextExecutionTime && p.lunchTime < p.departureTime) {
             const auto kitchenIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),

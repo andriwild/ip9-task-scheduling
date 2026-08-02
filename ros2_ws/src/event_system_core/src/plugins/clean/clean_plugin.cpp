@@ -33,7 +33,7 @@ void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
 
 double CleanPlugin::estimateReward(const des::IOrder& order, const ISimContext& context) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    const double areaUtility = std::min(1.0, context.location(o.roomName).m_area.value_or(1.0) / 100.0);
+    const double areaUtility = std::min(1.0, context.room(o.roomName).m_area.value_or(1.0) / 100.0);
     const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
 
     double urgency = 1.0;
@@ -96,7 +96,7 @@ double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const ISim
     const auto& o = static_cast<const CleanOrder&>(order);
     const auto& cfg = *context.getConfig();
 
-    const double roomArea  = context.location(o.roomName).m_area.value_or(1.0);
+    const double roomArea  = context.room(o.roomName).m_area.value_or(1.0);
     const double broomSide = std::sqrt(m_config.cleaningArea);
     const double steps     = (roomArea / m_config.cleaningArea) + 1;
     return steps * (2.0 * broomSide / cfg.robotSpeed);

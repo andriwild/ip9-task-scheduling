@@ -26,11 +26,11 @@ class MissionTraceObserver final : public IObserver {
 public:
     MissionTraceObserver(
         const ISimContext* ctx,
-        des::LocationMap locationMap,
+        des::RoomMap rooms,
         std::string outputPath,
         std::shared_ptr<const des::SimConfig> config = nullptr)
         : m_ctx(ctx)
-        , m_locationMap(std::move(locationMap))
+        , m_rooms(std::move(rooms))
         , m_outputPath(std::move(outputPath))
     {
         if (config) {
@@ -180,8 +180,8 @@ private:
     }
 
     std::optional<std::pair<double, double>> coordsOf(const std::string& location) const {
-        const auto it = m_locationMap.find(location);
-        if (it == m_locationMap.end()) {
+        const auto it = m_rooms.find(location);
+        if (it == m_rooms.end()) {
             return std::nullopt;
         }
         return std::make_pair(it->second.m_p.m_x, it->second.m_p.m_y);
@@ -368,7 +368,7 @@ private:
     }
 
     const ISimContext* m_ctx;
-    des::LocationMap m_locationMap;
+    des::RoomMap m_rooms;
     std::string m_outputPath;
     std::map<int, Trace> m_traces;
     std::map<std::string, PersonTrack> m_persons;
