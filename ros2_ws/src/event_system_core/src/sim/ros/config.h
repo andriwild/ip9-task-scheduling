@@ -56,54 +56,40 @@ private:
     void topicCallback(
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Request> &request,
         const std::shared_ptr<event_system_msgs::srv::SetSystemConfig::Response> &response
-    ) { {
-            auto config = des::SimConfig{
-                request->robot_speed,
-                request->drive_time_std,
-                request->time_buffer,
-                request->energy_consumption_drive,
-                request->energy_consumption_base,
-                request->battery_capacity,
-                request->initial_battery_capacity,
-                request->charging_rate,
-                request->low_battery_threshold,
-                request->full_battery_threshold,
-                static_cast<double>(request->arrival_mean),
-                static_cast<double>(request->arrival_std),
-                static_cast<double>(request->departure_mean),
-                static_cast<double>(request->departure_std),
-                des::distributionTypeFromString(request->arrival_distribution),
-                des::distributionTypeFromString(request->departure_distribution),
-                request->dock_location,
-                request->cache_enabled,
-                request->appointments_path,
-                request->people_spawn_location,
-                request->person_detection_range
-            };
-            config.simStartTime = request->sim_start_time;
-            config.simDuration  = request->sim_duration;
-            config.batteryVoltage = request->battery_voltage;
-            config.cvThreshold    = request->cv_threshold;
-            config.taperFraction  = request->taper_fraction;
-            config.chargeToFull   = request->charge_to_full;
-            config.alwaysChargeAtDock = request->always_charge_at_dock;
+    ) {
+        {
             std::lock_guard lock(m_configMutex);
-            // Preserve fields not carried by the service request.
-            config.useDistanceMatrix            = m_currentConfig->useDistanceMatrix;
-            config.metricsCsvExport             = m_currentConfig->metricsCsvExport;
-            config.replanBackgroundOnInterrupt  = m_currentConfig->replanBackgroundOnInterrupt;
-            config.lunchMean                    = m_currentConfig->lunchMean;
-            config.lunchStd                     = m_currentConfig->lunchStd;
-            config.lunchDistribution            = m_currentConfig->lunchDistribution;
-            config.lunchDurationMean            = m_currentConfig->lunchDurationMean;
-            config.lunchDurationStd             = m_currentConfig->lunchDurationStd;
-            config.simSpeedFactor               = m_currentConfig->simSpeedFactor;
-            config.searchExcludedRooms          = m_currentConfig->searchExcludedRooms;
-            config.employeesPath                = m_currentConfig->employeesPath;
-            config.missionTraceExport           = m_currentConfig->missionTraceExport;
-            config.searchRewardStrategy         = m_currentConfig->searchRewardStrategy;
-            config.energyReserveStrategy        = m_currentConfig->energyReserveStrategy;
-            config.energyReserveHorizon         = m_currentConfig->energyReserveHorizon;
+            auto config = *m_currentConfig;
+
+            config.robotSpeed             = request->robot_speed;
+            config.driveTimeStd           = request->drive_time_std;
+            config.timeBuffer             = request->time_buffer;
+            config.energyConsumptionDrive = request->energy_consumption_drive;
+            config.energyConsumptionBase  = request->energy_consumption_base;
+            config.batteryCapacity        = request->battery_capacity;
+            config.initialBatteryCapacity = request->initial_battery_capacity;
+            config.chargingRate           = request->charging_rate;
+            config.lowBatteryThreshold    = request->low_battery_threshold;
+            config.fullBatteryThreshold   = request->full_battery_threshold;
+            config.arrivalMean            = request->arrival_mean;
+            config.arrivalStd             = request->arrival_std;
+            config.departureMean          = request->departure_mean;
+            config.departureStd           = request->departure_std;
+            config.arrivalDistribution    = des::distributionTypeFromString(request->arrival_distribution);
+            config.departureDistribution  = des::distributionTypeFromString(request->departure_distribution);
+            config.dockLocation           = request->dock_location;
+            config.cacheEnabled           = request->cache_enabled;
+            config.appointmentsPath       = request->appointments_path;
+            config.peopleSpawnLocation    = request->people_spawn_location;
+            config.personDetectionRange   = request->person_detection_range;
+            config.simStartTime           = request->sim_start_time;
+            config.simDuration            = request->sim_duration;
+            config.batteryVoltage         = request->battery_voltage;
+            config.cvThreshold            = request->cv_threshold;
+            config.taperFraction          = request->taper_fraction;
+            config.chargeToFull           = request->charge_to_full;
+            config.alwaysChargeAtDock     = request->always_charge_at_dock;
+
             m_currentConfig = std::make_shared<des::SimConfig>(config);
             m_dirtyConfig = true;
         }
