@@ -190,6 +190,19 @@ TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
     std::filesystem::remove(tmpFile);
 }
 
+TEST_F(IntegrationTest, ContextIsDestroyedAfterDroppingLastReference) {
+    std::weak_ptr<SimulationContext> observer;
+    {
+        auto ctx = std::make_shared<SimulationContext>(
+            eventQueue, config, planner, employees, roomMap
+        );
+        ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+        observer = ctx;
+        EXPECT_FALSE(observer.expired());
+    }
+    EXPECT_TRUE(observer.expired());
+}
+
 // --- Event Loop: full scenario ---
 
 TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
@@ -197,7 +210,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     // Create a simple scenario: one appointment
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000, "Test Meeting");
@@ -246,7 +259,7 @@ TEST_F(IntegrationTest, EventLoopDrainsQueue) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     // Minimal scenario: just start and end
     eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
@@ -264,7 +277,7 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000);
 
@@ -293,7 +306,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     // Run some events to change state
     eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
@@ -325,7 +338,7 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     // First run
     eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
@@ -353,7 +366,7 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
     eventQueue.push(std::make_shared<SimulationEndEvent>(5000));
@@ -375,7 +388,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
         eventQueue, config, planner, employees, roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx));
+    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
 
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000, "Dokument abholen");
 

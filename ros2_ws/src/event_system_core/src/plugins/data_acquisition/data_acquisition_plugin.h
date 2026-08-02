@@ -40,7 +40,6 @@ public:
     bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
     std::optional<std::string> targetLocation(const des::IOrder& order) const override;
     double estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const override;
-    double estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const override;
     double estimateReward(const des::IOrder& order, const ISimContext& context) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 

@@ -26,7 +26,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isSearching = !ctx->getRobot()->isDriving()
             && dynamic_cast<SearchState*>(ctx->getRobot()->getState()) != nullptr;
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "IsSearching: %d", isSearching);
@@ -42,7 +42,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isScanning = ctx->getRobot()->isScanning();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "IsScanning: %d", isScanning);
         return isScanning ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
@@ -56,7 +56,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->getRobot()->setScanning(false);
         const bool visible = ctx->getRobot()->isPersonVisible();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "FoundPerson tick t=%d: setScanning(false), personVisible=%d", ctx->getTime(), visible);
@@ -71,7 +71,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->getRobot()->setScanning(true);
         ctx->pushEvent(std::make_shared<RoomSearch>(ctx->getTime(), ctx->getOrderPtr()));
         return BT::NodeStatus::SUCCESS;
@@ -85,7 +85,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Start Accompany Conversation");
         return BT::NodeStatus::SUCCESS;
@@ -99,7 +99,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto currentState = ctx->getRobot()->getState();
         const auto ss = dynamic_cast<SearchState*>(currentState);
@@ -121,7 +121,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto searchState = dynamic_cast<SearchState*>(ctx->getRobot()->getState());
         const auto locations = searchState->locations;
         std::string nextLocation = locations.front();
@@ -142,7 +142,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime(), ctx->getOrderPtr()));
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Abort Search in BT");
         return BT::NodeStatus::SUCCESS;

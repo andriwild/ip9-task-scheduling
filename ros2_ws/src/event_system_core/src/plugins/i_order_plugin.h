@@ -63,9 +63,9 @@ public:
     }
 
     // On-site execution energy in Wh — no drive legs.
-    virtual double estimateServiceEnergy(const des::IOrder& /*order*/,
-                                         const ISimContext& /*context*/) const {
-        return 0.0;
+    virtual double estimateServiceEnergy(const des::IOrder& order,
+                                         const ISimContext& context) const {
+        return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
     }
 
     // Round-trip energy estimate in Wh for executing the mission from

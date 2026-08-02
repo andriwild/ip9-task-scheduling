@@ -55,7 +55,7 @@ void HeadlessRunner::setupApplication() {
         m_ctx->addObserver(std::make_shared<MissionTraceObserver>(m_ctx.get(), m_rooms, outputPath("mission_trace", ".json"), m_config));
     }
 
-    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
+    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx.get()));
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Rounds: %d, scenario: %s",
                 m_totalRounds, m_config->appointmentsPath.c_str());

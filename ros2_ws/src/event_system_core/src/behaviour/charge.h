@@ -19,7 +19,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool chargingRequired = ctx->getRobot()->updateAndGetChargingRequired();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "IsBatteryLow: %d", chargingRequired);
         return chargingRequired ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
@@ -33,7 +33,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isCharging = ctx->getRobot()->getState()->getType() == des::RobotStateType::CHARGING;
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge.is_charging"), "%d", isCharging);
         return isCharging ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
@@ -47,7 +47,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         return ctx->getConfig()->alwaysChargeAtDock ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -59,7 +59,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         return ctx->getRobot()->isBatteryFullyCharged() ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -71,7 +71,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         return ctx->getRobot()->m_opportunisticCharge ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -84,7 +84,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx     = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx     = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot   = ctx->getRobot();
         const auto type    = robot->getStateType();
         const bool driving = robot->isDriving();
@@ -103,7 +103,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx          = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx          = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isTaskActive = ctx->getOrderPtr() != nullptr;
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "IsTaskActive: %d", isTaskActive);
         return isTaskActive? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
@@ -119,7 +119,7 @@ public:
 
     BT::NodeStatus tick() override {
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "GoToDock");
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         ctx->changeRobotState(std::make_unique<ChargeState>());
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
@@ -142,7 +142,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx       = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx       = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundMission();
         ctx->getRobot()->setBatteryForceFull(forceFull);
         return BT::NodeStatus::SUCCESS;
@@ -156,7 +156,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
 
         if (ctx->getRobot()->getStateType() != des::RobotStateType::CHARGING) {

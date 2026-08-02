@@ -20,7 +20,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx        = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasPending = ctx->hasScheduledMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasPendingMission: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
@@ -36,7 +36,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx    = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx    = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isBusy = ctx->getRobot()->isBusy();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsRobotBusy: %d", isBusy);
         if (isBusy) {
@@ -58,7 +58,7 @@ public:
     // MissionControlRoutine to avoid greedy double-accept of background
     // missions whose plugins don't change the robot state on onMissionStart.
     BT::NodeStatus tick() override {
-        const auto ctx      = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx      = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool assigned = ctx->getOrderPtr() != nullptr;
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsMissionAssigned: %d", assigned);
         return assigned ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
@@ -73,7 +73,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
@@ -95,7 +95,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
@@ -116,7 +116,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx     = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx     = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasBg   = ctx->hasBackgroundMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasBackgroundMission: %d", hasBg);
         return hasBg ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
@@ -133,7 +133,7 @@ public:
     // Delegates selection + feasibility to the background mission pool. FAILURE = no
     // feasible mission, the outer BT falls through to charging/idle.
     BT::NodeStatus tick() override {
-        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->acceptFeasibleBackgroundMission();
         if (!order) {
             return BT::NodeStatus::FAILURE;
@@ -152,7 +152,7 @@ public:
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto order = ctx->nextScheduledMission();
         const auto& plugin = OrderRegistry::instance().get(order->type);

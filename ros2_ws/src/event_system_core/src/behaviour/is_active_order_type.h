@@ -19,7 +19,7 @@ public:
     }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         auto inputType = getInput<std::string>("type");
 
         const auto order = ctx->getOrderPtr();

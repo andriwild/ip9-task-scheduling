@@ -20,7 +20,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isConversating = dynamic_cast<ConversateState*>(ctx->getRobot()->getState()) != nullptr;
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsConversating: %d", isConversating);
         if (isConversating) {
@@ -37,7 +37,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
@@ -55,7 +55,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
@@ -73,7 +73,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime(), ctx->getOrderPtr()));
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
@@ -87,7 +87,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto currentState = ctx->getRobot()->getState();
         const auto convState = dynamic_cast<ConversateState*>(currentState);
         
@@ -107,7 +107,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
     
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto currentState = ctx->getRobot()->getState();
         const auto convState = dynamic_cast<ConversateState*>(currentState);
 
@@ -127,7 +127,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
         if (convResult == des::Result::SUCCESS) {

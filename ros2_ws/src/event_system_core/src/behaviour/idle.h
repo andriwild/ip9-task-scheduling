@@ -20,7 +20,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const bool isIdle = ctx->getRobot()->getStateType() == des::RobotStateType::IDLE && !ctx->getRobot()->isDriving();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "IsIdle: %d", isIdle);
@@ -39,7 +39,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Docking: already at dock");
@@ -63,7 +63,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasPending = ctx->hasScheduledMission();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "HasPendingMissionIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }

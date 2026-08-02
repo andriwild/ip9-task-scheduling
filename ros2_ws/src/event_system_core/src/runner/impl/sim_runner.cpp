@@ -51,7 +51,7 @@ void SimRunner::buildSimulation() {
     m_ctx->addObserver(m_personMarkerObserver);
     m_ctx->addObserver(m_robotMarkerObserver);
     rebuildEventQueue();
-    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx));
+    m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx.get()));
 }
 
 
@@ -63,6 +63,7 @@ void SimRunner::reset() {
     m_rosObserver->publishReset();
     m_metricsNode->clear();
 
+    m_ctx.reset();
     reloadSimulationData();
     buildSimulation();
 

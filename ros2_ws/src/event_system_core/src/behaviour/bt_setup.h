@@ -183,7 +183,7 @@ inline std::string buildXml() {
     return xml;
 }
 
-inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> ctx) {
+inline std::shared_ptr<BT::Tree> setupBehaviorTree(ISimContext* ctx) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Create Behaviour Tree");
     BT::BehaviorTreeFactory factory;
 
@@ -196,7 +196,7 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(std::shared_ptr<ISimContext> 
     std::string xml = buildXml();
     factory.registerBehaviorTreeFromText(xml);
     auto tree = std::make_shared<BT::Tree>(factory.createTree("MainTree"));
-    tree->rootBlackboard()->set<std::shared_ptr<ISimContext>>("ctx", ctx);
+    tree->rootBlackboard()->set<ISimContext*>("ctx", ctx);
 
     if (W_OUT_TREE) {
         std::string xml_models    = BT::writeTreeNodesModelXML(factory);

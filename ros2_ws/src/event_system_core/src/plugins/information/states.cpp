@@ -11,10 +11,6 @@ void InformationState::enter(Robot& robot) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.information.state"), "Enter Information");
 }
 
-void InformationState::exit(Robot& robot) {
-    RobotState::exit(robot);
-}
-
 double InformationState::getEnergyConsumption(const ISimContext& ctx) const {
     const auto robot = ctx.getRobot();
     // At the dock the robot is plugged in, so an information interrupt keeps charging instead of draining.

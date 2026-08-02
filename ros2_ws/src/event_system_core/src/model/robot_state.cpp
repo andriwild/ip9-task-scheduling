@@ -6,13 +6,16 @@
 #include "i_sim_context.h"
 #include "robot.h"
 
+double RobotState::getEnergyConsumption(const ISimContext& ctx) const {
+    return ctx.getRobot()->isDriving()
+        ? ctx.getConfig()->energyConsumptionDrive
+        : ctx.getConfig()->energyConsumptionBase;
+}
+
 void IdleState::enter(Robot& robot) {
     RobotState::enter(robot);
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Idle");
     robot.setSpeed(robot.getDriveSpeed());
-}
-void IdleState::exit(Robot& robot) {
-    RobotState::exit(robot);
 }
 double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
     const auto robot = ctx.getRobot();
@@ -28,9 +31,6 @@ double IdleState::getEnergyConsumption(const ISimContext& ctx) const {
 void ChargeState::enter(Robot& robot) {
     RobotState::enter(robot);
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Charge");
-}
-void ChargeState::exit(Robot& robot) {
-    RobotState::exit(robot);
 }
 double ChargeState::getEnergyConsumption(const ISimContext& ctx) const {
     auto energyConsumption = ctx.getConfig()->energyConsumptionBase;

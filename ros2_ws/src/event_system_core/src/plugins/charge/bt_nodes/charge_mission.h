@@ -18,7 +18,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot = ctx->getRobot();
         const bool atDock = robot->getLocation() == robot->getIdleLocation() && !robot->isDriving();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionIsAtDock: %d", atDock);
@@ -33,7 +33,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus onStart() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         if (ctx->getRobot()->isDriving()) {
             return BT::NodeStatus::RUNNING;  // resumed mid-drive after interrupt
         }
@@ -44,7 +44,7 @@ public:
     }
 
     BT::NodeStatus onRunning() override {
-        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot = ctx->getRobot();
         if (robot->getLocation() == robot->getIdleLocation() && !robot->isDriving()) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionGoToDock: arrived at dock");
@@ -63,7 +63,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus onStart() override {
-        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only start once.
         if (order && order->state == des::MissionState::PENDING) {
@@ -74,7 +74,7 @@ public:
     }
 
     BT::NodeStatus onRunning() override {
-        const auto ctx   = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == des::MissionState::COMPLETED) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: done");

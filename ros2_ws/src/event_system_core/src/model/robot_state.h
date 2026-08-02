@@ -18,7 +18,7 @@ public:
     virtual void exit(Robot& robot) { m_result = des::Result::SUCCESS; } ;
     virtual des::RobotStateType getType() const = 0;
     virtual std::string getName() const = 0;
-    virtual double getEnergyConsumption(const ISimContext& ctx) const = 0;
+    virtual double getEnergyConsumption(const ISimContext& ctx) const;
     virtual std::unique_ptr<RobotState> clone() const = 0;
 
     des::Result getResult() const { return m_result; };
@@ -29,7 +29,6 @@ class IdleState final : public RobotState {
 public:
     explicit IdleState() : RobotState() {}
     void enter(Robot& robot) override;
-    void exit(Robot& robot) override;
     des::RobotStateType getType() const override { return des::RobotStateType::IDLE; }
     std::string getName() const override { return "idle"; }
     double getEnergyConsumption(const ISimContext& ctx) const override;
@@ -39,7 +38,6 @@ public:
 class ChargeState final : public RobotState {
 public:
     void enter(Robot& robot) override;
-    void exit(Robot& robot) override;
     des::RobotStateType getType() const override { return des::RobotStateType::CHARGING; }
     std::string getName() const override { return "charging"; }
     double getEnergyConsumption(const ISimContext& ctx) const override;

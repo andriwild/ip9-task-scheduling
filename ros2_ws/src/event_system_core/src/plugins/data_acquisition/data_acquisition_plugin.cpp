@@ -82,10 +82,6 @@ double DataAcquisition::estimateServiceDuration(const des::IOrder& /*order*/, co
     return m_config.dataAcquisitionDuration;
 }
 
-double DataAcquisition::estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const {
-    return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
-}
-
 void DataAcquisition::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
     const auto& o = static_cast<const DataAcquisitionOrder&>(order);
     observer.publishMeeting(

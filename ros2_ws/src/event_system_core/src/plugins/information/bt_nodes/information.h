@@ -21,7 +21,7 @@ public:
 
 private:
     BT::NodeStatus tickInternal() {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order) return BT::NodeStatus::FAILURE;
 

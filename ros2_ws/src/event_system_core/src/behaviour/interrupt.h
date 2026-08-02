@@ -16,7 +16,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard->get<ISimContext*>("ctx");
         return ctx->hasActiveInterrupt() ? BT::NodeStatus::SUCCESS
                                          : BT::NodeStatus::FAILURE;
     }

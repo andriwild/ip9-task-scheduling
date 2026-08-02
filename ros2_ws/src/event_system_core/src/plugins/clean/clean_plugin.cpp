@@ -102,10 +102,6 @@ double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const ISim
     return steps * (2.0 * broomSide / cfg.robotSpeed);
 }
 
-double CleanPlugin::estimateServiceEnergy(const des::IOrder& order, const ISimContext& context) const {
-    return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
-}
-
 void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     observer.publishMeeting(

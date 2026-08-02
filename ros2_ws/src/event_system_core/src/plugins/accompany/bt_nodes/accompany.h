@@ -23,7 +23,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const bool isArrived = ctx->getRobot()->getLocation() == ctx->getRobot()->getTargetLocation();
         const bool isAccompany = dynamic_cast<AccompanyState*>(ctx->getRobot()->getState()) != nullptr;
@@ -42,7 +42,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx->getOrderPtr());
         const bool arrived = accompany && ctx->getRobot()->getLocation() == accompany->roomName;
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "ArrivedWithPerson: %d", arrived);
@@ -57,7 +57,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx"), BT::InputPort<int>("current_time") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
         ctx->changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
@@ -73,7 +73,7 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<std::shared_ptr<ISimContext>>("ctx");
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         ctx->updateOrderState(des::MissionState::FAILED);
         ctx->changeRobotState(std::make_unique<IdleState>());
