@@ -19,7 +19,6 @@ float32 person_detection_range
 string dock_location
 bool cache_enabled
 string appointments_path
-string employee_path
 int32 sim_start_time
 int32 sim_duration
 float32 battery_voltage

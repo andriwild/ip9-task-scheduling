@@ -69,15 +69,12 @@ protected:
     QDoubleSpinBox* m_personDetectionRange;
     QCheckBox* m_cacheEnabled;
     QLabel* m_appointmentsPath;
-    QLabel* m_employeePath;
     QPushButton* m_btnSetConfig;
     QLabel* m_statusLabel;
     QPushButton* m_fileDialogBtn;
     QPushButton* m_btnFileDialog;
-    QPushButton* m_btnEmployeeFileDialog;
     QFileDialog* m_fileDialog;
     QString m_configFile;
-    QString m_employeeFile;
 
 private Q_SLOTS:
     void onSetConfig();
