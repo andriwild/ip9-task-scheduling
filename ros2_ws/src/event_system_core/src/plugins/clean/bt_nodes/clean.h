@@ -6,9 +6,9 @@
 #include <behaviortree_cpp/basic_types.h>
 #include <memory>
 
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "model/event/start_drive_event.h"
+#include "engine/event/start_drive_event.h"
 #include "plugins/clean/clean_order.h"
 #include "plugins/clean/events/start_clean_event.h"
 

@@ -4,7 +4,7 @@
 
 #include "bt_nodes/charge_mission.h"
 #include "charge_order.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "model/robot_state.h"
 
 void ChargePlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {

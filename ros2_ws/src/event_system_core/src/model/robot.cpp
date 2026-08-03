@@ -1,6 +1,7 @@
 #include "robot.h"
 #include "../util/log.h"
 #include "robot_state.h"
+#include "engine/contracts/i_event.h"
 
 Robot::Robot(const std::shared_ptr<des::SimConfig>& config)
     : m_state(std::make_unique<IdleState>())

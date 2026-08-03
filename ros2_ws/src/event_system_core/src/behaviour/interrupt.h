@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/condition_node.h>
 
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 
 class IsInterruptActive final : public BT::ConditionNode {
 public:

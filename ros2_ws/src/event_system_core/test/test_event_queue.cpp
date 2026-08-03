@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "../src/model/event.h"
-#include "../src/model/event_queue.h"
+#include "engine/event.h"
+#include "engine/event_queue.h"
 
 // Minimal concrete event for testing (no ROS dependency)
 class DummyEvent final : public IEvent {

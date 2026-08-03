@@ -9,7 +9,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
-#include "../model/event.h"
+#include "engine/event.h"
 #include "../sim/i_path_planner.h"
 #include "../plugins/order_registry.h"
 

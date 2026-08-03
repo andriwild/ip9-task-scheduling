@@ -5,7 +5,7 @@
 #include <thread>
 #include <vector>
 
-#include "../../model/event.h"
+#include "engine/event.h"
 #include "../../observer/metrics.h"
 #include "../../observer/person_marker.h"
 #include "../../observer/robot_marker.h"

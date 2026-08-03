@@ -3,19 +3,20 @@
 #include <memory>
 #include "../util/log.h"
 
-#include "../model/context.h"
-#include "../model/event.h"
+#include "engine/context.h"
+#include "engine/event.h"
 #include "../model/occupancy.h"
 #include "../sim/ros/path_node.h"
 #include "../sim/matrix_planner.h"
 #include "../util/db.h"
 #include "../init/config_loader.h"
 #include "../observer/ros.h"
-#include "../model/event_queue.h"
+#include "engine/event_queue.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
 #include "../sim/scheduler.h"
 #include "../plugins/order_registry.h"
+#include "util/constants.h"
 
 class MetricsNode;
 const std::string CONFIG_PATH = CONFIG_DIR;

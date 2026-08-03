@@ -10,7 +10,7 @@
 #include "../../behaviour/bt_setup.h"
 #include "../../observer/mission_trace.h"
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
-#include "../../model/event_queue.h"
+#include "engine/event_queue.h"
 
 void HeadlessRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");

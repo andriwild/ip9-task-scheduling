@@ -1,7 +1,7 @@
 #pragma once
 
-#include "model/event/base.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_event.h"
+#include "engine/contracts/i_sim_context.h"
 #include "plugins/i_order.h"
 #include "plugins/data_acquisition/data_acquisition_plugin.h"
 #include "execute_acquisition_event.h"

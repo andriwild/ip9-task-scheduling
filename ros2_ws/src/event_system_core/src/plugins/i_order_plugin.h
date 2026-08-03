@@ -6,7 +6,7 @@
 
 #include "i_order.h"
 #include "../util/types.h"
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 
 namespace BT { class BehaviorTreeFactory; }
 class Scheduler;

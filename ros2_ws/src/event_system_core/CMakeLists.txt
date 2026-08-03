@@ -146,10 +146,10 @@ if(BUILD_TESTING)
     src/model/robot.cpp
     src/model/robot_state.cpp
     src/model/battery.cpp
-    src/model/context.cpp
-    src/model/person_registry.cpp
-    src/model/service_log.cpp
-    src/model/mission/mission_board.cpp
+    src/engine/context.cpp
+    src/engine/person_registry.cpp
+    src/engine/service_log.cpp
+    src/engine/mission/mission_board.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
   )

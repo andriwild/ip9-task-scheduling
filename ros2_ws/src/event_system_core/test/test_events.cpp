@@ -4,9 +4,9 @@
 #include <random>
 #include <stdexcept>
 
-#include "../src/model/context.h"
-#include "../src/model/event.h"
-#include "../src/model/i_sim_context.h"
+#include "engine/context.h"
+#include "engine/event.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../src/model/robot.h"
 #include "../src/model/robot_state.h"
 #include "../src/plugins/accompany/accompany_order.h"
@@ -21,6 +21,7 @@
 #include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
 #include "../src/plugins/accompany/events/appointment_end_event.h"
 #include "../src/plugins/accompany/events/room_search.h"
+#include "util/constants.h"
 
 class MockSimContext : public ISimContext {
 public:

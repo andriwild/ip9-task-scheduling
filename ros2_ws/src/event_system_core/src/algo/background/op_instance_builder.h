@@ -8,7 +8,7 @@
 
 #include "../op.h"
 #include "../op_build.h"
-#include "../../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../../plugins/i_order.h"
 #include "../../plugins/order_registry.h"
 #include "../../util/log.h"

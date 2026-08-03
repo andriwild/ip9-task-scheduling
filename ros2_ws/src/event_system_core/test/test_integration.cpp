@@ -3,9 +3,9 @@
 
 #include "../src/behaviour/bt_setup.h"
 #include "../src/init/config_loader.h"
-#include "../src/model/context.h"
-#include "../src/model/event.h"
-#include "../src/model/event_queue.h"
+#include "engine/context.h"
+#include "engine/event.h"
+#include "engine/event_queue.h"
 #include "../src/observer/observer.h"
 #include "../src/sim/i_path_planner.h"
 #include "../src/sim/scheduler.h"
@@ -13,6 +13,7 @@
 #include "../src/plugins/accompany/accompany_plugin.h"
 #include "../src/plugins/accompany/states.h"
 #include "../src/plugins/order_registry.h"
+#include "util/constants.h"
 
 class MockPathPlanner : public IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;

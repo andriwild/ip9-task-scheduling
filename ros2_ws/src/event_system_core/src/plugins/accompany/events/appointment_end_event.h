@@ -3,9 +3,9 @@
 #include <format>
 #include <utility>
 
-#include "model/event/base.h"
-#include "model/event/person_transition.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_event.h"
+#include "engine/event/person_transition.h"
+#include "engine/contracts/i_sim_context.h"
 
 class AppointmentEndEvent final : public IEvent {
 public:

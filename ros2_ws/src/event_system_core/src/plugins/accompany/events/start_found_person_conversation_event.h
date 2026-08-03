@@ -2,9 +2,9 @@
 
 #include <cassert>
 
-#include "model/event/base.h"
+#include "engine/contracts/i_event.h"
 #include "found_person_conversation_complete.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 #include "model/robot_state.h"
 #include "plugins/accompany/accompany_plugin.h"

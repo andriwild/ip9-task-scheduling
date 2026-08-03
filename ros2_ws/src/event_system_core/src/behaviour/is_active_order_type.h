@@ -7,7 +7,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/condition_node.h>
 
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../model/robot_state.h"
 
 class IsActiveOrderType final : public BT::ConditionNode {

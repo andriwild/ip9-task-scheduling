@@ -6,7 +6,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "../../../util/log.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "plugins/information/events/start_information_event.h"
 
 class ExecuteInformation final : public BT::StatefulActionNode {

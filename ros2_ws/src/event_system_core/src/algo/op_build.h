@@ -6,7 +6,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "op_types.h"
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../util/log.h"
 
 struct OpBudgets {

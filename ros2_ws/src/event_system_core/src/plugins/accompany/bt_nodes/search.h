@@ -8,10 +8,10 @@
 #include <cassert>
 #include <memory>
 
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 #include "model/robot_state.h"
-#include "model/event.h"
+#include "engine/event.h"
 #include "util/rnd.h"
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"

@@ -6,9 +6,9 @@
 #include <memory>
 
 #include "../../../util/log.h"
-#include "model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "model/event/start_drive_event.h"
+#include "engine/event/start_drive_event.h"
 #include "plugins/charge/events/start_charge_event.h"
 
 class ChargeMissionIsAtDock final : public BT::ConditionNode {

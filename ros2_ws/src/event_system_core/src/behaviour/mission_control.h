@@ -7,8 +7,8 @@
 #include <behaviortree_cpp/action_node.h>
 #include <memory>
 
-#include "../model/i_sim_context.h"
-#include "../model/event.h"
+#include "engine/contracts/i_sim_context.h"
+#include "engine/event.h"
 #include "../model/robot.h"
 #include "../plugins/order_registry.h"
 

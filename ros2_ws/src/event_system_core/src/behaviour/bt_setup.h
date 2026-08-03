@@ -7,7 +7,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/xml_parsing.h>
 
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "idle.h"
 #include "charge.h"
 #include "../plugins/order_registry.h"

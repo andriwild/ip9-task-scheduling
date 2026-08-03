@@ -9,7 +9,7 @@
 #include "../op.h"
 #include "../op_types.h"
 #include "../op_build.h"
-#include "../../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../../util/log.h"
 #include "../../util/types.h"
 

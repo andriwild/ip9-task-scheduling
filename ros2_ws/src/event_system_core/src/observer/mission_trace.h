@@ -14,7 +14,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "observer.h"
-#include "../model/i_sim_context.h"
+#include "engine/contracts/i_sim_context.h"
 #include "../model/person.h"
 #include "../model/robot.h"
 #include "../plugins/order_registry.h"

@@ -7,8 +7,9 @@
 #include "../util/log.h"
 #include "robot_state.h"
 #include "battery.h"
-#include "event/base.h"
 #include "sighting.h"
+
+class IEvent;
 
 class Robot {
     std::string m_dockLocation = "IMVS_Dock";
