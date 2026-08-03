@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <vector>
 
 namespace des {
 
@@ -15,6 +16,8 @@ struct Point {
         return os;
     }
 };
+
+using Polygon = std::vector<Point>;
 
 struct Segment {
     int id;

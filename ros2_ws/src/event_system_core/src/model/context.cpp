@@ -2,6 +2,7 @@
 #include "../util/log.h"
 
 #include <utility>
+#include "../util/geometry.h"
 #include "../util/rnd.h"
 #include "../sim/scheduler.h"
 
@@ -233,7 +234,10 @@ bool SimulationContext::robotSeesPerson(const std::string& name) const {
         return false;
     }
     const des::Point robotPos = m_robot->getPosition();
-    return std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) <= m_simConfig->personDetectionRange;
+    if (std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) > m_simConfig->personDetectionRange) {
+        return false;
+    }
+    return geom::isVisible(*pos, m_robot->getVisibility());
 }
 
 std::optional<int> SimulationContext::lastServiced(const std::string& room, const std::string& type) const {

@@ -51,6 +51,7 @@ public:
 
     void arrive(ISimContext& ctx, double distance) const override {
         ctx.robotMoved(m_room, distance);
+        ctx.getRobot()->setVisibility(ctx.room(m_room).m_tour.visibilityAt(0));
         ctx.setBTBlackboard("location", m_room);
         if (const auto order = ctx.getOrderPtr()) {
             OrderRegistry::instance().get(order->type).onStopDriveEvent(ctx, *order);
@@ -63,9 +64,11 @@ public:
 
 class PointTarget final : public DriveTarget {
     des::Point m_point;
+    des::Polygon m_visibility;
 
 public:
-    explicit PointTarget(const des::Point& point) : m_point(point) {}
+    explicit PointTarget(const des::Point& point, des::Polygon visibility)
+        : m_point(point), m_visibility(std::move(visibility)) {}
 
     std::pair<int, double> travel(ISimContext& ctx) const override {
         const des::Point from = ctx.getRobot()->getPosition();
@@ -77,6 +80,7 @@ public:
 
     void arrive(ISimContext& ctx, double distance) const override {
         ctx.robotMovedTo(m_point, distance);
+        ctx.getRobot()->setVisibility(m_visibility);
         recordSightings(ctx, ctx.getRobot()->getLocation());
     }
 

@@ -54,6 +54,6 @@ inline void requestDrive(ISimContext& ctx, const std::string& target) {
     ctx.pushEvent(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<RoomTarget>(target)));
 }
 
-inline void requestDrive(ISimContext& ctx, const des::Point& target, std::shared_ptr<IEvent> onArrive = nullptr) {
-    ctx.startActivity(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<PointTarget>(target), std::move(onArrive)));
+inline void requestDrive(ISimContext& ctx, const des::Point& target, const des::Polygon& visibility, std::shared_ptr<IEvent> onArrive = nullptr) {
+    ctx.startActivity(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<PointTarget>(target, visibility), std::move(onArrive)));
 }

@@ -69,6 +69,14 @@ void Robot::setPosition(const des::Point& position) {
     m_position = position;
 }
 
+const des::Polygon& Robot::getVisibility() const {
+    return m_visibility;
+}
+
+void Robot::setVisibility(const des::Polygon& visibility) {
+    m_visibility = visibility;
+}
+
 std::string Robot::getTargetLocation() const {
     return m_targetLocation;
 }

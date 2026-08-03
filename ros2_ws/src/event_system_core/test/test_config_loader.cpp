@@ -383,6 +383,42 @@ TEST(ConfigLoaderBuildingSnapshot, LoadsFootprintsAndAreas) {
     EXPECT_TRUE(roomB.m_footprint.empty());
 }
 
+TEST(ConfigLoaderRoomTours, MergesVisibilityPolygonsPerTourPoint) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    ASSERT_TRUE(map.has_value());
+
+    const auto merged = ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value());
+    ASSERT_TRUE(merged.has_value());
+    EXPECT_EQ(merged.value(), 3u);
+
+    const des::RoomTour& tour = map->at("RoomA").m_tour;
+    ASSERT_EQ(tour.m_path.size(), 2u);
+    ASSERT_EQ(tour.m_visPolys.size(), 2u);
+    EXPECT_DOUBLE_EQ(tour.visibilityAt(0)[1].m_x, 2.0);
+    EXPECT_DOUBLE_EQ(tour.visibilityAt(1)[0].m_x, 2.0);
+}
+
+TEST(ConfigLoaderRoomTours, DropsVisibilityWhenItDoesNotMatchThePath) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    ASSERT_TRUE(map.has_value());
+    ASSERT_TRUE(ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
+
+    const des::RoomTour& tour = map->at("RoomB").m_tour;
+    ASSERT_EQ(tour.m_path.size(), 2u);
+    EXPECT_TRUE(tour.m_visPolys.empty());
+}
+
+TEST(ConfigLoaderRoomTours, TourWithoutVisibilityStaysUnbounded) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    ASSERT_TRUE(map.has_value());
+    ASSERT_TRUE(ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
+
+    const des::RoomTour& tour = map->at("Corridor").m_tour;
+    ASSERT_EQ(tour.m_path.size(), 2u);
+    EXPECT_TRUE(tour.visibilityAt(0).empty());
+    EXPECT_TRUE(tour.visibilityAt(1).empty());
+}
+
 TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {
     auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_legacy.json");
     ASSERT_TRUE(map.has_value());

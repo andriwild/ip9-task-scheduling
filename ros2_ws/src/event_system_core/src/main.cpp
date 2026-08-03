@@ -17,6 +17,8 @@
 
 int main(const int argc, char *argv[]) {
     std::unique_ptr<IAppRunner> app;
+    
+    // load plugins
     OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
     OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
     OrderRegistry::instance().registerPlugin(std::make_unique<CleanPlugin>());
@@ -33,6 +35,7 @@ int main(const int argc, char *argv[]) {
         const std::string next = argv[i + 1];
         return next.rfind("--", 0) == 0 ? "" : next;
     };
+
     for (int i = 1; i < argc; ++i) {
         const std::string flag = argv[i];
         if (flag == "--mode" && !valueOf(i).empty()) {
@@ -79,14 +82,15 @@ int main(const int argc, char *argv[]) {
         return 1;
     }
 
+    //TODO: get rid of that
     des::log::installOutputHandler();  // after rclcpp::init() from create()
     
 
+    // main loop of the application
     bool running = true;
     bool batteryDepleted = false;
     auto sim_loop = [&] {
         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
-        app->m_eventQueue.print();
         int lastEventTime = -1;
         while (running && rclcpp::ok()) {
             app->updateConfig();
@@ -124,10 +128,13 @@ int main(const int argc, char *argv[]) {
                     }
                     const auto e = app->m_eventQueue.top();
                     app->m_eventQueue.pop();
+
                     if (e->cancelled) {
                         break;
                     }
 
+
+                    // TODO: remove step functionality
                     const double speedFactor = app->m_ctx->getConfig()->simSpeedFactor;
                     if (!headless && state == SystemState::Request::RUN && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
                         const double waitMs = std::min(10000.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
@@ -138,6 +145,8 @@ int main(const int argc, char *argv[]) {
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
                     DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
+
+                    // stop if the battery is depleted -> simulation failed
                     if (app->m_ctx->getRobot()->isBatteryDepleted()) {
                         DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Robot battery reached SoC 0 at %s — aborting simulation", des::toHumanReadableTime(e->time).c_str());
                         batteryDepleted = true;
@@ -158,7 +167,7 @@ int main(const int argc, char *argv[]) {
                     break;
                 }
                 default:
-                        DES_LOG_WARN(rclcpp::get_logger("des.main"), "Unrecognized Simulation State!");
+                        DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Unrecognized Simulation State!");
                     break;
             }
         }

@@ -20,6 +20,7 @@
 #include "../src/plugins/accompany/events/found_person_conversation_complete.h"
 #include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
 #include "../src/plugins/accompany/events/appointment_end_event.h"
+#include "../src/plugins/accompany/events/room_search.h"
 
 class MockSimContext : public ISimContext {
 public:
@@ -281,6 +282,72 @@ static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
     return o;
 }
 
+static des::Polygon makeSquare(const double x0, const double y0, const double x1, const double y1) {
+    return {
+        des::Point{x0, y0, 0.0},
+        des::Point{x1, y0, 0.0},
+        des::Point{x1, y1, 0.0},
+        des::Point{x0, y1, 0.0}
+    };
+}
+
+// --- Visibility wiring ---
+
+TEST(EventExecute, SearchDriveCarriesTheVisibilityOfItsTourPoint) {
+    MockSimContext ctx;
+
+    des::Room room{ "Office", des::Point{}, 0.0 };
+    room.m_tour.m_path = { des::Point{1.0, 1.0, 0.0}, des::Point{2.0, 2.0, 0.0} };
+    room.m_tour.m_visPolys = { makeSquare(0.0, 0.0, 3.0, 3.0), makeSquare(2.0, 2.0, 5.0, 5.0) };
+    ctx.rooms.emplace("Office", std::move(room));
+    ctx.robot->setLocation("Office");
+    ctx.robot->setSpeed(1.0);
+
+    RoomSearch search(1000, makeAccompanyOrder(1, "Max", "Office"));
+    search.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    const auto startDrive = ctx.pushedEvents.back();
+    ctx.pushedEvents.clear();
+    startDrive->execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    const auto stopDrive = ctx.pushedEvents.back();
+    ctx.pushedEvents.clear();
+    stopDrive->execute(ctx);
+
+    EXPECT_DOUBLE_EQ(ctx.robot->getPosition().m_x, 1.0);
+    ASSERT_EQ(ctx.robot->getVisibility().size(), 4u);
+    EXPECT_DOUBLE_EQ(ctx.robot->getVisibility()[2].m_x, 3.0);
+    EXPECT_DOUBLE_EQ(ctx.robot->getVisibility()[2].m_y, 3.0);
+}
+
+TEST(EventExecute, ArrivingInARoomAdoptsItsFirstTourPointVisibility) {
+    MockSimContext ctx;
+
+    des::Room room{ "Office", des::Point{}, 0.0 };
+    room.m_tour.m_path = { des::Point{1.0, 1.0, 0.0} };
+    room.m_tour.m_visPolys = { makeSquare(0.0, 0.0, 3.0, 3.0) };
+    ctx.rooms.emplace("Office", std::move(room));
+
+    RoomTarget target("Office");
+    target.arrive(ctx, 1.0);
+
+    ASSERT_EQ(ctx.robot->getVisibility().size(), 4u);
+    EXPECT_DOUBLE_EQ(ctx.robot->getVisibility()[2].m_x, 3.0);
+}
+
+TEST(EventExecute, ArrivingInARoomWithoutTourKeepsFullSight) {
+    MockSimContext ctx;
+    ctx.rooms.emplace("Dock", des::Room{ "Dock", des::Point{}, 0.0 });
+    ctx.robot->setVisibility(makeSquare(0.0, 0.0, 3.0, 3.0));
+
+    RoomTarget target("Dock");
+    target.arrive(ctx, 1.0);
+
+    EXPECT_TRUE(ctx.robot->getVisibility().empty());
+}
+
 // --- SimulationStartEvent ---
 
 TEST(EventExecute, SimulationStartSetsIdleState) {
@@ -347,7 +414,7 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
     for (const auto& name : ctx.roomNamesList) {
         des::Room room{ name, des::Point{}, 0.0 };
-        room.m_tour = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} } };
+        room.m_tour = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} }, {} };
         ctx.rooms.emplace(name, std::move(room));
     }
 

@@ -65,6 +65,7 @@ public:
         return dist.value() / speed;
     }
 
+    // TODO: check if the result is correct
     // Time it takes to scan the given area in seconds
     [[nodiscard]] double getScanTime(const std::string& area) const {
         auto it = m_rooms.find(area);

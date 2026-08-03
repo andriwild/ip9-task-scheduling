@@ -12,6 +12,7 @@
 
 #include "types.h"
 
+// TODO: simplify log system
 namespace des::log {
 
 inline std::atomic<int>  g_sim_time{0};

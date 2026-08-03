@@ -543,6 +543,19 @@ public:
                     tour.m_path.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
                 }
             }
+            if (entry.contains("vis") && entry.at("vis").is_array()) {
+                for (const auto& poly : entry.at("vis")) {
+                    des::Polygon ring;
+                    for (const auto& p : poly) {
+                        ring.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
+                    }
+                    tour.m_visPolys.push_back(std::move(ring));
+                }
+            }
+            if (!tour.m_visPolys.empty() && tour.m_visPolys.size() != tour.m_path.size()) {
+                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' has %zu visibility polygons for %zu points; dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
+                tour.m_visPolys.clear();
+            }
             it->second.m_tour = std::move(tour);
             ++merged;
         }

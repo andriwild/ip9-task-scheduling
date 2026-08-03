@@ -47,7 +47,7 @@ public:
 
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "RoomSearch t=%d room=%s person=%s -> tour with %zu points (%.2fm)", this->time, room.c_str(), personName.c_str(), tour.m_path.size(), tour.m_distance);
         ctx.robotMovedTo(ctx.room(room).m_p);
-        requestDrive(ctx, tour.m_path[0], std::make_shared<Scan>(this->time, m_order, 0));
+        requestDrive(ctx, tour.m_path[0], tour.visibilityAt(0), std::make_shared<Scan>(this->time, m_order, 0));
     }
 
     std::string getName() const override { return "Room Search"; }

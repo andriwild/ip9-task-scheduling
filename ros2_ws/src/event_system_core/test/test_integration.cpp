@@ -259,6 +259,41 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     EXPECT_TRUE(hasConversate);
 }
 
+TEST_F(IntegrationTest, PersonOutsideTheVisibilityPolygonIsNotSeen) {
+    config->personDetectionRange = 100.0;
+    roomMap.at("Office").m_footprint = {
+        des::Point{10.0, 10.0, 0.0},
+        des::Point{11.0, 10.0, 0.0},
+        des::Point{11.0, 11.0, 0.0},
+        des::Point{10.0, 11.0, 0.0}
+    };
+
+    auto ctx = std::make_shared<SimulationContext>(
+        eventQueue, config, planner, makePeople(), roomMap
+    );
+    ctx->setPersonLocation("Max", "Office");
+    ctx->getRobot()->setLocation("Office");
+    ctx->robotMovedTo(des::Point{0.0, 0.0, 0.0}, 0.0);
+
+    EXPECT_TRUE(ctx->robotSeesPerson("Max"));
+
+    ctx->getRobot()->setVisibility({
+        des::Point{0.0, 0.0, 0.0},
+        des::Point{5.0, 0.0, 0.0},
+        des::Point{5.0, 5.0, 0.0},
+        des::Point{0.0, 5.0, 0.0}
+    });
+    EXPECT_FALSE(ctx->robotSeesPerson("Max"));
+
+    ctx->getRobot()->setVisibility({
+        des::Point{0.0, 0.0, 0.0},
+        des::Point{20.0, 0.0, 0.0},
+        des::Point{20.0, 20.0, 0.0},
+        des::Point{0.0, 20.0, 0.0}
+    });
+    EXPECT_TRUE(ctx->robotSeesPerson("Max"));
+}
+
 TEST_F(IntegrationTest, EventLoopDrainsQueue) {
     auto ctx = std::make_shared<SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap

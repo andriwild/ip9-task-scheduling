@@ -16,6 +16,7 @@ class Robot {
     std::string m_currentLocation;
     std::string m_targetLocation;
     des::Point m_position;
+    des::Polygon m_visibility;
 
     SightingLog m_sightings;
 
@@ -50,6 +51,9 @@ public:
 
     des::Point getPosition() const;
     void setPosition(const des::Point& position);
+
+    const des::Polygon& getVisibility() const;
+    void setVisibility(const des::Polygon& visibility);
 
     void changeState(std::unique_ptr<RobotState> newState);
     RobotState* getState() const;

@@ -50,7 +50,7 @@ public:
         } else if (m_index + 1 >= tour.m_path.size()) {
             ctx.startActivity(std::make_shared<ScanComplete>(this->time, m_order, found, 0));
         } else {
-            requestDrive(ctx, tour.m_path[m_index + 1], std::make_shared<Scan>(this->time, m_order, m_index + 1));
+            requestDrive(ctx, tour.m_path[m_index + 1], tour.visibilityAt(m_index + 1), std::make_shared<Scan>(this->time, m_order, m_index + 1));
         }
     }
 

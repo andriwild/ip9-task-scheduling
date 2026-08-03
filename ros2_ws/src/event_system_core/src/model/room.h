@@ -58,9 +58,18 @@ struct RoomTour {
     double m_distance = 0.0;
     int m_steps = 0;
     std::vector<Point> m_path;
+    std::vector<Polygon> m_visPolys;
 
     bool empty() const {
         return m_path.empty();
+    }
+
+    const Polygon& visibilityAt(const std::size_t index) const {
+        static const Polygon unbounded;
+        if (index >= m_visPolys.size()) {
+            return unbounded;
+        }
+        return m_visPolys[index];
     }
 };
 

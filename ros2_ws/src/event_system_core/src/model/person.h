@@ -11,6 +11,7 @@
 
 namespace des {
 
+// TODO: add to sim config file
 struct StayDurationConfig {
     double workplaceMin = 60 * 10;
     double workplaceMax = 3600 * 2;
@@ -47,6 +48,7 @@ public:
     bool lunchPending = false;
     std::vector<std::string> roomLabels;
     std::vector<std::vector<double>> transitionMatrix;
+    // TODO: static function instead of a member
     StayDurationConfig stayDuration;
     std::mt19937 rng{};
 
@@ -78,8 +80,7 @@ public:
         os << "-------------------------------------------\n"
             << "ID: " << p.id << " | Name: " << p.firstName << " " << p.lastName << "\n"
             << "sex: " << p.sex << "\n"
-            << "workplace: " << p.workplace << "\n"
-            << "Transition Matrix (Labels: ";
+            << "workplace: " << p.workplace << "\n";
         return os;
     }
 };

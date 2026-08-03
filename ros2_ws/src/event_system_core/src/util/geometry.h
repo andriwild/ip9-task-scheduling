@@ -18,7 +18,7 @@ namespace bg = boost::geometry;
 using BgPoint = bg::model::d2::point_xy<double>;
 using BgPolygon = bg::model::polygon<BgPoint>;
 
-inline BgPolygon toPolygon(const std::vector<des::Point>& poly) {
+inline BgPolygon toPolygon(const des::Polygon& poly) {
     BgPolygon p;
     for (const auto& v : poly) {
         bg::append(p.outer(), BgPoint(v.m_x, v.m_y));
@@ -27,7 +27,14 @@ inline BgPolygon toPolygon(const std::vector<des::Point>& poly) {
     return p;
 }
 
-inline std::optional<des::Point> sampleInPolygon(const std::vector<des::Point>& poly, std::mt19937& rng, const int maxTries = 30) {
+inline bool isVisible(const des::Point& p, const des::Polygon& visibility) {
+    if (visibility.size() < 3) {
+        return true;
+    }
+    return bg::covered_by(BgPoint(p.m_x, p.m_y), toPolygon(visibility));
+}
+
+inline std::optional<des::Point> sampleInPolygon(const des::Polygon& poly, std::mt19937& rng, const int maxTries = 30) {
     if (poly.size() < 3) {
         return std::nullopt;
     }
