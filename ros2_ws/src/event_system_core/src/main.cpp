@@ -111,7 +111,6 @@ int main(const int argc, char *argv[]) {
                     running = false;
                     break;
 
-                case SystemState::Request::STEP:
                 case SystemState::Request::RUN: {
                     auto handleSimComplete = [&] {
                         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Simulation complete.");
@@ -133,10 +132,8 @@ int main(const int argc, char *argv[]) {
                         break;
                     }
 
-
-                    // TODO: remove step functionality
                     const double speedFactor = app->m_ctx->getConfig()->simSpeedFactor;
-                    if (!headless && state == SystemState::Request::RUN && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
+                    if (!headless && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
                         const double waitMs = std::min(10000.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
                         std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(waitMs)));
                     }
@@ -160,9 +157,6 @@ int main(const int argc, char *argv[]) {
                     if (e->getType() == des::EventType::SIMULATION_END) {
                         app->m_eventQueue.clear();
                         handleSimComplete();
-                    }
-                    if (state == SystemState::Request::STEP) {
-                        app->enterPause();
                     }
                     break;
                 }
