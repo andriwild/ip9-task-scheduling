@@ -16,6 +16,8 @@
 #include "util/log.h"
 
 int main(const int argc, char *argv[]) {
+    des::log::setConsoleDefaults();
+
     std::unique_ptr<IAppRunner> app;
     
     // load plugins
@@ -58,7 +60,6 @@ int main(const int argc, char *argv[]) {
     // Offline building-snapshot generation: build the JSON from DB + Nav2, exit.
     if (mode == "build") {
         rclcpp::init(argc, argv);
-        des::log::installOutputHandler();
         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "\n----- Building Snapshot Generation -----");
         SnapshotBuilder builder;
         const int rc = builder.run();
@@ -82,9 +83,6 @@ int main(const int argc, char *argv[]) {
         return 1;
     }
 
-    //TODO: get rid of that
-    des::log::installOutputHandler();  // after rclcpp::init() from create()
-    
 
     // main loop of the application
     bool running = true;
