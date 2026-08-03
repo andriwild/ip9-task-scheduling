@@ -1,5 +1,7 @@
 #pragma once
 
+#include "VisLibRational.h"
+
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -21,6 +23,7 @@ namespace TSP {
 struct Vec2 {
     double m_x = 0.0;
     double m_y = 0.0;
+    VisLib::Point<VisLib::CT> m_exact;
 };
 
 struct Room {
@@ -37,6 +40,7 @@ struct RoomTour {
     std::size_t m_steps = 0;
     double m_distance = 0.0;
     std::vector<Vec2> m_path;
+    std::vector<std::vector<Vec2>> m_visPolys;
 };
 
 inline double distance(const Vec2& from, const Vec2& to) {
@@ -134,10 +138,10 @@ inline TSP::RoomTour twoOpt(TSP::RoomTour tour) {
             for (size_t j = i + 2; j < N; ++j) {
                 if (i == 0 && j == N - 1) { continue; } // edges share vertex 0
 
-                const TSP::Vec2 a = out.m_path[i];
-                const TSP::Vec2 b = out.m_path[i + 1];
-                const TSP::Vec2 c = out.m_path[j];
-                const TSP::Vec2 d = out.m_path[(j + 1) % N];
+                const TSP::Vec2& a = out.m_path[i];
+                const TSP::Vec2& b = out.m_path[i + 1];
+                const TSP::Vec2& c = out.m_path[j];
+                const TSP::Vec2& d = out.m_path[(j + 1) % N];
 
                 // calculate the delta of the tour distance
                 const double delta = (distance(a,c) + distance(b,d)) - (distance(a,b) + distance(c,d));

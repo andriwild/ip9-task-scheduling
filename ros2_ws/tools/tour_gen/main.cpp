@@ -92,22 +92,41 @@ TSP::RoomTour computeTour(const std::vector<TSP::Vec2>& polygon, const TSP::Vec2
     try {
         VisLib::SimplePolygon<VisLib::CT> simplePolygon(points);
         VisLib::DCEL<VisLib::CT> dcel(simplePolygon);
-        const auto result = dcel.sightseeingTour1(VisLib::Point<VisLib::CT>(VisLib::CT(start.m_x), VisLib::CT(start.m_y)), radius, VisLib::Show::Nothing);
+        const VisLib::Point<VisLib::CT> startPoint(VisLib::CT(start.m_x), VisLib::CT(start.m_y));
+        const auto result = dcel.sightseeingTour1(startPoint, radius, VisLib::Show::Nothing);
         if (result.m_path.empty()) {
             tour.m_reason = "degenerate";
             return tour;
         }
         tour.m_ok = true;
-        tour.m_start = start;
+        tour.m_start = TSP::Vec2{start.m_x, start.m_y, startPoint};
         tour.m_steps = result.m_path.size();
         tour.m_distance = static_cast<double>(result.m_distance);
         for (const auto& point : result.m_path) {
-            tour.m_path.push_back(TSP::Vec2{static_cast<double>(point.m_x), static_cast<double>(point.m_y)});
+            tour.m_path.push_back(TSP::Vec2{static_cast<double>(point.m_x), static_cast<double>(point.m_y), point});
         }
     } catch (const std::exception&) {
         tour.m_reason = "throw";
     }
     return tour;
+}
+
+void addVisibility(TSP::RoomTour& tour, const std::vector<TSP::Vec2>& footprint) {
+    tour.m_visPolys.clear();
+    if (!tour.m_ok) {
+        return;
+    }
+    const VisLib::SimplePolygon<VisLib::CT> room(toExactPolygon(footprint));
+    tour.m_visPolys.reserve(tour.m_path.size());
+    for (const TSP::Vec2& point : tour.m_path) {
+        const VisLib::SimplePolygon<VisLib::CT> visibility = room.visibility(point.m_exact);
+        std::vector<TSP::Vec2> ring;
+        ring.reserve(visibility.size());
+        for (const VisLib::Point<VisLib::CT>& vertex : visibility.m_polygon) {
+            ring.push_back(TSP::Vec2{static_cast<double>(vertex.m_x), static_cast<double>(vertex.m_y), vertex});
+        }
+        tour.m_visPolys.push_back(std::move(ring));
+    }
 }
 
 TSP::RoomTour computeRoomTour(const TSP::Room& room, double radius) {
@@ -141,6 +160,17 @@ void writeTours(const std::string& path, double radius, const std::vector<TSP::R
             path_.push_back({point.m_x, point.m_y});
         }
         entry["path"] = path_;
+        if (!tour.m_visPolys.empty()) {
+            nlohmann::ordered_json vis = nlohmann::ordered_json::array();
+            for (const std::vector<TSP::Vec2>& polygon : tour.m_visPolys) {
+                nlohmann::ordered_json ring = nlohmann::ordered_json::array();
+                for (const TSP::Vec2& point : polygon) {
+                    ring.push_back({point.m_x, point.m_y});
+                }
+                vis.push_back(ring);
+            }
+            entry["vis"] = vis;
+        }
         rooms[tour.m_roomName] = entry;
     }
 
@@ -178,11 +208,19 @@ int main(int argc, char** argv) {
         double rawTotal = 0.0;
         double tspTotal = 0.0;
         for (std::size_t i = 0; i < rooms.size(); ++i) {
-            const TSP::RoomTour tour = computeRoomTour(rooms[i], radius);
-            const TSP::RoomTour optimized = TSP::twoOpt(TSP::nearestNeighbor(tour));
+            TSP::RoomTour tour = computeRoomTour(rooms[i], radius);
+            TSP::RoomTour optimized = TSP::twoOpt(TSP::nearestNeighbor(tour));
+            addVisibility(tour, rooms[i].m_footprint);
+            addVisibility(optimized, rooms[i].m_footprint);
             std::cout << "[" << (i + 1) << "/" << rooms.size() << "] " << rooms[i].m_name << "  ";
             if (tour.m_ok) {
-                std::cout << "steps=" << tour.m_steps << " distance=" << tour.m_distance << " tsp=" << optimized.m_distance << "\n";
+                const std::size_t blind = std::count_if(tour.m_visPolys.begin(), tour.m_visPolys.end(),
+                    [](const std::vector<TSP::Vec2>& ring) { return ring.empty(); });
+                std::cout << "steps=" << tour.m_steps << " distance=" << tour.m_distance << " tsp=" << optimized.m_distance;
+                if (blind > 0) {
+                    std::cout << "  WARN " << blind << " viewpoint(s) without visibility polygon";
+                }
+                std::cout << "\n";
                 rawTotal += tour.m_distance;
                 tspTotal += optimized.m_distance;
             } else {
