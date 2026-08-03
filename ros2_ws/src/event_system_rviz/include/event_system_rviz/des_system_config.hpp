@@ -71,16 +71,13 @@ protected:
     QLabel* m_appointmentsPath;
     QPushButton* m_btnSetConfig;
     QLabel* m_statusLabel;
-    QPushButton* m_fileDialogBtn;
     QPushButton* m_btnFileDialog;
-    QFileDialog* m_fileDialog;
     QString m_configFile;
 
 private Q_SLOTS:
     void onSetConfig();
     void onServiceResponse(ServiceResponseFuture future);
     void onSystemConfig(event_system_msgs::msg::SystemConfig::SharedPtr msg);
-    QString onChooseFile();
     QTreeWidgetItem* addConfigItem(QTreeWidgetItem* parent, QString label, QWidget* widget);
 };
 

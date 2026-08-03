@@ -205,11 +205,6 @@ std::string Robot::getIdleLocation() const {
     return m_dockLocation;
 }
 
-void Robot::setIdleLocation(const std::string& location) {
-    m_dockLocation = location;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot idle/dock location set to: %s", location.c_str());
-}
-
 std::weak_ptr<IEvent> Robot::inFlight() const {
     return m_inFlightEvent;
 }

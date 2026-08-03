@@ -94,7 +94,6 @@ public:
     void setDriveSpeed(const double speed);
 
     std::string getIdleLocation() const;
-    void setIdleLocation(const std::string& location);
 
     std::weak_ptr<IEvent> inFlight() const;
     void setInFlight(const std::shared_ptr<IEvent>& event);

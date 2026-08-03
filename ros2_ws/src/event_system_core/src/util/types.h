@@ -100,13 +100,6 @@ enum class ExecutionMode {
     INTERRUPT
 };
 
-inline ExecutionMode executionTypeFromString(const std::string& str) {
-    if (str == "scheduled") return ExecutionMode::SCHEDULED;
-    if (str == "background") return ExecutionMode::BACKGROUND;
-    if (str == "interrupt") return ExecutionMode::INTERRUPT;
-    return ExecutionMode::BACKGROUND;
-}
-
 struct SimConfig {
     double robotSpeed;
     double driveTimeStd;

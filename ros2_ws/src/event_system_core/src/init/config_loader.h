@@ -123,29 +123,6 @@ public:
         return orders;
     };
 
-    // Background orders are tasks without a fixed time scheduler dispatches them opportunistically
-    // the "background" entries must not specify appointmentTime.
-    static des::OrderList loadBackgroundOrders(const std::string& filePath) {
-        auto json = getJson(filePath);
-        if (!json.has_value() || !json.value().contains("background")) {
-            return {};
-        }
-
-        des::OrderList orders;
-        for (const auto& j : json.value().at("background")) {
-            if (j.contains("appointmentTime")) {
-                throw std::runtime_error(
-                    "Background order (id=" + std::to_string(j.value("id", -1)) +
-                    ") must not specify appointmentTime. Move it to 'orders' if it needs a fixed time.");
-            }
-            const std::string& type = j.at("type").get_ref<const std::string&>();
-            auto order = OrderRegistry::instance().get(type).fromJson(j);
-            order->execution = des::ExecutionMode::BACKGROUND;
-            orders.push_back(order);
-        }
-        return orders;
-    }
-
     static std::vector<BackgroundTemplate> loadBackgroundTemplates(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value() || !json.value().contains("background")) {
@@ -537,7 +514,6 @@ public:
             }
             des::RoomTour tour;
             tour.m_distance = entry.value("distance", 0.0);
-            tour.m_steps = entry.value("steps", 0);
             if (entry.contains("path") && entry.at("path").is_array()) {
                 for (const auto& p : entry.at("path")) {
                     tour.m_path.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});

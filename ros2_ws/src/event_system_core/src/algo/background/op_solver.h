@@ -11,6 +11,7 @@
 
 namespace op_solver {
 
+// TODO: naming Station(s), dock?
 inline int nearestStation(const OpInstance& op, const int from) {
     const auto& stations = op.stations();
     int best = stations.front();

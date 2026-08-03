@@ -33,10 +33,6 @@ struct TimelineTransformer {
     double toX(const int time) const {
         return xOffset + (time - simStartTime) * pixelsPerSecond;
     }
-
-    double toWidth(const int duration) const {
-        return duration * pixelsPerSecond;
-    }
 };
 
 struct RobotStateMeta {

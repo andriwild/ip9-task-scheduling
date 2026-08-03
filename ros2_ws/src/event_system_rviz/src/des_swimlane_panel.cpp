@@ -674,7 +674,6 @@ void DesSwimlanePanel::onStateChange(const event_system_msgs::msg::TimelineState
 void DesSwimlanePanel::onMeeting(const event_system_msgs::msg::TimelineMeeting::SharedPtr msg) {
     MeetingRecord m{
         msg->id,
-        msg->mission_state,
         msg->appointment_time,
         msg->start_time,
         QString::fromStdString(msg->order_type),

@@ -318,8 +318,6 @@ public:
         perDay[time / kSecondsPerDay].distance += distance;
     }
 
-    bool hasData() const { return hasLastState; }
-
     event_system_msgs::msg::MetricsReport buildReport() {
         auto msg = event_system_msgs::msg::MetricsReport();
 

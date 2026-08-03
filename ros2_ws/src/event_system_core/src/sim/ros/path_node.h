@@ -50,11 +50,6 @@ public:
         }
     }
 
-    void clearCache() {
-        m_cache.clear();
-        RCLCPP_INFO(this->get_logger(), "Cache cleared");
-    }
-
     PathResult serviceRequest(const SimplePose& goal, const SimplePose& start) {
         PathResult result{false, 0.0};
         m_resultReady = false;

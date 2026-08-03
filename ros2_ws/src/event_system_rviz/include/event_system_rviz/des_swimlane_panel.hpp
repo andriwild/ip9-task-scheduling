@@ -44,7 +44,6 @@ struct StateChangeRecord {
 
 struct MeetingRecord {
     int id;
-    quint8 missionState;
     int appointmentTime;
     int startTime;
     QString orderType;
@@ -128,16 +127,6 @@ private:
     void rebuildFilterList();
 
     // Derived buckets ---------------------------------------------------------
-    struct ComputedMission {
-        int id;
-        int startTime;
-        int endTime;       // -1 if still running
-        QString personName;
-        QString roomName;
-        QString description;
-        QColor color;
-    };
-
     // Helpers for grouping
     QColor pickPersonColor(const QString& name);
     static QColor parseColor(const QString& s, const QColor& fallback);

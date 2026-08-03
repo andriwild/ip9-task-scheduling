@@ -24,11 +24,6 @@ inline void setSimTime(int t) noexcept {
     g_time_set.store(true, std::memory_order_relaxed);
 }
 
-inline void resetSimTime() noexcept {
-    g_sim_time.store(0, std::memory_order_relaxed);
-    g_time_set.store(false, std::memory_order_relaxed);
-}
-
 inline std::string nowStr() {
     if (!g_time_set.load(std::memory_order_relaxed)) {
         return "--:--:--";

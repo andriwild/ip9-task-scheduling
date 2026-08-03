@@ -22,10 +22,6 @@ public:
         m_observers.erase(it, m_observers.end());
     }
 
-    void clear() {
-        m_observers.clear();
-    }
-
     void notifyEvent(int time, const des::EventType& type, const std::string& name,
                      bool isDriving, bool isCharging, const std::string& color = "",
                      int missionId = -1) const {

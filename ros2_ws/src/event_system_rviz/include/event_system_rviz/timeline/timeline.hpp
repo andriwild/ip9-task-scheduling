@@ -127,8 +127,6 @@ public slots:
         markDirty();
     }
 
-    void handleBattery(const int time, const double soc, const double capacity) const {}
-
     void zoomIn() { applyZoom(1.5); }
     void zoomOut() { applyZoom(0.66); }
 

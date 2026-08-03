@@ -40,11 +40,6 @@ public:
 
     ~DBClient() { m_db.close(); }
 
-    void setCredentials(const std::string& user, const std::string& pw) {
-        m_user = user;
-        m_pw = pw;
-    }
-
     bool init() {
         m_db = QSqlDatabase::addDatabase("QPSQL");
         m_db.setPort(m_port);

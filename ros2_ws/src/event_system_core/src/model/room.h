@@ -56,7 +56,6 @@ inline RoomType parseRoomName(const std::string& roomName) {
 
 struct RoomTour {
     double m_distance = 0.0;
-    int m_steps = 0;
     std::vector<Point> m_path;
     std::vector<Polygon> m_visPolys;
 

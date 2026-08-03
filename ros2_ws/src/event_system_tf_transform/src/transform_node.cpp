@@ -74,13 +74,6 @@ private:
         odom_to_base.header.frame_id = "odom";
         odom_to_base.child_frame_id = m_base_link;
 
-        tf2::Quaternion gazebo_quat(
-          pose.orientation().x(),
-          pose.orientation().y(),
-          pose.orientation().z(),
-          pose.orientation().w()
-        );
-
         odom_to_base.transform.translation.x = pose.position().x();
         odom_to_base.transform.translation.y = pose.position().y();
         odom_to_base.transform.translation.z = pose.position().z();

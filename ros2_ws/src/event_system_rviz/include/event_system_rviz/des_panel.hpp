@@ -21,7 +21,6 @@ class DesPanel : public rviz_common::Panel {
 
 protected:
     std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> m_nodePtr;
-    rclcpp::Service<event_system_msgs::srv::SetSystemState>::SharedPtr m_service;
     rclcpp::Client<event_system_msgs::srv::SetSystemState>::SharedPtr m_client;
 
     QLabel* m_stateLabel;

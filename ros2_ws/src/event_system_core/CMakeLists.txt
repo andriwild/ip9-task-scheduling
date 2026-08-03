@@ -18,8 +18,6 @@ find_package(std_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(gz-math8 REQUIRED)
-find_package(gz-transport13 REQUIRED)
 find_package(event_system_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets Charts Sql REQUIRED)
@@ -41,8 +39,6 @@ target_include_directories(event_system_core PUBLIC
 target_link_libraries(event_system_core
   Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Charts Qt5::Sql
   nlohmann_json::nlohmann_json
-  gz-math8::gz-math8
-  gz-transport13::gz-transport13
   atomic
 )
 

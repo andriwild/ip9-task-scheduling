@@ -17,7 +17,6 @@ class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
     std::shared_ptr<IPathPlanner> m_plannerNode;
     const des::RoomMap& m_rooms;
-    std::string m_startPosition = "IMVS_Dock";
 
 public:
 
@@ -30,10 +29,6 @@ public:
         , m_plannerNode(plannerNode)
         , m_rooms(rooms)
     {}
-
-    std::string startPos() const {
-        return m_startPosition;
-    }
 
     int timeBuffer() const {
         return m_simConfig->timeBuffer;

@@ -414,7 +414,7 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     ctx.roomNamesList = {"Office", "Kitchen", "Lab"};
     for (const auto& name : ctx.roomNamesList) {
         des::Room room{ name, des::Point{}, 0.0 };
-        room.m_tour = des::RoomTour{ 10.0, 2, { des::Point{}, des::Point{} }, {} };
+        room.m_tour = des::RoomTour{ 10.0, { des::Point{}, des::Point{} }, {} };
         ctx.rooms.emplace(name, std::move(room));
     }
 

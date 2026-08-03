@@ -174,10 +174,6 @@ void SimulationContext::executeEvent(const std::shared_ptr<IEvent>& event) {
     }
 }
 
-void SimulationContext::printEventQueue() const {
-    m_queue.print();
-}
-
 void SimulationContext::setBehaviorTree(std::shared_ptr<BT::Tree> tree) {
     m_behaviorTree = std::move(tree);
 }
@@ -339,10 +335,6 @@ void SimulationContext::addObserver(const std::shared_ptr<IObserver>& observer) 
 
 void SimulationContext::removeObserver(const std::shared_ptr<IObserver>& observer) {
     m_eventBus.removeObserver(observer);
-}
-
-void SimulationContext::clearObservers() {
-    m_eventBus.clear();
 }
 
 void SimulationContext::notifyMissionComplete(const des::OrderPtr& order, const int timeDiff) const {

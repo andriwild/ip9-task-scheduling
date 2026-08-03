@@ -80,7 +80,6 @@ public:
     void pushEvent(const std::shared_ptr<IEvent>& event) override;
     void startActivity(const std::shared_ptr<IEvent>& endEvent) override;
     void executeEvent(const std::shared_ptr<IEvent>& event);
-    void printEventQueue() const;
 
     void setBehaviorTree(std::shared_ptr<BT::Tree> tree);
     void tickBT() override;
@@ -128,7 +127,6 @@ public:
     // Observer functions (delegated to EventBus)
     void addObserver(const std::shared_ptr<IObserver>& observer);
     void removeObserver(const std::shared_ptr<IObserver>& observer);
-    void clearObservers();
 
     void notifyMissionComplete(const des::OrderPtr& order, int timeDiff) const;
     void notifyRobotStateChanged() const;
