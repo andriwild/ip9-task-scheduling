@@ -9,7 +9,7 @@ SimulationContext::SimulationContext(
     EventQueue& queue,
     std::shared_ptr<des::SimConfig> simConfig,
     std::shared_ptr<IPathPlanner> plannerNode,
-    des::PersonMap employees,
+    des::PersonList people,
     des::RoomMap rooms
 )
     : m_simConfig(std::move(simConfig))
@@ -17,7 +17,7 @@ SimulationContext::SimulationContext(
     , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_rooms))
     , m_plannerNode(std::move(plannerNode))
     , m_rooms(std::move(rooms))
-    , m_persons(std::move(employees), m_rooms, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
+    , m_persons(std::move(people), m_rooms, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
     , m_missions(m_queue, m_eventBus)
 {
     reseed(m_simConfig->seed);
@@ -198,6 +198,10 @@ void SimulationContext::setBTBlackboard(const std::string& key, const std::strin
 
 des::Person* SimulationContext::getPersonByName(const std::string& person) const {
     return m_persons.getByName(person);
+}
+
+const des::PersonList& SimulationContext::getAllPersons() const {
+    return m_persons.all();
 }
 
 bool SimulationContext::hasEmployee(const std::string& person) const {

@@ -19,20 +19,6 @@ void SimRunner::reloadSimulationData() {
     m_orders = loadOrders(m_config->appointmentsPath, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(m_config->appointmentsPath);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
-    auto allPeople = ConfigLoader::loadEmployees(m_config->employeesPath);
-    if (!allPeople.has_value() || allPeople.value().empty()) {
-        throw std::runtime_error("No employees loaded");
-    }
-
-    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_rooms, "5.2B_Elevator");
-
-    m_people = std::move(allPeople.value());
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", m_people.value().size());
-
-    m_employees.clear();
-    for (const auto& p: m_people.value()) {
-        m_employees[p->firstName] = p.get();
-    }
 }
 
 void SimRunner::rebuildEventQueue() {
@@ -42,12 +28,19 @@ void SimRunner::rebuildEventQueue() {
 void SimRunner::buildSimulation() {
     mergeRoomTours();
 
+    auto allPeople = ConfigLoader::loadEmployees(m_config->employeesPath);
+    if (!allPeople.has_value() || allPeople.value().empty()) {
+        throw std::runtime_error("No employees loaded");
+    }
+    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_rooms, "5.2B_Elevator");
+    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", allPeople.value().size());
+
     m_ctx = std::make_shared<SimulationContext>(
-        m_eventQueue, m_config, m_planner, m_employees, m_rooms
+        m_eventQueue, m_config, m_planner, std::move(allPeople.value()), m_rooms
     );
     m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
-    m_personMarkerObserver->attach(m_ctx.get(), m_employees);
+    m_personMarkerObserver->attach(m_ctx.get());
     m_ctx->addObserver(m_personMarkerObserver);
     m_ctx->addObserver(m_robotMarkerObserver);
     rebuildEventQueue();

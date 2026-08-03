@@ -24,20 +24,13 @@ void HeadlessRunner::setupApplication() {
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
     }
-    m_people = std::move(allPeople.value());
-
-    // employees needs all people for scheduler path lookups
-    for (const auto& p: m_people.value()) {
-        m_employees[p->firstName] = p.get();
-    }
-
     mergeRoomTours();
 
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue,
         m_config,
         m_planner,
-        m_employees,
+        std::move(allPeople.value()),
         m_rooms
     );
 
@@ -100,10 +93,10 @@ bool HeadlessRunner::loadNextBatch() {
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
-    ConfigLoader::validateConfig(m_orders, m_people.value(), m_rooms, "5.2B_Elevator");
+    ConfigLoader::validateConfig(m_orders, m_ctx->getAllPersons(), m_rooms, "5.2B_Elevator");
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees",
-                m_people.value().size());
+                m_ctx->getAllPersons().size());
 
     populateEventQueue();
     m_eventQueue.print();

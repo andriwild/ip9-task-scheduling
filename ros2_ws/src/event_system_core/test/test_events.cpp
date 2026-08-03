@@ -188,6 +188,11 @@ public:
         return employees.at(person);
     }
 
+    des::PersonList people;
+    const des::PersonList& getAllPersons() const override {
+        return people;
+    }
+
     std::shared_ptr<des::SimConfig> getConfig() const override { return simConfig; }
     std::mt19937& worldRng() const override { return m_rng; }
     std::mt19937& robotRng() const override { return m_robotRng; }

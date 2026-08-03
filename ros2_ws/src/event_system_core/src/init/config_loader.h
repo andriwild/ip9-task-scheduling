@@ -211,7 +211,6 @@ public:
                 p.id               = item.at("id").get<int>();
                 p.firstName        = item.at("firstName").get<std::string>();
                 p.lastName         = item.at("lastName").get<std::string>();
-                p.birthDate        = item.at("birthDate").get<std::string>();
                 p.sex              = item.at("sex").get<std::string>();
                 p.roles            = item.value("roles", std::vector<std::string>{});
                 p.workplace        = item.at("workplace").get<std::string>();

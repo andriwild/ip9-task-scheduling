@@ -104,7 +104,6 @@ public:
             person.id        = query.value("id").toInt();
             person.firstName = query.value("first_name").toString().toStdString();
             person.lastName  = query.value("last_name").toString().toStdString();
-            person.birthDate = query.value("birth_date").toString().toStdString();
             person.sex       = query.value("sex").toString().toStdString();
             person.workplace = query.value("assigned_room_id").toInt();
             return person;

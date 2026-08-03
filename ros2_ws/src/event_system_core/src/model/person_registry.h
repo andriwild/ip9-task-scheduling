@@ -8,6 +8,7 @@
 #include "../util/types.h"
 
 class PersonRegistry {
+    des::PersonList m_people;
     des::PersonMap m_employees;
     std::map<std::string, std::string> m_roomByPerson;
     std::map<std::string, des::Point> m_positionByPerson;
@@ -18,7 +19,7 @@ public:
     static constexpr unsigned int PLACEMENT_SEED = 1337;
 
     PersonRegistry(
-        des::PersonMap employees,
+        des::PersonList people,
         const des::RoomMap& rooms,
         unsigned int seed = PLACEMENT_SEED
     );
@@ -28,6 +29,7 @@ public:
 
     bool hasEmployee(const std::string& name) const;
     des::Person* getByName(const std::string& name) const;
+    const des::PersonList& all() const;
 
     std::string room(const std::string& person) const;
     const std::map<std::string, std::string>& allRooms() const;

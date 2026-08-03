@@ -51,7 +51,7 @@ public:
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
         std::shared_ptr<IPathPlanner> plannerNode,
-        des::PersonMap employees,
+        des::PersonList people,
         des::RoomMap rooms
     );
 
@@ -87,6 +87,7 @@ public:
     void setBTBlackboard(const std::string& key, const std::string& value) override;
 
     des::Person* getPersonByName(const std::string& person) const override;
+    const des::PersonList& getAllPersons() const override;
     bool hasEmployee(const std::string& person) const override;
     std::string getPersonLocation(const std::string& name) const override;
     const std::map<std::string, std::string>& getAllPersonLocations() const override;

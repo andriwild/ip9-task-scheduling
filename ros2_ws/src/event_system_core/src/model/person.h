@@ -35,7 +35,6 @@ public:
     int id{};
     std::string firstName;
     std::string lastName;
-    std::string birthDate;
     std::string sex;
     std::vector<std::string> roles;
     std::string workplace;
@@ -78,22 +77,9 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Person& p) {
         os << "-------------------------------------------\n"
             << "ID: " << p.id << " | Name: " << p.firstName << " " << p.lastName << "\n"
-            << "b-day: " << p.birthDate << " | sex: " << p.sex << "\n"
+            << "sex: " << p.sex << "\n"
             << "workplace: " << p.workplace << "\n"
             << "Transition Matrix (Labels: ";
-
-        for (size_t i = 0; i < p.roomLabels.size(); ++i) {
-            os << p.roomLabels[i] << (i == p.roomLabels.size() - 1 ? "" : ", ");
-        }
-        os << "):\n";
-
-        for (const auto& row : p.transitionMatrix) {
-            os << "  [ ";
-            for (double val : row) {
-                os << std::fixed << std::setprecision(2) << val << " ";
-            }
-            os << "]\n";
-        }
         return os;
     }
 };

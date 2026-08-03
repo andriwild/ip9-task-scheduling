@@ -107,7 +107,6 @@ TEST(ConfigLoaderEmployees, EmployeeFieldsParsedCorrectly) {
     EXPECT_EQ(anna->id, 2);
     EXPECT_EQ(anna->firstName, "Anna");
     EXPECT_EQ(anna->lastName, "Schmidt");
-    EXPECT_EQ(anna->birthDate, "1993-11-02");
     EXPECT_EQ(anna->sex, "female");
     EXPECT_EQ(anna->color, "#00A000");
     EXPECT_EQ(anna->workplace, "5.2B01");

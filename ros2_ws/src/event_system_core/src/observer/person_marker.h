@@ -25,9 +25,8 @@ public:
         m_publisher = node->create_publisher<visualization_msgs::msg::MarkerArray>("visualization_marker_array", qos);
     }
 
-    void attach(const IPersonRegistry* ctx, const des::PersonMap& employees) {
+    void attach(const IPersonRegistry* ctx) {
         m_ctx = ctx;
-        m_employees = employees;
 
         visualization_msgs::msg::MarkerArray wipe;
         visualization_msgs::msg::Marker clearAll;
@@ -67,7 +66,8 @@ private:
 
         visualization_msgs::msg::MarkerArray markers;
 
-        for (const auto& [name, person] : m_employees) {
+        for (const auto& person : m_ctx->getAllPersons()) {
+            const std::string& name = person->firstName;
             auto marker = baseMarker(person->id);
 
             const auto pos = m_ctx->getPersonPosition(name);
@@ -119,7 +119,6 @@ private:
     }
 
     const IPersonRegistry* m_ctx = nullptr;
-    des::PersonMap m_employees;
     des::RoomMap m_rooms;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_publisher;
 };

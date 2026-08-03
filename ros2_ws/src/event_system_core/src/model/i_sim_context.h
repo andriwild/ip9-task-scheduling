@@ -111,6 +111,7 @@ public:
     virtual ~IPersonRegistry() = default;
     virtual bool hasEmployee(const std::string& person) const = 0;
     virtual des::Person* getPersonByName(const std::string& person) const = 0;
+    virtual const des::PersonList& getAllPersons() const = 0;
 
     // Person location registry (single source of truth)
     virtual std::string getPersonLocation(const std::string& name) const = 0;

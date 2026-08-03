@@ -5,14 +5,21 @@
 #include "../util/geometry.h"
 
 PersonRegistry::PersonRegistry(
-    des::PersonMap employees,
+    des::PersonList people,
     const des::RoomMap& rooms,
     const unsigned int seed
 )
-    : m_employees(std::move(employees))
+    : m_people(std::move(people))
     , m_rooms(rooms)
     , m_placementRng(seed)
 {
+    for (const auto& person : m_people) {
+        m_employees[person->firstName] = person.get();
+    }
+}
+
+const des::PersonList& PersonRegistry::all() const {
+    return m_people;
 }
 
 void PersonRegistry::reseed(const unsigned int seed) {

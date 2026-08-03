@@ -153,10 +153,8 @@ protected:
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     std::shared_ptr<MetricsNode> m_metricsNode;
-    des::PersonMap m_employees;
     des::OrderList m_orders;
     std::vector<BackgroundTemplate> m_backgroundTemplates;
-    std::optional<des::PersonList> m_people;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
     DBClient m_db;
@@ -187,9 +185,11 @@ protected:
             throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
         }
 
+        const des::PersonList& people = m_ctx->getAllPersons();
+
         m_ctx->reseedPersons();
-        scheduleOccupancy(*m_config, m_people.value());
-        m_eventQueue.extend(personArrivalGenerator(m_people.value()));
+        scheduleOccupancy(*m_config, people);
+        m_eventQueue.extend(personArrivalGenerator(people));
         m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
 
         const int simStartTime = m_config->simStartTime;
@@ -199,7 +199,7 @@ protected:
         m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));
         m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
 
-        for (const auto& p : m_people.value()) {
+        for (const auto& p : people) {
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simStartTime, p.get()));
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p.get()));
         }
@@ -213,7 +213,7 @@ protected:
             m_ctx->publishMissionRegistered(order);
         }
 
-        for (const auto& p : m_people.value()) {
+        for (const auto& p : people) {
             m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
         }
     }
