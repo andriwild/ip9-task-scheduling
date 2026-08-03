@@ -6,7 +6,7 @@
 #include "engine/event/charge_phase_transition_event.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "end_charge_event.h"
 
 class StartChargeEvent final : public IEvent {

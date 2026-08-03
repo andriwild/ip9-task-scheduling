@@ -9,18 +9,20 @@
 #include "../op.h"
 #include "../op_types.h"
 #include "../op_build.h"
-#include "engine/contracts/i_sim_context.h"
+#include "engine/contracts/i_path_planning.h"
+#include "engine/contracts/i_world_model.h"
 #include "../../util/log.h"
 #include "../../util/types.h"
 
 inline std::optional<OpInstance> buildSearchInstance(
-    const ISimContext& ctx,
+    const IWorldModel& world,
+    const IPathPlanning& paths,
+    const des::SimConfig& cfg,
     const std::vector<OpNode>& roomNodes,
     const std::string& startLoc,
     const std::string& endLoc,
     const OpBudgets& budgets
 ) {
-    const auto cfg = ctx.getConfig();
 
     const int startNodeId = 0;
     std::vector<op_build::PlannedNode> planned = { op_build::anchorNode(startLoc) };
@@ -36,13 +38,13 @@ inline std::optional<OpInstance> buildSearchInstance(
         if (room.name == startLoc || room.name == endLoc) {
             continue;
         }
-        const des::RoomTour& tour = ctx.room(room.name).m_tour;
+        const des::RoomTour& tour = world.room(room.name).m_tour;
         if (tour.empty()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.algo.search"), "No room tour for '%s'; excluded from search plan", room.name.c_str());
             continue;
         }
-        const double scanTime    = tour.m_distance / cfg->robotSpeed;
-        const double scanEnergy  = scanTime * cfg->energyConsumptionDrive / 3600.0;
+        const double scanTime    = tour.m_distance / cfg.robotSpeed;
+        const double scanEnergy  = scanTime * cfg.energyConsumptionDrive / 3600.0;
         planned.push_back(op_build::PlannedNode{
             OpNode{ room.name, room.reward, static_cast<float>(scanTime), static_cast<float>(scanEnergy) },
             nullptr,
@@ -53,7 +55,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         return std::nullopt;
     }
 
-    auto mat = op_build::distanceMatrix(ctx, planned);
+    auto mat = op_build::distanceMatrix(paths, planned);
     if (!mat) {
         return std::nullopt;
     }
@@ -64,7 +66,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         nodes.push_back(std::move(node.op));
     }
 
-    const auto driveEnergyPerMeter = static_cast<float>(cfg->energyConsumptionDrive / (3600.0 * cfg->robotSpeed));
+    const auto driveEnergyPerMeter = static_cast<float>(cfg.energyConsumptionDrive / (3600.0 * cfg.robotSpeed));
     const OpParams params {
         .startNodeId     = startNodeId,
         .endNodeId       = endNodeId,
@@ -77,7 +79,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         .chargeTimePerWh = budgets.chargeTimePerWh,
         .chargeTimePerWhTapered = budgets.chargeTimePerWhTapered,
         .cvEnergy        = budgets.cvEnergy,
-        .driveSpeed      = static_cast<float>(cfg->robotSpeed),
+        .driveSpeed      = static_cast<float>(cfg.robotSpeed),
         .driveEnergy     = driveEnergyPerMeter,
     };
 

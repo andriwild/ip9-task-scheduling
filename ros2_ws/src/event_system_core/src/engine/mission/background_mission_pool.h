@@ -12,7 +12,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "plugins/order_registry.h"
 #include "model/battery.h"
 #include "model/robot.h"
@@ -191,7 +191,7 @@ public:
         };
 
         // builds a problem instance containing parameters (constraints, budget) and a list of locations to visit 
-        const auto problem = buildMissionInstance(ctx, m_missions, startLoc, endLoc, budgets);
+        const auto problem = buildMissionInstance(EstimationView{ctx, ctx, *cfg}, ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
             return;

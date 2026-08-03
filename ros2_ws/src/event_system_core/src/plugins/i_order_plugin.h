@@ -4,8 +4,9 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
-#include "i_order.h"
+#include "model/order.h"
 #include "../util/types.h"
+#include "engine/contracts/estimation_view.h"
 #include "engine/contracts/i_sim_context.h"
 
 namespace BT { class BehaviorTreeFactory; }
@@ -51,21 +52,21 @@ public:
     }
 
     // OP reward for visiting this mission's location. Default: the room area.
-    virtual double estimateReward(const des::IOrder& order, const ISimContext& context) const {
+    virtual double estimateReward(const des::IOrder& order, const EstimationView& view) const {
         const auto target = targetLocation(order);
-        return target ? context.room(*target).m_area.value_or(1.0) : 0.0;
+        return target ? view.world.room(*target).m_area.value_or(1.0) : 0.0;
     }
 
     // On-site execution time in seconds — no drive legs.
     virtual double estimateServiceDuration(const des::IOrder& /*order*/,
-                                           const ISimContext& /*context*/) const {
+                                           const EstimationView& /*view*/) const {
         return 0.0;
     }
 
     // On-site execution energy in Wh — no drive legs.
     virtual double estimateServiceEnergy(const des::IOrder& order,
-                                         const ISimContext& context) const {
-        return estimateServiceDuration(order, context) * context.getConfig()->energyConsumptionBase / 3600.0;
+                                         const EstimationView& view) const {
+        return estimateServiceDuration(order, view) * view.cfg.energyConsumptionBase / 3600.0;
     }
 
     // Round-trip energy estimate in Wh for executing the mission from

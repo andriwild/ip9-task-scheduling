@@ -108,7 +108,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         .cvEnergy        = static_cast<float>(capacityWh),
     };
 
-    auto instance = buildSearchInstance(ctx, roomNodes, startLoc, a.roomName, budgets);
+    auto instance = buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
     if (!instance) {
         return std::nullopt;
     }

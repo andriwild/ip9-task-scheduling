@@ -6,7 +6,8 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "op_types.h"
-#include "engine/contracts/i_sim_context.h"
+#include "engine/contracts/i_path_planning.h"
+#include "model/order.h"
 #include "../util/log.h"
 
 struct OpBudgets {
@@ -32,12 +33,12 @@ inline PlannedNode anchorNode(const std::string& location) {
     return { OpNode{ location, 0.0f, 0.0f, 0.0f }, nullptr };
 }
 
-inline std::optional<Mat> distanceMatrix(const ISimContext& ctx, const std::vector<PlannedNode>& planned) {
+inline std::optional<Mat> distanceMatrix(const IPathPlanning& paths, const std::vector<PlannedNode>& planned) {
     const size_t n = planned.size();
     Mat mat(n, std::vector<float>(n, 0.0f));
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = i + 1; j < n; ++j) {
-            const auto d = ctx.getDistance(planned[i].op.name, planned[j].op.name);
+            const auto d = paths.getDistance(planned[i].op.name, planned[j].op.name);
             if (!d) {
                 DES_LOG_ERROR(rclcpp::get_logger("des.algo.op"), "No distance %s -> %s", planned[i].op.name.c_str(), planned[j].op.name.c_str());
                 return std::nullopt;

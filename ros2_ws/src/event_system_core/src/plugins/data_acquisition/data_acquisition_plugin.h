@@ -39,8 +39,8 @@ public:
     int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
     std::optional<std::string> targetLocation(const des::IOrder& order) const override;
-    double estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const override;
-    double estimateReward(const des::IOrder& order, const ISimContext& context) const override;
+    double estimateServiceDuration(const des::IOrder& order, const EstimationView& view) const override;
+    double estimateReward(const des::IOrder& order, const EstimationView& view) const override;
     void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
 
     const DataAcquisitionConfig& config() const { return m_config; }

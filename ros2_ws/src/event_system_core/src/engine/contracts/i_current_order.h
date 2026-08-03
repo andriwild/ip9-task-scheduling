@@ -1,6 +1,6 @@
 #pragma once
 
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "util/types.h"
 
 class ICurrentOrder {

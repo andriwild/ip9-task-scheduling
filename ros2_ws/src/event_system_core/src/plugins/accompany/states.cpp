@@ -24,6 +24,6 @@ void ConversateState::enter(Robot& robot) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Conversate");
     robot.setSpeed(robot.getDriveSpeed());
 }
-double ConversateState::getEnergyConsumption(const ISimContext& ctx) const {
-    return ctx.getConfig()->energyConsumptionBase;
+double ConversateState::getEnergyConsumption(const Robot& /*robot*/, const des::SimConfig& cfg) const {
+    return cfg.energyConsumptionBase;
 }

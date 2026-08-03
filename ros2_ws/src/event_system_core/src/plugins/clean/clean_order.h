@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <string>
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 struct CleanOrder : des::IOrder {
     std::string roomName;

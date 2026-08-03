@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 struct DataAcquisitionOrder : des::IOrder {
     std::string roomName;

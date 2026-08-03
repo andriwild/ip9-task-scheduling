@@ -321,7 +321,7 @@ void SimulationContext::publishMissionRegistered(const des::OrderPtr& order) {
 
 void SimulationContext::advanceTime(const int newTime) {
     assert(newTime >= m_currentTime);
-    m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*this));
+    m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*m_robot, *m_simConfig));
     if (m_robot->isBatteryLow()) {
         m_robot->setChargingRequired(true);
     }

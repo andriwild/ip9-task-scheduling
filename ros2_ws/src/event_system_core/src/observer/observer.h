@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../plugins/i_order.h"
+#include "model/order.h"
 #include "../util/types.h"
 
 class IObserver {

@@ -31,15 +31,15 @@ void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
-double CleanPlugin::estimateReward(const des::IOrder& order, const ISimContext& context) const {
+double CleanPlugin::estimateReward(const des::IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    const double areaUtility = std::min(1.0, context.room(o.roomName).m_area.value_or(1.0) / 100.0);
+    const double areaUtility = std::min(1.0, view.world.room(o.roomName).m_area.value_or(1.0) / 100.0);
     const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
 
     double urgency = 1.0;
-    const auto last = context.lastServiced(o.roomName, kTypeName);
+    const auto last = view.world.lastServiced(o.roomName, kTypeName);
     if (last.has_value() && interval > 0.0) {
-        urgency = std::clamp((context.getTime() - last.value()) / interval, 0.0, 1.0);
+        urgency = std::clamp((view.clock.getTime() - last.value()) / interval, 0.0, 1.0);
     }
     return m_config.rewardWeight * areaUtility * urgency;
 }
@@ -92,11 +92,11 @@ std::optional<std::string> CleanPlugin::targetLocation(const des::IOrder& order)
     return static_cast<const CleanOrder&>(order).roomName;
 }
 
-double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const ISimContext& context) const {
+double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    const auto& cfg = *context.getConfig();
+    const auto& cfg = view.cfg;
 
-    const double roomArea  = context.room(o.roomName).m_area.value_or(1.0);
+    const double roomArea  = view.world.room(o.roomName).m_area.value_or(1.0);
     const double broomSide = std::sqrt(m_config.cleaningArea);
     const double steps     = (roomArea / m_config.cleaningArea) + 1;
     return steps * (2.0 * broomSide / cfg.robotSpeed);

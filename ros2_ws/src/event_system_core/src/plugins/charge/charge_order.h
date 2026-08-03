@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 inline constexpr const char* kChargeOrderType = "charge";
 

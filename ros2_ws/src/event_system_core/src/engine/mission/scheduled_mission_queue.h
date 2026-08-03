@@ -5,7 +5,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 // FIFO queue of dispatched, time-scheduled missions awaiting execution.
 class ScheduledMissionQueue {

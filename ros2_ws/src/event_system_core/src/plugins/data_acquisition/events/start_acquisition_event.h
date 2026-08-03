@@ -2,7 +2,7 @@
 
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_sim_context.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "plugins/data_acquisition/data_acquisition_plugin.h"
 #include "execute_acquisition_event.h"
 

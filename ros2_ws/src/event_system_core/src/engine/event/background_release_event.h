@@ -4,7 +4,7 @@
 
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_sim_context.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 class BackgroundReleaseEvent final : public IEvent {
     des::OrderPtr m_order;

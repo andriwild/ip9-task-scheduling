@@ -6,7 +6,7 @@
 #include "engine/event/mission_complete_event.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot_state.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/search_exclusion.h"
 #include "util/log.h"

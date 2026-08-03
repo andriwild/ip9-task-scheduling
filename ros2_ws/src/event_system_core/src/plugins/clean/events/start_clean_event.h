@@ -6,7 +6,7 @@
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "plugins/clean/clean_plugin.h"
 #include "end_clean_event.h"
 

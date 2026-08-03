@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 enum class SearchAbortReason { NONE, OUTSIDE, IN_BUILDING_FINDABLE, IN_BUILDING_UNREACHABLE };
 

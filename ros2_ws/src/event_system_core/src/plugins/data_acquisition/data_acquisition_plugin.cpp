@@ -28,7 +28,7 @@ void DataAcquisition::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
-double DataAcquisition::estimateReward(const des::IOrder& /*order*/, const ISimContext& /*context*/) const {
+double DataAcquisition::estimateReward(const des::IOrder& /*order*/, const EstimationView& /*view*/) const {
     return m_config.rewardWeight;
 }
 
@@ -78,7 +78,7 @@ std::optional<std::string> DataAcquisition::targetLocation(const des::IOrder& or
     return static_cast<const DataAcquisitionOrder&>(order).roomName;
 }
 
-double DataAcquisition::estimateServiceDuration(const des::IOrder& /*order*/, const ISimContext& /*context*/) const {
+double DataAcquisition::estimateServiceDuration(const des::IOrder& /*order*/, const EstimationView& /*view*/) const {
     return m_config.dataAcquisitionDuration;
 }
 

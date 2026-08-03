@@ -8,8 +8,9 @@
 
 #include "../op.h"
 #include "../op_build.h"
-#include "engine/contracts/i_sim_context.h"
-#include "../../plugins/i_order.h"
+#include "engine/contracts/estimation_view.h"
+#include "engine/contracts/i_path_planning.h"
+#include "model/order.h"
 #include "../../plugins/order_registry.h"
 #include "../../util/log.h"
 
@@ -31,7 +32,7 @@ inline std::string formatRoute(const OpProblem& problem, const std::vector<int>&
 
 namespace op_build {
 
-inline std::optional<PlannedNode> serviceNode(const ISimContext& ctx, const des::OrderPtr& order) {
+inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const des::OrderPtr& order) {
     const auto& plugin = OrderRegistry::instance().get(order->type);
     const auto target  = plugin.targetLocation(*order);
     if (!target) {
@@ -41,9 +42,9 @@ inline std::optional<PlannedNode> serviceNode(const ISimContext& ctx, const des:
     return PlannedNode{
         OpNode{
             *target,
-            static_cast<float>(plugin.estimateReward(*order, ctx)),
-            static_cast<float>(plugin.estimateServiceDuration(*order, ctx)),
-            static_cast<float>(plugin.estimateServiceEnergy(*order, ctx)),
+            static_cast<float>(plugin.estimateReward(*order, view)),
+            static_cast<float>(plugin.estimateServiceDuration(*order, view)),
+            static_cast<float>(plugin.estimateServiceEnergy(*order, view)),
         },
         order,
     };
@@ -52,14 +53,15 @@ inline std::optional<PlannedNode> serviceNode(const ISimContext& ctx, const des:
 }  // namespace op_build
 
 inline std::optional<OpProblem> buildMissionInstance(
-    const ISimContext& ctx,
+    const EstimationView& view,
+    const IPathPlanning& paths,
     const std::vector<des::OrderPtr>& missions,
     const std::string& startLoc,
     const std::string& endLoc,
     const OpBudgets& budgets
 ) {
-    const auto cfg          = ctx.getConfig();
-    const std::string& dock = cfg->dockLocation;
+    const des::SimConfig& cfg = view.cfg;
+    const std::string& dock   = cfg.dockLocation;
     const int startNodeId   = 0;
     const int dockNodeId    = 1;
     int endNodeId           = dockNodeId;
@@ -77,7 +79,7 @@ inline std::optional<OpProblem> buildMissionInstance(
     const size_t anchorCount = planned.size();
 
     for (const auto& order : missions) {
-        if (auto node = op_build::serviceNode(ctx, order)) {
+        if (auto node = op_build::serviceNode(view, order)) {
             planned.push_back(std::move(*node));
         }
     }
@@ -86,7 +88,7 @@ inline std::optional<OpProblem> buildMissionInstance(
         return std::nullopt;
     }
 
-    auto mat = op_build::distanceMatrix(ctx, planned);
+    auto mat = op_build::distanceMatrix(paths, planned);
     if (!mat) {
         return std::nullopt;
     }
@@ -101,7 +103,7 @@ inline std::optional<OpProblem> buildMissionInstance(
         orderByNode.push_back(std::move(node.order));
     }
 
-    const auto driveEnergyPerMeter = static_cast<float>(cfg->energyConsumptionDrive / (3600.0 * cfg->robotSpeed));
+    const auto driveEnergyPerMeter = static_cast<float>(cfg.energyConsumptionDrive / (3600.0 * cfg.robotSpeed));
     const OpParams params {
         .startNodeId     = startNodeId,
         .endNodeId       = endNodeId,
@@ -114,7 +116,7 @@ inline std::optional<OpProblem> buildMissionInstance(
         .chargeTimePerWh = budgets.chargeTimePerWh,
         .chargeTimePerWhTapered = budgets.chargeTimePerWhTapered,
         .cvEnergy        = budgets.cvEnergy,
-        .driveSpeed      = static_cast<float>(cfg->robotSpeed),
+        .driveSpeed      = static_cast<float>(cfg.robotSpeed),
         .driveEnergy     = driveEnergyPerMeter,
     };
 

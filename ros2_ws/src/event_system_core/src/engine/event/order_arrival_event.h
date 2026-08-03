@@ -6,7 +6,7 @@
 #include "engine/contracts/i_event.h"
 #include "engine/event/mission_complete_event.h"
 #include "engine/contracts/i_sim_context.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 #include "util/types.h"
 
 class OrderArrivalEvent final : public IEvent {

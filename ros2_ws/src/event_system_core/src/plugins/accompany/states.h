@@ -41,6 +41,6 @@ public:
     void enter(Robot& robot) override;
     des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
     std::string getName() const override { return "conversate"; }
-    double getEnergyConsumption(const ISimContext& ctx) const override;
+    double getEnergyConsumption(const Robot& robot, const des::SimConfig& cfg) const override;
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<ConversateState>(*this); }
 };

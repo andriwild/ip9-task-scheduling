@@ -3,7 +3,7 @@
 #include <optional>
 #include <vector>
 
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 class IScheduledMissions {
 public:

@@ -5,7 +5,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
-#include "plugins/i_order.h"
+#include "model/order.h"
 
 // Single-slot holder for a preemptive interrupt mission (at most one active),
 // remembering whether the preempted mission was mid-drive so it can resume on pop.
