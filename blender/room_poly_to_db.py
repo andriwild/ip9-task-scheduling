@@ -242,9 +242,9 @@ else:
                 poi_id = poi_ids[matched_name]
 
                 conn.execute(
-                    text("INSERT INTO search_zones (name, type, poi_id, polygon) "
-                         "VALUES (:name, :type, :poi_id, ST_GeomFromText(:wkt))"),
-                    {"name": matched_name, "type": room_type, "poi_id": poi_id, "wkt": wkt},
+                    text("INSERT INTO search_zones (type, poi_id, polygon) "
+                         "VALUES (:type, :poi_id, ST_GeomFromText(:wkt))"),
+                    {"type": room_type, "poi_id": poi_id, "wkt": wkt},
                 )
 
                 # Rename Blender object to matched waypoint name
@@ -253,7 +253,8 @@ else:
                 print(f"  OK: {matched_name:20} | Type: {room_type:10} | poi_id: {poi_id} | Vertices: {len(verts)}")
 
             invalid = conn.execute(text(
-                "SELECT name, ST_IsValidReason(polygon) FROM search_zones WHERE NOT ST_IsValid(polygon)"
+                "SELECT p.name, ST_IsValidReason(sz.polygon) FROM search_zones sz "
+                "JOIN points_of_interest p ON p.id = sz.poi_id WHERE NOT ST_IsValid(sz.polygon)"
             )).fetchall()
             for name, reason in invalid:
                 print(f"  INVALID: {name}: {reason}")

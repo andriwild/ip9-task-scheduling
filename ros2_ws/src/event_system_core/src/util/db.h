@@ -24,9 +24,9 @@ class DBClient {
     QSqlDatabase m_db;
     std::string m_user;
     std::string m_pw;
-    const std::string m_dbName = "wsr";
-    const std::string m_host = "localhost";
-    const int m_port = 5432;
+    const std::string m_dbName;
+    const std::string m_host;
+    const int m_port;
 
 public:
     explicit DBClient(const DBConfig& dbCfg)
@@ -91,7 +91,7 @@ public:
             return std::nullopt;
         }
         QSqlQuery query;
-        query.prepare("SELECT ST_Area(polygon) FROM search_zones WHERE name = :zoneName");
+        query.prepare("SELECT ST_Area(sz.polygon) FROM search_zones sz JOIN points_of_interest p ON p.id = sz.poi_id WHERE p.name = :zoneName");
         query.bindValue(":zoneName", QString::fromStdString(zoneName));
 
         if (!query.exec()) {

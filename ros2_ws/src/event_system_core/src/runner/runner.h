@@ -8,7 +8,6 @@
 #include "../model/occupancy.h"
 #include "../sim/ros/path_node.h"
 #include "../sim/matrix_planner.h"
-#include "../util/db.h"
 #include "../init/config_loader.h"
 #include "../observer/ros.h"
 #include "engine/event_queue.h"
@@ -21,16 +20,12 @@
 class MetricsNode;
 const std::string CONFIG_PATH = CONFIG_DIR;
 
-//TODO: replace with config
-const std::string DB_USER     = "wsr_user";
-const std::string DB_PASSWORD = "wsr_password";
-
 class IAppRunner {
 public:
     static inline std::string s_outDir = "";
     static inline std::string s_runId  = "";
 
-    IAppRunner() : m_db({DB_USER, DB_PASSWORD}) {};
+    IAppRunner() = default;
 
     virtual ~IAppRunner() = default;
 
@@ -95,7 +90,6 @@ protected:
     std::vector<BackgroundTemplate> m_backgroundTemplates;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
-    DBClient m_db;
 
     void createPlanner() {
         const auto config = ConfigLoader::loadSimConfig();

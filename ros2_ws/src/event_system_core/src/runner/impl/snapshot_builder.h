@@ -10,7 +10,10 @@
 #include "../../util/db.h"
 #include "../../util/dist_mat.h"
 #include "../../util/log.h"
-#include "../runner.h"
+
+//TODO: replace with config
+const std::string DB_USER     = "wsr_user";
+const std::string DB_PASSWORD = "wsr_password";
 
 class SnapshotBuilder {
     DBClient m_db;

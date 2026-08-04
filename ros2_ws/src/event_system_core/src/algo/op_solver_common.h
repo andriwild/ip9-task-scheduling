@@ -5,6 +5,8 @@
 
 #include "op.h"
 
+// TODO: clean up namespaces
+
 namespace op_solver {
 
 inline float greedyValue(const OpInstance& op, const int curId, const int candIdx) {
