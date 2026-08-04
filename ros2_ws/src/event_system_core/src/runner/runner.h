@@ -112,6 +112,7 @@ protected:
         }
     }
 
+    // fill up the event queue with mission and person events
     void populateEventQueue() {
         if (!m_ctx) {
             throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
@@ -160,8 +161,10 @@ protected:
         return orders.value();
     }
 
+    // generate interrupt events on a daily basis within a time window
     void addEventsFromInterruptGenerators(const std::string& path) {
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load ad-hoc generators: %s", path.c_str());
+
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
         int eventId = 100000; // TODO: magic number
         const int simStart = m_config->simStartTime;
@@ -224,16 +227,21 @@ protected:
     }
 
     void mergeRoomTours() {
+
+        // get the configured precalculated tour config file (e.g. tous_r2.5.json)
         std::ostringstream radius;
         radius << m_config->personDetectionRange;
         const std::string path = CONFIG_DIR + "tours_r" + radius.str() + (m_config->useTspTours ? "_tsp" : "") + ".json";
 
+        // add tours through to existing rooms
         const auto merged = ConfigLoader::mergeRoomTours(path, m_rooms);
         if (!merged.has_value()) {
             throw std::runtime_error("Could not load room tours from " + path + ". Generate them first with ./build_tours.sh " + radius.str());
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu room tours from %s", merged.value(), path.c_str());
 
+        // check if some rooms have no tours
+        // docks are stored as room without tours
         std::vector<std::string> withoutTour;
         for (const auto& [name, room] : m_rooms) {
             if (room.m_tour.empty()) {
@@ -249,6 +257,7 @@ protected:
         }
     }
 
+    // if distance matrix is not used, the distance between waypoints are fetchted by a nav2 planner
     virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {
         // leads to spam messages on lower logger level
         rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);

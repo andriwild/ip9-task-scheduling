@@ -1,3 +1,11 @@
+/*
+ * An employee in the building: static profile plus the per-day
+ * schedule (arrival, lunch, departure) and a room transition matrix.
+ * Owns an id-keyed RNG stream so schedules stay reproducible
+ * independently of the robot.
+ * Copy is not allowed because of the rng stream per person.
+ *
+ */
 #pragma once
 
 #include <algorithm>

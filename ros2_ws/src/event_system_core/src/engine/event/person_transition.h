@@ -1,3 +1,11 @@
+/*
+ * Movement events of the simulated people: arrival, room transitions
+ * from the transition matrix, lunch and departure, which reseeds the
+ * occupancy for the next day.
+ * Persons draw from their own RNG stream, busy persons defer their
+ * events until the robot releases them (accompany).
+ *
+ */
 #pragma once
 
 #include <algorithm>

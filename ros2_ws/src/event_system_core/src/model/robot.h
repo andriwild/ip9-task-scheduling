@@ -1,3 +1,8 @@
+/*
+ * State of the robot: location, position, visibility polygon speed and the current RobotState.
+ * Owner of the battery and the sighting log it feeds while driving.
+ *
+ */
 #pragma once
 
 #include <memory>

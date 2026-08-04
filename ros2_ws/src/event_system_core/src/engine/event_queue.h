@@ -1,3 +1,10 @@
+/*
+ * Priority queue of pending simulation events.
+ * Ordering key is (time, priority desc, insertion sequence),
+ * which makes the event order deterministic for a given seed.
+ *
+ */
+
 #pragma once
 
 #include <memory>
@@ -46,6 +53,7 @@ public:
 
     std::shared_ptr<IEvent> nextEvent(des::EventType type) const;
 
+    // Set a flag on the given event
     void cancelByType(des::EventType type) const;
 
     // Time of the earliest queued event matching `type`

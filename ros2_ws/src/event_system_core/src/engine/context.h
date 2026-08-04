@@ -1,3 +1,10 @@
+/*
+ * Central simulation hub and ISimContext implementation.
+ * Owns clock, robot, RNG streams and the sub-registries, and mostly
+ * delegates to PersonRegistry, ServiceLog, MissionBoard and EventBus.
+ *
+ */
+
 #pragma once
 
 #include <behaviortree_cpp/bt_factory.h>

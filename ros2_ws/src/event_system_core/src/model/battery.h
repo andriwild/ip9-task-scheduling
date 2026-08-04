@@ -1,3 +1,11 @@
+/*
+ * Energy model of the robot: capacity in Ah, updated from power draw
+ * over elapsed time. Charging is two-phase CC/CV, tapered above
+ * cvThreshold and stopping either at that knee or at the full
+ * threshold, depending on the charge target.
+ *
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -13,7 +21,7 @@ class Battery {
     double m_lowBatteryThreshold; // %
     double m_fullBatteryThreshold; // %
 
-    double m_voltage = 12.0;
+    double m_voltage       = 12.0;
     double m_cvThreshold   = 0.8;
     double m_taperFraction = 0.5;
     bool m_chargeToFull    = true;
@@ -38,6 +46,8 @@ public:
 
     void updateConfig(const double designCapacity, const double initialCapacity, const double lowThreshold, const double fullThreshold,
                       const double voltage, const double cvThreshold, const double taperFraction, const bool chargeToFull);
+
+    // incrementally update battery capacity
     void updateBalance(const int time, const double energyConsumption);
     void completeCharge();
 

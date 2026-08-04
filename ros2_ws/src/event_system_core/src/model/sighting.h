@@ -1,3 +1,11 @@
+/*
+ * Log of who the robot saw where or not.
+ * Observations are buffered per room visit and flushed on the next.
+ * beginVisit(), one room visit yields at most one entry per person.
+ * The tally feeds the search priors of the accompany plugin.
+ *
+ */
+
 #pragma once
 
 #include <map>

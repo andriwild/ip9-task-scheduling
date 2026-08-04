@@ -71,7 +71,7 @@ if(BUILD_TESTING)
   set(TEST_FIXTURES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/fixtures")
 
   # EventQueue tests
-  ament_add_gtest(test_event_queue test/test_event_queue.cpp)
+  ament_add_gtest(test_event_queue test/test_event_queue.cpp src/engine/event_queue.cpp)
   ament_target_dependencies(test_event_queue rclcpp behaviortree_cpp)
   target_compile_definitions(test_event_queue PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
@@ -147,6 +147,7 @@ if(BUILD_TESTING)
     src/model/robot_state.cpp
     src/model/battery.cpp
     src/engine/context.cpp
+    src/engine/event_queue.cpp
     src/engine/person_registry.cpp
     src/engine/service_log.cpp
     src/engine/mission/mission_board.cpp

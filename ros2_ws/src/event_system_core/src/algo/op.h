@@ -72,6 +72,7 @@ public:
 
         for (const int idx : route) {
             const float d = m_mat[prev][idx];
+            // time and energy to drive to the room
             soc  -= d * m_p.driveEnergy;
             time += d / m_p.driveSpeed;
 
@@ -83,6 +84,7 @@ public:
                 time += chargeDuration(soc, m_p.maxEnergy);
                 soc   = m_p.maxEnergy;
             } else {
+                // time and energy for the work in the room (e.g. clean)
                 soc  -= m_nodes[idx].serviceEnergy;
                 time += m_nodes[idx].serviceTime;
                 if (soc < 0.0f) {

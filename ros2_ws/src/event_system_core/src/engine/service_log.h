@@ -1,3 +1,8 @@
+/*
+ * Class to store last service time of a job.
+ * Used for prioritizing recurrent missions.
+ * 
+ */
 #pragma once
 
 #include <map>

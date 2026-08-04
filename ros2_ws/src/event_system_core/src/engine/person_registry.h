@@ -1,3 +1,11 @@
+/*
+ * Owns the simulated people and their locations.
+ * Maps name to Person, tracks the current room per person and
+ * samples a concrete point inside that room's footprint.
+ * Placement uses its own RNG stream. 
+ * 
+ */
+
 #pragma once
 
 #include <map>

@@ -67,6 +67,7 @@ void SimRunner::setupApplication() {
 
     m_config = m_systemConfigNode->getConfig();
 
+    // simulation with duration > 3 days leads to message overflow
     constexpr int kMaxInteractiveDurationSec = 3 * 86400;
     if (m_config->simDuration > kMaxInteractiveDurationSec) {
         throw std::runtime_error(

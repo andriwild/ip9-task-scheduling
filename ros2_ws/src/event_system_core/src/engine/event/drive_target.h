@@ -1,3 +1,11 @@
+/*
+ * Drive destination strategy used by DriveEvent.
+ * RoomTarget resolves a room name through the path planner,
+ * PointTarget drives straight to a coordinate.
+ * travel() estimates, arrive() applies the effects of having arrived.
+ *
+ */
+
 #pragma once
 
 #include <cmath>

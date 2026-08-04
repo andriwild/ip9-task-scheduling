@@ -1,3 +1,10 @@
+/*
+ * Owns the current mission and the three mission channels:
+ * scheduled, background and interrupt.
+ * Scheduled orders live in the event queue as dispatch events,
+ * so this class reads them back from there rather than storing them twice.
+ *
+ */
 #pragma once
 
 #include <optional>
@@ -34,6 +41,8 @@ public:
     des::OrderPtr nextScheduled();
     des::OrderPtr popScheduled();
     std::optional<int> nextScheduledDispatchTime() const;
+
+    // reading directly from the event queue
     des::OrderPtr peekNextScheduledOrder() const;
     std::vector<des::OrderPtr> peekScheduledOrdersUntil(int untilTime) const;
 

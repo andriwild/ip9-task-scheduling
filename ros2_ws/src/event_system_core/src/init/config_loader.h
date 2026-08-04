@@ -450,6 +450,8 @@ public:
         return std::nullopt;
     }
 
+    // add a sightseeing tour to a given room
+    // the tours are stored in a config file (e.g. tours_r2.json)
     static std::optional<std::size_t> mergeRoomTours(const std::string& filePath, des::RoomMap& rooms) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -524,8 +526,7 @@ public:
             const auto& l = locs.at(i);
 
             des::Room room(name, des::Point{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) });
-            room.m_roomType = i < types.size() ? des::roomTypeFromString(types.at(i).get<std::string>())
-                                               : des::parseRoomName(name);
+            room.m_roomType = i < types.size() ? des::roomTypeFromString(types.at(i).get<std::string>()) : des::parseRoomName(name);
             if (i < areas.size() && !areas.at(i).is_null()) {
                 room.m_area = areas.at(i).get<double>();
             }
