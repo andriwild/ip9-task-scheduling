@@ -4,13 +4,13 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
-#include <map>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
 #include <utility>
 
+#include "../model/person.h"
+#include "../model/room.h"
 #include "../util/log.h"
-#include "types.h"
 
 struct DBConfig {
     std::string m_user;
@@ -54,29 +54,6 @@ public:
             return false;
         }
         return true;
-    }
-
-    std::optional<std::vector<des::Room>> waypoints() {
-        if (!m_db.isOpen() && !m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        std::vector<des::Room> locations;
-        QSqlQuery query;
-        if (!query.exec("SELECT name, ST_X(coordinate), ST_Y(coordinate), yaw FROM points_of_interest")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Query failed: %s", query.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        while (query.next()) {
-            QString name = query.value(0).toString();
-            double x     = query.value(1).toDouble();
-            double y     = query.value(2).toDouble();
-            double yaw   = query.value(3).toDouble();
-            des::Point p = {x, y, yaw};
-            locations.emplace_back(name.toStdString(), p);
-        }
-
-        return locations;
     }
 
     std::optional<des::Person> personByName(const std::string& firstName, const std::string& lastName) {
@@ -128,66 +105,39 @@ public:
         return std::nullopt;
     }
 
-    std::optional<std::map<std::string, std::vector<des::Point>>> allFootprints() {
+    std::optional<des::RoomMap> rooms() {
         if (!m_db.isOpen() && !m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         QSqlQuery query;
         if (!query.exec(
-                "SELECT sz.name, ST_X(p.geom), ST_Y(p.geom) "
-                "FROM (SELECT DISTINCT ON (name) name, polygon FROM search_zones ORDER BY name, id) sz, "
-                "LATERAL ST_DumpPoints(ST_ExteriorRing(sz.polygon)) AS p "
-                "ORDER BY sz.name, p.path[1]")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allFootprints Query failed: %s", query.lastError().text().toStdString().c_str());
+                "SELECT p.name, ST_X(p.coordinate), ST_Y(p.coordinate), COALESCE(p.yaw, 0), "
+                "COALESCE(sz.type, 'OTHER'), ST_Area(sz.polygon), ST_X(d.geom), ST_Y(d.geom) "
+                "FROM points_of_interest p "
+                "LEFT JOIN search_zones sz ON sz.poi_id = p.id "
+                "LEFT JOIN LATERAL ST_DumpPoints(ST_ExteriorRing(sz.polygon)) d ON true "
+                "WHERE d.path IS NULL OR d.path[1] < ST_NPoints(ST_ExteriorRing(sz.polygon)) "
+                "ORDER BY p.name, d.path[1]")) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "rooms Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
-        std::map<std::string, std::vector<des::Point>> footprints;
+        des::RoomMap rooms;
         while (query.next()) {
             const std::string name = query.value(0).toString().toStdString();
-            footprints[name].push_back({query.value(1).toDouble(), query.value(2).toDouble(), 0.0});
-        }
-        for (auto& [name, ring] : footprints) {
-            if (ring.size() > 1 && ring.front().m_x == ring.back().m_x && ring.front().m_y == ring.back().m_y) {
-                ring.pop_back();
+            const des::Point p     = {query.value(1).toDouble(), query.value(2).toDouble(), query.value(3).toDouble()};
+            const auto [it, inserted] = rooms.try_emplace(name, name, p);
+            if (inserted) {
+                it->second.m_roomType = des::roomTypeFromString(query.value(4).toString().toStdString());
+                if (!query.value(5).isNull()) {
+                    it->second.m_area = query.value(5).toDouble();
+                }
+            }
+            if (!query.value(6).isNull()) {
+                it->second.m_footprint.push_back({query.value(6).toDouble(), query.value(7).toDouble(), 0.0});
             }
         }
-        return footprints;
+        return rooms;
     }
 
-    std::optional<std::map<std::string, des::RoomType>> allRoomTypes() {
-        if (!m_db.isOpen() && !m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        QSqlQuery query;
-        if (!query.exec("SELECT DISTINCT ON (name) name, type FROM search_zones ORDER BY name, id")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allRoomTypes Query failed: %s", query.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        std::map<std::string, des::RoomType> types;
-        while (query.next()) {
-            const std::string name = query.value(0).toString().toStdString();
-            const std::string type = query.value(1).toString().toStdString();
-            types[name] = des::roomTypeFromString(type);
-        }
-        return types;
-    }
-
-    std::optional<std::map<std::string, double>> allAreas() {
-        if (!m_db.isOpen() && !m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        QSqlQuery query;
-        if (!query.exec("SELECT name, ST_Area(polygon) FROM search_zones")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "allAreas Query failed: %s", query.lastError().text().toStdString().c_str());
-            return std::nullopt;
-        }
-        std::map<std::string, double> areas;
-        while (query.next()) {
-            areas[query.value(0).toString().toStdString()] = query.value(1).toDouble();
-        }
-        return areas;
-    }
 };

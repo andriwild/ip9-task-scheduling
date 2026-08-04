@@ -22,18 +22,19 @@ TEST_F(DBTest, ConnectionSucceeds) {
     EXPECT_TRUE(db->init());
 }
 
-TEST_F(DBTest, WaypointsReturnsData) {
-    auto result = db->waypoints();
+TEST_F(DBTest, RoomsReturnsData) {
+    auto result = db->rooms();
     ASSERT_TRUE(result.has_value());
     EXPECT_GT(result.value().size(), 0u);
 }
 
-TEST_F(DBTest, WaypointsHaveValidCoordinates) {
-    auto result = db->waypoints();
+TEST_F(DBTest, RoomsHaveNamesMatchingTheirKey) {
+    auto result = db->rooms();
     ASSERT_TRUE(result.has_value());
 
-    for (const auto& loc : result.value()) {
-        EXPECT_FALSE(loc.m_name.empty());
+    for (const auto& [name, room] : result.value()) {
+        EXPECT_FALSE(name.empty());
+        EXPECT_EQ(room.m_name, name);
     }
 }
 
@@ -62,52 +63,42 @@ TEST_F(DBTest, AreaByNameReturnsNulloptForUnknown) {
     EXPECT_FALSE(result.has_value());
 }
 
-TEST_F(DBTest, AllAreasReturnsData) {
-    auto result = db->allAreas();
+TEST_F(DBTest, RoomsContainKnownZoneWithPositiveArea) {
+    auto result = db->rooms();
     ASSERT_TRUE(result.has_value());
-    EXPECT_GT(result.value().size(), 0u);
+    ASSERT_TRUE(result.value().contains("IMVS_Kitchen"));
+    const auto& area = result.value().at("IMVS_Kitchen").m_area;
+    ASSERT_TRUE(area.has_value());
+    EXPECT_GT(area.value(), 0.0);
 }
 
-TEST_F(DBTest, AllAreasContainsKnownZone) {
-    auto result = db->allAreas();
-    ASSERT_TRUE(result.has_value());
-    EXPECT_TRUE(result.value().contains("IMVS_Kitchen"));
-    EXPECT_GT(result.value().at("IMVS_Kitchen"), 0.0);
-}
-
-TEST_F(DBTest, AllAreasConsistentWithAreaByName) {
-    auto all = db->allAreas();
+TEST_F(DBTest, RoomAreaConsistentWithAreaByName) {
+    auto all = db->rooms();
     auto single = db->areaByName("IMVS_Kitchen");
     ASSERT_TRUE(all.has_value());
     ASSERT_TRUE(single.has_value());
-    EXPECT_DOUBLE_EQ(all.value().at("IMVS_Kitchen"), single.value());
+    ASSERT_TRUE(all.value().at("IMVS_Kitchen").m_area.has_value());
+    EXPECT_DOUBLE_EQ(all.value().at("IMVS_Kitchen").m_area.value(), single.value());
 }
 
-TEST_F(DBTest, AllFootprintsReturnsData) {
-    auto result = db->allFootprints();
+TEST_F(DBTest, FootprintsAreOpenRingsWithAtLeastThreeVertices) {
+    auto result = db->rooms();
     ASSERT_TRUE(result.has_value());
-    EXPECT_FALSE(result->empty());
-}
-
-TEST_F(DBTest, AllFootprintsAreOpenRingsWithAtLeastThreeVertices) {
-    auto result = db->allFootprints();
-    ASSERT_TRUE(result.has_value());
-    for (const auto& [name, ring] : result.value()) {
-        EXPECT_GE(ring.size(), 3u) << name;
-        if (ring.size() > 1) {
-            const bool closed = ring.front().m_x == ring.back().m_x && ring.front().m_y == ring.back().m_y;
-            EXPECT_FALSE(closed) << name;
+    for (const auto& [name, room] : result.value()) {
+        if (room.m_footprint.empty()) {
+            continue;
         }
+        const auto& ring = room.m_footprint;
+        EXPECT_GE(ring.size(), 3u) << name;
+        const bool closed = ring.front().m_x == ring.back().m_x && ring.front().m_y == ring.back().m_y;
+        EXPECT_FALSE(closed) << name;
     }
 }
 
-TEST_F(DBTest, AllFootprintsMatchAllAreas) {
-    auto footprints = db->allFootprints();
-    auto areas = db->allAreas();
-    ASSERT_TRUE(footprints.has_value());
-    ASSERT_TRUE(areas.has_value());
-    EXPECT_EQ(footprints->size(), areas->size());
-    for (const auto& [name, ring] : footprints.value()) {
-        EXPECT_TRUE(areas->contains(name)) << name;
+TEST_F(DBTest, FootprintAndAreaAppearTogether) {
+    auto result = db->rooms();
+    ASSERT_TRUE(result.has_value());
+    for (const auto& [name, room] : result.value()) {
+        EXPECT_EQ(room.m_footprint.empty(), !room.m_area.has_value()) << name;
     }
 }

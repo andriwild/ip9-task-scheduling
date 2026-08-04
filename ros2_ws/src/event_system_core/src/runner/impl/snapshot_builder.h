@@ -23,9 +23,16 @@ public:
     ~SnapshotBuilder() { shutdown(); }
 
     int run() {
-        const des::RoomMap rooms = loadRoomsFromDB(m_db);
+        const auto rooms = m_db.rooms();
+        if (!rooms.has_value()) {
+            throw std::runtime_error("Could not load rooms from DB");
+        }
+        DES_LOG_INFO(rclcpp::get_logger("des.snapshot"), "Loaded %zu rooms from DB", rooms->size());
+        for (const auto& [_, room] : rooms.value()) {
+            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.snapshot"), room);
+        }
 
-        m_planner = std::make_shared<PathPlannerNode>(rooms);
+        m_planner = std::make_shared<PathPlannerNode>(rooms.value());
         if (!m_planner->isReady()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.snapshot"), "Nav2 planner not available — is planner.sh running?");
             return 1;
@@ -40,8 +47,8 @@ public:
 
         // Matrix index order follows the (name-sorted) RoomMap iteration.
         std::vector<des::Room> locations;
-        locations.reserve(rooms.size());
-        for (const auto& [_, loc] : rooms) {
+        locations.reserve(rooms->size());
+        for (const auto& [_, loc] : rooms.value()) {
             locations.push_back(loc);
         }
 
