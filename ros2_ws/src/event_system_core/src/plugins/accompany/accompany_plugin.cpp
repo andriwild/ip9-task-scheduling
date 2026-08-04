@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <algorithm>
+#include <cmath>
 
 #include "bt_nodes/search.h"
 #include "bt_nodes/accompany.h"
@@ -208,12 +209,21 @@ des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
 }
 
 namespace {
-double meetingViaWorkplace(const Scheduler& sched, const std::string& workplace, const std::string& startPos, const std::string& goalPos) {
-    const double accompanySpd  = accompanyConfig().accompanySpeed;
+struct MeetingEstimate {
+    double driveTime;
+    double talkTime;
+
+    double total() const {
+        return driveTime + talkTime;
+    }
+};
+
+MeetingEstimate meetingViaWorkplace(const Scheduler& sched, const std::string& workplace, const std::string& startPos, const std::string& goalPos) {
+    const auto& cfg            = accompanyConfig();
     const double searchTime    = sched.robotDriveTime(startPos, workplace);
     const double scanTime      = sched.getScanTime(workplace);
-    const double accompanyTime = sched.getDriveTime(workplace, goalPos, accompanySpd);
-    return searchTime + accompanyTime + scanTime;
+    const double accompanyTime = sched.getDriveTime(workplace, goalPos, cfg.accompanySpeed);
+    return { searchTime + scanTime + accompanyTime, 2.0 * cfg.conversationDurationMean };
 }
 }
 
@@ -225,10 +235,12 @@ int AccompanyOrderPlugin::planDispatchTime(const des::IOrder& order, const Sched
 bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContext& context) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
 
-    const auto robotLocation = context.getRobot()->getLocation();
-    const auto person        = context.getPersonByName(a.personName);
-    const double missionDuration = meetingViaWorkplace(context.getScheduler(), person->workplace, robotLocation, a.roomName);
-    const int slack = static_cast<int>(order.deadline.value() - missionDuration - context.getTime());
+    const auto robotLocation     = context.getRobot()->getLocation();
+    const auto person            = context.getPersonByName(a.personName);
+    const double missionDuration = meetingViaWorkplace(context.getScheduler(), person->workplace, robotLocation, a.roomName).total();
+
+    const int slack = static_cast<int>(std::floor(order.deadline.value() - missionDuration - context.getTime()));
+
     if (slack >= 0) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
         return true;
@@ -263,9 +275,9 @@ double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, con
     if (auto plan = planPersonSearch(context, a, startLocation)) {
         searchWh = plan->energyWh;
     } else {
-        const auto person    = context.getPersonByName(a.personName);
-        const double meeting = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
-        searchWh             = meeting * cfg.energyConsumptionDrive / 3600.0;
+        const auto person  = context.getPersonByName(a.personName);
+        const auto meeting = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
+        searchWh           = (meeting.driveTime * cfg.energyConsumptionDrive + meeting.talkTime * cfg.energyConsumptionBase) / 3600.0;
     }
 
     const double appointmentWh = accompanyConfig().appointmentDuration * cfg.energyConsumptionBase / 3600.0;
@@ -283,7 +295,7 @@ double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, c
         searchSec = plan->durationSec;
     } else {
         const auto person = context.getPersonByName(a.personName);
-        searchSec         = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
+        searchSec         = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName).total();
     }
 
     const double driveBackSec = sched.robotDriveTime(a.roomName, cfg.dockLocation);

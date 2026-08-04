@@ -60,14 +60,13 @@ public:
         return dist.value() / speed;
     }
 
-    // TODO: check if the result is correct
-    // Time it takes to scan the given area in seconds
-    [[nodiscard]] double getScanTime(const std::string& area) const {
-        auto it = m_rooms.find(area);
-        if (it == m_rooms.end() || !it->second.m_area.has_value()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "Location area not found for '%s', defaulting to 1.0", area.c_str());
-            return 1.0;
+    // Time it takes to scan the given room in seconds, same model as the search planner
+    [[nodiscard]] double getScanTime(const std::string& room) const {
+        auto it = m_rooms.find(room);
+        if (it == m_rooms.end() || m_simConfig->robotSpeed <= 0.0) {
+            DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "No scan time for '%s', defaulting to 0", room.c_str());
+            return 0.0;
         }
-        return it->second.m_area.value();
+        return it->second.m_tour.m_distance / m_simConfig->robotSpeed;
     }
 };

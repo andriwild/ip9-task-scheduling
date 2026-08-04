@@ -12,6 +12,7 @@
 
 class Scan final : public IEvent {
     des::OrderPtr m_order;
+    // TODO: rename m_index
     size_t m_index;
 
 public:
