@@ -78,15 +78,17 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 
     const auto& excluded = ctx.getConfig()->searchExcludedRooms;
     std::vector<std::string> universe;
+    std::vector<des::RoomType> universeTypes;
     for (const auto& name : ctx.roomNames()) {
         if (!isSearchExcluded(excluded, name)) {
             universe.push_back(name);
+            universeTypes.push_back(ctx.room(name).m_roomType);
         }
     }
     const auto strategy = ctx.getConfig()->searchRewardStrategy;
     const auto roomNodes = strategy == des::SearchRewardStrategy::FREQUENCY
         ? frequencyReward(robot->getSightings(), a.personName, universe)
-        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe);
+        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior);
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();

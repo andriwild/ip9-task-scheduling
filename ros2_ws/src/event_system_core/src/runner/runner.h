@@ -20,9 +20,12 @@
 
 class MetricsNode;
 const std::string CONFIG_PATH = CONFIG_DIR;
+
+//TODO: replace with config
 const std::string DB_USER     = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
 
+// generates a map with all the rooms and its properties from the db
 inline des::RoomMap loadRoomsFromDB(DBClient& db) {
     const auto pois = db.waypoints();
     if (!pois.has_value()) {

@@ -100,6 +100,8 @@ public:
     void setInFlight(const std::shared_ptr<IEvent>& event);
     void clearInFlight();
 
-    void addSighting(const Sighting& sighting);
+    void beginRoomVisit(const std::string& location);
+    void observePerson(const int time, const std::string& personName, const bool seen);
+    void flushRoomVisit();
     const SightingLog& getSightings() const;
 };

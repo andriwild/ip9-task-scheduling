@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QSql>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -6,9 +7,9 @@
 #include <map>
 #include <optional>
 #include <rclcpp/rclcpp.hpp>
-#include "../util/log.h"
 #include <utility>
 
+#include "../util/log.h"
 #include "types.h"
 
 struct DBConfig {

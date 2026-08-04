@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "engine/contracts/i_sim_context.h"
+#include "model/person.h"
 #include "model/robot.h"
-#include "model/sighting.h"
 #include "plugins/order_registry.h"
 #include "util/types.h"
 
@@ -20,14 +20,13 @@ public:
     virtual std::string label() const = 0;
 };
 
-inline void recordSightings(ISimContext& ctx, const std::string& room) {
+inline void observeSightings(ISimContext& ctx) {
     for (const auto& [name, personRoom] : ctx.getAllPersonLocations()) {
-        ctx.getRobot()->addSighting({
-            ctx.getTime(),
-            name,
-            room,
-            ctx.robotSeesPerson(name) ? SightingKind::PRESENT : SightingKind::ABSENT
-        });
+        const des::Person* person = ctx.getPersonByName(name);
+        if (person && person->busy) {
+            continue;
+        }
+        ctx.getRobot()->observePerson(ctx.getTime(), name, ctx.robotSeesPerson(name));
     }
 }
 
@@ -56,7 +55,8 @@ public:
         if (const auto order = ctx.getOrderPtr()) {
             OrderRegistry::instance().get(order->type).onStopDriveEvent(ctx, *order);
         }
-        recordSightings(ctx, m_room);
+        ctx.getRobot()->beginRoomVisit(m_room);
+        observeSightings(ctx);
     }
 
     std::string label() const override { return m_room; }
@@ -81,7 +81,7 @@ public:
     void arrive(ISimContext& ctx, double distance) const override {
         ctx.robotMovedTo(m_point, distance);
         ctx.getRobot()->setVisibility(m_visibility);
-        recordSightings(ctx, ctx.getRobot()->getLocation());
+        observeSightings(ctx);
     }
 
     std::string label() const override {

@@ -18,6 +18,7 @@ namespace bg = boost::geometry;
 using BgPoint = bg::model::d2::point_xy<double>;
 using BgPolygon = bg::model::polygon<BgPoint>;
 
+// convert to boost polygon
 inline BgPolygon toPolygon(const des::Polygon& poly) {
     BgPolygon p;
     for (const auto& v : poly) {
@@ -27,6 +28,7 @@ inline BgPolygon toPolygon(const des::Polygon& poly) {
     return p;
 }
 
+// check if a point is in a polygon
 inline bool isVisible(const des::Point& p, const des::Polygon& visibility) {
     if (visibility.size() < 3) {
         return true;
@@ -34,6 +36,7 @@ inline bool isVisible(const des::Point& p, const des::Polygon& visibility) {
     return bg::covered_by(BgPoint(p.m_x, p.m_y), toPolygon(visibility));
 }
 
+// generate a randomly distributed point in a given polygon
 inline std::optional<des::Point> sampleInPolygon(const des::Polygon& poly, std::mt19937& rng, const int maxTries = 30) {
     if (poly.size() < 3) {
         return std::nullopt;

@@ -4,12 +4,13 @@
 #include <vector>
 
 #include "algo/op_types.h"
+#include "algo/search/role_prior.h"
+#include "model/room.h"
 #include "model/sighting.h"
 
 // calculate the probability of a room using beta-binomial model
-inline float roomProbability(int hits, int misses, bool isWorkplace) {
+inline float roomProbability(int hits, int misses, float p0) {
     const double k     = 4.0;
-    const double p0    = isWorkplace ? 0.6 : 0.05;
     const double alpha = k * p0;
     const double beta  = k * (1.0 - p0);
     const double y     = hits;
@@ -17,14 +18,25 @@ inline float roomProbability(int hits, int misses, bool isWorkplace) {
     return (alpha + y) / (alpha + beta + n);
 }
 
-inline std::vector<OpNode> occupancyProbability(const SightingLog& sightings, const std::string& person, const std::string& office, const std::vector<std::string>& allRooms) {
+inline float occupancyPrior(bool isWorkplace, des::RoomType type, const std::vector<std::string>& roles, bool useRolePrior) {
+    if (isWorkplace) {
+        return 0.6f;
+    }
+    if (!useRolePrior) {
+        return 0.05f;
+    }
+    return des::rolePrior(roles, type, 0.05f);
+}
+
+inline std::vector<OpNode> occupancyProbability(const SightingLog& sightings, const std::string& person, const std::string& office, const std::vector<std::string>& allRooms, const std::vector<des::RoomType>& roomTypes, const std::vector<std::string>& roles, bool useRolePrior) {
     std::vector<OpNode> nodes;
-    for(const auto& room: allRooms) {
+    for (std::size_t i = 0; i < allRooms.size(); ++i) {
+        const std::string& room = allRooms[i];
         const SightingCounts c = sightings.counts(person, room);
-        nodes.push_back({room, roomProbability(c.hits, c.misses, office == room)});
+        const des::RoomType type = i < roomTypes.size() ? roomTypes[i] : des::RoomType::OTHER;
+        nodes.push_back({room, roomProbability(c.hits, c.misses, occupancyPrior(office == room, type, roles, useRolePrior))});
     }
     return nodes;
-
 }
 
 inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const std::string& person, const std::vector<std::string>& allRooms) {

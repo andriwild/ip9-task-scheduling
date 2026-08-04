@@ -218,8 +218,16 @@ void Robot::clearInFlight() {
     m_inFlightEvent.reset();
 }
 
-void Robot::addSighting(const Sighting& sighting) {
-    m_sightings.add(sighting);
+void Robot::beginRoomVisit(const std::string& location) {
+    m_sightings.beginVisit(location);
+}
+
+void Robot::observePerson(const int time, const std::string& personName, const bool seen) {
+    m_sightings.observe(time, personName, seen);
+}
+
+void Robot::flushRoomVisit() {
+    m_sightings.flushVisit();
 }
 
 const SightingLog& Robot::getSightings() const {

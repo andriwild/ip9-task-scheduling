@@ -22,7 +22,7 @@ enum class DistributionType {
 
 inline std::string distributionTypeToString(const DistributionType type) {
     switch (type) {
-        case DistributionType::UNIFORM:     return "uniform";
+        case DistributionType::UNIFORM:      return "uniform";
         case DistributionType::NORMAL:       return "normal";
         case DistributionType::EXPONENTIAL:  return "exponential";
         case DistributionType::LOG_NORMAL:   return "log_normal";
@@ -146,6 +146,7 @@ struct SimConfig {
     std::vector<int> missionTraceRounds = {};
     std::vector<int> missionTraceWindow = {};
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
+    bool searchRolePrior = false;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
     unsigned int seed = 42;
@@ -183,6 +184,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "missionTraceExport" << ": " << config.missionTraceExport << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
+        os << std::left << std::setw(W) << "searchRolePrior" << ": " << config.searchRolePrior << std::endl;
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;
         os << std::left << std::setw(W) << "seed" << ": " << config.seed << std::endl;
