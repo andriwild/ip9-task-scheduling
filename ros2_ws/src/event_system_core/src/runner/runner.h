@@ -163,7 +163,7 @@ protected:
     void addEventsFromInterruptGenerators(const std::string& path) {
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load ad-hoc generators: %s", path.c_str());
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
-        int eventId = 100000;
+        int eventId = 100000; // TODO: magic number
         const int simStart = m_config->simStartTime;
         const int simEnd   = m_config->simStartTime + m_config->simDuration;
 
@@ -224,11 +224,13 @@ protected:
     }
 
     void mergeRoomTours() {
-        const std::string path = ConfigLoader::toursFilePath(m_config->personDetectionRange, m_config->useTspTours);
+        std::ostringstream radius;
+        radius << m_config->personDetectionRange;
+        const std::string path = CONFIG_DIR + "tours_r" + radius.str() + (m_config->useTspTours ? "_tsp" : "") + ".json";
+
         const auto merged = ConfigLoader::mergeRoomTours(path, m_rooms);
         if (!merged.has_value()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.runner"), "No room tours at %s; no room can be searched", path.c_str());
-            return;
+            throw std::runtime_error("Could not load room tours from " + path + ". Generate them first with ./build_tours.sh " + radius.str());
         }
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu room tours from %s", merged.value(), path.c_str());
 

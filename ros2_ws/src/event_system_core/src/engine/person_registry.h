@@ -7,6 +7,7 @@
 
 #include "util/types.h"
 
+
 class PersonRegistry {
     des::PersonList m_people;
     des::PersonMap m_employees;

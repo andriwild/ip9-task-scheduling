@@ -32,14 +32,9 @@ public:
         ctx.changeRobotState(std::make_unique<AccompanyState>());
         static_cast<AccompanyOrder&>(*m_order).phase = AccompanyPhase::ACCOMPANY;
 
-        const std::string currentRoom = ctx.getRobot()->getLocation();
-        const des::RoomTour& tour = ctx.room(currentRoom).m_tour;
-        if (!tour.empty()) {
-            auto roomDrive = std::make_shared<StartDriveEvent>(time, std::make_shared<RoomTarget>(accompany.roomName));
-            requestDrive(ctx, ctx.room(currentRoom).m_p, tour.visibilityAt(0), roomDrive);
-        } else {
-            requestDrive(ctx, accompany.roomName);
-        }
+        const des::Room& currentRoom = ctx.room(ctx.getRobot()->getLocation());
+        auto roomDrive = std::make_shared<StartDriveEvent>(time, std::make_shared<RoomTarget>(accompany.roomName));
+        requestDrive(ctx, currentRoom.m_waypoint, currentRoom.m_tour.visibilityAt(0), roomDrive);
 
         ctx.notifyEvent(*this);
     }

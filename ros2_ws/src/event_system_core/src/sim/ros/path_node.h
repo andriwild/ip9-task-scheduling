@@ -108,8 +108,8 @@ public:
             return std::nullopt;
         }
 
-        SimplePose start{fromIt->second.m_p.m_x, fromIt->second.m_p.m_y, 0.0};
-        SimplePose goal{toIt->second.m_p.m_x, toIt->second.m_p.m_y, 0.0};
+        SimplePose start{fromIt->second.m_waypoint.m_x, fromIt->second.m_waypoint.m_y, 0.0};
+        SimplePose goal{toIt->second.m_waypoint.m_x, toIt->second.m_waypoint.m_y, 0.0};
 
         auto result = serviceRequest(start, goal);
 

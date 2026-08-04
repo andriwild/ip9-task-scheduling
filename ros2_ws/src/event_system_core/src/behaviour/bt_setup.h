@@ -14,6 +14,7 @@
 #include "is_active_order_type.h"
 #include "interrupt.h"
 #include "mission_control.h"
+#include "mission_outcome.h"
 
 
 constexpr bool W_OUT_TREE   = true;
@@ -123,6 +124,10 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
     factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
     factory.registerNodeType<IsInterruptActive>("IsInterruptActive");
+
+    // mission outcome
+    factory.registerNodeType<CompleteMission>("CompleteMission");
+    factory.registerNodeType<FailMission>("FailMission");
 }
 
 

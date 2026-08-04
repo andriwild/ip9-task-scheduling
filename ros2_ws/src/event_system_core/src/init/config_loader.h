@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -64,12 +65,6 @@ public:
         return slash == std::string::npos ? "" : SIM_CONFIG_FILE.substr(0, slash + 1);
     }
 
-    // Relative paths are tried against the working directory first, then against
-    // config/. Without the first rule a path typed from the workspace root
-    // silently resolves to a non-existent file under config/.
-    // Always returns an absolute path so that resolving an already resolved path
-    // is a no-op. Relative input is tried against the working directory first,
-    // then against config/.
     static std::string resolvePath(const std::string& path) {
         if (path.empty() || path.front() == '/') {
             return path;
@@ -97,7 +92,7 @@ public:
         }
 
         des::OrderList orders;
-        int instanceId = 200000;
+        int instanceId = 200000; // TODO magic number
         for (const auto& j : json.value().at("orders")) {
             const std::string& type = j.at("type").get_ref<const std::string&>();
             auto& plugin = OrderRegistry::instance().get(type);
@@ -316,77 +311,6 @@ public:
         return filtered;
     }
 
-    static void validateConfig(
-        const des::OrderList& orders,
-        const des::PersonList& employees,
-        const des::RoomMap& rooms,
-        const std::string& arrivalLocation
-    ) {
-        std::vector<std::string> errors;
-
-        // Build employee lookup
-        std::set<std::string> employeeNames;
-        for (const auto& p : employees) {
-            employeeNames.insert(p->firstName);
-        }
-
-        // Check accompany orders reference valid employees and rooms.
-        // Other order types provide their own validation elsewhere.
-        for (const auto& order : orders) {
-            auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(order);
-            if (!accompany) { continue; }
-            if (!employeeNames.contains(accompany->personName)) {
-                errors.push_back("Order '" + accompany->description +
-                    "': personName '" + accompany->personName + "' does not match any employee");
-            }
-            if (!rooms.contains(accompany->roomName)) {
-                errors.push_back("Order '" + accompany->description +
-                    "': roomName '" + accompany->roomName + "' is not a known location");
-            }
-        }
-
-        // Check employee roomLabels reference valid rooms and arrival location is reachable
-        for (const auto& p : employees) {
-            for (const auto& room : p->roomLabels) {
-                if (!rooms.contains(room)) {
-                    errors.push_back("Employee '" + p->firstName +
-                        "': roomLabel '" + room + "' is not a known location");
-                }
-            }
-
-            if (!arrivalLocation.empty()) {
-                auto it = std::find(p->roomLabels.begin(), p->roomLabels.end(), arrivalLocation);
-                if (it == p->roomLabels.end()) {
-                    errors.push_back("Employee '" + p->firstName +
-                        "': arrivalLocation '" + arrivalLocation + "' is not in roomLabels");
-                }
-            }
-
-            // Check transition matrix dimensions
-            if (p->transitionMatrix.size() != p->roomLabels.size()) {
-                errors.push_back("Employee '" + p->firstName +
-                    "': transitionMatrix has " + std::to_string(p->transitionMatrix.size()) +
-                    " rows but roomLabels has " + std::to_string(p->roomLabels.size()) + " entries");
-            }
-            for (size_t i = 0; i < p->transitionMatrix.size(); ++i) {
-                if (p->transitionMatrix[i].size() != p->roomLabels.size()) {
-                    errors.push_back("Employee '" + p->firstName +
-                        "': transitionMatrix row " + std::to_string(i) +
-                        " has " + std::to_string(p->transitionMatrix[i].size()) +
-                        " columns but expected " + std::to_string(p->roomLabels.size()));
-                }
-            }
-        }
-
-        if (!errors.empty()) {
-            std::string msg = "Configuration validation failed:\n";
-            for (const auto& e : errors) {
-                msg += "  - " + e + "\n";
-            }
-            throw std::runtime_error(msg);
-        }
-    }
-
     static double roundValue(const double value) {
         return std::round(value * 1000.0) / 1000.0;
     }
@@ -484,13 +408,46 @@ public:
         return json;
     }
 
-    // Loads the building snapshot into a name -> Location map (coords + optional area) 
-    static std::string toursFilePath(double radius, const bool tsp) {
-        std::ostringstream oss;
-        oss << "tours_r" << radius << (tsp ? "_tsp" : "") << ".json";
-        const auto slash = BUILDING_FILE.rfind('/');
-        const std::string dir = slash == std::string::npos ? "" : BUILDING_FILE.substr(0, slash + 1);
-        return dir + oss.str();
+    static const nlohmann::json& arrayOrEmpty(const nlohmann::json& j, const std::string& key) {
+        static const nlohmann::json empty = nlohmann::json::array();
+        return j.contains(key) && j.at(key).is_array() ? j.at(key) : empty;
+    }
+
+    static std::vector<des::Point> parsePoints(const nlohmann::json& array) {
+        std::vector<des::Point> points;
+        if (!array.is_array()) {
+            return points;
+        }
+        for (const auto& p : array) {
+            points.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
+        }
+        return points;
+    }
+
+    static des::RoomTour parseRoomTour(const nlohmann::json& entry) {
+        des::RoomTour tour;
+        tour.m_distance = entry.value("distance", 0.0);
+        if (entry.contains("path")) {
+            tour.m_path = parsePoints(entry.at("path"));
+        }
+        if (entry.contains("vis") && entry.at("vis").is_array()) {
+            for (const auto& ring : entry.at("vis")) {
+                tour.m_visPolys.push_back(parsePoints(ring));
+            }
+        }
+        return tour;
+    }
+
+    static std::optional<std::string> invalidTourReason(const des::RoomTour& tour, const des::Point& waypoint) {
+        constexpr double kToleranceM = 1e-3;
+        if (tour.empty()) {
+            return "has no path";
+        }
+        if (std::hypot(tour.m_path[0].m_x - waypoint.m_x, tour.m_path[0].m_y - waypoint.m_y) > kToleranceM) {
+            return std::format("starts at ({:.3f}, {:.3f}) instead of the room waypoint ({:.3f}, {:.3f})",
+                               tour.m_path[0].m_x, tour.m_path[0].m_y, waypoint.m_x, waypoint.m_y);
+        }
+        return std::nullopt;
     }
 
     static std::optional<std::size_t> mergeRoomTours(const std::string& filePath, des::RoomMap& rooms) {
@@ -514,25 +471,14 @@ public:
                 DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Tour for unknown room '%s'; dropped", name.c_str());
                 continue;
             }
-            des::RoomTour tour;
-            tour.m_distance = entry.value("distance", 0.0);
-            if (entry.contains("path") && entry.at("path").is_array()) {
-                for (const auto& p : entry.at("path")) {
-                    tour.m_path.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
-                }
-            }
-            if (entry.contains("vis") && entry.at("vis").is_array()) {
-                for (const auto& poly : entry.at("vis")) {
-                    des::Polygon ring;
-                    for (const auto& p : poly) {
-                        ring.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
-                    }
-                    tour.m_visPolys.push_back(std::move(ring));
-                }
-            }
+            des::RoomTour tour = parseRoomTour(entry);
             if (!tour.m_visPolys.empty() && tour.m_visPolys.size() != tour.m_path.size()) {
-                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' has %zu visibility polygons for %zu points; dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
+                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' has %zu visibility polygons for %zu points; visibility dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
                 tour.m_visPolys.clear();
+            }
+            if (const auto reason = invalidTourReason(tour, it->second.m_waypoint)) {
+                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' %s; dropped", name.c_str(), reason->c_str());
+                continue;
             }
             it->second.m_tour = std::move(tour);
             ++merged;
@@ -540,6 +486,7 @@ public:
         return merged;
     }
 
+    // Loads the building snapshot into a name -> Location map (coords + optional area)
     static std::optional<des::RoomMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -559,40 +506,38 @@ public:
 
         const auto& names = j.at("names");
         const auto& locs  = j.at("locations");
-        const bool hasAreas      = j.contains("areas");
-        const bool hasFootprints = j.contains("footprints");
-        const bool hasTypes      = j.contains("types");
-        if (!hasTypes) {
+        if (names.size() != locs.size()) {
+            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s has %zu names for %zu locations", filePath.c_str(), names.size(), locs.size());
+            return std::nullopt;
+        }
+
+        const auto& areas      = arrayOrEmpty(j, "areas");
+        const auto& types      = arrayOrEmpty(j, "types");
+        const auto& footprints = arrayOrEmpty(j, "footprints");
+        if (types.empty()) {
             DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no 'types', falling back to name-based room types; re-bake via ./build_snapshot.sh", filePath.c_str());
         }
 
         des::RoomMap map;
-        for (size_t i = 0; i < names.size() && i < locs.size(); ++i) {
+        for (size_t i = 0; i < names.size(); ++i) {
             const std::string name = names.at(i).get<std::string>();
             const auto& l = locs.at(i);
-            const des::Point p{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) };
 
-            std::optional<double> area;
-            if (hasAreas && i < j.at("areas").size() && !j.at("areas").at(i).is_null()) {
-                area = j.at("areas").at(i).get<double>();
+            des::Room room(name, des::Point{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) });
+            room.m_roomType = i < types.size() ? des::roomTypeFromString(types.at(i).get<std::string>())
+                                               : des::parseRoomName(name);
+            if (i < areas.size() && !areas.at(i).is_null()) {
+                room.m_area = areas.at(i).get<double>();
             }
-
-            des::Room location(name, p, area);
-            if (hasTypes && i < j.at("types").size() && j.at("types").at(i).is_string()) {
-                location.m_roomType = des::roomTypeFromString(j.at("types").at(i).get<std::string>());
-            } else {
-                location.m_roomType = des::parseRoomName(name);
+            if (i < footprints.size()) {
+                room.m_footprint = parsePoints(footprints.at(i));
             }
-            if (hasFootprints && i < j.at("footprints").size() && j.at("footprints").at(i).is_array()) {
-                for (const auto& v : j.at("footprints").at(i)) {
-                    location.m_footprint.push_back(des::Point{v.at(0).get<double>(), v.at(1).get<double>(), 0.0});
-                }
-            }
-            map.emplace(name, std::move(location));
+            map.emplace(name, std::move(room));
         }
         return map;
     }
 
+    // TODO: use type alias
     static std::optional<std::pair<std::vector<std::string>, std::vector<std::vector<float>>>>
     loadDistanceMatrix(const std::string& filePath) {
         const auto json = getJson(filePath);

@@ -42,9 +42,9 @@ public:
             names.push_back(p.m_name);
             types.push_back(des::roomTypeToString(p.m_roomType));
             locations.push_back({
-                {"x",   p.m_p.m_x},
-                {"y",   p.m_p.m_y},
-                {"yaw", p.m_p.m_yaw},
+                {"x",   p.m_waypoint.m_x},
+                {"y",   p.m_waypoint.m_y},
+                {"yaw", p.m_waypoint.m_yaw},
             });
             if (p.m_area) areas.push_back(*p.m_area);
             else          areas.push_back(nullptr);

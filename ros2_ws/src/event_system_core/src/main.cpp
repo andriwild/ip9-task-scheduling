@@ -85,6 +85,7 @@ int main(const int argc, char *argv[]) {
 
 
     // main loop of the application
+    // System State (RUN, PAUSE, RESET, EXIT) are used for the UI (Rviz)
     bool running = true;
     bool batteryDepleted = false;
     auto sim_loop = [&] {

@@ -32,7 +32,6 @@ void SimRunner::buildSimulation() {
     if (!allPeople.has_value() || allPeople.value().empty()) {
         throw std::runtime_error("No employees loaded");
     }
-    ConfigLoader::validateConfig(m_orders, allPeople.value(), m_rooms, "5.2B_Elevator");
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees", allPeople.value().size());
 
     m_ctx = std::make_shared<SimulationContext>(

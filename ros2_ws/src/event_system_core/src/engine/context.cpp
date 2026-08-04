@@ -373,7 +373,7 @@ void SimulationContext::robotMoved(const std::string& location, const double dis
     m_robot->setLocation(location);
     const auto it = m_rooms.find(location);
     if (it != m_rooms.end()) {
-        m_robot->setPosition(it->second.m_p);
+        m_robot->setPosition(it->second.m_waypoint);
     }
     m_eventBus.notifyMoved(m_currentTime, location, distance);
 }

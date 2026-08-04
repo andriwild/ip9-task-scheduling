@@ -20,7 +20,7 @@
 #include "../src/plugins/accompany/events/found_person_conversation_complete.h"
 #include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
 #include "../src/plugins/accompany/events/appointment_end_event.h"
-#include "../src/plugins/accompany/events/room_search.h"
+#include "../src/plugins/accompany/events/scan_point_event.h"
 #include "util/constants.h"
 
 class MockSimContext : public ISimContext {
@@ -304,8 +304,9 @@ TEST(EventExecute, SearchDriveCarriesTheVisibilityOfItsTourPoint) {
     ctx.robot->setLocation("Office");
     ctx.robot->setSpeed(1.0);
 
-    RoomSearch search(1000, makeAccompanyOrder(1, "Max", "Office"));
-    search.execute(ctx);
+    const auto order = makeAccompanyOrder(1, "Max", "Office");
+    const des::RoomTour& tour = ctx.room("Office").m_tour;
+    requestDrive(ctx, tour.m_path[0], tour.visibilityAt(0), std::make_shared<ScanPointEvent>(1000, order));
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     const auto startDrive = ctx.pushedEvents.back();
@@ -321,6 +322,40 @@ TEST(EventExecute, SearchDriveCarriesTheVisibilityOfItsTourPoint) {
     ASSERT_EQ(ctx.robot->getVisibility().size(), 4u);
     EXPECT_DOUBLE_EQ(ctx.robot->getVisibility()[2].m_x, 3.0);
     EXPECT_DOUBLE_EQ(ctx.robot->getVisibility()[2].m_y, 3.0);
+}
+
+TEST(EventExecute, ScanPointLatchesTheTargetAndMarksThePersonBusy) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    ctx.employees["Max"] = person.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Office";
+
+    ScanPointEvent event(1000, makeAccompanyOrder(1, "Max", "Office"));
+    event.execute(ctx);
+
+    EXPECT_TRUE(ctx.robot->isPersonVisible());
+    EXPECT_TRUE(person->busy);
+    EXPECT_EQ(ctx.tickCount, 1);
+}
+
+TEST(EventExecute, ScanPointWithoutSightingLeavesTheRobotSearching) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    ctx.employees["Max"] = person.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Kitchen";
+
+    ScanPointEvent event(1000, makeAccompanyOrder(1, "Max", "Office"));
+    event.execute(ctx);
+
+    EXPECT_FALSE(ctx.robot->isPersonVisible());
+    EXPECT_FALSE(person->busy);
+    EXPECT_EQ(ctx.tickCount, 1);
 }
 
 TEST(EventExecute, ArrivingInARoomAdoptsItsFirstTourPointVisibility) {
@@ -375,7 +410,7 @@ TEST(EventExecute, SimulationStartPushesStopDriveEvent) {
 
 TEST(EventExecute, SimulationEndSetsIdleState) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<SearchState>(std::vector<std::string>{"A"}));
+    ctx.robot->changeState(std::make_unique<SearchState>());
 
     SimulationEndEvent event(1000);
     event.execute(ctx);
@@ -428,17 +463,17 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     EXPECT_EQ(ctx.robot->getState()->getName(), "search");
     EXPECT_EQ(ctx.tickCount, 1);
 
-    auto* searchState = dynamic_cast<SearchState*>(ctx.robot->getState());
-    ASSERT_NE(searchState, nullptr);
+    ASSERT_NE(dynamic_cast<SearchState*>(ctx.robot->getState()), nullptr);
 
-    std::vector<std::string> got = searchState->locations;
+    std::vector<std::string> got = order->remainingSearch;
     std::sort(got.begin(), got.end());
     EXPECT_EQ(got, (std::vector<std::string>{"Kitchen", "Lab", "Office"}));
+    EXPECT_EQ(order->scanIndex, 0u);
 }
 
 // --- AbortSearchEvent ---
 
-TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
+TEST(EventExecute, AbortSearchReportsReasonWithoutEndingTheMission) {
     MockSimContext ctx;
 
     auto order = makeAccompanyOrder(1, "Max");
@@ -449,11 +484,10 @@ TEST(EventExecute, AbortSearchFailsMissionAndSetsIdle) {
     AbortSearchEvent event(36000, order);
     event.execute(ctx);
 
-    EXPECT_EQ(ctx.currentOrder->state, des::MissionState::FAILED);
-    EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::IDLE);
     EXPECT_EQ(order->abortReason, SearchAbortReason::OUTSIDE);
-    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::MISSION_COMPLETE);
+    EXPECT_EQ(ctx.currentOrder->state, des::MissionState::IN_PROGRESS);
+    EXPECT_TRUE(ctx.pushedEvents.empty());
+    EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
 
 TEST(EventExecute, AbortSearchInBuildingSetsReason) {
@@ -473,8 +507,15 @@ TEST(EventExecute, AbortSearchInBuildingSetsReason) {
 
 // --- StartAccompanyEvent ---
 
-TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
+TEST(EventExecute, StartAccompanyDrivesToTheRoomViaItsWaypoint) {
     MockSimContext ctx;
+
+    des::Room office{ "Office", des::Point{5.0, 0.0, 0.0}, 0.0 };
+    office.m_tour.m_path = { des::Point{5.0, 0.0, 0.0}, des::Point{8.0, 0.0, 0.0} };
+    ctx.rooms.emplace("Office", std::move(office));
+    ctx.robot->setLocation("Office");
+    ctx.robot->setPosition(des::Point{8.0, 0.0, 0.0});
+    ctx.robot->setSpeed(1.0);
 
     auto order = makeAccompanyOrder(1, "Max", "MeetingRoom");
     ctx.currentOrder = order;
@@ -485,10 +526,19 @@ TEST(EventExecute, StartAccompanySetsAccompanyStateAndDrivesToRoom) {
     EXPECT_EQ(ctx.robot->getState()->getName(), "accompany");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::START_DRIVE);
-    // Verify the drive target is the appointment room
-    auto* driveEvent = dynamic_cast<StartDriveEvent*>(ctx.pushedEvents[0].get());
-    ASSERT_NE(driveEvent, nullptr);
-    EXPECT_EQ(driveEvent->getName(), "Departing: MeetingRoom");
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Departing: (5.000000, 0.000000)");
+
+    const auto toWaypoint = ctx.pushedEvents.back();
+    ctx.pushedEvents.clear();
+    toWaypoint->execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    const auto atWaypoint = ctx.pushedEvents.back();
+    ctx.pushedEvents.clear();
+    atWaypoint->execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Departing: MeetingRoom");
 }
 
 // --- StartFoundPersonConversationEvent ---

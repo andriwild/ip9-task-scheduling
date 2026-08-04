@@ -17,8 +17,6 @@ struct SightingCounts {
     int misses = 0;
 };
 
-// Append-only log plus a running (person, room) tally. The tally makes a belief
-// query O(rooms) instead of O(rooms x log), the raw entries stay for the trace export.
 class SightingLog {
     std::vector<Sighting> m_entries;
     std::map<std::string, std::map<std::string, SightingCounts>> m_tally;

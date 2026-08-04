@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@ struct AccompanyOrder : des::IOrder {
     std::string roomName;
     std::vector<std::string> plannedSearch;
     std::vector<std::string> remainingSearch;
+    size_t scanIndex = 0;
     AccompanyPhase phase = AccompanyPhase::NONE;
     SearchAbortReason abortReason = SearchAbortReason::NONE;
 };

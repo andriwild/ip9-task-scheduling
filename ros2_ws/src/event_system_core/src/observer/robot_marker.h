@@ -34,7 +34,7 @@ public:
         if (it == m_rooms.end()) {
             return;
         }
-        m_position = it->second.m_p;
+        m_position = it->second.m_waypoint;
         publish();
     }
 

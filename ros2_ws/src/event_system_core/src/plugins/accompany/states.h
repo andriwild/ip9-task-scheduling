@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "../../model/robot_state.h"
 #include "../../util/types.h"
@@ -16,8 +15,6 @@ class ISimContext;
 
 class SearchState final : public RobotState {
 public:
-    std::vector<std::string> locations;
-    explicit SearchState(const std::vector<std::string>& locations) : locations(locations) {}
     void enter(Robot& robot) override;
     des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
     std::string getName() const override { return "search"; }

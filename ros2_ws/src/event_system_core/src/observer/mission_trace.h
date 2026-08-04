@@ -184,7 +184,7 @@ private:
         if (it == m_rooms.end()) {
             return std::nullopt;
         }
-        return std::make_pair(it->second.m_p.m_x, it->second.m_p.m_y);
+        return std::make_pair(it->second.m_waypoint.m_x, it->second.m_waypoint.m_y);
     }
 
     void appendRobot(Trace& trace, const int time, const std::string& location, const std::string& event) {

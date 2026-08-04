@@ -476,25 +476,14 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(e->getType(), des::EventType::MISSION_START);
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "search");
 
-    // Step 5: ScanAera at Dock
-    e = step(*ctx);
-    ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::ROOM_SEARCH);
-    EXPECT_EQ(ctx->getRobot()->getLocation(), "IMVS_Dock");
-
-    // Step 6: ScanComplete at Dock (person not found)
-    e = step(*ctx);
-    ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::SCAN_COMPLETE);
-
-    // Step 7: StartDrive to Office
+    // Step 5: StartDrive to Office — the dock is excluded from the search, so it is not scanned
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
     EXPECT_TRUE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "Office");
 
-    // Step 8: StopDrive at Office
+    // Step 6: StopDrive at Office
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
@@ -502,36 +491,32 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "search");
 
-    // Step 9: ScanAera at Office
+    // Step 7: Scan at Office — person found
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::ROOM_SEARCH);
+    EXPECT_EQ(e->getType(), des::EventType::SCAN);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
+    EXPECT_TRUE(ctx->getRobot()->isPersonVisible());
 
-    // Step 10: ScanComplete at Office — person found
-    e = step(*ctx);
-    ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::SCAN_COMPLETE);
-
-    // Step 11: StartFoundPersonConversation
+    // Step 8: StartFoundPersonConversation
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::START_FOUND_PERSON_CONV);
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
 
-    // Step 12: FoundPersonConversationComplete
+    // Step 9: FoundPersonConversationComplete
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::FOUND_PERSON_CONV_COMPLETE);
     EXPECT_EQ(ctx->getRobot()->getState()->getResult(), des::Result::SUCCESS);
 
-    // Step 13: StartAccompany
+    // Step 10: StartAccompany
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "accompany");
 
-    // Steps 14-15: PersonAccompanyDeparture + StartDrive (same time, order not guaranteed)
+    // Steps 11-12: PersonAccompanyDeparture + StartDrive (same time, order not guaranteed)
     {
         bool seenDeparture = false;
         bool seenStartDrive = false;
@@ -542,21 +527,32 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
             if (e->getType() == des::EventType::START_DRIVE) seenStartDrive = true;
         }
         EXPECT_TRUE(seenDeparture) << "Expected PersonAccompanyDeparture at accompany start";
-        EXPECT_TRUE(seenStartDrive) << "Expected StartDrive to MeetingRoom";
+        EXPECT_TRUE(seenStartDrive) << "Expected StartDrive to the room waypoint";
     }
+    EXPECT_TRUE(ctx->getRobot()->isDriving());
+
+    // Steps 13-14: StopDrive at the waypoint of Office, then StartDrive to MeetingRoom
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
+    EXPECT_EQ(ctx->getRobot()->getLocation(), "Office");
+
+    e = step(*ctx);
+    ASSERT_NE(e, nullptr);
+    EXPECT_EQ(e->getType(), des::EventType::START_DRIVE);
     EXPECT_TRUE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getRobot()->getTargetLocation(), "MeetingRoom");
 
-    // Step 16: StopDrive at MeetingRoom
+    // Step 15: StopDrive at MeetingRoom
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::STOP_DRIVE);
     EXPECT_EQ(ctx->getRobot()->getLocation(), "MeetingRoom");
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getPersonLocation("Max"), "MeetingRoom");
-    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "accompany");
 
-    // Steps 17-18: PersonAccompanyArrived + StartDropOffConversation
+    // Steps 16-17: PersonAccompanyArrived + StartDropOffConversation
     {
         bool seenArrived = false;
         bool seenStartDropOff = false;
@@ -569,6 +565,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
         EXPECT_TRUE(seenArrived) << "Expected PersonAccompanyArrived (accompany arrival)";
         EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
     }
+    EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
 
     // Step 18: DropOffConversationComplete (Success)
     e = step(*ctx);

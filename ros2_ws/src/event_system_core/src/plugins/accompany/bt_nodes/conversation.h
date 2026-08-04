@@ -11,7 +11,6 @@
 #include "model/robot_state.h"
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
-#include "engine/event.h"
 
 class IsConversating final : public BT::ConditionNode {
 public:
@@ -120,25 +119,3 @@ public:
     }
 };
 
-class CompleteMissionAction final : public BT::SyncActionNode {
-public:
-    CompleteMissionAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
-
-    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
-
-    BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-
-        const auto convResult = ctx->getRobot()->getState()->getResult();
-        if (convResult == des::Result::SUCCESS) {
-            ctx->updateOrderState(des::MissionState::COMPLETED);
-        } else {
-            ctx->updateOrderState(des::MissionState::FAILED);
-        }
-        ctx->changeRobotState(std::make_unique<IdleState>());
-        ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "Complete Mission Action");
-        
-        return BT::NodeStatus::SUCCESS;
-    }
-};

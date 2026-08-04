@@ -115,14 +115,6 @@ void Robot::setCharging(const bool isCharging) {
     m_isCharging = isCharging;
 }
 
-bool Robot::isScanning() const {
-    return m_isScanning;
-}
-
-void Robot::setScanning(const bool isScanning) {
-    m_isScanning = isScanning;
-}
-
 bool Robot::updateAndGetChargingRequired() {
     m_chargingRequired = false;
     if (m_bat->isBatteryLow()) {

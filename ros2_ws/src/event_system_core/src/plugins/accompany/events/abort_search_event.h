@@ -3,9 +3,7 @@
 #include <algorithm>
 
 #include "engine/contracts/i_event.h"
-#include "engine/event/mission_complete_event.h"
 #include "engine/contracts/i_sim_context.h"
-#include "model/robot_state.h"
 #include "model/order.h"
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/search_exclusion.h"
@@ -43,9 +41,6 @@ public:
                              unreachable ? "unreachable room (excluded from search)" : (searched ? "searched room, timing miss" : "unsearched room, belief miss"));
             }
         }
-        m_order->state = des::MissionState::FAILED;
-        ctx.changeRobotState(std::make_unique<IdleState>());
-        ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
         ctx.notifyEvent(*this);
     }
 

@@ -295,76 +295,6 @@ TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveOrders) {
     EXPECT_EQ(filtered.size(), employees->size());
 }
 
-// --- validateConfig ---
-
-TEST(ConfigLoaderValidation, ValidConfigDoesNotThrow) {
-    auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
-    auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
-    ASSERT_TRUE(employees.has_value());
-    ASSERT_TRUE(orders.has_value());
-
-    des::RoomMap locationMap;
-    locationMap.emplace("5.2B03", des::Room("5.2B03", des::Point(0, 0, 0)));
-    locationMap.emplace("5.2B01", des::Room("5.2B01", des::Point(1, 1, 0)));
-    locationMap.emplace("5.2B10", des::Room("5.2B10", des::Point(2, 2, 0)));
-    locationMap.emplace("5.2B_Elevator", des::Room("5.2B_Elevator", des::Point(3, 3, 0)));
-
-    EXPECT_NO_THROW(ConfigLoader::validateConfig(*orders, *employees, locationMap, "5.2B_Elevator"));
-}
-
-TEST(ConfigLoaderValidation, UnknownPersonInAccompanyOrderThrows) {
-    des::PersonList employees;
-    auto emp = std::make_unique<des::Person>();
-    emp->firstName = "Max";
-    emp->roomLabels = {"RoomA"};
-    emp->transitionMatrix = {{1.0}};
-    employees.push_back(std::move(emp));
-
-    des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomA") };
-
-    des::RoomMap locationMap;
-    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
-
-    EXPECT_THROW(ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"), std::runtime_error);
-}
-
-TEST(ConfigLoaderValidation, UnknownRoomInAccompanyOrderThrows) {
-    auto emp = std::make_unique<des::Person>();
-    emp->firstName = "Max";
-    emp->roomLabels = {"RoomA"};
-    emp->transitionMatrix = {{1.0}};
-
-    des::OrderList orders = { makeAccompanyOrder("Max", "NonexistentRoom") };
-
-    des::RoomMap locationMap;
-    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
-
-    des::PersonList employees;
-    employees.push_back(std::move(emp));
-    EXPECT_THROW(
-        ConfigLoader::validateConfig(orders, employees, locationMap, "RoomA"),
-        std::runtime_error
-    );
-}
-
-TEST(ConfigLoaderValidation, MismatchedTransitionMatrixThrows) {
-    auto emp = std::make_unique<des::Person>();
-    emp->firstName = "Max";
-    emp->roomLabels = {"RoomA", "RoomB"};
-    emp->transitionMatrix = {{1.0}}; // 1x1 but should be 2x2
-
-    des::RoomMap locationMap;
-    locationMap.emplace("RoomA", des::Room("RoomA", des::Point(0, 0, 0)));
-    locationMap.emplace("RoomB", des::Room("RoomB", des::Point(1, 1, 0)));
-
-    des::PersonList employees;
-    employees.push_back(std::move(emp));
-    EXPECT_THROW(
-        ConfigLoader::validateConfig({}, employees, locationMap, "RoomA"),
-        std::runtime_error
-    );
-}
-
 TEST(ConfigLoaderBuildingSnapshot, LoadsFootprintsAndAreas) {
     auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
@@ -417,6 +347,16 @@ TEST(ConfigLoaderRoomTours, TourWithoutVisibilityStaysUnbounded) {
     ASSERT_EQ(tour.m_path.size(), 2u);
     EXPECT_TRUE(tour.visibilityAt(0).empty());
     EXPECT_TRUE(tour.visibilityAt(1).empty());
+}
+
+TEST(ConfigLoaderRoomTours, DropsTourThatDoesNotStartAtTheRoomWaypoint) {
+    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    ASSERT_TRUE(map.has_value());
+
+    const auto merged = ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours_offset.json", map.value());
+    ASSERT_TRUE(merged.has_value());
+    EXPECT_EQ(merged.value(), 0u);
+    EXPECT_TRUE(map->at("RoomA").m_tour.empty());
 }
 
 TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {

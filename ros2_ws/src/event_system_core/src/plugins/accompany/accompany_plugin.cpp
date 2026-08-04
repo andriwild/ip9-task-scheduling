@@ -24,19 +24,19 @@
 void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
-    factory.registerNodeType<IsScanning>("IsScanning");
     factory.registerNodeType<FoundPerson>("FoundPerson");
-    factory.registerNodeType<ScanLocation>("ScanLocation");
+    factory.registerNodeType<HasScanPoint>("HasScanPoint");
+    factory.registerNodeType<ScanNextPoint>("ScanNextPoint");
     factory.registerNodeType<HasNextLocation>("HasNextLocation");
     factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
     factory.registerNodeType<StartAccompanyConversation>("StartAccompanyConversation");
-    factory.registerNodeType<AbortSearch>("AbortSearch");
+    factory.registerNodeType<ReportSearchAbort>("ReportSearchAbort");
 
     // accompany
     factory.registerNodeType<IsAccompany>("IsAccompany");
+    factory.registerNodeType<HasArrived>("HasArrived");
     factory.registerNodeType<ArrivedWithPerson>("ArrivedWithPerson");
     factory.registerNodeType<StartDropOffConversation>("StartDropOffConversation");
-    factory.registerNodeType<AbortAccompany>("AbortAccompany");
 
     // conversation
     factory.registerNodeType<IsConversating>("IsConversating");
@@ -45,7 +45,6 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsFoundPersonConversation>("IsFoundPersonConversation");
     factory.registerNodeType<IsDropOffConversation>("IsDropOffConversation");
     factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
-    factory.registerNodeType<CompleteMissionAction>("CompleteMissionAction");
 }
 
 void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
@@ -150,15 +149,16 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
 
     accompanyOrder.plannedSearch = locations;
     accompanyOrder.remainingSearch = locations;
+    accompanyOrder.scanIndex = 0;
     accompanyOrder.phase = AccompanyPhase::SEARCH;
-    ctx.changeRobotState(std::make_unique<SearchState>(locations));
+    ctx.changeRobotState(std::make_unique<SearchState>());
 }
 
 void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, des::IOrder& order) {
     auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
     switch (accompanyOrder.phase) {
         case AccompanyPhase::SEARCH: {
-            ctx.changeRobotState(std::make_unique<SearchState>(accompanyOrder.remainingSearch));
+            ctx.changeRobotState(std::make_unique<SearchState>());
             break;
         }
         case AccompanyPhase::ACCOMPANY: {

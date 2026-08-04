@@ -74,16 +74,16 @@ struct RoomTour {
 
 struct Room {
     std::string m_name;
-    Point m_p;
+    Point m_waypoint;
     std::optional<double> m_area;
     std::vector<Point> m_footprint;
     RoomType m_roomType = RoomType::OTHER;
     RoomTour m_tour;
 
-    explicit Room(const std::string& name, const Point p, const std::optional<double> area = std::nullopt) : m_name(name), m_p(p), m_area(area) {}
+    explicit Room(const std::string& name, const Point waypoint, const std::optional<double> area = std::nullopt) : m_name(name), m_waypoint(waypoint), m_area(area) {}
 
     friend std::ostream& operator<<(std::ostream& os, const Room& r) {
-        os << r.m_name << r.m_p;
+        os << r.m_name << r.m_waypoint;
         if (r.m_area) os << " area=" << *r.m_area;
         os << " type=" << roomTypeToString(r.m_roomType);
         if (!r.m_tour.empty()) os << " tour=" << r.m_tour.m_distance << "m/" << r.m_tour.m_path.size() << "pts";

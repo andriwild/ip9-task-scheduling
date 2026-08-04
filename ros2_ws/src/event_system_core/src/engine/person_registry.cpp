@@ -85,5 +85,5 @@ std::optional<des::Point> PersonRegistry::samplePosition(const std::string& room
     if (const auto pos = geom::sampleInPolygon(it->second.m_footprint, m_placementRng)) {
         return pos;
     }
-    return it->second.m_p;
+    return it->second.m_waypoint;
 }

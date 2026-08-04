@@ -93,11 +93,6 @@ bool HeadlessRunner::loadNextBatch() {
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
-    ConfigLoader::validateConfig(m_orders, m_ctx->getAllPersons(), m_rooms, "5.2B_Elevator");
-
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Simulating %zu employees",
-                m_ctx->getAllPersons().size());
-
     populateEventQueue();
     m_eventQueue.print();
     return true;
