@@ -180,7 +180,7 @@ public:
 
         const OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
-            .energyBudget    = static_cast<float>(currentWh), // TODO: check for deletion
+            .energyBudget    = static_cast<float>(std::max(energyBudget, kMinEnergyBudgetWh)),
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
             .socThreshold    = static_cast<float>(socThreshold),

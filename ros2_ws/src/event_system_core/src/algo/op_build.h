@@ -17,6 +17,8 @@
 #include "model/order.h"
 #include "../util/log.h"
 
+constexpr double kMinEnergyBudgetWh = 1e-3;
+
 struct OpBudgets {
     float timeBudget;
     float energyBudget;

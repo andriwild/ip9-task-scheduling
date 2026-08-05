@@ -95,12 +95,13 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const double currentWh  = bat.soc * bat.capacity * voltage;
     const double capacityWh = bat.capacity * voltage;
     const double reserveWh  = capacityWh * bat.lowThreshold / 100.0;
+    const double spendableWh = currentWh - reserveWh;
     const int now           = ctx.getTime();
     const int deadline      = a.deadline.value_or(now);
 
     const OpBudgets budgets {
         .timeBudget      = static_cast<float>(std::max(0, deadline - now)),
-        .energyBudget    = static_cast<float>(currentWh),
+        .energyBudget    = static_cast<float>(std::max(spendableWh, kMinEnergyBudgetWh)),
         .initialSoc      = static_cast<float>(currentWh),
         .endSocMin       = static_cast<float>(reserveWh),
         .socThreshold    = static_cast<float>(reserveWh),
