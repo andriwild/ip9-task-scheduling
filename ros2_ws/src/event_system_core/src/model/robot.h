@@ -17,7 +17,7 @@
 class IEvent;
 
 class Robot {
-    std::string m_dockLocation = "IMVS_Dock";
+    std::string m_dockLocation;
     std::unique_ptr<RobotState> m_state;
     std::string m_currentLocation;
     std::string m_targetLocation;

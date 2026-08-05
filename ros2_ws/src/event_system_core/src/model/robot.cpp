@@ -6,7 +6,8 @@
 Robot::Robot(const std::shared_ptr<des::SimConfig>& config)
     : m_state(std::make_unique<IdleState>())
 {
-    m_driveSpeed = config->robotSpeed;
+    m_driveSpeed   = config->robotSpeed;
+    m_dockLocation = config->dockLocation;
 
     m_bat = std::make_unique<Battery>(
         config->batteryCapacity,

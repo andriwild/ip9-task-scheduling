@@ -123,7 +123,7 @@ protected:
         m_ctx->reseedPersons();
         scheduleOccupancy(*m_config, people);
         m_eventQueue.extend(personArrivalGenerator(people));
-        m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), "IMVS_Dock"));
+        m_eventQueue.extend(createMissionQueue(m_orders, m_ctx->getScheduler(), m_config->dockLocation));
 
         const int simStartTime = m_config->simStartTime;
         const int simEndTime   = m_config->simStartTime + m_config->simDuration;
