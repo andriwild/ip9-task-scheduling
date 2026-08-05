@@ -1,3 +1,10 @@
+/*
+ * Helpers to put a route planning problem together.
+ * Start and end places become nodes without reward or cost,
+ * and the distance matrix is filled from the path planner.
+ *
+ */
+
 #pragma once
 
 #include <optional>

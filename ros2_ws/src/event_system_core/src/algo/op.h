@@ -1,3 +1,12 @@
+/*
+ * Route planning problem: the nodes, the distances between them and the limits.
+ * The main job is simulateRoute(): it drives the route step by step
+ * and reports how much time it takes and how full the battery is at the end.
+ * A route is feasible if it stays inside the time limit and never falls below the battery limit.
+ * Charging stations refill the battery in the middle of a route.
+ *
+ */
+
 #pragma once
 
 #include <algorithm>

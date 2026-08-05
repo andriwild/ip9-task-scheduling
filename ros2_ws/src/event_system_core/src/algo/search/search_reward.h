@@ -1,3 +1,11 @@
+/*
+ * Gives each room a score for the search route.
+ * The score starts at the role prior and moves towards what the robot has really seen.
+ * Many hits raise the score, many misses lower it.
+ * Rooms the robot never visited keep the prior.
+ *
+ */
+
 #pragma once
 
 #include <string>

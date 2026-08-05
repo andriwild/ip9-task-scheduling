@@ -1,3 +1,11 @@
+/*
+ * Plain data for a route planning problem.
+ * A node is a place the robot can visit.
+ * It has a reward and the time and energy it costs to work there.
+ * The parameters hold the start and end node, the limits and the robot values needed to turn a distance into time and energy.
+ *
+ */
+
 #pragma once
 
 #include <string>

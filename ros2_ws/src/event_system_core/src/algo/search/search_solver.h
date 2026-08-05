@@ -1,3 +1,11 @@
+/*
+ * Simple solver for the search route.
+ * It always adds the room with the best value for its cost,
+ * but only if the full route still fits into the time and energy limits.
+ * It stops when no room fits any more.
+ *
+ */
+
 #pragma once
 
 #include <vector>
@@ -17,7 +25,7 @@ inline std::vector<int> greedySearchOrder(const OpInstance& op) {
         for (std::size_t i = 0; i < candidates.size(); ++i) {
             const int c = candidates[i];
             route.push_back(c);
-            const bool feasible = op.simulateRoute(route).feasible;
+            const bool feasible = op.simulateRoute(route, true).feasible;
             route.pop_back();
             if (!feasible) {
                 continue;

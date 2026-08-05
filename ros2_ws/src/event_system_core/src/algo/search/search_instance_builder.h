@@ -1,3 +1,11 @@
+/*
+ * Builds the input for the search route planner.
+ * Each room the robot search becomes a node. 
+ * The cost to scan a room comes from its room tour. Start and end location are fixed.
+ * Distances and the time and energy limits are added to each candidate.
+ *
+ */
+
 #pragma once
 
 #include <optional>
@@ -13,6 +21,7 @@
 #include "engine/contracts/i_world_model.h"
 #include "../../util/log.h"
 #include "../../util/types.h"
+
 
 inline std::optional<OpInstance> buildSearchInstance(
     const IWorldModel& world,
@@ -34,6 +43,7 @@ inline std::optional<OpInstance> buildSearchInstance(
     }
     const std::size_t anchorCount = planned.size();
 
+    // precalculate time and energy usage of all candidates using sightseeing tour
     for (const auto& room : roomNodes) {
         if (room.name == startLoc || room.name == endLoc) {
             continue;
@@ -55,6 +65,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         return std::nullopt;
     }
 
+    // create submatrix containing only the candidates
     auto mat = op_build::distanceMatrix(paths, planned);
     if (!mat) {
         return std::nullopt;

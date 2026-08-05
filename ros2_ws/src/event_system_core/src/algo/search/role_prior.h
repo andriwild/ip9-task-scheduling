@@ -1,3 +1,10 @@
+/*
+ * How likely each role is to be found in each room type.
+ * These are fixed start values, used before the robot has seen the person anywhere.
+ * If a person has several roles, the highest value wins.
+ *
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -18,6 +25,7 @@ struct RolePrior {
     float toilet;
 };
 
+// TODO: explain in more detail, get rid of magic numbers
 inline const std::vector<RolePrior>& rolePriors() {
     static const std::vector<RolePrior> table = {
         { "Student",            0.03f, 0.12f, 0.10f, 0.05f, 0.02f },
