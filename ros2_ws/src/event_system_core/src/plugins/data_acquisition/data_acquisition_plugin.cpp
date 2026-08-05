@@ -1,5 +1,6 @@
 #include "data_acquisition_plugin.h"
 
+#include <algorithm>
 #include <memory>
 
 #include "bt_nodes/acquisition.h"
@@ -28,8 +29,16 @@ void DataAcquisition::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
-double DataAcquisition::estimateReward(const des::IOrder& /*order*/, const EstimationView& /*view*/) const {
-    return m_config.rewardWeight;
+double DataAcquisition::estimateReward(const des::IOrder& order, const EstimationView& view) const {
+    const auto& o = static_cast<const DataAcquisitionOrder&>(order);
+    const double interval = o.acquisitionInterval.value_or(m_config.acquisitionInterval);
+
+    double urgency = 1.0;
+    const auto last = view.world.lastServiced(o.roomName, kTypeName);
+    if (last.has_value() && interval > 0.0) {
+        urgency = std::clamp((view.clock.getTime() - last.value()) / interval, 0.0, 1.0);
+    }
+    return m_config.rewardWeight * urgency;
 }
 
 void DataAcquisition::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
@@ -43,6 +52,9 @@ des::OrderPtr DataAcquisition::fromJson(const nlohmann::json& j) const {
     o->deadline    = j.contains("appointmentTime") ? std::optional<int>(j.at("appointmentTime").get<int>()) : std::nullopt;
     o->description = j.value("description", "");
     o->roomName    = j.at("roomName");
+    if (j.contains("data_acquisition_interval")) {
+        o->acquisitionInterval = j.at("data_acquisition_interval").get<double>();
+    }
     o->execution   = des::ExecutionMode::BACKGROUND;
     return o;
 }
