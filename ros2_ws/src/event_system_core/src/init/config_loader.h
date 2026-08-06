@@ -454,9 +454,6 @@ public:
 
         std::size_t merged = 0;
         for (const auto& [name, entry] : j.at("rooms").items()) {
-            if (!entry.value("ok", false)) {
-                continue;
-            }
             const auto it = rooms.find(name);
             if (it == rooms.end()) {
                 DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Tour for unknown room '%s'; dropped", name.c_str());

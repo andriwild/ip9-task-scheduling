@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 
+// TODO: namespace
 class IPathPlanner {
 public:
     virtual ~IPathPlanner() = default;

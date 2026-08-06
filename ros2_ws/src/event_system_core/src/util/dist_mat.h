@@ -24,6 +24,7 @@
 
 using Mat = std::vector<std::vector<float>>;
 
+// TODO: namespace
 class DistMat {
 public:
     // Writes the full snapshot. Areas come straight from each Location's m_area

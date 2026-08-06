@@ -23,6 +23,7 @@ struct StateInterval {
     double socTo;
 };
 
+// TODO: namespace
 class StateLog {
     std::vector<StateInterval> m_entries;
     bool m_open = false;

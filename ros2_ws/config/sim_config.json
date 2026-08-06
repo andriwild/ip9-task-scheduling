@@ -7,7 +7,7 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/handcheck_search.json",
+    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 1800.0,
@@ -62,12 +62,14 @@
         "Dock",
         "Toilet"
     ],
+    "search_prior_weight": 4.0,
     "search_reward_strategy": "beta_smoothed",
     "search_role_prior": true,
+    "search_workplace_prior": 0.6,
     "seed": 42,
-    "sim_duration": 86400,
+    "sim_duration": 35640,
     "sim_start_time": 18000,
     "taper_fraction": 0.6,
-    "timeBuffer": 2000.0,
+    "timeBuffer": 1000.0,
     "use_distance_matrix": true
 }
