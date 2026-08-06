@@ -27,6 +27,7 @@ public:
     m_robot_name    = this->get_parameter("robot_name").as_string();
     m_base_link     = this->get_parameter("base_frame").as_string();
 
+
     m_tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
     // Subscribe to Gazebo topic

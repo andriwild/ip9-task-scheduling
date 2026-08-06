@@ -34,8 +34,7 @@ void HeadlessRunner::setupApplication() {
     );
 
     if (m_config->metricsCsvExport) {
-        m_reporter.setRunId(s_runId);
-        m_reporter.enableCsv(outputPath("metrics", ".csv"), m_config);
+        m_reporter.enableCsv(outputPath("metrics", ".csv"));
         m_reporter.enableDailyCsv(outputPath("metrics_daily", ".csv"));
     }
 
@@ -62,7 +61,7 @@ bool HeadlessRunner::loadNextRound() {
 
     const std::string& path = m_config->appointmentsPath;
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Starting round %d/%d: %s", m_currentRound + 1, kRounds, path.c_str());
-    m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_currentRound + 1, m_ctx->activeSeed());
+    m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_ctx->activeSeed());
 
     auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     if (!appts.has_value()) {

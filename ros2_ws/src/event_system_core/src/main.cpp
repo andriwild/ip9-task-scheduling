@@ -140,7 +140,6 @@ int main(const int argc, char *argv[]) {
                         batteryDepleted = true;
                         running = false;
                         app->m_ctx->getRobot()->closeStateLog(e->time);
-                        app->reporter().setTerminatedReason("battery_depleted");
                         app->reporter().report(*app->m_ctx, app->m_protocol);
                         break;
                     }

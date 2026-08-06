@@ -142,6 +142,8 @@ struct SimConfig {
     std::string employeesPath = "";
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
     bool searchRolePrior = false;
+    double searchPriorWeight = 4.0;
+    double searchWorkplacePrior = 0.6;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
     unsigned int seed = 42;

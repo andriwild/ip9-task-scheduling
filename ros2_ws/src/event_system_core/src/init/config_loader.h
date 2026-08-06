@@ -267,6 +267,8 @@ public:
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
             config.searchRewardStrategy = des::searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.searchRolePrior = j.value("search_role_prior", false);
+            config.searchPriorWeight = j.value("search_prior_weight", 4.0);
+            config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
             config.energyReserveStrategy = des::energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
             config.seed = j.value("seed", 42u);
@@ -347,6 +349,8 @@ public:
         j["search_excluded_rooms"]          = config.searchExcludedRooms;
         j["search_reward_strategy"]         = des::searchRewardStrategyToString(config.searchRewardStrategy);
         j["search_role_prior"]              = config.searchRolePrior;
+        j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
+        j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);
         j["energy_reserve_strategy"]        = des::energyReserveStrategyToString(config.energyReserveStrategy);
         j["energy_reserve_horizon"]         = config.energyReserveHorizon;
         j["seed"]                           = config.seed;

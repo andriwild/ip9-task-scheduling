@@ -7,6 +7,8 @@
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 #include "model/order.h"
+#include "util/log.h"
+#include "plugins/clean/clean_order.h"
 #include "plugins/clean/clean_plugin.h"
 #include "end_clean_event.h"
 
@@ -27,13 +29,17 @@ public:
         m_order->state = des::MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
 
-        const std::string robotLocation = ctx.getRobot()->getLocation();
-        const double roomArea           = ctx.room(robotLocation).m_area.value_or(1.0);
-        const double broomFootprint     = cleanConfig().cleaningArea;
-        assert(broomFootprint > 0.0);
-        const double broomSide  = std::sqrt(broomFootprint);
-        const double steps      = (roomArea / broomFootprint) + 1;
-        const int cleanTime     = static_cast<int>(steps * (2.0 * broomSide / ctx.getConfig()->robotSpeed));
+        const std::string& roomName = static_cast<const CleanOrder&>(*m_order).roomName;
+        const auto area             = ctx.room(roomName).m_area;
+        if (!area.has_value()) {
+            DES_LOG_WARN(rclcpp::get_logger("des.plugin.clean"), "Room '%s' has no area, cleaning mission %d falls back to 1m2", roomName.c_str(), m_order->id);
+        }
+        const double roomArea       = area.value_or(1.0);
+        const double cleaningArea = cleanConfig().cleaningArea;
+        assert(cleaningArea > 0.0);
+        const double cleaningSide = std::sqrt(cleaningArea);
+        const double steps        = (roomArea / cleaningArea) + 1;
+        const int cleanTime       = static_cast<int>(steps * (2.0 * cleaningSide / ctx.getConfig()->robotSpeed));
         assert(cleanTime > 0);
 
         ctx.startActivity(std::make_shared<EndCleanEvent>(this->time + cleanTime, m_order));

@@ -96,10 +96,10 @@ double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const Esti
     const auto& o = static_cast<const CleanOrder&>(order);
     const auto& cfg = view.cfg;
 
-    const double roomArea  = view.world.room(o.roomName).m_area.value_or(1.0);
-    const double broomSide = std::sqrt(m_config.cleaningArea);
-    const double steps     = (roomArea / m_config.cleaningArea) + 1;
-    return steps * (2.0 * broomSide / cfg.robotSpeed);
+    const double roomArea     = view.world.room(o.roomName).m_area.value_or(1.0);
+    const double cleaningSide = std::sqrt(m_config.cleaningArea);
+    const double steps        = (roomArea / m_config.cleaningArea) + 1;
+    return steps * (2.0 * cleaningSide / cfg.robotSpeed);
 }
 
 void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {

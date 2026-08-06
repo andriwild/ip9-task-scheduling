@@ -21,7 +21,7 @@ public:
     uint64_t seq;
     bool cancelled = false;
     explicit IEvent(const int time) : time(time), seq(s_seqCounter.fetch_add(1, std::memory_order_relaxed)) {}
-    IEvent(const IEvent& o) : time(o.time), seq(s_seqCounter.fetch_add(1, std::memory_order_relaxed)), cancelled(o.cancelled) {}
+    IEvent(const IEvent& o) : time(o.time), seq(s_seqCounter.fetch_add(1, std::memory_order_relaxed)), cancelled(o.cancelled), m_missionId(o.m_missionId) {}
     virtual ~IEvent() = default;
 
     virtual void execute(ISimContext& ctx) = 0;
@@ -29,11 +29,16 @@ public:
     virtual des::EventType getType() const = 0;
     virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;
     virtual std::string getColor() const { return ""; }
-    virtual int getMissionId() const { return -1; }
+    virtual int getMissionId() const { return m_missionId; }
+    void setMissionId(const int missionId) { m_missionId = missionId; }
     virtual des::OrderPtr getOrder() const { return nullptr; }
     virtual double getDistance() const { return 0.0; }
     virtual int priority() const { return 0; }
 
+private:
+    int m_missionId = -1;
+
+public:
     bool operator<(const IEvent& other) const {
         if (time != other.time) {
             return time < other.time;

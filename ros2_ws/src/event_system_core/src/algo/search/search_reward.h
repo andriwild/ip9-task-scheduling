@@ -17,8 +17,7 @@
 #include "model/sighting.h"
 
 // calculate the probability of a room using beta-binomial model
-inline float roomProbability(int hits, int misses, float p0) {
-    const double k     = 4.0; // TODO: magic number
+inline float roomProbability(int hits, int misses, float p0, double k) {
     const double alpha = k * p0;
     const double beta  = k * (1.0 - p0);
     const double y     = hits;
@@ -29,9 +28,9 @@ inline float roomProbability(int hits, int misses, float p0) {
 // get the prior for a room
 // the workplace of a person has always the highest prior
 // useRolePrior: if true the prior for rooms is depending on the person role
-inline float occupancyPrior(bool isWorkplace, des::RoomType type, const std::vector<std::string>& roles, bool useRolePrior) {
+inline float occupancyPrior(bool isWorkplace, des::RoomType type, const std::vector<std::string>& roles, bool useRolePrior, float workplacePrior) {
     if (isWorkplace) {
-        return 0.6f; // TODO: magic number
+        return workplacePrior;
     }
     if (!useRolePrior) {
         return 0.05f; // TODO: magic number
@@ -47,14 +46,16 @@ inline std::vector<OpNode> occupancyProbability(
     const std::vector<std::string>& allRooms,
     const std::vector<des::RoomType>& roomTypes,
     const std::vector<std::string>& roles,
-    bool useRolePrior) 
+    bool useRolePrior,
+    double priorWeight,
+    float workplacePrior)
 {
     std::vector<OpNode> nodes;
     for (std::size_t i = 0; i < allRooms.size(); ++i) {
         const std::string& room = allRooms[i];
         const SightingCounts c = sightings.counts(person, room);
         const des::RoomType type = i < roomTypes.size() ? roomTypes[i] : des::RoomType::OTHER;
-        const double probability = roomProbability(c.hits, c.misses, occupancyPrior(office == room, type, roles, useRolePrior));
+        const double probability = roomProbability(c.hits, c.misses, occupancyPrior(office == room, type, roles, useRolePrior, workplacePrior), priorWeight);
         nodes.push_back({room, static_cast<float>(probability)});
     }
     return nodes;

@@ -156,11 +156,22 @@ std::mt19937& SimulationContext::robotRng() const {
     return m_robotRng;
 }
 
+void SimulationContext::addMissionId(IEvent& event) const {
+    if (event.getMissionId() >= 0) {
+        return;
+    }
+    if (const auto current = m_missions.effective()) {
+        event.setMissionId(current->id);
+    }
+}
+
 void SimulationContext::pushEvent(const std::shared_ptr<IEvent>& event) {
+    addMissionId(*event);
     m_queue.push(event);
 }
 
 void SimulationContext::startActivity(const std::shared_ptr<IEvent>& endEvent) {
+    addMissionId(*endEvent);
     m_robot->setInFlight(endEvent);
     m_queue.push(endEvent);
 }
@@ -345,13 +356,7 @@ void SimulationContext::notifyBatteryChanged() const {
 }
 
 void SimulationContext::notifyEvent(const IEvent& event) const {
-    int missionId = event.getMissionId();
-    if (missionId < 0) {
-        if (const auto current = m_missions.current()) {
-            missionId = current->id;
-        }
-    }
-    m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), missionId);
+    m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), event.getMissionId());
 }
 
 void SimulationContext::notifyChargeStarted() const {

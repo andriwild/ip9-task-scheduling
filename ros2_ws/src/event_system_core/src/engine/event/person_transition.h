@@ -63,6 +63,7 @@ public:
     }
     des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
     std::string getColor() const override { return person->color; }
+    int getMissionId() const override { return -1; }
 };
 
 class PersonArrivedEvent final : public PersonTransitionEvent {

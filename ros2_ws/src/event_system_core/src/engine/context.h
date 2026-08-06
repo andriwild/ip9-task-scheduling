@@ -84,6 +84,7 @@ public:
     void reseedPersons();
     unsigned int activeSeed() const;
 
+    void addMissionId(IEvent& event) const;
     void pushEvent(const std::shared_ptr<IEvent>& event) override;
     void startActivity(const std::shared_ptr<IEvent>& endEvent) override;
     void executeEvent(const std::shared_ptr<IEvent>& event);

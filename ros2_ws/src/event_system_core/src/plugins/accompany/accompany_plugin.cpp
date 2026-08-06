@@ -88,7 +88,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const auto strategy = ctx.getConfig()->searchRewardStrategy;
     const auto roomNodes = strategy == des::SearchRewardStrategy::FREQUENCY
         ? frequencyReward(robot->getSightings(), a.personName, universe)
-        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior);
+        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();

@@ -8,4 +8,4 @@ args=()
 
 RCUTILS_COLORIZED_OUTPUT=1 \
 RCUTILS_LOGGING_MIN_SEVERITY=WARN \
-ros2 launch event_system_bringup bringup.launch.py log_level:=INFO mode:=headless rounds:=1 "${args[@]}"
+ros2 launch event_system_bringup bringup.launch.py log_level:=INFO mode:=headless "${args[@]}"
