@@ -2,9 +2,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cassert>
 #include <fstream>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace TourIO {
 const std::string kConfigDir = "config";
 const std::string kBuildingFile = kConfigDir + "/building.json";
 
-inline std::string toursFile(const double radius) {
+inline std::string toursPath(const double radius) {
     std::ostringstream oss;
     oss << kConfigDir << "/tours_r" << radius << ".json";
     return oss.str();
@@ -23,9 +23,7 @@ inline std::string toursFile(const double radius) {
 
 inline std::vector<TSP::Room> readBuilding(const std::string& path) {
     std::ifstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("building snapshot not found: " + path + " (run ./build_snapshot.sh first)");
-    }
+    assert(file.is_open());
     const nlohmann::json json = nlohmann::json::parse(file);
 
     const auto& names = json.at("names");
@@ -52,12 +50,6 @@ inline void writeTours(const std::string& path, const double radius, const std::
     nlohmann::ordered_json rooms = nlohmann::ordered_json::object();
     for (const TSP::RoomTour& tour : tours) {
         nlohmann::ordered_json entry;
-        entry["ok"] = tour.m_ok;
-        if (!tour.m_ok) {
-            entry["reason"] = tour.m_reason;
-            rooms[tour.m_roomName] = entry;
-            continue;
-        }
         entry["steps"] = tour.m_steps;
         entry["distance"] = tour.m_distance;
         entry["start"] = {tour.m_start.m_x, tour.m_start.m_y};
@@ -85,9 +77,7 @@ inline void writeTours(const std::string& path, const double radius, const std::
     out["rooms"] = rooms;
 
     std::ofstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("cannot write " + path);
-    }
+    assert(file.is_open());
     file << out.dump(2) << "\n";
 }
 

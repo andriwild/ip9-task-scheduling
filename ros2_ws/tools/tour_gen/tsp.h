@@ -34,8 +34,6 @@ struct Room {
 
 struct RoomTour {
     std::string m_roomName;
-    bool m_ok = false;
-    std::string m_reason;
     Vec2 m_start;
     std::size_t m_steps = 0;
     double m_distance = 0.0;
@@ -168,7 +166,7 @@ inline TSP::RoomTour twoOpt(TSP::RoomTour tour) {
 inline RoomTour nearestNeighbor(
     const RoomTour& tour
 ) {
-    if( !tour.m_ok || tour.m_path.size() < 4) {
+    if (tour.m_path.size() < 4) {
         return tour;
     }
 

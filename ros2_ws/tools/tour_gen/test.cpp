@@ -37,7 +37,6 @@ bool isClosed(const TSP::RoomTour& tour) {
 TSP::RoomTour makeTour(const std::vector<TSP::Vec2>& path) {
     TSP::RoomTour tour;
     tour.m_roomName = "test";
-    tour.m_ok = true;
     tour.m_start = path.front();
     tour.m_path = path;
     tour.m_steps = path.size();
@@ -129,17 +128,14 @@ void testDistanceStaysExactOnLargeTour() {
 }
 
 void testGuards() {
-    std::cout << "guards: short and failed tours pass through untouched\n";
+    std::cout << "guards: short and empty tours pass through untouched\n";
     TSP::RoomTour single = makeTour({{3, 4}});
     check("single point survives nearestNeighbor", TSP::nearestNeighbor(single).m_path.size() == 1);
     check("single point survives twoOpt", TSP::twoOpt(single).m_path.size() == 1);
 
-    TSP::RoomTour failed;
-    failed.m_ok = false;
-    failed.m_reason = "degenerate";
-    check("failed tour survives nearestNeighbor", TSP::nearestNeighbor(failed).m_path.empty());
-    check("failed tour survives twoOpt", TSP::twoOpt(failed).m_path.empty());
-    check("failed tour keeps reason", TSP::nearestNeighbor(failed).m_reason == "degenerate");
+    TSP::RoomTour empty;
+    check("empty tour survives nearestNeighbor", TSP::nearestNeighbor(empty).m_path.empty());
+    check("empty tour survives twoOpt", TSP::twoOpt(empty).m_path.empty());
 }
 
 int main() {
