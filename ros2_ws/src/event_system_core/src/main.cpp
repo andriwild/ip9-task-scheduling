@@ -90,7 +90,6 @@ int main(const int argc, char *argv[]) {
     bool batteryDepleted = false;
     auto sim_loop = [&] {
         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
-        int lastEventTime = -1;
         while (running && rclcpp::ok()) {
             app->updateConfig();
 
@@ -99,7 +98,6 @@ int main(const int argc, char *argv[]) {
                 case SystemState::Request::RESET:
                     app->reset();
                     app->enterPause();
-                    lastEventTime = -1;
                     break;
 
                 case SystemState::Request::PAUSE:
@@ -131,15 +129,9 @@ int main(const int argc, char *argv[]) {
                         break;
                     }
 
-                    const double speedFactor = app->m_ctx->getConfig()->simSpeedFactor;
-                    if (!headless && speedFactor > 0.0 && lastEventTime >= 0 && e->time > lastEventTime) {
-                        const double waitMs = std::min(10000.0, (e->time - lastEventTime) * 1000.0 / speedFactor);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(waitMs)));
-                    }
-                    lastEventTime = e->time;
-
                     app->m_ctx->advanceTime(e->time);
                     app->m_ctx->executeEvent(e);
+                    app->m_protocol.push_back(e);
                     DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "-> Event Execute: %s %s", e->getName().c_str(), des::toHumanReadableTime(e->time).c_str());
 
                     // stop if the battery is depleted -> simulation failed
@@ -147,14 +139,14 @@ int main(const int argc, char *argv[]) {
                         DES_LOG_ERROR(rclcpp::get_logger("des.main"), "Robot battery reached SoC 0 at %s — aborting simulation", des::toHumanReadableTime(e->time).c_str());
                         batteryDepleted = true;
                         running = false;
-                        if (const auto metrics = app->metricsNode()) {
-                            metrics->setTerminatedReason("battery_depleted");
-                            metrics->publishReport();
-                        }
+                        app->m_ctx->getRobot()->closeStateLog(e->time);
+                        app->reporter().setTerminatedReason("battery_depleted");
+                        app->reporter().report(*app->m_ctx, app->m_protocol);
                         break;
                     }
                     if (e->getType() == des::EventType::SIMULATION_END) {
                         app->m_eventQueue.clear();
+                        app->reporter().report(*app->m_ctx, app->m_protocol);
                         handleSimComplete();
                     }
                     break;

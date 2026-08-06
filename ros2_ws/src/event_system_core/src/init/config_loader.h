@@ -14,6 +14,7 @@
 
 #include "../util/log.h"
 #include "../util/types.h"
+#include "util/constants.h"
 #include "../plugins/order_registry.h"
 #include "../plugins/accompany/accompany_order.h"
 
@@ -38,7 +39,6 @@ const std::string BUILDING_FILE         = CONFIG_DIR + "building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
 constexpr int SIM_DURATION   = 43200;
-constexpr int SECONDS_PER_DAY_CFG = 86400;
 
 struct InterruptGeneratorConfig {
     std::string type;
@@ -82,7 +82,7 @@ public:
         return resolvePath(s_baseConfigPath);
     }
 
-    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY_CFG) {
+    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY) {
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -104,8 +104,8 @@ public:
             }
 
             const int offset = j.at("appointmentTime").get<int>();
-            for (int day = 0; day * SECONDS_PER_DAY_CFG < simEndTime; day += everyNDays) {
-                const int appointmentTime = day * SECONDS_PER_DAY_CFG + offset;
+            for (int day = 0; day * SECONDS_PER_DAY < simEndTime; day += everyNDays) {
+                const int appointmentTime = day * SECONDS_PER_DAY + offset;
                 if (appointmentTime < simStartTime || appointmentTime >= simEndTime) {
                     continue;
                 }
@@ -246,7 +246,6 @@ public:
             config.lunchDistribution        = des::distributionTypeFromString(j.value("lunch_distribution", "normal"));
             config.lunchDurationMean        = j.value("lunch_duration_mean", 2400.0);
             config.lunchDurationStd         = j.value("lunch_duration_std", 600.0);
-            config.simSpeedFactor           = j.value("sim_speed_factor", 0.0);
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
@@ -258,7 +257,6 @@ public:
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
-            config.useTspTours = j.value("use_tsp_tours", false);
             config.batteryVoltage = j.value("battery_voltage", 12.0);
             config.cvThreshold    = j.value("cv_threshold", 0.8);
             config.taperFraction  = j.value("taper_fraction", 0.5);
@@ -267,20 +265,12 @@ public:
             config.metricsCsvExport   = j.value("metrics_csv_export", true);
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
-            config.missionTraceExport = j.value("mission_trace_export", false);
-            config.missionTraceRounds = j.value("mission_trace_rounds", std::vector<int>{});
-            config.missionTraceWindow = j.value("mission_trace_window", std::vector<int>{});
             config.searchRewardStrategy = des::searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.searchRolePrior = j.value("search_role_prior", false);
             config.energyReserveStrategy = des::energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
             config.seed = j.value("seed", 42u);
             config.roundMode = des::roundModeFromString(j.value("round_mode", "replication"));
-
-            if (config.missionTraceWindow.size() != 0 && config.missionTraceWindow.size() != 2) {
-                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "mission_trace_window must be [from, to], got %zu entries", config.missionTraceWindow.size());
-                return std::nullopt;
-            }
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -337,7 +327,6 @@ public:
         j["lunch_distribution"]             = des::distributionTypeToString(config.lunchDistribution);
         j["lunch_duration_mean"]            = roundValue(config.lunchDurationMean);
         j["lunch_duration_std"]             = roundValue(config.lunchDurationStd);
-        j["sim_speed_factor"]               = roundValue(config.simSpeedFactor);
         j["dock_location"]                  = config.dockLocation;
         j["cacheEnabled"]                   = config.cacheEnabled;
         j["appointments_path"]              = config.appointmentsPath;
@@ -348,7 +337,6 @@ public:
         j["sim_start_time"]                 = config.simStartTime;
         j["sim_duration"]                   = config.simDuration;
         j["use_distance_matrix"]            = config.useDistanceMatrix;
-        j["use_tsp_tours"]                  = config.useTspTours;
         j["battery_voltage"]                = roundValue(config.batteryVoltage);
         j["cv_threshold"]                   = roundValue(config.cvThreshold);
         j["taper_fraction"]                 = roundValue(config.taperFraction);
@@ -357,9 +345,6 @@ public:
         j["metrics_csv_export"]             = config.metricsCsvExport;
         j["replan_background_on_interrupt"] = config.replanBackgroundOnInterrupt;
         j["search_excluded_rooms"]          = config.searchExcludedRooms;
-        j["mission_trace_export"]           = config.missionTraceExport;
-        j["mission_trace_rounds"]           = config.missionTraceRounds;
-        j["mission_trace_window"]           = config.missionTraceWindow;
         j["search_reward_strategy"]         = des::searchRewardStrategyToString(config.searchRewardStrategy);
         j["search_role_prior"]              = config.searchRolePrior;
         j["energy_reserve_strategy"]        = des::energyReserveStrategyToString(config.energyReserveStrategy);

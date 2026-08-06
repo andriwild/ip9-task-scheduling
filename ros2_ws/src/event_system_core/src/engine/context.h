@@ -127,7 +127,6 @@ public:
     std::optional<int> getSimulationEndTime() const override;
 
     void publishMission(const des::OrderPtr& order, int time) override;
-    void publishMissionRegistered(const des::OrderPtr& order) override;
 
     void advanceTime(int newTime);
 
@@ -135,7 +134,6 @@ public:
     void addObserver(const std::shared_ptr<IObserver>& observer);
     void removeObserver(const std::shared_ptr<IObserver>& observer);
 
-    void notifyMissionComplete(const des::OrderPtr& order, int timeDiff) const;
     void notifyRobotStateChanged() const;
     void notifyBatteryChanged() const override;
     void notifyEvent(const IEvent& event) const override;

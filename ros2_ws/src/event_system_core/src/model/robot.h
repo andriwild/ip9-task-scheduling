@@ -13,6 +13,7 @@
 #include "robot_state.h"
 #include "battery.h"
 #include "sighting.h"
+#include "state_log.h"
 
 class IEvent;
 
@@ -25,6 +26,10 @@ class Robot {
     des::Polygon m_visibility;
 
     SightingLog m_sightings;
+    StateLog m_stateLog;
+    std::vector<int> m_chargeSessions;
+    int m_now = 0;
+    double m_odometer = 0.0;
 
     double m_driveSpeed;
     double m_currentSpeed = 0;
@@ -43,7 +48,7 @@ public:
     bool m_batteryFullEventScheduled = false;
     bool m_opportunisticCharge = false;
 
-    explicit Robot(const std::shared_ptr<des::SimConfig>& config);
+    explicit Robot(const std::shared_ptr<des::SimConfig>& config, int startTime = 0);
 
     bool isBusy() const;
     void updateConfig(const des::SimConfig& config);
@@ -60,8 +65,20 @@ public:
     const des::Polygon& getVisibility() const;
     void setVisibility(const des::Polygon& visibility);
 
-    void changeState(std::unique_ptr<RobotState> newState);
+    void changeState(std::unique_ptr<RobotState> newState, int time);
     RobotState* getState() const;
+
+    void closeStateLog(int time);
+    void beginStateInterval(des::RobotStateType category, std::string name);
+    void endStateInterval();
+    const StateLog& getStateLog() const;
+
+    void addDistance(double distance);
+    double getOdometer() const;
+
+    void beginChargeSession(int time);
+    const std::vector<int>& getChargeSessions() const;
+    double getDischargedAh() const;
 
     bool isDriving() const;
     bool isPersonVisible() const;

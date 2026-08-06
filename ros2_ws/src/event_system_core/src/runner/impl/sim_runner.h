@@ -6,9 +6,6 @@
 #include <vector>
 
 #include "engine/event.h"
-#include "../../observer/metrics.h"
-#include "../../observer/person_marker.h"
-#include "../../observer/robot_marker.h"
 #include "../../observer/ros.h"
 #include "../../runner/runner.h"
 #include "../../sim/ros/config.h"
@@ -25,9 +22,8 @@ public:
         createPlanner();
         m_controllerNode   = std::make_shared<ControllerNode>();
         m_systemConfigNode = std::make_shared<ConfigNode>();
-        m_metricsNode      = std::make_shared<MetricsNode>();
 
-        std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_controllerNode, m_systemConfigNode, m_metricsNode };
+        std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_controllerNode, m_systemConfigNode };
         if (m_plannerNode) nodes.push_back(m_plannerNode);
         IAppRunner::initROS(nodes);
     }
@@ -72,6 +68,4 @@ private:
     std::shared_ptr<ConfigNode> m_systemConfigNode;
     std::thread m_simThread;
     std::shared_ptr<RosObserver> m_rosObserver;
-    std::shared_ptr<PersonMarkerObserver> m_personMarkerObserver;
-    std::shared_ptr<RobotMarkerObserver> m_robotMarkerObserver;
 };

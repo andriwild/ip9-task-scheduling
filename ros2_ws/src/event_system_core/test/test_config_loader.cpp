@@ -163,14 +163,12 @@ TEST(ConfigLoaderSimConfig, SeedAndRoundModeFallBackToDefaults) {
 
     EXPECT_EQ(result->seed, 42u);
     EXPECT_EQ(result->roundMode, des::RoundMode::REPLICATION);
-    EXPECT_TRUE(result->missionTraceRounds.empty());
-    EXPECT_TRUE(result->missionTraceWindow.empty());
 }
 
 TEST(ConfigLoaderSimConfig, OverrideSetsSeedAndRoundMode) {
     const std::string overridePath = "/tmp/test_seed_override.json";
     std::ofstream out(overridePath);
-    out << R"({"seed": 7, "round_mode": "continuation", "mission_trace_rounds": [1, 3], "mission_trace_window": [0, 86400]})";
+    out << R"({"seed": 7, "round_mode": "continuation"})";
     out.close();
 
     auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json", overridePath);
@@ -178,8 +176,6 @@ TEST(ConfigLoaderSimConfig, OverrideSetsSeedAndRoundMode) {
 
     EXPECT_EQ(result->seed, 7u);
     EXPECT_EQ(result->roundMode, des::RoundMode::CONTINUATION);
-    EXPECT_EQ(result->missionTraceRounds, (std::vector<int>{1, 3}));
-    EXPECT_EQ(result->missionTraceWindow, (std::vector<int>{0, 86400}));
     EXPECT_DOUBLE_EQ(result->robotSpeed, 0.5);
 
     std::filesystem::remove(overridePath);
@@ -189,18 +185,6 @@ TEST(ConfigLoaderSimConfig, PathResolutionIsIdempotent) {
     const std::string relative = ConfigLoader::resolvePath("scenarios/single_accompany.json");
     EXPECT_TRUE(std::filesystem::path(relative).is_absolute());
     EXPECT_EQ(ConfigLoader::resolvePath(relative), relative);
-}
-
-TEST(ConfigLoaderSimConfig, MalformedTraceWindowReturnsNullopt) {
-    const std::string overridePath = "/tmp/test_bad_window_override.json";
-    std::ofstream out(overridePath);
-    out << R"({"mission_trace_window": [100]})";
-    out.close();
-
-    auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json", overridePath);
-    EXPECT_FALSE(result.has_value());
-
-    std::filesystem::remove(overridePath);
 }
 
 // --- saveSimConfig roundtrip ---

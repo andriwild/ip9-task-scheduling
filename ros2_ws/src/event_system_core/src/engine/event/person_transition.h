@@ -45,6 +45,10 @@ public:
         person(std::move(p))
     {}
 
+    void moveTo(ISimContext& ctx, const std::string& room) const {
+        ctx.setPersonLocation(person->firstName, room);
+    }
+
     std::shared_ptr<IEvent> withTime(int newTime) const override {
         auto copy = std::make_shared<PersonTransitionEvent>(*this);
         copy->time = newTime;
@@ -90,7 +94,7 @@ public:
 
         // Person arrived at unknown room (e.g. after accompany) — return to workplace
         if (it == p.roomLabels.end()) {
-            ctx.setPersonLocation(p.firstName, p.workplace);
+            moveTo(ctx, p.workplace);
             ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
                 this->time + rnd::uni(p.rng, 60, ONE_HOUR), this->person));
             return;
@@ -100,7 +104,7 @@ public:
         const std::vector<double>& row = p.transitionMatrix.at(currentIndex);
         int nextRoomIdx = rnd::discrete_dist(p.rng, row);
 
-        ctx.setPersonLocation(p.firstName, p.roomLabels.at(nextRoomIdx));
+        moveTo(ctx, p.roomLabels.at(nextRoomIdx));
         double nextExecutionTime = this->time + rnd::uni(p.rng, 10, 30);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(nextExecutionTime, this->person));
     }
@@ -131,7 +135,7 @@ public:
             return;
         }
         targetRoom = "OUTDOOR";
-        ctx.setPersonLocation(this->person->firstName, "OUTDOOR");
+        moveTo(ctx, "OUTDOOR");
         ctx.notifyEvent(*this);
 
         const int nextDayBase = (this->time / SECONDS_PER_DAY + 1) * SECONDS_PER_DAY;
@@ -172,7 +176,7 @@ public:
             return;
         }
 
-        ctx.setPersonLocation(p.firstName, targetRoom);
+        moveTo(ctx, targetRoom);
         ctx.notifyEvent(*this);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
             static_cast<int>(this->time + p.lunchDuration), this->person));
@@ -211,7 +215,7 @@ public:
         ctx.notifyEvent(*this);
 
         const double walkTime = personWalkTime(ctx, p, currentRoom, targetRoom);
-        ctx.setPersonLocation(p.firstName, IN_TRANSIT);
+        moveTo(ctx, IN_TRANSIT);
         ctx.pushEvent(std::make_shared<PersonLunchArrivedEvent>(
             static_cast<int>(this->time + walkTime), this->person, targetRoom));
     }
@@ -244,7 +248,7 @@ public:
             return;
         }
 
-        ctx.setPersonLocation(p.firstName, targetRoom);
+        moveTo(ctx, targetRoom);
         ctx.notifyEvent(*this);
 
         double nextExecutionTime = this->time + p.getStayDuration(ctx.room(targetRoom).m_roomType, p.rng);
@@ -264,7 +268,7 @@ public:
             auto elevatorIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
                 [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
             if (elevatorIt != p.roomLabels.end()) {
-                ctx.setPersonLocation(p.firstName, *elevatorIt);
+                moveTo(ctx, *elevatorIt);
             }
             const int departAt = std::max(p.departureTime, this->time);
             ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
@@ -304,7 +308,7 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
     // Person was moved outside their known rooms (e.g. by accompany) — return to workplace
     if (it == p.roomLabels.end()) {
         ctx.notifyEvent(*this);
-        ctx.setPersonLocation(p.firstName, p.workplace);
+        moveTo(ctx, p.workplace);
         ctx.pushEvent(std::make_shared<PersonTransitionEvent>(
             this->time + rnd::uni(p.rng, 60, ONE_HOUR), this->person));
         return;
@@ -319,7 +323,7 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
     ctx.notifyEvent(*this);
 
     const double walkTime = personWalkTime(ctx, p, currentRoom, nextRoom);
-    ctx.setPersonLocation(p.firstName, IN_TRANSIT);
+    moveTo(ctx, IN_TRANSIT);
     ctx.pushEvent(std::make_shared<PersonRoomArrivedEvent>(
         static_cast<int>(this->time + walkTime), this->person, nextRoom));
 }

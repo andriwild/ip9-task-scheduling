@@ -126,7 +126,6 @@ struct SimConfig {
     int simStartTime = 25200;  // 07:00
     int simDuration  = 43200;
     bool useDistanceMatrix = false;
-    bool useTspTours = false;
     double batteryVoltage = 12.0;
     double cvThreshold = 0.8;
     double taperFraction = 0.5;
@@ -139,12 +138,8 @@ struct SimConfig {
     DistributionType lunchDistribution = DistributionType::NORMAL;
     double lunchDurationMean = 2400.0;
     double lunchDurationStd = 600.0;
-    double simSpeedFactor = 0.0;
     std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
     std::string employeesPath = "";
-    bool missionTraceExport = false;
-    std::vector<int> missionTraceRounds = {};
-    std::vector<int> missionTraceWindow = {};
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
     bool searchRolePrior = false;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
@@ -177,12 +172,10 @@ struct SimConfig {
         os << std::left << std::setw(W) << "lunchDistribution" << ": " << distributionTypeToString(config.lunchDistribution) << std::endl;
         os << std::left << std::setw(W) << "lunchDurationMean" << ": " << config.lunchDurationMean << std::endl;
         os << std::left << std::setw(W) << "lunchDurationStd" << ": " << config.lunchDurationStd << std::endl;
-        os << std::left << std::setw(W) << "simSpeedFactor" << ": " << config.simSpeedFactor << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
-        os << std::left << std::setw(W) << "missionTraceExport" << ": " << config.missionTraceExport << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
         os << std::left << std::setw(W) << "searchRolePrior" << ": " << config.searchRolePrior << std::endl;
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
@@ -195,7 +188,6 @@ struct SimConfig {
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simDuration" << ": " << config.simDuration << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;
-        os << std::left << std::setw(W) << "useTspTours" << ": " << config.useTspTours << std::endl;
         os << std::left << std::setw(W) << "batteryVoltage" << ": " << config.batteryVoltage << std::endl;
         os << std::left << std::setw(W) << "cvThreshold" << ": " << config.cvThreshold << std::endl;
         os << std::left << std::setw(W) << "taperFraction" << ": " << config.taperFraction << std::endl;
@@ -228,41 +220,41 @@ enum class Result {
 };
 
 enum class EventType : int {
-    SIMULATION_START = 0,
-    SIMULATION_END = 1,
-    STOP_DRIVE = 2,
-    MISSION_COMPLETE = 3,
-    MISSION_DISPATCH = 4,
-    DROP_OFF_CONV_COMPLETE = 5,
-    FOUND_PERSON_CONV_COMPLETE = 6,
-    ABORT_SEARCH = 7,
-    START_DROP_OFF_CONV = 8,
-    START_FOUND_PERSON_CONV = 9,
-    START_ACCOMPANY = 10,
-    ARRIVED_ACCOMPANY = 11,
-    START_DRIVE = 12,
-    BATTERY_FULL = 13,
-    RESET = 14,
-    PERSON_TRANSITION = 15,
-    PERSON_ARRIVED = 16,
-    PERSON_DEPARTURE = 17,
-    MISSION_START = 18,
-    APPOINTMENT_END = 19,
+    SIMULATION_START           = 0, 
+    SIMULATION_END             = 1, 
+    STOP_DRIVE                 = 2, 
+    MISSION_COMPLETE           = 3, 
+    MISSION_DISPATCH           = 4, 
+    DROP_OFF_CONV_COMPLETE     = 5, 
+    FOUND_PERSON_CONV_COMPLETE = 6, 
+    ABORT_SEARCH               = 7, 
+    START_DROP_OFF_CONV        = 8, 
+    START_FOUND_PERSON_CONV    = 9, 
+    START_ACCOMPANY            = 10,
+    ARRIVED_ACCOMPANY          = 11,
+    START_DRIVE                = 12,
+    BATTERY_FULL               = 13,
+    RESET                      = 14,
+    PERSON_TRANSITION          = 15,
+    PERSON_ARRIVED             = 16,
+    PERSON_DEPARTURE           = 17,
+    MISSION_START              = 18,
+    APPOINTMENT_END            = 19,
     PERSON_ACCOMPANY_DEPARTURE = 22,
-    PERSON_ACCOMPANY_ARRIVED = 23,
-    DATA_ACQUISITION_START = 24,
-    DATA_ACQUISITION = 25,
-    CLEAN_START = 26,
-    CLEAN = 27,
-    ORDER_ARRIVAL = 28,
-    INFORMATION_START = 29,
-    INFORMATION = 30,
-    CHARGE_MISSION_START = 31,
-    CHARGE_MISSION = 32,
-    CHARGE_PHASE_TRANSITION = 33,
-    PERSON_ROOM_ARRIVED = 34,
-    BACKGROUND_RELEASE = 35,
-    SCAN = 36
+    PERSON_ACCOMPANY_ARRIVED   = 23,
+    DATA_ACQUISITION_START     = 24,
+    DATA_ACQUISITION           = 25,
+    CLEAN_START                = 26,
+    CLEAN                      = 27,
+    ORDER_ARRIVAL              = 28,
+    INFORMATION_START          = 29,
+    INFORMATION                = 30,
+    CHARGE_MISSION_START       = 31,
+    CHARGE_MISSION             = 32,
+    CHARGE_PHASE_TRANSITION    = 33,
+    PERSON_ROOM_ARRIVED        = 34,
+    BACKGROUND_RELEASE         = 35,
+    SCAN                       = 36
 };
 
 enum MissionState {

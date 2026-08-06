@@ -47,6 +47,7 @@ public:
 
     // Waypoint the mission is executed at, used for route planning.
     // nullopt = mission has no single target and cannot be routed.
+
     virtual std::optional<std::string> targetLocation(const des::IOrder& /*order*/) const {
         return std::nullopt;
     }

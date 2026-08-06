@@ -5,6 +5,16 @@
 #include "../util/log.h"
 #include "robot.h"
 
+void RobotState::enter(Robot& robot) {
+    m_result = des::Result::RUNNING;
+    robot.beginStateInterval(getType(), getName());
+}
+
+void RobotState::exit(Robot& robot) {
+    m_result = des::Result::SUCCESS;
+    robot.endStateInterval();
+}
+
 double RobotState::getEnergyConsumption(const Robot& robot, const des::SimConfig& cfg) const {
     return robot.isDriving()
         ? cfg.energyConsumptionDrive

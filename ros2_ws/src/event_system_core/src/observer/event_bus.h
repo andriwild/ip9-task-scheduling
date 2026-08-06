@@ -36,30 +36,6 @@ public:
         }
     }
 
-    void notifyMissionComplete(int time, const des::OrderPtr& order, int timeDiff) const {
-        for (const auto& obs : m_observers) {
-            obs->onMissionComplete(time, order, timeDiff);
-        }
-    }
-
-    void notifyMissionRegistered(const des::OrderPtr& order) const {
-        for (const auto& obs : m_observers) {
-            obs->onMissionRegistered(order);
-        }
-    }
-
-    void notifyMoved(int time, const std::string& location, double distance) const {
-        for (const auto& obs : m_observers) {
-            obs->onRobotMoved(time, location, distance);
-        }
-    }
-
-    void notifyMovedTo(int time, const des::Point& position, double distance = 0.0) const {
-        for (const auto& obs : m_observers) {
-            obs->onRobotMovedTo(time, position, distance);
-        }
-    }
-
     void notifyMissionPublished(const des::OrderPtr& order, int time) const {
         for (const auto& obs : m_observers) {
             obs->onMissionPublished(order, time);

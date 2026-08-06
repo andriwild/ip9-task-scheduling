@@ -16,7 +16,6 @@ def generate_launch_description():
     # Event-queue push/pop traffic — opt-in DEBUG, otherwise stays at log_level.
     queue_log_level  = LaunchConfiguration("queue_log_level",  default=log_level)
     mode = LaunchConfiguration("mode", default="full")
-    rounds = LaunchConfiguration("rounds", default="1")
     config = LaunchConfiguration("config", default="")
     base_config = LaunchConfiguration("base_config", default="")
     out_dir = LaunchConfiguration("out_dir", default="")
@@ -37,7 +36,6 @@ def generate_launch_description():
         DeclareLaunchArgument("queue_log_level",  default_value=queue_log_level,
                               description="Override level for des.event_queue (default: log_level). Set to DEBUG to see push/pop traffic."),
         DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless or build"),
-        DeclareLaunchArgument("rounds", default_value=rounds, description="Number of rounds in headless mode"),
         DeclareLaunchArgument("config", default_value=config, description="Optional override config merged onto sim_config.json (path relative to config/ or absolute)"),
         DeclareLaunchArgument("base_config", default_value=base_config, description="Replaces sim_config.json as the merge base (path relative to config/ or absolute)"),
         DeclareLaunchArgument("out_dir", default_value=out_dir, description="Directory for metrics.csv, metrics_daily.csv and mission_trace.json (default: results/ with a timestamp)"),
@@ -59,7 +57,7 @@ def generate_launch_description():
             parameters=[{
                 'use_sim_time': use_sim_time,
             }],
-            arguments=['--mode', mode, '--rounds', rounds, '--config', config,
+            arguments=['--mode', mode, '--config', config,
                        '--base-config', base_config, '--out-dir', out_dir, '--run-id', run_id],
             ros_arguments=[
                 # All DES-internal loggers live under the `des.*` hierarchy,

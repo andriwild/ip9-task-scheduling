@@ -1,4 +1,5 @@
 #pragma once
+#include "util/constants.h"
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <string>
@@ -15,7 +16,7 @@ class RosObserver;
 struct DataAcquisitionConfig {
     double dataAcquisitionDuration = 120.0;
     double rewardWeight = 0.12;
-    double acquisitionInterval = 86400.0;
+    double acquisitionInterval = SECONDS_PER_DAY;
 };
 
 class DataAcquisition: public IOrderPlugin {

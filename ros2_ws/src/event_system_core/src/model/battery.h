@@ -21,6 +21,7 @@ class Battery {
     double m_lowBatteryThreshold; // %
     double m_fullBatteryThreshold; // %
 
+    double m_dischargedAh  = 0.0;
     double m_voltage       = 12.0;
     double m_cvThreshold   = 0.8;
     double m_taperFraction = 0.5;
@@ -49,6 +50,7 @@ public:
 
     // incrementally update battery capacity
     void updateBalance(const int time, const double energyConsumption);
+    double getDischargedAh() const;
     void completeCharge();
 
     // Runtime override of the charge target, independent of the configured charge_to_full baseline.

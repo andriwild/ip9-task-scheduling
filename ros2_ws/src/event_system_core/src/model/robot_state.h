@@ -13,8 +13,8 @@ class RobotState {
 
 public:
     virtual ~RobotState() = default;
-    virtual void enter(Robot& robot) { m_result = des::Result::RUNNING; };
-    virtual void exit(Robot& robot) { m_result = des::Result::SUCCESS; } ;
+    virtual void enter(Robot& robot);
+    virtual void exit(Robot& robot);
     virtual des::RobotStateType getType() const = 0;
     virtual std::string getName() const = 0;
     virtual double getEnergyConsumption(const Robot& robot, const des::SimConfig& cfg) const;

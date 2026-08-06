@@ -43,4 +43,5 @@ public:
 
     std::string getName() const override { return "Arrived: " + m_target->label(); }
     des::EventType getType() const override { return des::EventType::STOP_DRIVE; }
+    double getDistance() const override { return m_distance; }
 };

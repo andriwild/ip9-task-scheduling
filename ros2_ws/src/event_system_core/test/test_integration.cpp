@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -38,8 +40,12 @@ public:
     // plugin-supplied name so tests can assert either dimension.
     struct StateChange { int time; des::RobotStateType type; std::string name; };
     std::vector<StateChange> stateChanges;
-    std::vector<std::pair<int, des::MissionState>> missionCompletions;
-    std::vector<std::pair<int, std::string>> moves;
+
+    bool sawEvent(const des::EventType type) const {
+        return std::any_of(events.begin(), events.end(), [type](const auto& e) {
+            return e.second == type;
+        });
+    }
 
     std::string getName() override { return "TrackingObserver"; }
 
@@ -51,13 +57,7 @@ public:
         stateChanges.push_back({time, type, name});
     }
 
-    void onMissionComplete(int time, const des::OrderPtr& order, int) override {
-        missionCompletions.emplace_back(time, order->state);
-    }
 
-    void onRobotMoved(int time, const std::string& location, double) override {
-        moves.emplace_back(time, location);
-    }
 };
 
 static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
@@ -240,11 +240,11 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     runEventLoop(*ctx);
 
     // Verify: mission was completed
-    EXPECT_FALSE(observer->missionCompletions.empty());
+    EXPECT_TRUE(observer->sawEvent(des::EventType::MISSION_COMPLETE));
     // Verify: robot went through state changes
     EXPECT_FALSE(observer->stateChanges.empty());
     // Verify: robot moved at least once
-    EXPECT_FALSE(observer->moves.empty());
+    EXPECT_TRUE(observer->sawEvent(des::EventType::STOP_DRIVE));
     // Verify: multiple events were processed
     EXPECT_GT(observer->events.size(), 5u);
 
@@ -578,8 +578,8 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_COMPLETE);
-    EXPECT_FALSE(observer->missionCompletions.empty());
-    EXPECT_EQ(observer->missionCompletions.back().second, des::MissionState::COMPLETED);
+    EXPECT_TRUE(observer->sawEvent(des::EventType::MISSION_COMPLETE));
+    EXPECT_EQ(order->state, des::MissionState::COMPLETED);
 
     // Step 20: StartDrive back to Dock
     e = step(*ctx);

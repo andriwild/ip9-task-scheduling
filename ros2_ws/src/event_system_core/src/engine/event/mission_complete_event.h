@@ -46,4 +46,7 @@ public:
     }
     des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; }
     int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
+    des::OrderPtr getOrder() const override {
+        return orderPtr;
+    }
 };

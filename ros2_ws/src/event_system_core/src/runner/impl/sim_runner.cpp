@@ -37,11 +37,7 @@ void SimRunner::buildSimulation() {
     m_ctx = std::make_shared<SimulationContext>(
         m_eventQueue, m_config, m_planner, std::move(allPeople.value()), m_rooms
     );
-    m_ctx->addObserver(m_metricsNode);
     m_ctx->addObserver(m_rosObserver);
-    m_personMarkerObserver->attach(m_ctx.get());
-    m_ctx->addObserver(m_personMarkerObserver);
-    m_ctx->addObserver(m_robotMarkerObserver);
     rebuildEventQueue();
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx.get()));
 }
@@ -53,7 +49,7 @@ void SimRunner::reset() {
     }
 
     m_rosObserver->publishReset();
-    m_metricsNode->clear();
+    m_protocol.clear();
 
     m_ctx.reset();
     reloadSimulationData();
@@ -68,19 +64,17 @@ void SimRunner::setupApplication() {
     m_config = m_systemConfigNode->getConfig();
 
     // simulation with duration > 3 days leads to message overflow
-    constexpr int kMaxInteractiveDurationSec = 3 * 86400;
+    constexpr int kMaxInteractiveDurationSec = 3 * SECONDS_PER_DAY;
     if (m_config->simDuration > kMaxInteractiveDurationSec) {
         throw std::runtime_error(
             "Interactive mode is limited to 3 days of simulation, but sim_duration=" +
             std::to_string(m_config->simDuration) + "s (" +
-            std::to_string(m_config->simDuration / 86400) + " days). Reduce sim_duration to <= " +
+            std::to_string(m_config->simDuration / SECONDS_PER_DAY) + " days). Reduce sim_duration to <= " +
             std::to_string(kMaxInteractiveDurationSec) + "s or run headless.");
     }
 
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
-    m_personMarkerObserver = std::make_shared<PersonMarkerObserver>(m_systemConfigNode, m_rooms);
-    m_robotMarkerObserver = std::make_shared<RobotMarkerObserver>(m_systemConfigNode, m_rooms);
     buildSimulation();
 
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");

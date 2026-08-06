@@ -11,13 +11,14 @@
 #include "../init/config_loader.h"
 #include "../observer/ros.h"
 #include "engine/event_queue.h"
+#include "engine/contracts/i_event.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
 #include "../sim/scheduler.h"
 #include "../plugins/order_registry.h"
 #include "util/constants.h"
 
-class MetricsNode;
+#include "metrics/metrics_reporter.h"
 const std::string CONFIG_PATH = CONFIG_DIR;
 
 class IAppRunner {
@@ -37,10 +38,11 @@ public:
     virtual void shutdown() = 0;
 
     EventQueue m_eventQueue;
+    EventList m_protocol;
     std::shared_ptr<SimulationContext> m_ctx;
 
-    std::shared_ptr<MetricsNode> metricsNode() const {
-        return m_metricsNode;
+    des::metrics::MetricsReporter& reporter() {
+        return m_reporter;
     }
 
     static SortedEventQueue createMissionQueue(
@@ -85,7 +87,7 @@ protected:
     std::shared_ptr<des::SimConfig> m_config;
     std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
-    std::shared_ptr<MetricsNode> m_metricsNode;
+    des::metrics::MetricsReporter m_reporter;
     des::OrderList m_orders;
     std::vector<BackgroundTemplate> m_backgroundTemplates;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
@@ -141,10 +143,6 @@ protected:
         addBackgroundReleaseEvents(simStartTime, simEndTime);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
-
-        for (const auto& order : m_orders) {
-            m_ctx->publishMissionRegistered(order);
-        }
 
         for (const auto& p : people) {
             m_ctx->setPersonLocation(p->firstName, "OUTDOOR");
@@ -231,7 +229,7 @@ protected:
         // get the configured precalculated tour config file (e.g. tous_r2.5.json)
         std::ostringstream radius;
         radius << m_config->personDetectionRange;
-        const std::string path = CONFIG_DIR + "tours_r" + radius.str() + (m_config->useTspTours ? "_tsp" : "") + ".json";
+        const std::string path = CONFIG_DIR + "tours_r" + radius.str() + ".json";
 
         // add tours through to existing rooms
         const auto merged = ConfigLoader::mergeRoomTours(path, m_rooms);

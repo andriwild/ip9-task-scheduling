@@ -3,45 +3,20 @@
 #include <memory>
 #include "../../util/log.h"
 #include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <queue>
 #include <string>
 #include <vector>
 #include "../runner.h"
-#include "../../observer/metrics.h"
-
-class MetricsNode;
 
 class HeadlessRunner final : public IAppRunner {
-    std::queue<std::string> m_orderFiles;
-    int m_totalRounds = 1;
-    int m_currentRound = 0;
-    bool m_batchComplete = false;
+    static constexpr int kRounds = 1;
 
-    void rebuildFileQueue() {
-        m_orderFiles = {};
-        m_orderFiles.push(m_config->appointmentsPath);
-    }
+    int m_currentRound = 0;
+    bool m_runComplete = false;
 
     unsigned int roundSeed(const int round) const {
         return m_config->seed + des::ROUND_SEED_STRIDE * static_cast<unsigned int>(round);
     }
 
-    void writeEffectiveConfig(const std::string& path) const {
-        std::error_code ec;
-        const auto parent = std::filesystem::path(path).parent_path();
-        if (!parent.empty()) {
-            std::filesystem::create_directories(parent, ec);
-        }
-        std::ofstream out(path);
-        if (!out.is_open()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "Could not write effective config: %s", path.c_str());
-            return;
-        }
-        out << std::setw(4) << ConfigLoader::configToJson(*m_config) << std::endl;
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Effective config written: %s", path.c_str());
-    }
 
     static std::string outputPath(const std::string& stem, const std::string& extension) {
         if (!s_outDir.empty()) {
@@ -59,9 +34,7 @@ public:
         m_rooms = loadRooms();
 
         createPlanner();
-        m_metricsNode = std::make_shared<MetricsNode>();
-
-        std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_metricsNode };
+        std::vector<std::shared_ptr<rclcpp::Node>> nodes;
         if (m_plannerNode) nodes.push_back(m_plannerNode);
         IAppRunner::initROS(nodes);
     }
@@ -82,14 +55,7 @@ public:
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "\n----- Descrete Event Sytem: Headless Mode -----");
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
 
-        auto runner = std::make_unique<HeadlessRunner>();
-        for (int i = 1; i + 1 < argc; ++i) {
-            if (std::string(argv[i]) == "--rounds" && std::string(argv[i + 1]).rfind("--", 0) != 0) {
-                int rounds = std::atoi(argv[i + 1]);
-                runner->m_totalRounds = std::max(1, rounds);
-            }
-        }
-        return runner;
+        return std::make_unique<HeadlessRunner>();
     }
 
     void setupApplication() override;
@@ -106,5 +72,5 @@ public:
     }
 
 private:
-    bool loadNextBatch();
+    bool loadNextRound();
 };

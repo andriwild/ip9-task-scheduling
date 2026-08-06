@@ -11,5 +11,4 @@ public:
     virtual void notifyBatteryChanged() const = 0;
     virtual void notifyChargeStarted() const = 0;
     virtual void publishMission(const des::OrderPtr& order, int time) = 0;
-    virtual void publishMissionRegistered(const des::OrderPtr& order) = 0;
 };

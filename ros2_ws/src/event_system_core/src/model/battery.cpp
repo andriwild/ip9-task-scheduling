@@ -67,6 +67,7 @@ void Battery::updateBalance(const int time, const double energyConsumption) {
     const int timeDelta = time - m_lastBalanceUpdate;
     m_lastBalanceUpdate = time;
     const double capacityDiff = energyConsumption * timeDelta / (3600 * m_voltage);
+    const double capacityBefore = m_currentCapacity;
     m_currentCapacity -= capacityDiff;
 
     //DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
@@ -80,6 +81,13 @@ void Battery::updateBalance(const int time, const double energyConsumption) {
         m_depleted = true;
     }
     m_currentCapacity = clip(m_currentCapacity, 0.0, m_designCapacity);
+    if (capacityBefore > m_currentCapacity) {
+        m_dischargedAh += capacityBefore - m_currentCapacity;
+    }
+}
+
+double Battery::getDischargedAh() const {
+    return m_dischargedAh;
 }
 
 void Battery::completeCharge() {
@@ -99,6 +107,7 @@ void Battery::reset(const int startTime) {
     m_currentCapacity = m_initialCapacity;
     m_forceFull = false;
     m_depleted = false;
+    m_dischargedAh = 0.0;
     DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
 }
 

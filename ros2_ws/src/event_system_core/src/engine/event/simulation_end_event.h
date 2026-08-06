@@ -20,6 +20,7 @@ public:
     void execute(ISimContext& ctx) override {
         ctx.getRobot()->flushRoomVisit();
         ctx.changeRobotState(std::make_unique<IdleState>());
+        ctx.getRobot()->closeStateLog(time);
         ctx.notifyBatteryChanged();
         ctx.notifyEvent(*this);
         ctx.pushEvent(std::make_shared<StopDriveEvent>(time, std::make_shared<RoomTarget>(ctx.getRobot()->getLocation()), 0));

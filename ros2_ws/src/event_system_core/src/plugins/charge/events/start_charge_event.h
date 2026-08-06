@@ -24,6 +24,7 @@ public:
 
     void execute(ISimContext& ctx) override {
         m_order->state = des::MissionState::IN_PROGRESS;
+        ctx.getRobot()->beginChargeSession(this->time);
         ctx.notifyEvent(*this);
 
         assert(ctx.getRobot()->getLocation() == ctx.getRobot()->getIdleLocation());

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "model/order.h"
 #include "util/types.h"
 
 class ISimContext;
@@ -29,6 +30,8 @@ public:
     virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;
     virtual std::string getColor() const { return ""; }
     virtual int getMissionId() const { return -1; }
+    virtual des::OrderPtr getOrder() const { return nullptr; }
+    virtual double getDistance() const { return 0.0; }
     virtual int priority() const { return 0; }
 
     bool operator<(const IEvent& other) const {

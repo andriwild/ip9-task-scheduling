@@ -86,7 +86,7 @@ public:
     Robot* getRobot() const override { return robot.get(); }
 
     void changeRobotState(std::unique_ptr<RobotState> newState) const override {
-        robot->changeState(std::move(newState));
+        robot->changeState(std::move(newState), currentTime);
     }
 
     void robotMoved(const std::string& location, double /*distance*/) const override {
@@ -180,7 +180,6 @@ public:
     }
 
     void publishMission(const des::OrderPtr& /*order*/, int /*time*/) override {}
-    void publishMissionRegistered(const des::OrderPtr& /*order*/) override {}
 
     bool hasEmployee(const std::string& person) const override {
         return employees.contains(person);
@@ -410,7 +409,7 @@ TEST(EventExecute, SimulationStartPushesStopDriveEvent) {
 
 TEST(EventExecute, SimulationEndSetsIdleState) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<SearchState>());
+    ctx.robot->changeState(std::make_unique<SearchState>(), ctx.currentTime);
 
     SimulationEndEvent event(1000);
     event.execute(ctx);
@@ -615,7 +614,7 @@ TEST(EventExecute, StartDropOffConvPushesFailedWithZeroProbability) {
 
 TEST(EventExecute, SuccessFoundPersonConvSetsResultAndTicks) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON), ctx.currentTime);
 
     SuccessFoundPersonConversationCompleteEvent event(35030);
     event.execute(ctx);
@@ -626,7 +625,7 @@ TEST(EventExecute, SuccessFoundPersonConvSetsResultAndTicks) {
 
 TEST(EventExecute, FailedFoundPersonConvSetsFailureAndTicks) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON), ctx.currentTime);
 
     FailedFoundPersonConversationCompleteEvent event(35030);
     event.execute(ctx);
@@ -637,7 +636,7 @@ TEST(EventExecute, FailedFoundPersonConvSetsFailureAndTicks) {
 
 TEST(EventExecute, SuccessDropOffConvSetsResultAndTicks) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF), ctx.currentTime);
 
     SuccessDropOffConversationCompleteEvent event(35030);
     event.execute(ctx);
@@ -648,7 +647,7 @@ TEST(EventExecute, SuccessDropOffConvSetsResultAndTicks) {
 
 TEST(EventExecute, FailedDropOffConvSetsFailureAndTicks) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+    ctx.robot->changeState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF), ctx.currentTime);
 
     FailedDropOffConversationCompleteEvent event(35030);
     event.execute(ctx);
@@ -661,7 +660,7 @@ TEST(EventExecute, FailedDropOffConvSetsFailureAndTicks) {
 
 TEST(EventExecute, BatteryFullSetsIdleAndResetsBatteryFlag) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<ChargeState>());
+    ctx.robot->changeState(std::make_unique<ChargeState>(), ctx.currentTime);
     ctx.robot->m_batteryFullEventScheduled = true;
 
     BatteryFullEvent event(37000);
@@ -786,7 +785,7 @@ TEST(EventExecute, StopDriveMovesRobotAndSetsDrivingFalse) {
 TEST(EventExecute, StopDriveInAccompanyMovesPerson) {
     MockSimContext ctx;
     ctx.robot->setDriving(true);
-    ctx.robot->changeState(std::make_unique<AccompanyState>());
+    ctx.robot->changeState(std::make_unique<AccompanyState>(), ctx.currentTime);
 
     auto person = std::make_shared<des::Person>();
     person->firstName = "Max";

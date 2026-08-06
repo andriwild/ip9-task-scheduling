@@ -21,7 +21,6 @@ public:
 
     void execute(ISimContext& ctx) override {
         ctx.addBackgroundMission(m_order);
-        ctx.publishMissionRegistered(m_order);
         ctx.tickBT();
     }
 
@@ -30,4 +29,7 @@ public:
     }
     des::EventType getType() const override { return des::EventType::BACKGROUND_RELEASE; }
     int getMissionId() const override { return m_order ? m_order->id : -1; }
+    des::OrderPtr getOrder() const override {
+        return m_order;
+    }
 };

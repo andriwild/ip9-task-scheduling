@@ -24,7 +24,6 @@ public:
 
     void execute(ISimContext& ctx) override {
         ctx.publishMission(m_order, time);
-        ctx.publishMissionRegistered(m_order);
         switch (m_order->execution) {
             case des::ExecutionMode::BACKGROUND:
             case des::ExecutionMode::SCHEDULED:
@@ -46,4 +45,7 @@ public:
     }
     des::EventType getType() const override { return des::EventType::ORDER_ARRIVAL; }
     int getMissionId() const override { return m_order ? m_order->id : -1; }
+    des::OrderPtr getOrder() const override {
+        return m_order;
+    }
 };

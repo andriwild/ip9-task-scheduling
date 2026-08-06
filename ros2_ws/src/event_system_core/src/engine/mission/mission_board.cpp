@@ -67,8 +67,6 @@ void MissionBoard::complete(ISimContext& ctx, const des::OrderPtr& order) {
         } else {
             DES_LOG_INFO(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
         }
-
-        m_bus.notifyMissionComplete(ctx.getTime(), order, timeDiff);
     }
     if (m_current == order) {
         setCurrent(nullptr);

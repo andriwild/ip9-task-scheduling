@@ -3,9 +3,10 @@
 #include "robot_state.h"
 #include "engine/contracts/i_event.h"
 
-Robot::Robot(const std::shared_ptr<des::SimConfig>& config)
+Robot::Robot(const std::shared_ptr<des::SimConfig>& config, const int startTime)
     : m_state(std::make_unique<IdleState>())
 {
+    m_now = startTime;
     m_driveSpeed   = config->robotSpeed;
     m_dockLocation = config->dockLocation;
 
@@ -20,14 +21,55 @@ Robot::Robot(const std::shared_ptr<des::SimConfig>& config)
         config->chargeToFull
     );
     setLocation(m_dockLocation);
+
+    // enter initial state to make sure protocol logging is active
+    m_state->enter(*this);
 }
 
-void Robot::changeState(std::unique_ptr<RobotState> newState) {
+void Robot::changeState(std::unique_ptr<RobotState> newState, const int time) {
+    m_now = time;
     if (m_state) {
         m_state->exit(*this);
     }
     m_state = std::move(newState);
     m_state->enter(*this);
+}
+
+void Robot::closeStateLog(const int time) {
+    m_now = time;
+    m_stateLog.close(time, m_bat->getStats().soc);
+}
+
+void Robot::beginStateInterval(const des::RobotStateType category, std::string name) {
+    m_stateLog.open(m_now, category, std::move(name), m_bat->getStats().soc);
+}
+
+void Robot::endStateInterval() {
+    m_stateLog.close(m_now, m_bat->getStats().soc);
+}
+
+const StateLog& Robot::getStateLog() const {
+    return m_stateLog;
+}
+
+void Robot::addDistance(const double distance) {
+    m_odometer += distance;
+}
+
+double Robot::getOdometer() const {
+    return m_odometer;
+}
+
+void Robot::beginChargeSession(const int time) {
+    m_chargeSessions.push_back(time);
+}
+
+const std::vector<int>& Robot::getChargeSessions() const {
+    return m_chargeSessions;
+}
+
+double Robot::getDischargedAh() const {
+    return m_bat->getDischargedAh();
 }
 
 bool Robot::isBusy() const {

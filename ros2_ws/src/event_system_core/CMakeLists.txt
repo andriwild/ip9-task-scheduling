@@ -91,6 +91,15 @@ if(BUILD_TESTING)
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
 
+  # Orienteering problem and solver tests
+  foreach(op_test test_op test_op_solver_common test_op_solver test_search_solver test_search_reward test_role_prior)
+    ament_add_gtest(${op_test} test/${op_test}.cpp)
+    ament_target_dependencies(${op_test} rclcpp behaviortree_cpp)
+    target_compile_definitions(${op_test} PRIVATE
+      TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
+    )
+  endforeach()
+
   # ConfigLoader tests
   ament_add_gtest(test_config_loader
     test/test_config_loader.cpp
@@ -159,7 +168,7 @@ if(BUILD_TESTING)
   target_compile_definitions(test_integration PRIVATE
     TEST_FIXTURES_DIR="${TEST_FIXTURES_DIR}"
   )
-  foreach(t test_event_queue test_battery test_geometry test_config_loader test_scheduler test_events test_integration)
+  foreach(t test_event_queue test_battery test_geometry test_op test_op_solver_common test_op_solver test_search_solver test_search_reward test_role_prior test_config_loader test_scheduler test_events test_integration)
     target_include_directories(${t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   endforeach()
 

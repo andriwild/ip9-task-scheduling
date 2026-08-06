@@ -1,4 +1,5 @@
 #pragma once
+#include "util/constants.h"
 
 #include <behaviortree_cpp/bt_factory.h>
 #include <string>
@@ -15,7 +16,7 @@ class RosObserver;
 struct CleanConfig {
     double cleaningArea = 0.09;
     double rewardWeight = 0.23;
-    double cleaningInterval = 86400.0;
+    double cleaningInterval = SECONDS_PER_DAY;
 };
 
 class CleanPlugin: public IOrderPlugin {

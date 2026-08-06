@@ -22,7 +22,7 @@ SimulationContext::SimulationContext(
     , m_missions(m_queue, m_eventBus)
 {
     reseed(m_simConfig->seed);
-    m_robot = std::make_unique<Robot>(m_simConfig);
+    m_robot = std::make_unique<Robot>(m_simConfig, m_currentTime);
     DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Simulation Context created!");
 }
 
@@ -95,7 +95,7 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
         && current->getType() == des::RobotStateType::CHARGING
         && newType != des::RobotStateType::CHARGING
         && m_robot->m_opportunisticCharge;
-    m_robot->changeState(std::move(newState));
+    m_robot->changeState(std::move(newState), m_currentTime);
     if (leavingOpportunisticCharge) {
         m_queue.cancelByType(des::EventType::BATTERY_FULL);
         m_queue.cancelByType(des::EventType::CHARGE_PHASE_TRANSITION);
@@ -129,7 +129,7 @@ const Scheduler& SimulationContext::getScheduler() const {
 
 void SimulationContext::resetRobot() {
     m_robot.reset();
-    m_robot = std::make_unique<Robot>(m_simConfig);
+    m_robot = std::make_unique<Robot>(m_simConfig, m_currentTime);
 }
 
 std::optional<double> SimulationContext::getDistance(const std::string& from, const std::string& to) const {
@@ -315,9 +315,6 @@ void SimulationContext::publishMission(const des::OrderPtr& order, const int tim
     m_eventBus.notifyMissionPublished(order, time);
 }
 
-void SimulationContext::publishMissionRegistered(const des::OrderPtr& order) {
-    m_eventBus.notifyMissionRegistered(order);
-}
 
 void SimulationContext::advanceTime(const int newTime) {
     assert(newTime >= m_currentTime);
@@ -337,18 +334,10 @@ void SimulationContext::removeObserver(const std::shared_ptr<IObserver>& observe
     m_eventBus.removeObserver(observer);
 }
 
-void SimulationContext::notifyMissionComplete(const des::OrderPtr& order, const int timeDiff) const {
-    m_eventBus.notifyMissionComplete(m_currentTime, order, timeDiff);
-}
 
 void SimulationContext::notifyRobotStateChanged() const {
     const auto* state = m_robot->getState();
-    const auto type   = state->getType();
-    std::string name = state->getName();
-    if (type == des::RobotStateType::IDLE && m_robot->isDriving() && m_robot->getTargetLocation() == m_robot->getIdleLocation()) {
-        name = "returning";
-    }
-    m_eventBus.notifyStateChanged(m_currentTime, type, name, m_robot->batteryStats());
+    m_eventBus.notifyStateChanged(m_currentTime, state->getType(), state->getName(), m_robot->batteryStats());
 }
 
 void SimulationContext::notifyBatteryChanged() const {
@@ -366,21 +355,22 @@ void SimulationContext::notifyEvent(const IEvent& event) const {
 }
 
 void SimulationContext::notifyChargeStarted() const {
+    m_robot->beginChargeSession(m_currentTime);
     m_eventBus.notifyEvent(m_currentTime, des::EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
 }
 
 void SimulationContext::robotMoved(const std::string& location, const double distance) const {
     m_robot->setLocation(location);
+    m_robot->addDistance(distance);
     const auto it = m_rooms.find(location);
     if (it != m_rooms.end()) {
         m_robot->setPosition(it->second.m_waypoint);
     }
-    m_eventBus.notifyMoved(m_currentTime, location, distance);
 }
 
 void SimulationContext::robotMovedTo(const des::Point& position, const double distance) const {
     m_robot->setPosition(position);
-    m_eventBus.notifyMovedTo(m_currentTime, position, distance);
+    m_robot->addDistance(distance);
 }
 
 double SimulationContext::getDriveTimeStd() const {

@@ -20,7 +20,6 @@ qt5_wrap_cpp(MOC_FILES
   include/event_system_rviz/des_panel.hpp
   include/event_system_rviz/des_system_config.hpp
   include/event_system_rviz/des_timeline_panel.hpp
-  include/event_system_rviz/des_metrics_panel.hpp
   include/event_system_rviz/des_occupancy_panel.hpp
   include/event_system_rviz/des_swimlane_panel.hpp
   include/event_system_rviz/timeline/timeline.hpp
@@ -30,7 +29,6 @@ add_library(event_system_rviz
   src/des_panel.cpp
   src/des_system_config.cpp
   src/des_timeline_panel.cpp
-  src/des_metrics_panel.cpp
   src/des_occupancy_panel.cpp
   src/des_swimlane_panel.cpp
   ${MOC_FILES}
@@ -70,7 +68,6 @@ install(FILES rviz_common_plugins.xml
 install(FILES
     icons/classes/DesPanel.png
     icons/classes/DesTimelinePanel.png
-    icons/classes/DesMetricsPanel.png
     icons/classes/DesSystemConfig.png
     DESTINATION share/${PROJECT_NAME}/icons/classes
 )
