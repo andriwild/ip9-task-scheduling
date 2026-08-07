@@ -48,8 +48,8 @@ public:
 
         auto secondsIn = [&states](const std::string& stateName) {
             return std::ranges::fold_left(
-                states | filter([&](const StateInterval& s) { return s.name == stateName; })
-                       | transform([](const StateInterval& s) { return s.endTime - s.time; }),
+                states | filter([&](const des::StateInterval& s) { return s.name == stateName; })
+                       | transform([](const des::StateInterval& s) { return s.endTime - s.time; }),
                 0, std::plus{});
         };
 

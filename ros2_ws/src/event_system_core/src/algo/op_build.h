@@ -17,6 +17,8 @@
 #include "model/order.h"
 #include "../util/log.h"
 
+namespace des {
+
 constexpr double kMinEnergyBudgetWh = 1e-3;
 
 struct OpBudgets {
@@ -60,3 +62,5 @@ inline std::optional<Mat> distanceMatrix(const IPathPlanning& paths, const std::
 }
 
 }  // namespace op_build
+
+}  // namespace des

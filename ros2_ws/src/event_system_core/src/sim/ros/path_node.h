@@ -28,7 +28,7 @@ struct PathResult {
 
 using Cache = std::map<std::pair<std::string, std::string>, double>;
 
-class PathPlannerNode : public rclcpp::Node, public IPathPlanner {
+class PathPlannerNode : public rclcpp::Node, public des::IPathPlanner {
 public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;

@@ -9,7 +9,7 @@
 SimulationContext::SimulationContext(
     EventQueue& queue,
     std::shared_ptr<des::SimConfig> simConfig,
-    std::shared_ptr<IPathPlanner> plannerNode,
+    std::shared_ptr<des::IPathPlanner> plannerNode,
     des::PersonList people,
     des::RoomMap rooms
 )

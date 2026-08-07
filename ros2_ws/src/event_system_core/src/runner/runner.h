@@ -85,7 +85,7 @@ public:
 protected:
     des::RoomMap m_rooms;
     std::shared_ptr<des::SimConfig> m_config;
-    std::shared_ptr<IPathPlanner> m_planner;
+    std::shared_ptr<des::IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     des::metrics::MetricsReporter m_reporter;
     des::OrderList m_orders;

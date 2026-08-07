@@ -474,6 +474,7 @@ public:
         return merged;
     }
 
+    // TODO: refactor
     // Loads the building snapshot into a name -> Location map (coords + optional area)
     static std::optional<des::RoomMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);

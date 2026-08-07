@@ -55,7 +55,7 @@ public:
             locations.push_back(loc);
         }
 
-        const bool ok = DistMat::rebuild(locations, m_planner);
+        const bool ok = des::DistMat::rebuild(locations, m_planner);
         shutdown();
         return ok ? 0 : 1;
     }

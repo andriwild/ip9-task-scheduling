@@ -88,6 +88,7 @@ int main(const int argc, char *argv[]) {
     // System State (RUN, PAUSE, RESET, EXIT) are used for the UI (Rviz)
     bool running = true;
     bool batteryDepleted = false;
+    // TODO: refactor
     auto sim_loop = [&] {
         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Start Simulation Loop (Headless Mode: %d)", headless);
         while (running && rclcpp::ok()) {

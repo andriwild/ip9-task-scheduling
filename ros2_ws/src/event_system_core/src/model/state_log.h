@@ -14,6 +14,8 @@
 
 #include "../util/types.h"
 
+namespace des {
+
 struct StateInterval {
     int time;
     int endTime;
@@ -23,7 +25,6 @@ struct StateInterval {
     double socTo;
 };
 
-// TODO: namespace
 class StateLog {
     std::vector<StateInterval> m_entries;
     bool m_open = false;
@@ -64,3 +65,5 @@ public:
         m_open = false;
     }
 };
+
+}  // namespace des

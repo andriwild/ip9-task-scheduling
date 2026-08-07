@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+namespace des {
+
 using Mat = std::vector<std::vector<float>>;
 
 struct OpNode {
@@ -35,3 +37,5 @@ struct OpParams {
     float driveSpeed      = 1.0f;
     float driveEnergy     = 0.0f;
 };
+
+}  // namespace des

@@ -9,6 +9,8 @@
 #include "../op.h"
 #include "../op_solver_common.h"
 
+namespace des {
+
 namespace op_solver {
 
 // TODO: naming Station(s), dock?
@@ -200,3 +202,5 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
 }
 
 }  // namespace op_solver
+
+}  // namespace des

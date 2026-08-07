@@ -48,7 +48,7 @@ void Robot::endStateInterval() {
     m_stateLog.close(m_now, m_bat->getStats().soc);
 }
 
-const StateLog& Robot::getStateLog() const {
+const des::StateLog& Robot::getStateLog() const {
     return m_stateLog;
 }
 

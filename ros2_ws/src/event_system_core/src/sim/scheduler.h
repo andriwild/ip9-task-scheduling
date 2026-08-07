@@ -15,14 +15,14 @@
 
 class Scheduler {
     std::shared_ptr<des::SimConfig> m_simConfig;
-    std::shared_ptr<IPathPlanner> m_plannerNode;
+    std::shared_ptr<des::IPathPlanner> m_plannerNode;
     const des::RoomMap& m_rooms;
 
 public:
 
     explicit Scheduler(
         const std::shared_ptr<des::SimConfig> &simConfig,
-        const std::shared_ptr<IPathPlanner> &plannerNode,
+        const std::shared_ptr<des::IPathPlanner> &plannerNode,
         const des::RoomMap& rooms
     )
         : m_simConfig(simConfig)

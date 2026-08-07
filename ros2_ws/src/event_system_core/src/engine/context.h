@@ -46,7 +46,7 @@ class SimulationContext : public ISimContext {
     mutable std::mt19937 m_robotRng{DEFAULT_SEED + des::ROBOT_SEED_OFFSET};
     unsigned int m_activeSeed = DEFAULT_SEED;
 
-    std::shared_ptr<IPathPlanner> m_plannerNode;
+    std::shared_ptr<des::IPathPlanner> m_plannerNode;
     std::unique_ptr<Robot> m_robot;
     des::RoomMap m_rooms;
     PersonRegistry m_persons;
@@ -57,7 +57,7 @@ public:
     explicit SimulationContext(
         EventQueue& queue,
         std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<IPathPlanner> plannerNode,
+        std::shared_ptr<des::IPathPlanner> plannerNode,
         des::PersonList people,
         des::RoomMap rooms
     );

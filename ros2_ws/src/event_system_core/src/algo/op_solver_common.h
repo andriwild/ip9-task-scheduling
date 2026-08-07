@@ -14,6 +14,8 @@
 
 #include "op.h"
 
+namespace des {
+
 // TODO: clean up namespaces
 
 namespace op_solver {
@@ -46,3 +48,5 @@ inline std::vector<int> taskCandidates(const OpInstance& op) {
 }  // namespace detail
 
 }  // namespace op_solver
+
+}  // namespace des

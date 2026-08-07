@@ -17,7 +17,7 @@
 #include "../src/plugins/order_registry.h"
 #include "util/constants.h"
 
-class MockPathPlanner : public IPathPlanner {
+class MockPathPlanner : public des::IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;
 
 public:

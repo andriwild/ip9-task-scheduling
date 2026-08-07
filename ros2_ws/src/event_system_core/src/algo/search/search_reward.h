@@ -16,6 +16,8 @@
 #include "model/room.h"
 #include "model/sighting.h"
 
+namespace des {
+
 // calculate the probability of a room using beta-binomial model
 inline float roomProbability(int hits, int misses, float p0, double k) {
     const double alpha = k * p0;
@@ -72,3 +74,5 @@ inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const s
     }
     return nodes;
 }
+
+}  // namespace des

@@ -23,6 +23,8 @@
 #include "../../util/types.h"
 
 
+namespace des {
+
 inline std::optional<OpInstance> buildSearchInstance(
     const IWorldModel& world,
     const IPathPlanning& paths,
@@ -96,3 +98,5 @@ inline std::optional<OpInstance> buildSearchInstance(
 
     return OpInstance(std::move(nodes), std::move(*mat), {}, params);
 }
+
+}  // namespace des

@@ -26,7 +26,7 @@ class Robot {
     des::Polygon m_visibility;
 
     SightingLog m_sightings;
-    StateLog m_stateLog;
+    des::StateLog m_stateLog;
     std::vector<int> m_chargeSessions;
     int m_now = 0;
     double m_odometer = 0.0;
@@ -71,7 +71,7 @@ public:
     void closeStateLog(int time);
     void beginStateInterval(des::RobotStateType category, std::string name);
     void endStateInterval();
-    const StateLog& getStateLog() const;
+    const des::StateLog& getStateLog() const;
 
     void addDistance(double distance);
     double getOdometer() const;

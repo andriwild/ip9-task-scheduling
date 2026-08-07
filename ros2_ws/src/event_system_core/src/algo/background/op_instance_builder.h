@@ -14,6 +14,8 @@
 #include "../../plugins/order_registry.h"
 #include "../../util/log.h"
 
+namespace des {
+
 struct OpProblem {
     OpInstance instance;
     std::vector<des::OrderPtr> orderByNode;
@@ -125,3 +127,5 @@ inline std::optional<OpProblem> buildMissionInstance(
         std::move(orderByNode),
     };
 }
+
+}  // namespace des

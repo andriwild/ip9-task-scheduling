@@ -72,6 +72,7 @@ struct SearchPlan {
     double durationSec;
 };
 
+// TODO: refactor
 std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc) {
     const auto person = ctx.getPersonByName(a.personName);
     const auto robot  = ctx.getRobot();
@@ -87,8 +88,8 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     }
     const auto strategy = ctx.getConfig()->searchRewardStrategy;
     const auto roomNodes = strategy == des::SearchRewardStrategy::FREQUENCY
-        ? frequencyReward(robot->getSightings(), a.personName, universe)
-        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
+        ? des::frequencyReward(robot->getSightings(), a.personName, universe)
+        : des::occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();
@@ -99,9 +100,9 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const int now           = ctx.getTime();
     const int deadline      = a.deadline.value_or(now);
 
-    const OpBudgets budgets {
+    const des::OpBudgets budgets {
         .timeBudget      = static_cast<float>(std::max(0, deadline - now)),
-        .energyBudget    = static_cast<float>(std::max(spendableWh, kMinEnergyBudgetWh)),
+        .energyBudget    = static_cast<float>(std::max(spendableWh, des::kMinEnergyBudgetWh)),
         .initialSoc      = static_cast<float>(currentWh),
         .endSocMin       = static_cast<float>(reserveWh),
         .socThreshold    = static_cast<float>(reserveWh),
@@ -111,11 +112,11 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         .cvEnergy        = static_cast<float>(capacityWh),
     };
 
-    auto instance = buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
+    auto instance = des::buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
     if (!instance) {
         return std::nullopt;
     }
-    const auto route = op_solver::greedySearchOrder(*instance);
+    const auto route = des::op_solver::greedySearchOrder(*instance);
     if (route.empty()) {
         return std::nullopt;
     }

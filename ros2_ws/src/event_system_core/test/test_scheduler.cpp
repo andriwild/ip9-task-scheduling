@@ -8,7 +8,7 @@
 #include "../src/plugins/accompany/accompany_plugin.h"
 #include "../src/plugins/accompany/accompany_order.h"
 
-class MockPathPlanner : public IPathPlanner {
+class MockPathPlanner : public des::IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;
 
 public:

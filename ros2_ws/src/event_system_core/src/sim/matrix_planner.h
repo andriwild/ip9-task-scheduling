@@ -8,7 +8,7 @@
 
 #include "i_path_planner.h"
 
-class MatrixPlanner : public IPathPlanner {
+class MatrixPlanner : public des::IPathPlanner {
     std::vector<std::vector<float>> m_mat;
     std::unordered_map<std::string, int> m_index;
 

@@ -18,7 +18,7 @@ SightingLog logWith(const int hits, const int misses, const std::string& room) {
     return log;
 }
 
-float rewardOf(const std::vector<OpNode>& nodes, const std::string& room) {
+float rewardOf(const std::vector<des::OpNode>& nodes, const std::string& room) {
     for (const auto& node : nodes) {
         if (node.name == room) {
             return node.reward;
@@ -33,40 +33,40 @@ static constexpr double kPriorWeight = 4.0;
 static constexpr float kWorkplacePrior = 0.6f;
 
 TEST(RoomProbability, WithoutEvidenceItIsThePrior) {
-    EXPECT_NEAR(roomProbability(0, 0, 0.05f, kPriorWeight), 0.05f, 1e-6f);
-    EXPECT_NEAR(roomProbability(0, 0, 0.60f, kPriorWeight), 0.60f, 1e-6f);
+    EXPECT_NEAR(des::roomProbability(0, 0, 0.05f, kPriorWeight), 0.05f, 1e-6f);
+    EXPECT_NEAR(des::roomProbability(0, 0, 0.60f, kPriorWeight), 0.60f, 1e-6f);
 }
 
 TEST(RoomProbability, OneHitPullsItUp) {
-    EXPECT_NEAR(roomProbability(1, 0, 0.05f, kPriorWeight), 0.24f, 1e-6f);
+    EXPECT_NEAR(des::roomProbability(1, 0, 0.05f, kPriorWeight), 0.24f, 1e-6f);
 }
 
 TEST(RoomProbability, OneMissPullsItDown) {
-    EXPECT_NEAR(roomProbability(0, 1, 0.05f, kPriorWeight), 0.04f, 1e-6f);
+    EXPECT_NEAR(des::roomProbability(0, 1, 0.05f, kPriorWeight), 0.04f, 1e-6f);
 }
 
 TEST(RoomProbability, MoreHitsNeverLowerIt) {
-    EXPECT_LT(roomProbability(1, 0, 0.05f, kPriorWeight), roomProbability(2, 0, 0.05f, kPriorWeight));
-    EXPECT_LT(roomProbability(2, 0, 0.05f, kPriorWeight), roomProbability(10, 0, 0.05f, kPriorWeight));
+    EXPECT_LT(des::roomProbability(1, 0, 0.05f, kPriorWeight), des::roomProbability(2, 0, 0.05f, kPriorWeight));
+    EXPECT_LT(des::roomProbability(2, 0, 0.05f, kPriorWeight), des::roomProbability(10, 0, 0.05f, kPriorWeight));
 }
 
 TEST(OccupancyPrior, TheWorkplaceAlwaysWins) {
-    EXPECT_FLOAT_EQ(occupancyPrior(true, des::RoomType::OTHER, {}, false, kWorkplacePrior), 0.6f);
-    EXPECT_FLOAT_EQ(occupancyPrior(true, des::RoomType::KITCHEN, {"Chef"}, true, kWorkplacePrior), 0.6f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(true, des::RoomType::OTHER, {}, false, kWorkplacePrior), 0.6f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(true, des::RoomType::KITCHEN, {"Chef"}, true, kWorkplacePrior), 0.6f);
 }
 
 TEST(OccupancyPrior, WithoutRolePriorEveryOtherRoomIsFlat) {
-    EXPECT_FLOAT_EQ(occupancyPrior(false, des::RoomType::KITCHEN, {"Chef"}, false, kWorkplacePrior), 0.05f);
-    EXPECT_FLOAT_EQ(occupancyPrior(false, des::RoomType::TOILET, {"Chef"}, false, kWorkplacePrior), 0.05f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(false, des::RoomType::KITCHEN, {"Chef"}, false, kWorkplacePrior), 0.05f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(false, des::RoomType::TOILET, {"Chef"}, false, kWorkplacePrior), 0.05f);
 }
 
 TEST(OccupancyPrior, WithRolePriorTheRoleDecides) {
-    EXPECT_FLOAT_EQ(occupancyPrior(false, des::RoomType::KITCHEN, {"Chef"}, true, kWorkplacePrior), 0.30f);
-    EXPECT_FLOAT_EQ(occupancyPrior(false, des::RoomType::KITCHEN, {"Employee"}, true, kWorkplacePrior), 0.10f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(false, des::RoomType::KITCHEN, {"Chef"}, true, kWorkplacePrior), 0.30f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(false, des::RoomType::KITCHEN, {"Employee"}, true, kWorkplacePrior), 0.10f);
 }
 
 TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
-    const auto nodes = occupancyProbability(SightingLog{}, "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(SightingLog{}, "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
 
     ASSERT_EQ(nodes.size(), 2u);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
@@ -74,20 +74,20 @@ TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
 }
 
 TEST(OccupancyProbability, SightingsRaiseTheRoomAboveItsPrior) {
-    const auto nodes = occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
 
     EXPECT_NEAR(rewardOf(nodes, "kitchen"), 2.2f / 6.0f, 1e-6f);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
 }
 
 TEST(OccupancyProbability, MissesPushTheWorkplaceBelowItsPrior) {
-    const auto nodes = occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
 
     EXPECT_LT(rewardOf(nodes, "office"), 0.60f);
 }
 
 TEST(FrequencyReward, OnlyRoomsWithHitsAreListed) {
-    const auto nodes = frequencyReward(logWith(3, 0, "kitchen"), "anna", kRooms);
+    const auto nodes = des::frequencyReward(logWith(3, 0, "kitchen"), "anna", kRooms);
 
     ASSERT_EQ(nodes.size(), 1u);
     EXPECT_EQ(nodes.front().name, "kitchen");

@@ -14,6 +14,8 @@
 
 #include "op_types.h"
 
+namespace des {
+
 class OpInstance {
     std::vector<OpNode> m_nodes;
     Mat m_mat;
@@ -117,3 +119,5 @@ public:
         return simulateRoute(route).feasible;
     }
 };
+
+}  // namespace des

@@ -178,9 +178,9 @@ public:
         const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : 1e9f;
         const float cvEnergy = static_cast<float>(cfg->cvThreshold * capacityWh);
 
-        const OpBudgets budgets {
+        const des::OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
-            .energyBudget    = static_cast<float>(std::max(energyBudget, kMinEnergyBudgetWh)),
+            .energyBudget    = static_cast<float>(std::max(energyBudget, des::kMinEnergyBudgetWh)),
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
             .socThreshold    = static_cast<float>(socThreshold),
@@ -199,7 +199,7 @@ public:
 
         // index based route (tour)
         const int graspSeed = static_cast<int>(ctx.getConfig()->seed + des::GRASP_SEED_OFFSET);
-        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
+        const auto route = des::op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
 
         DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 

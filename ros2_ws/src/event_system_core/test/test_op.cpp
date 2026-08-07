@@ -4,14 +4,14 @@
 
 namespace {
 
-OpInstance chargeInstance() {
-    std::vector<OpNode> nodes = {
-        OpNode{"start", 0.0f, 0.0f, 0.0f},
-        OpNode{"end", 0.0f, 0.0f, 0.0f},
-        OpNode{"dock", 0.0f, 0.0f, 0.0f},
+des::OpInstance chargeInstance() {
+    std::vector<des::OpNode> nodes = {
+        des::OpNode{"start", 0.0f, 0.0f, 0.0f},
+        des::OpNode{"end", 0.0f, 0.0f, 0.0f},
+        des::OpNode{"dock", 0.0f, 0.0f, 0.0f},
     };
-    Mat mat = op_fixtures::uniformMatrix(nodes.size(), 10.0f);
-    const OpParams params {
+    des::Mat mat = op_fixtures::uniformMatrix(nodes.size(), 10.0f);
+    const des::OpParams params {
         .startNodeId  = 0,
         .endNodeId    = 1,
         .timeBudget   = 1000.0f,
@@ -24,15 +24,15 @@ OpInstance chargeInstance() {
         .driveSpeed   = 1.0f,
         .driveEnergy  = 1.0f,
     };
-    return OpInstance(std::move(nodes), std::move(mat), { 2 }, params);
+    return des::OpInstance(std::move(nodes), std::move(mat), { 2 }, params);
 }
 
 }  // namespace
 
 TEST(OpInstanceRoute, CostsMatchTheHandComputedValues) {
-    const OpInstance op = op_fixtures::lineInstance(90.0f);
+    const des::OpInstance op = op_fixtures::lineInstance(90.0f);
     const std::vector<int> route = { 3, 2 };
-    const OpInstance::Sim sim = op.simulateRoute(route, true);
+    const des::OpInstance::Sim sim = op.simulateRoute(route, true);
 
     EXPECT_TRUE(sim.feasible);
     EXPECT_FLOAT_EQ(sim.time, 80.0f);
@@ -41,15 +41,15 @@ TEST(OpInstanceRoute, CostsMatchTheHandComputedValues) {
 }
 
 TEST(OpInstanceRoute, TheFullRouteExceedsTheTimeBudget) {
-    const OpInstance op = op_fixtures::lineInstance(90.0f);
-    const OpInstance::Sim sim = op.simulateRoute({ 3, 2, 4 }, true);
+    const des::OpInstance op = op_fixtures::lineInstance(90.0f);
+    const des::OpInstance::Sim sim = op.simulateRoute({ 3, 2, 4 }, true);
 
     EXPECT_FALSE(sim.feasible);
     EXPECT_FLOAT_EQ(sim.time, 100.0f);
 }
 
 TEST(OpInstanceRoute, DriveToTheEndIsOnlyCountedWithToEnd) {
-    const OpInstance op = op_fixtures::lineInstance(90.0f);
+    const des::OpInstance op = op_fixtures::lineInstance(90.0f);
 
     EXPECT_FLOAT_EQ(op.simulateRoute({ 3, 2 }, false).time, 50.0f);
     EXPECT_FLOAT_EQ(op.simulateRoute({ 3, 2 }, true).time, 80.0f);
@@ -72,7 +72,7 @@ TEST(OpInstanceCharge, NothingToChargeCostsNoTime) {
 }
 
 TEST(OpInstanceStations, OnlyDeclaredNodesAreStations) {
-    const OpInstance op = chargeInstance();
+    const des::OpInstance op = chargeInstance();
 
     EXPECT_TRUE(op.isStation(2));
     EXPECT_FALSE(op.isStation(0));
@@ -80,8 +80,8 @@ TEST(OpInstanceStations, OnlyDeclaredNodesAreStations) {
 }
 
 TEST(OpInstanceStations, VisitingAStationRefillsToMaxEnergy) {
-    const OpInstance op = chargeInstance();
-    const OpInstance::Sim sim = op.simulateRoute({ 2 }, false);
+    const des::OpInstance op = chargeInstance();
+    const des::OpInstance::Sim sim = op.simulateRoute({ 2 }, false);
 
     EXPECT_FLOAT_EQ(sim.socEnd, 100.0f);
 }
