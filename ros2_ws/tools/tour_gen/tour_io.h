@@ -26,18 +26,13 @@ inline std::vector<TSP::Room> readBuilding(const std::string& path) {
     assert(file.is_open());
     const nlohmann::json json = nlohmann::json::parse(file);
 
-    const auto& names = json.at("names");
-    const auto& footprints = json.at("footprints");
-    const auto& locations = json.at("locations");
-
     std::vector<TSP::Room> rooms;
-    rooms.reserve(names.size());
-    for (std::size_t i = 0; i < names.size(); ++i) {
+    for (const auto& entry : json.at("rooms")) {
         TSP::Room room;
-        room.m_name = names.at(i).get<std::string>();
-        room.m_waypoint = TSP::Vec2{locations.at(i).at("x").get<double>(), locations.at(i).at("y").get<double>()};
-        if (i < footprints.size() && footprints.at(i).is_array()) {
-            for (const auto& vertex : footprints.at(i)) {
+        room.m_name = entry.at("name").get<std::string>();
+        room.m_waypoint = TSP::Vec2{entry.at("x").get<double>(), entry.at("y").get<double>()};
+        if (entry.contains("footprint")) {
+            for (const auto& vertex : entry.at("footprint")) {
                 room.m_footprint.push_back(TSP::Vec2{vertex.at(0).get<double>(), vertex.at(1).get<double>()});
             }
         }

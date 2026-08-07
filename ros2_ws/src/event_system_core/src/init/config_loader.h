@@ -399,10 +399,6 @@ public:
         return json;
     }
 
-    static const nlohmann::json& arrayOrEmpty(const nlohmann::json& j, const std::string& key) {
-        static const nlohmann::json empty = nlohmann::json::array();
-        return j.contains(key) && j.at(key).is_array() ? j.at(key) : empty;
-    }
 
     static std::vector<Point> parsePoints(const nlohmann::json& array) {
         std::vector<Point> points;
@@ -483,65 +479,34 @@ public:
         if (!json.has_value()) {
             return std::nullopt;
         }
-        const auto& j = json.value();
-        if (!j.contains("names") || !j.contains("locations")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s missing 'names'/'locations'", filePath.c_str());
-            return std::nullopt;
-        }
-
-        if (j.contains("generated_at")) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Building snapshot generated at %s", j.at("generated_at").get<std::string>().c_str());
-        } else {
-            DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no generated_at stamp, consider re-baking via ./build_snapshot.sh", filePath.c_str());
-        }
-
-        const auto& names = j.at("names");
-        const auto& locs  = j.at("locations");
-        if (names.size() != locs.size()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s has %zu names for %zu locations", filePath.c_str(), names.size(), locs.size());
-            return std::nullopt;
-        }
-
-        const auto& areas      = arrayOrEmpty(j, "areas");
-        const auto& types      = arrayOrEmpty(j, "types");
-        const auto& footprints = arrayOrEmpty(j, "footprints");
-        if (types.empty()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no 'types', falling back to name-based room types; re-bake via ./build_snapshot.sh", filePath.c_str());
-        }
 
         RoomMap map;
-        for (size_t i = 0; i < names.size(); ++i) {
-            const std::string name = names.at(i).get<std::string>();
-            const auto& l = locs.at(i);
-
-            Room room(name, Point{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) });
-            room.m_roomType = i < types.size() ? roomTypeFromString(types.at(i).get<std::string>()) : parseRoomName(name);
-            if (i < areas.size() && !areas.at(i).is_null()) {
-                room.m_area = areas.at(i).get<double>();
+        for (const auto& entry : json->at("rooms")) {
+            const std::string name = entry.at("name").get<std::string>();
+            Room room(name, Point{ entry.at("x").get<double>(), entry.at("y").get<double>(), entry.at("yaw").get<double>() });
+            room.m_roomType = roomTypeFromString(entry.at("type").get<std::string>());
+            if (entry.contains("area")) {
+                room.m_area = entry.at("area").get<double>();
             }
-            if (i < footprints.size()) {
-                room.m_footprint = parsePoints(footprints.at(i));
+            if (entry.contains("footprint")) {
+                room.m_footprint = parsePoints(entry.at("footprint"));
             }
             map.emplace(name, std::move(room));
         }
         return map;
     }
 
-    // TODO: use type alias
-    static std::optional<std::pair<std::vector<std::string>, std::vector<std::vector<float>>>>
-    loadDistanceMatrix(const std::string& filePath) {
+    static std::optional<std::pair<std::vector<std::string>, Mat>> loadDistanceMatrix(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
         }
-        const auto& j = json.value();
-        if (!j.contains("names") || !j.contains("mat")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Building snapshot %s missing 'names'/'mat'", filePath.c_str());
-            return std::nullopt;
+
+        std::vector<std::string> names;
+        for (const auto& entry : json->at("rooms")) {
+            names.push_back(entry.at("name").get<std::string>());
         }
-        return std::make_pair(
-            j.at("names").get<std::vector<std::string>>(),
-            j.at("mat").get<std::vector<std::vector<float>>>());
+        return std::make_pair(std::move(names), json->at("mat").get<Mat>());
     }
 };
 

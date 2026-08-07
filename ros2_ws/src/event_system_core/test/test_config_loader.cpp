@@ -343,8 +343,8 @@ TEST(ConfigLoaderRoomTours, DropsTourThatDoesNotStartAtTheRoomWaypoint) {
     EXPECT_TRUE(map->at("RoomA").m_tour.empty());
 }
 
-TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {
-    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_legacy.json");
+TEST(ConfigLoaderBuildingSnapshot, LoadsRoomWithoutFootprint) {
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_minimal.json");
     ASSERT_TRUE(map.has_value());
     const auto& roomA = map->at("RoomA");
     ASSERT_TRUE(roomA.m_area.has_value());

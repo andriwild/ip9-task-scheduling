@@ -13,6 +13,8 @@
 
 namespace des {
 
+using Mat = std::vector<std::vector<float>>;
+
 enum class DistributionType {
     NORMAL,
     UNIFORM,

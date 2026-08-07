@@ -11,9 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "util/types.h"
+
 namespace des {
 
-using Mat = std::vector<std::vector<float>>;
 
 struct OpNode {
     std::string name;

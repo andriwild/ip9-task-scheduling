@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ctime>
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -24,58 +25,41 @@
 
 namespace des {
 
-using Mat = std::vector<std::vector<float>>;
 
 class DistMat {
 public:
     // Writes the full snapshot. Areas come straight from each Location's m_area
     // (null when a waypoint has no matching search zone).
     static bool saveMat(const Mat& mat, const std::vector<Room>& points) {
-        nlohmann::json j;
-        j["mat"] = mat;
-
-        std::vector<std::string> names;
-        names.reserve(points.size());
-        nlohmann::json locations  = nlohmann::json::array();
-        nlohmann::json areas      = nlohmann::json::array();
-        nlohmann::json footprints = nlohmann::json::array();
-        nlohmann::json types      = nlohmann::json::array();
-        for (const auto& p : points) {
-            names.push_back(p.m_name);
-            types.push_back(roomTypeToString(p.m_roomType));
-            locations.push_back({
-                {"x",   p.m_waypoint.m_x},
-                {"y",   p.m_waypoint.m_y},
-                {"yaw", p.m_waypoint.m_yaw},
-            });
-            if (p.m_area) areas.push_back(*p.m_area);
-            else          areas.push_back(nullptr);
-            if (p.m_footprint.empty()) {
-                footprints.push_back(nullptr);
-            } else {
-                nlohmann::json ring = nlohmann::json::array();
-                for (const auto& v : p.m_footprint) {
-                    ring.push_back({v.m_x, v.m_y});
-                }
-                footprints.push_back(ring);
+        nlohmann::json rooms = nlohmann::json::array();
+        for (const Room& p : points) {
+            nlohmann::json entry{
+                { "name", p.m_name },
+                { "x",    p.m_waypoint.m_x },
+                { "y",    p.m_waypoint.m_y },
+                { "yaw",  p.m_waypoint.m_yaw },
+                { "type", roomTypeToString(p.m_roomType) },
+            };
+            if (p.m_area) {
+                entry["area"] = *p.m_area;
             }
+            for (const Point& v : p.m_footprint) {
+                entry["footprint"].push_back({ v.m_x, v.m_y });
+            }
+            rooms.push_back(std::move(entry));
         }
-        j["names"]      = names;
-        j["locations"]  = locations;
-        j["areas"]      = areas;
-        j["footprints"] = footprints;
-        j["types"]      = types;
 
         const std::time_t now = std::time(nullptr);
         char stamp[32];
         std::strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+
+        nlohmann::json j;
         j["generated_at"] = stamp;
+        j["rooms"]        = std::move(rooms);
+        j["mat"]          = mat;
 
         std::ofstream file(BUILDING_FILE);
-        if (!file.is_open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.dist_mat"), "Could not write building snapshot to: %s", BUILDING_FILE.c_str());
-            return false;
-        }
+        assert(file.is_open());
         file << std::setw(4) << j << std::endl;
         return true;
     }
