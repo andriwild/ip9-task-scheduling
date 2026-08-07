@@ -18,6 +18,8 @@
 #include "plugins/accompany/search_exclusion.h"
 #include "plugins/accompany/states.h"
 
+namespace des {
+
 class IsSearching final : public BT::ConditionNode {
 public:
     IsSearching(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -92,7 +94,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
-        const des::RoomTour& tour = ctx->room(ctx->getRobot()->getLocation()).m_tour;
+        const RoomTour& tour = ctx->room(ctx->getRobot()->getLocation()).m_tour;
 
         const size_t point = order.scanIndex;
         order.scanIndex++;
@@ -154,3 +156,5 @@ public:
         return BT::NodeStatus::SUCCESS;
     }
 };
+
+}  // namespace des

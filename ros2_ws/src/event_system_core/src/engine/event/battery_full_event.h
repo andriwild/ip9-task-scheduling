@@ -5,6 +5,8 @@
 #include "model/robot.h"
 #include "model/robot_state.h"
 
+namespace des {
+
 class BatteryFullEvent final : public IEvent {
 public:
     explicit BatteryFullEvent(const int time) : IEvent(time) {}
@@ -25,5 +27,7 @@ public:
     }
 
     std::string getName() const override { return "Battery Full"; }
-    des::EventType getType() const override { return des::EventType::BATTERY_FULL; }
+    EventType getType() const override { return EventType::BATTERY_FULL; }
 };
+
+}  // namespace des

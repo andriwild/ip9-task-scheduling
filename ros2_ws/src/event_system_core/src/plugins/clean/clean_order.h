@@ -4,7 +4,11 @@
 #include <string>
 #include "model/order.h"
 
-struct CleanOrder : des::IOrder {
+namespace des {
+
+struct CleanOrder : IOrder {
     std::string roomName;
     std::optional<double> cleaningInterval;
 };
+
+}  // namespace des

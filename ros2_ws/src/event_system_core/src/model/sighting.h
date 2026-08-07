@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+namespace des {
+
 enum class SightingKind { PRESENT, ABSENT };
 struct Sighting {
     int time;
@@ -99,3 +101,5 @@ public:
         m_visitLocation.clear();
     }
 };
+
+}  // namespace des

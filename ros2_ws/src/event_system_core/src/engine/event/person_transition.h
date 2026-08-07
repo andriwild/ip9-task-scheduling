@@ -19,13 +19,15 @@
 #include "util/rnd.h"
 #include "util/constants.h"
 
+namespace des {
+
 class PersonDepartureEvent;
 
 inline int busyRetryAt(ISimContext& ctx, const int now) {
     return now + static_cast<int>(rnd::uni(ctx.robotRng(), 60, 300));
 }
 
-inline double personWalkTime(ISimContext& ctx, des::Person& person, const std::string& from, const std::string& to) {
+inline double personWalkTime(ISimContext& ctx, Person& person, const std::string& from, const std::string& to) {
     const std::optional<double> dist = ctx.getDistance(from, to);
     const double speed = ctx.getConfig()->personSpeed;
     if (!dist.has_value() || speed <= 0.0) {
@@ -38,9 +40,9 @@ inline double personWalkTime(ISimContext& ctx, des::Person& person, const std::s
 
 class PersonTransitionEvent : public IEvent {
 public:
-    des::Person* const person;
+    Person* const person;
     std::string targetRoom;
-    explicit PersonTransitionEvent(const int time, des::Person* p) :
+    explicit PersonTransitionEvent(const int time, Person* p) :
         IEvent(time),
         person(std::move(p))
     {}
@@ -61,14 +63,14 @@ public:
     std::string getName() const override {
         return std::format("{} walking to {}", person->firstName, targetRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
+    EventType getType() const override { return EventType::PERSON_TRANSITION; }
     std::string getColor() const override { return person->color; }
     int getMissionId() const override { return -1; }
 };
 
 class PersonArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonArrivedEvent(const int time, des::Person* p) :
+    explicit PersonArrivedEvent(const int time, Person* p) :
         PersonTransitionEvent(time, std::move(p))
     {}
 
@@ -113,12 +115,12 @@ public:
     std::string getName() const override {
         return std::format("{} arrived to {}", person->firstName, targetRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_ARRIVED; }
+    EventType getType() const override { return EventType::PERSON_ARRIVED; }
 };
 
 class PersonDepartureEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonDepartureEvent(const int time, des::Person* p) :
+    explicit PersonDepartureEvent(const int time, Person* p) :
         PersonTransitionEvent(time, std::move(p))
     {}
 
@@ -140,7 +142,7 @@ public:
         ctx.notifyEvent(*this);
 
         const int nextDayBase = (this->time / SECONDS_PER_DAY + 1) * SECONDS_PER_DAY;
-        des::sampleOccupancy(*ctx.getConfig(), this->person->rng, nextDayBase, *this->person);
+        sampleOccupancy(*ctx.getConfig(), this->person->rng, nextDayBase, *this->person);
         const auto simEnd = ctx.getSimulationEndTime();
         if (simEnd.has_value() && this->person->arrivalTime < simEnd.value()) {
             ctx.pushEvent(std::make_shared<PersonArrivedEvent>(this->person->arrivalTime, this->person));
@@ -150,12 +152,12 @@ public:
     std::string getName() const override {
         return std::format("{} leaved to {}", person->firstName, targetRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_DEPARTURE; }
+    EventType getType() const override { return EventType::PERSON_DEPARTURE; }
 };
 
 class PersonLunchArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonLunchArrivedEvent(const int time, des::Person* p, std::string room) :
+    explicit PersonLunchArrivedEvent(const int time, Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);
@@ -186,12 +188,12 @@ public:
     std::string getName() const override {
         return std::format("{} having lunch at {}", person->firstName, targetRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_ROOM_ARRIVED; }
+    EventType getType() const override { return EventType::PERSON_ROOM_ARRIVED; }
 };
 
 class PersonLunchEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonLunchEvent(const int time, des::Person* p, std::string room) :
+    explicit PersonLunchEvent(const int time, Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);
@@ -221,12 +223,12 @@ public:
             static_cast<int>(this->time + walkTime), this->person, targetRoom));
     }
 
-    des::EventType getType() const override { return des::EventType::PERSON_TRANSITION; }
+    EventType getType() const override { return EventType::PERSON_TRANSITION; }
 };
 
 class PersonRoomArrivedEvent final : public PersonTransitionEvent {
 public:
-    explicit PersonRoomArrivedEvent(const int time, des::Person* p, std::string room) :
+    explicit PersonRoomArrivedEvent(const int time, Person* p, std::string room) :
         PersonTransitionEvent(time, std::move(p))
     {
         targetRoom = std::move(room);
@@ -282,7 +284,7 @@ public:
     std::string getName() const override {
         return std::format("{} arrived at {}", person->firstName, targetRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_ROOM_ARRIVED; }
+    EventType getType() const override { return EventType::PERSON_ROOM_ARRIVED; }
 };
 
 inline void PersonTransitionEvent::execute(ISimContext& ctx) {
@@ -328,3 +330,5 @@ inline void PersonTransitionEvent::execute(ISimContext& ctx) {
     ctx.pushEvent(std::make_shared<PersonRoomArrivedEvent>(
         static_cast<int>(this->time + walkTime), this->person, nextRoom));
 }
+
+}  // namespace des

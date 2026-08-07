@@ -2,6 +2,10 @@
 
 #include "model/order.h"
 
-struct InformationOrder : des::IOrder {
+namespace des {
+
+struct InformationOrder : IOrder {
     mutable double sampledDuration = -1.0;
 };
+
+}  // namespace des

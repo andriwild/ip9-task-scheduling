@@ -30,9 +30,11 @@
 #include "engine/event_queue.h"
 
 
+namespace des {
+
 class SimulationContext : public ISimContext {
     int m_currentTime {};
-    std::shared_ptr<des::SimConfig> m_simConfig;
+    std::shared_ptr<SimConfig> m_simConfig;
     EventBus m_eventBus;
     EventQueue& m_queue;
     std::shared_ptr<BT::Tree> m_behaviorTree;
@@ -43,12 +45,12 @@ class SimulationContext : public ISimContext {
     static constexpr unsigned int DEFAULT_SEED = 42;
     // mutable: RNG state changes are an implementation detail, allowing use in const methods
     mutable std::mt19937 m_worldRng{DEFAULT_SEED};
-    mutable std::mt19937 m_robotRng{DEFAULT_SEED + des::ROBOT_SEED_OFFSET};
+    mutable std::mt19937 m_robotRng{DEFAULT_SEED + ROBOT_SEED_OFFSET};
     unsigned int m_activeSeed = DEFAULT_SEED;
 
-    std::shared_ptr<des::IPathPlanner> m_plannerNode;
+    std::shared_ptr<IPathPlanner> m_plannerNode;
     std::unique_ptr<Robot> m_robot;
-    des::RoomMap m_rooms;
+    RoomMap m_rooms;
     PersonRegistry m_persons;
     ServiceLog m_services;
     MissionBoard m_missions;
@@ -56,10 +58,10 @@ class SimulationContext : public ISimContext {
 public:
     explicit SimulationContext(
         EventQueue& queue,
-        std::shared_ptr<des::SimConfig> simConfig,
-        std::shared_ptr<des::IPathPlanner> plannerNode,
-        des::PersonList people,
-        des::RoomMap rooms
+        std::shared_ptr<SimConfig> simConfig,
+        std::shared_ptr<IPathPlanner> plannerNode,
+        PersonList people,
+        RoomMap rooms
     );
 
     Scheduler& getScheduler();
@@ -71,12 +73,12 @@ public:
     std::optional<double> getDistance(const std::string& from, const std::string& to) const override;
 
     void changeRobotState(std::unique_ptr<RobotState> newState) const override;
-    void setConfig(const std::shared_ptr<des::SimConfig>& newConfig);
+    void setConfig(const std::shared_ptr<SimConfig>& newConfig);
     void resetContext(int newTime);
-    void completeOrder(const des::OrderPtr& order) override;
+    void completeOrder(const OrderPtr& order) override;
 
     int getTime() const override;
-    std::shared_ptr<des::SimConfig> getConfig() const override;
+    std::shared_ptr<SimConfig> getConfig() const override;
     Robot* getRobot() const override;
     std::mt19937& worldRng() const override;
     std::mt19937& robotRng() const override;
@@ -93,41 +95,41 @@ public:
     void tickBT() override;
     void setBTBlackboard(const std::string& key, const std::string& value) override;
 
-    des::Person* getPersonByName(const std::string& person) const override;
-    const des::PersonList& getAllPersons() const override;
+    Person* getPersonByName(const std::string& person) const override;
+    const PersonList& getAllPersons() const override;
     bool hasEmployee(const std::string& person) const override;
     std::string getPersonLocation(const std::string& name) const override;
     const std::map<std::string, std::string>& getAllPersonLocations() const override;
     void setPersonLocation(const std::string& name, const std::string& room) override;
-    std::optional<des::Point> getPersonPosition(const std::string& name) const override;
+    std::optional<Point> getPersonPosition(const std::string& name) const override;
     bool robotSeesPerson(const std::string& name) const override;
 
     std::optional<int> lastServiced(const std::string& room, const std::string& type) const override;
     void recordServiced(const std::string& room, const std::string& type, int time) override;
 
     std::vector<std::string> roomNames() const override;
-    const des::Room& room(const std::string& name) const override;
+    const Room& room(const std::string& name) const override;
 
     // Mission management — current mission plus the three mission channels.
-    void setOrderPtr(const des::OrderPtr& orderPtr) override;
-    des::OrderPtr getOrderPtr() const override;
-    void updateOrderState(const des::MissionState& newState) override;
+    void setOrderPtr(const OrderPtr& orderPtr) override;
+    OrderPtr getOrderPtr() const override;
+    void updateOrderState(const MissionState& newState) override;
 
-    void addScheduledMission(const des::OrderPtr orderPtr) override;
+    void addScheduledMission(const OrderPtr orderPtr) override;
     bool hasScheduledMission() const override;
-    des::OrderPtr nextScheduledMission() override;
-    des::OrderPtr popScheduledMission() override;
+    OrderPtr nextScheduledMission() override;
+    OrderPtr popScheduledMission() override;
 
-    void addBackgroundMission(const des::OrderPtr orderPtr) override;
+    void addBackgroundMission(const OrderPtr orderPtr) override;
     bool hasBackgroundMission() const override;
-    des::OrderPtr acceptFeasibleBackgroundMission() override;
+    OrderPtr acceptFeasibleBackgroundMission() override;
 
     std::optional<int> getNextScheduledDispatchTime() const override;
-    des::OrderPtr peekNextScheduledOrder() const override;
-    std::vector<des::OrderPtr> peekScheduledOrdersUntil(int untilTime) const override;
+    OrderPtr peekNextScheduledOrder() const override;
+    std::vector<OrderPtr> peekScheduledOrdersUntil(int untilTime) const override;
     std::optional<int> getSimulationEndTime() const override;
 
-    void publishMission(const des::OrderPtr& order, int time) override;
+    void publishMission(const OrderPtr& order, int time) override;
 
     void advanceTime(int newTime);
 
@@ -140,11 +142,13 @@ public:
     void notifyEvent(const IEvent& event) const override;
     void notifyChargeStarted() const override;
     void robotMoved(const std::string& location, double distance = 0) const override;
-    void robotMovedTo(const des::Point& position, double distance = 0.0) const override;
+    void robotMovedTo(const Point& position, double distance = 0.0) const override;
 
     double getDriveTimeStd() const;
 
-    bool pushInterrupt(const des::OrderPtr& order) override;
-    void popInterrupt(const des::OrderPtr& completedOrder) override;
+    bool pushInterrupt(const OrderPtr& order) override;
+    void popInterrupt(const OrderPtr& completedOrder) override;
     bool hasActiveInterrupt() const override;
 };
+
+}  // namespace des

@@ -11,6 +11,8 @@
 #include "event_system_msgs/msg/timeline_meeting.hpp"
 #include "event_system_msgs/msg/timeline_reset.hpp"
 
+namespace des {
+
 class RosObserver final : public IObserver {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(std::move(node)) {
@@ -25,7 +27,7 @@ public:
         return "ROS";
     }
 
-    void onEvent(const int time, des::EventType type, const std::string& message, const bool isDriving, const bool isCharging, const std::string& color = "", const int missionId = -1) override {
+    void onEvent(const int time, EventType type, const std::string& message, const bool isDriving, const bool isCharging, const std::string& color = "", const int missionId = -1) override {
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
@@ -37,7 +39,7 @@ public:
         m_pubEvent->publish(msg);
     };
 
-    void onStateChanged(const int time, const des::RobotStateType& type, const std::string& name, const des::BatteryProps batStats) override {
+    void onStateChanged(const int time, const RobotStateType& type, const std::string& name, const BatteryProps batStats) override {
         auto msg = event_system_msgs::msg::TimelineStateChange();
         msg.time          = time;
         msg.state         = static_cast<int>(type);
@@ -53,7 +55,7 @@ public:
         m_pubReset->publish(msg);
     }
 
-    void onMissionPublished(const des::OrderPtr& order, int time) override {
+    void onMissionPublished(const OrderPtr& order, int time) override {
         if (!order) return;
         auto& plugin = OrderRegistry::instance().get(order->type);
         plugin.publishTimeline(*order, time, *this);
@@ -88,3 +90,5 @@ private:
     rclcpp::Publisher<event_system_msgs::msg::TimelineMeeting>::SharedPtr m_pubMeeting;
     rclcpp::Publisher<event_system_msgs::msg::TimelineEvent>::SharedPtr m_pubEvent;
 };
+
+}  // namespace des

@@ -14,6 +14,8 @@
 #include "plugins/accompany/events/start_drop_off_conversation_event.h"
 #include "plugins/accompany/states.h"
 
+namespace des {
+
 class IsAccompany final : public BT::ConditionNode {
 public:
     IsAccompany(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -71,3 +73,5 @@ public:
         return BT::NodeStatus::SUCCESS;
     }
 };
+
+}  // namespace des

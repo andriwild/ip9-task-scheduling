@@ -11,6 +11,8 @@
 #include "model/order.h"
 #include "util/types.h"
 
+namespace des {
+
 class ISimContext;
 
 class IEvent {
@@ -26,12 +28,12 @@ public:
 
     virtual void execute(ISimContext& ctx) = 0;
     virtual std::string getName() const = 0;
-    virtual des::EventType getType() const = 0;
+    virtual EventType getType() const = 0;
     virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;
     virtual std::string getColor() const { return ""; }
     virtual int getMissionId() const { return m_missionId; }
     void setMissionId(const int missionId) { m_missionId = missionId; }
-    virtual des::OrderPtr getOrder() const { return nullptr; }
+    virtual OrderPtr getOrder() const { return nullptr; }
     virtual double getDistance() const { return 0.0; }
     virtual int priority() const { return 0; }
 
@@ -76,3 +78,5 @@ using SortedEventQueue = std::priority_queue<
     std::shared_ptr<IEvent>,
     EventList,
     EventComparator>;
+
+}  // namespace des

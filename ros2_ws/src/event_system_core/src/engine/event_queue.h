@@ -15,6 +15,8 @@
 #include "engine/contracts/i_event.h"
 #include "util/types.h"
 
+namespace des {
+
 class EventQueue {
     struct EarliestFirst {
         bool operator()(const std::shared_ptr<IEvent>& a,
@@ -51,13 +53,13 @@ public:
 
     int getFirstEventTime() const;
 
-    std::shared_ptr<IEvent> nextEvent(des::EventType type) const;
+    std::shared_ptr<IEvent> nextEvent(EventType type) const;
 
     // Set a flag on the given event
-    void cancelByType(des::EventType type) const;
+    void cancelByType(EventType type) const;
 
     // Time of the earliest queued event matching `type`
-    std::optional<int> nextEventTime(des::EventType type) const;
+    std::optional<int> nextEventTime(EventType type) const;
 
     // Convenience: next MissionDispatchEvent in the queue
     std::optional<int> nextDispatchTime() const;
@@ -68,3 +70,5 @@ public:
 
     void print() const;
 };
+
+}  // namespace des

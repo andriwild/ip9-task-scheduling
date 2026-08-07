@@ -8,6 +8,8 @@
 #include "../util/log.h"
 #include "observer.h"
 
+namespace des {
+
 class EventBus {
     std::vector<std::shared_ptr<IObserver>> m_observers;
 
@@ -22,7 +24,7 @@ public:
         m_observers.erase(it, m_observers.end());
     }
 
-    void notifyEvent(int time, const des::EventType& type, const std::string& name,
+    void notifyEvent(int time, const EventType& type, const std::string& name,
                      bool isDriving, bool isCharging, const std::string& color = "",
                      int missionId = -1) const {
         for (const auto& obs : m_observers) {
@@ -30,15 +32,17 @@ public:
         }
     }
 
-    void notifyStateChanged(int time, des::RobotStateType newState, const std::string& name, des::BatteryProps batStats) const {
+    void notifyStateChanged(int time, RobotStateType newState, const std::string& name, BatteryProps batStats) const {
         for (const auto& obs : m_observers) {
             obs->onStateChanged(time, newState, name, batStats);
         }
     }
 
-    void notifyMissionPublished(const des::OrderPtr& order, int time) const {
+    void notifyMissionPublished(const OrderPtr& order, int time) const {
         for (const auto& obs : m_observers) {
             obs->onMissionPublished(order, time);
         }
     }
 };
+
+}  // namespace des

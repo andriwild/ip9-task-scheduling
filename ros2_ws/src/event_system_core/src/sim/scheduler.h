@@ -13,17 +13,19 @@
 #include "../sim/i_path_planner.h"
 #include "../plugins/order_registry.h"
 
+namespace des {
+
 class Scheduler {
-    std::shared_ptr<des::SimConfig> m_simConfig;
-    std::shared_ptr<des::IPathPlanner> m_plannerNode;
-    const des::RoomMap& m_rooms;
+    std::shared_ptr<SimConfig> m_simConfig;
+    std::shared_ptr<IPathPlanner> m_plannerNode;
+    const RoomMap& m_rooms;
 
 public:
 
     explicit Scheduler(
-        const std::shared_ptr<des::SimConfig> &simConfig,
-        const std::shared_ptr<des::IPathPlanner> &plannerNode,
-        const des::RoomMap& rooms
+        const std::shared_ptr<SimConfig> &simConfig,
+        const std::shared_ptr<IPathPlanner> &plannerNode,
+        const RoomMap& rooms
     )
         : m_simConfig(simConfig)
         , m_plannerNode(plannerNode)
@@ -34,7 +36,7 @@ public:
         return m_simConfig->timeBuffer;
     }
 
-    std::vector<std::shared_ptr<MissionDispatchEvent>> createMissionDispatchEvents(des::OrderList& orders, const std::string& startPos) {
+    std::vector<std::shared_ptr<MissionDispatchEvent>> createMissionDispatchEvents(OrderList& orders, const std::string& startPos) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
         std::vector<std::shared_ptr<MissionDispatchEvent>> events;
 
@@ -70,3 +72,5 @@ public:
         return it->second.m_tour.m_distance / m_simConfig->robotSpeed;
     }
 };
+
+}  // namespace des

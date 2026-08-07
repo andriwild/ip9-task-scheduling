@@ -7,10 +7,12 @@
 #include "util/log.h"
 #include "model/order.h"
 
+namespace des {
+
 // Single-slot holder for a preemptive interrupt mission (at most one active),
 // remembering whether the preempted mission was mid-drive so it can resume on pop.
 class InterruptMissionSlot {
-    des::OrderPtr m_mission = nullptr;
+    OrderPtr m_mission = nullptr;
 
     struct Suspended {
         bool wasDriving = false;
@@ -22,12 +24,12 @@ public:
         return m_mission != nullptr;
     }
 
-    des::OrderPtr active() const {
+    OrderPtr active() const {
         return m_mission;
     }
 
     // Returns false if the slot is already occupied. `current` is the mission being preempted (logging only).
-    bool push(const des::OrderPtr& order, const des::OrderPtr& current) {
+    bool push(const OrderPtr& order, const OrderPtr& current) {
         if (m_mission) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) rejected — interrupt %d already active", order->id, order->type.c_str(), m_mission->id);
             return false;
@@ -41,7 +43,7 @@ public:
         return true;
     }
 
-    void pop(const des::OrderPtr& completedOrder) {
+    void pop(const OrderPtr& completedOrder) {
         if (m_mission == completedOrder) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) popped", completedOrder->id, completedOrder->type.c_str());
             m_mission = nullptr;
@@ -67,3 +69,5 @@ public:
         m_suspended.reset();
     }
 };
+
+}  // namespace des

@@ -17,12 +17,12 @@ std::string fixturesDir() {
     return std::string(TEST_FIXTURES_DIR);
 }
 
-std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+std::shared_ptr<des::AccompanyOrder> makeAccompanyOrder(
         const std::string& person,
         const std::string& room,
         int appointmentTime = 36000,
         const std::string& description = "Test") {
-    auto o = std::make_shared<AccompanyOrder>();
+    auto o = std::make_shared<des::AccompanyOrder>();
     o->type = "accompany";
     o->personName = person;
     o->roomName = room;
@@ -38,10 +38,10 @@ public:
     void SetUp() override {
         static bool registered = false;
         if (!registered) {
-            OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
-            OrderRegistry::instance().registerPlugin(std::make_unique<CleanPlugin>());
-            OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
-            OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::AccompanyOrderPlugin>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::CleanPlugin>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::DataAcquisition>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::InformationPlugin>());
             registered = true;
         }
     }
@@ -53,11 +53,11 @@ public:
 // --- loadOrderConfig ---
 
 TEST(ConfigLoaderOrders, LoadsValidOrders) {
-    auto result = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
+    auto result = des::ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->size(), 2u);
 
-    auto first = std::dynamic_pointer_cast<AccompanyOrder>((*result)[0]);
+    auto first = std::dynamic_pointer_cast<des::AccompanyOrder>((*result)[0]);
     ASSERT_NE(first, nullptr);
     EXPECT_EQ(first->personName, "Max");
     EXPECT_EQ(first->roomName, "5.2B10");
@@ -65,14 +65,14 @@ TEST(ConfigLoaderOrders, LoadsValidOrders) {
     EXPECT_EQ(first->description, "Meeting A");
     EXPECT_EQ(first->id, 0);
 
-    auto second = std::dynamic_pointer_cast<AccompanyOrder>((*result)[1]);
+    auto second = std::dynamic_pointer_cast<des::AccompanyOrder>((*result)[1]);
     ASSERT_NE(second, nullptr);
     EXPECT_EQ(second->personName, "Anna");
     EXPECT_EQ(second->id, 1);
 }
 
 TEST(ConfigLoaderOrders, DefaultStateIsPending) {
-    auto result = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
+    auto result = des::ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(result.has_value());
     for (const auto& order : *result) {
         EXPECT_EQ(order->state, des::MissionState::PENDING);
@@ -82,7 +82,7 @@ TEST(ConfigLoaderOrders, DefaultStateIsPending) {
 // --- loadEmployees ---
 
 TEST(ConfigLoaderEmployees, LoadsValidEmployees) {
-    auto result = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
+    auto result = des::ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->size(), 2u);
 
@@ -95,12 +95,12 @@ TEST(ConfigLoaderEmployees, LoadsValidEmployees) {
 }
 
 TEST(ConfigLoaderEmployees, NonexistentFileReturnsNullopt) {
-    auto result = ConfigLoader::loadEmployees("/tmp/nonexistent_xyz_12345.json");
+    auto result = des::ConfigLoader::loadEmployees("/tmp/nonexistent_xyz_12345.json");
     EXPECT_FALSE(result.has_value());
 }
 
 TEST(ConfigLoaderEmployees, EmployeeFieldsParsedCorrectly) {
-    auto result = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
+    auto result = des::ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(result.has_value());
 
     const auto& anna = (*result)[1];
@@ -115,7 +115,7 @@ TEST(ConfigLoaderEmployees, EmployeeFieldsParsedCorrectly) {
 // --- loadSimConfig ---
 
 TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
-    auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
+    auto result = des::ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(result.has_value());
 
     EXPECT_DOUBLE_EQ(result->robotSpeed, 0.5);
@@ -131,19 +131,19 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_EQ(std::filesystem::path(result->appointmentsPath).filename(), "test.json");
 
     // Plugin-owned parameters live under their typeName() sub-object now.
-    EXPECT_DOUBLE_EQ(accompanyConfig().accompanySpeed, 0.3);
-    EXPECT_DOUBLE_EQ(accompanyConfig().conversationProbability, 0.5);
-    EXPECT_DOUBLE_EQ(accompanyConfig().conversationDurationMean, 30.0);
-    EXPECT_DOUBLE_EQ(accompanyConfig().conversationDurationStd, 10.0);
-    EXPECT_DOUBLE_EQ(accompanyConfig().appointmentDuration, 1800.0);
-    EXPECT_DOUBLE_EQ(cleanConfig().cleaningArea, 0.09);
-    EXPECT_DOUBLE_EQ(dataAcquisitionConfig().dataAcquisitionDuration, 120.0);
-    EXPECT_DOUBLE_EQ(informationConfig().informationDurationMin, 30.0);
-    EXPECT_DOUBLE_EQ(informationConfig().informationDurationMax, 90.0);
+    EXPECT_DOUBLE_EQ(des::accompanyConfig().accompanySpeed, 0.3);
+    EXPECT_DOUBLE_EQ(des::accompanyConfig().conversationProbability, 0.5);
+    EXPECT_DOUBLE_EQ(des::accompanyConfig().conversationDurationMean, 30.0);
+    EXPECT_DOUBLE_EQ(des::accompanyConfig().conversationDurationStd, 10.0);
+    EXPECT_DOUBLE_EQ(des::accompanyConfig().appointmentDuration, 1800.0);
+    EXPECT_DOUBLE_EQ(des::cleanConfig().cleaningArea, 0.09);
+    EXPECT_DOUBLE_EQ(des::dataAcquisitionConfig().dataAcquisitionDuration, 120.0);
+    EXPECT_DOUBLE_EQ(des::informationConfig().informationDurationMin, 30.0);
+    EXPECT_DOUBLE_EQ(des::informationConfig().informationDurationMax, 90.0);
 }
 
 TEST(ConfigLoaderSimConfig, DistributionTypesParsedCorrectly) {
-    auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
+    auto result = des::ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->arrivalDistribution, des::DistributionType::NORMAL);
@@ -153,12 +153,12 @@ TEST(ConfigLoaderSimConfig, DistributionTypesParsedCorrectly) {
 }
 
 TEST(ConfigLoaderSimConfig, NonexistentFileReturnsNullopt) {
-    auto result = ConfigLoader::loadSimConfig("/tmp/nonexistent_xyz_12345.json");
+    auto result = des::ConfigLoader::loadSimConfig("/tmp/nonexistent_xyz_12345.json");
     EXPECT_FALSE(result.has_value());
 }
 
 TEST(ConfigLoaderSimConfig, SeedAndRoundModeFallBackToDefaults) {
-    auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
+    auto result = des::ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->seed, 42u);
@@ -171,7 +171,7 @@ TEST(ConfigLoaderSimConfig, OverrideSetsSeedAndRoundMode) {
     out << R"({"seed": 7, "round_mode": "continuation"})";
     out.close();
 
-    auto result = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json", overridePath);
+    auto result = des::ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json", overridePath);
     ASSERT_TRUE(result.has_value());
 
     EXPECT_EQ(result->seed, 7u);
@@ -182,30 +182,30 @@ TEST(ConfigLoaderSimConfig, OverrideSetsSeedAndRoundMode) {
 }
 
 TEST(ConfigLoaderSimConfig, PathResolutionIsIdempotent) {
-    const std::string relative = ConfigLoader::resolvePath("scenarios/single_accompany.json");
+    const std::string relative = des::ConfigLoader::resolvePath("scenarios/single_accompany.json");
     EXPECT_TRUE(std::filesystem::path(relative).is_absolute());
-    EXPECT_EQ(ConfigLoader::resolvePath(relative), relative);
+    EXPECT_EQ(des::ConfigLoader::resolvePath(relative), relative);
 }
 
 // --- saveSimConfig roundtrip ---
 
 TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
-    auto original = ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
+    auto original = des::ConfigLoader::loadSimConfig(fixturesDir() + "/test_sim_config.json");
     ASSERT_TRUE(original.has_value());
 
     // Snapshot plugin-owned values right after load — the plugins are
     // singletons, so the second load below would overwrite them and we'd
     // lose the "original" to compare against.
-    const auto accompanyOriginal       = accompanyConfig();
-    const auto cleanOriginal           = cleanConfig();
-    const auto dataAcquisitionOriginal = dataAcquisitionConfig();
-    const auto informationOriginal     = informationConfig();
+    const auto accompanyOriginal       = des::accompanyConfig();
+    const auto cleanOriginal           = des::cleanConfig();
+    const auto dataAcquisitionOriginal = des::dataAcquisitionConfig();
+    const auto informationOriginal     = des::informationConfig();
 
     std::string tmpFile = "/tmp/test_sim_config_roundtrip.json";
     auto configPtr = std::make_shared<des::SimConfig>(*original);
-    ASSERT_TRUE(ConfigLoader::saveSimConfig(tmpFile, configPtr));
+    ASSERT_TRUE(des::ConfigLoader::saveSimConfig(tmpFile, configPtr));
 
-    auto reloaded = ConfigLoader::loadSimConfig(tmpFile);
+    auto reloaded = des::ConfigLoader::loadSimConfig(tmpFile);
     ASSERT_TRUE(reloaded.has_value());
 
     EXPECT_DOUBLE_EQ(original->robotSpeed, reloaded->robotSpeed);
@@ -225,49 +225,49 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_EQ(original->departureDistribution, reloaded->departureDistribution);
 
     // Plugin-owned values survive the round-trip too.
-    EXPECT_DOUBLE_EQ(accompanyOriginal.accompanySpeed,           accompanyConfig().accompanySpeed);
-    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationProbability,  accompanyConfig().conversationProbability);
-    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationMean, accompanyConfig().conversationDurationMean);
-    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationStd,  accompanyConfig().conversationDurationStd);
-    EXPECT_DOUBLE_EQ(accompanyOriginal.appointmentDuration,      accompanyConfig().appointmentDuration);
-    EXPECT_DOUBLE_EQ(cleanOriginal.cleaningArea,                 cleanConfig().cleaningArea);
-    EXPECT_DOUBLE_EQ(dataAcquisitionOriginal.dataAcquisitionDuration, dataAcquisitionConfig().dataAcquisitionDuration);
-    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMin, informationConfig().informationDurationMin);
-    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMax, informationConfig().informationDurationMax);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.accompanySpeed,           des::accompanyConfig().accompanySpeed);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationProbability,  des::accompanyConfig().conversationProbability);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationMean, des::accompanyConfig().conversationDurationMean);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.conversationDurationStd,  des::accompanyConfig().conversationDurationStd);
+    EXPECT_DOUBLE_EQ(accompanyOriginal.appointmentDuration,      des::accompanyConfig().appointmentDuration);
+    EXPECT_DOUBLE_EQ(cleanOriginal.cleaningArea,                 des::cleanConfig().cleaningArea);
+    EXPECT_DOUBLE_EQ(dataAcquisitionOriginal.dataAcquisitionDuration, des::dataAcquisitionConfig().dataAcquisitionDuration);
+    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMin, des::informationConfig().informationDurationMin);
+    EXPECT_DOUBLE_EQ(informationOriginal.informationDurationMax, des::informationConfig().informationDurationMax);
 
     std::filesystem::remove(tmpFile);
 }
 
 TEST(ConfigLoaderSimConfig, SaveToInvalidPathReturnsFalse) {
     auto config = std::make_shared<des::SimConfig>();
-    EXPECT_FALSE(ConfigLoader::saveSimConfig("/nonexistent_dir/file.json", config));
+    EXPECT_FALSE(des::ConfigLoader::saveSimConfig("/nonexistent_dir/file.json", config));
 }
 
 // --- filterByAppointments ---
 
 TEST(ConfigLoaderFilter, FiltersEmployeesByAccompanyOrder) {
-    auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
+    auto employees = des::ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
     des::OrderList orders = { makeAccompanyOrder("Max", "5.2B10") };
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
+    auto filtered = des::ConfigLoader::filterByAppointments(*employees, orders);
     ASSERT_EQ(filtered.size(), 1u);
     EXPECT_EQ(filtered[0]->firstName, "Max");
 }
 
 TEST(ConfigLoaderFilter, NoMatchingEmployeesReturnsEmpty) {
-    auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
+    auto employees = des::ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
     des::OrderList orders = { makeAccompanyOrder("UnknownPerson", "RoomX") };
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
+    auto filtered = des::ConfigLoader::filterByAppointments(*employees, orders);
     EXPECT_TRUE(filtered.empty());
 }
 
 TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveOrders) {
-    auto employees = ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
+    auto employees = des::ConfigLoader::loadEmployees(fixturesDir() + "/test_employees.json");
     ASSERT_TRUE(employees.has_value());
 
     des::OrderList orders;
@@ -275,12 +275,12 @@ TEST(ConfigLoaderFilter, AllEmployeesMatchedWhenAllHaveOrders) {
         orders.push_back(makeAccompanyOrder(emp->firstName, "Room"));
     }
 
-    auto filtered = ConfigLoader::filterByAppointments(*employees, orders);
+    auto filtered = des::ConfigLoader::filterByAppointments(*employees, orders);
     EXPECT_EQ(filtered.size(), employees->size());
 }
 
 TEST(ConfigLoaderBuildingSnapshot, LoadsFootprintsAndAreas) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
     ASSERT_EQ(map->size(), 3u);
 
@@ -298,10 +298,10 @@ TEST(ConfigLoaderBuildingSnapshot, LoadsFootprintsAndAreas) {
 }
 
 TEST(ConfigLoaderRoomTours, MergesVisibilityPolygonsPerTourPoint) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
 
-    const auto merged = ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value());
+    const auto merged = des::ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value());
     ASSERT_TRUE(merged.has_value());
     EXPECT_EQ(merged.value(), 3u);
 
@@ -313,9 +313,9 @@ TEST(ConfigLoaderRoomTours, MergesVisibilityPolygonsPerTourPoint) {
 }
 
 TEST(ConfigLoaderRoomTours, DropsVisibilityWhenItDoesNotMatchThePath) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
-    ASSERT_TRUE(ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
+    ASSERT_TRUE(des::ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
 
     const des::RoomTour& tour = map->at("RoomB").m_tour;
     ASSERT_EQ(tour.m_path.size(), 2u);
@@ -323,9 +323,9 @@ TEST(ConfigLoaderRoomTours, DropsVisibilityWhenItDoesNotMatchThePath) {
 }
 
 TEST(ConfigLoaderRoomTours, TourWithoutVisibilityStaysUnbounded) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
-    ASSERT_TRUE(ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
+    ASSERT_TRUE(des::ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours.json", map.value()).has_value());
 
     const des::RoomTour& tour = map->at("Corridor").m_tour;
     ASSERT_EQ(tour.m_path.size(), 2u);
@@ -334,17 +334,17 @@ TEST(ConfigLoaderRoomTours, TourWithoutVisibilityStaysUnbounded) {
 }
 
 TEST(ConfigLoaderRoomTours, DropsTourThatDoesNotStartAtTheRoomWaypoint) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building.json");
     ASSERT_TRUE(map.has_value());
 
-    const auto merged = ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours_offset.json", map.value());
+    const auto merged = des::ConfigLoader::mergeRoomTours(fixturesDir() + "/test_tours_offset.json", map.value());
     ASSERT_TRUE(merged.has_value());
     EXPECT_EQ(merged.value(), 0u);
     EXPECT_TRUE(map->at("RoomA").m_tour.empty());
 }
 
 TEST(ConfigLoaderBuildingSnapshot, LoadsLegacySnapshotWithoutFootprints) {
-    auto map = ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_legacy.json");
+    auto map = des::ConfigLoader::loadBuildingSnapshot(fixturesDir() + "/test_building_legacy.json");
     ASSERT_TRUE(map.has_value());
     const auto& roomA = map->at("RoomA");
     ASSERT_TRUE(roomA.m_area.has_value());
@@ -360,7 +360,7 @@ TEST(ConfigLoaderSimConfig, SaveMergesUnknownKeysIntoExistingFile) {
 
     auto config = std::make_shared<des::SimConfig>();
     config->robotSpeed = 2.5;
-    ASSERT_TRUE(ConfigLoader::saveSimConfig(path, config));
+    ASSERT_TRUE(des::ConfigLoader::saveSimConfig(path, config));
 
     std::ifstream in(path);
     nlohmann::json j;
@@ -370,7 +370,7 @@ TEST(ConfigLoaderSimConfig, SaveMergesUnknownKeysIntoExistingFile) {
 }
 
 TEST(ConfigLoaderOrders, ExpandsRepeatingOrdersOverSimWindow) {
-    const auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json", 25200, 30 * 86400);
+    const auto orders = des::ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json", 25200, 30 * 86400);
     ASSERT_TRUE(orders.has_value());
     ASSERT_EQ(orders->size(), 6u);
 
@@ -391,7 +391,7 @@ TEST(ConfigLoaderOrders, ExpandsRepeatingOrdersOverSimWindow) {
 }
 
 TEST(ConfigLoaderOrders, RepeatingOrderDefaultsToSingleDayWindow) {
-    const auto orders = ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json");
+    const auto orders = des::ConfigLoader::loadOrderConfig(fixturesDir() + "/test_repeating_orders.json");
     ASSERT_TRUE(orders.has_value());
     ASSERT_EQ(orders->size(), 2u);
 }

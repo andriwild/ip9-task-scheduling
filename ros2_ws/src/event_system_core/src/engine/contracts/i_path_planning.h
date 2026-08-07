@@ -3,6 +3,8 @@
 #include <optional>
 #include <string>
 
+namespace des {
+
 class Scheduler;
 
 struct Journey {
@@ -20,3 +22,5 @@ public:
     // distance source (matrix or Nav2). nullopt = unknown waypoint / no path.
     virtual std::optional<double> getDistance(const std::string& from, const std::string& to) const = 0;
 };
+
+}  // namespace des

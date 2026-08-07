@@ -12,6 +12,8 @@
 #include "../model/room.h"
 #include "../util/log.h"
 
+namespace des {
+
 struct DBConfig {
     std::string m_user;
     std::string m_pw;
@@ -56,7 +58,7 @@ public:
         return true;
     }
 
-    std::optional<des::Person> personByName(const std::string& firstName, const std::string& lastName) {
+    std::optional<Person> personByName(const std::string& firstName, const std::string& lastName) {
         if (!m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
             return std::nullopt;
@@ -73,7 +75,7 @@ public:
         }
 
         if (query.next()) {
-            des::Person person;
+            Person person;
             person.id        = query.value("id").toInt();
             person.firstName = query.value("first_name").toString().toStdString();
             person.lastName  = query.value("last_name").toString().toStdString();
@@ -105,7 +107,7 @@ public:
         return std::nullopt;
     }
 
-    std::optional<des::RoomMap> rooms() {
+    std::optional<RoomMap> rooms() {
         if (!m_db.isOpen() && !m_db.open()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
@@ -122,13 +124,13 @@ public:
             DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "rooms Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
-        des::RoomMap rooms;
+        RoomMap rooms;
         while (query.next()) {
             const std::string name = query.value(0).toString().toStdString();
-            const des::Point p     = {query.value(1).toDouble(), query.value(2).toDouble(), query.value(3).toDouble()};
+            const Point p     = {query.value(1).toDouble(), query.value(2).toDouble(), query.value(3).toDouble()};
             const auto [it, inserted] = rooms.try_emplace(name, name, p);
             if (inserted) {
-                it->second.m_roomType = des::roomTypeFromString(query.value(4).toString().toStdString());
+                it->second.m_roomType = roomTypeFromString(query.value(4).toString().toStdString());
                 if (!query.value(5).isNull()) {
                     it->second.m_area = query.value(5).toDouble();
                 }
@@ -141,3 +143,5 @@ public:
     }
 
 };
+
+}  // namespace des

@@ -7,10 +7,12 @@
 #include "engine/event/person_transition.h"
 #include "engine/contracts/i_sim_context.h"
 
+namespace des {
+
 class AppointmentEndEvent final : public IEvent {
 public:
-    des::Person* person;
-    explicit AppointmentEndEvent(const int time, des::Person* p)
+    Person* person;
+    explicit AppointmentEndEvent(const int time, Person* p)
         : IEvent(time), person(std::move(p)) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -28,7 +30,9 @@ public:
     std::string getName() const override {
         return std::format("{} Appointment End", person->firstName);
     }
-    des::EventType getType() const override { return des::EventType::APPOINTMENT_END; }
+    EventType getType() const override { return EventType::APPOINTMENT_END; }
 };
+
+}  // namespace des
 
 

@@ -48,16 +48,16 @@ public:
 
         auto secondsIn = [&states](const std::string& stateName) {
             return std::ranges::fold_left(
-                states | filter([&](const des::StateInterval& s) { return s.name == stateName; })
-                       | transform([](const des::StateInterval& s) { return s.endTime - s.time; }),
+                states | filter([&](const StateInterval& s) { return s.name == stateName; })
+                       | transform([](const StateInterval& s) { return s.endTime - s.time; }),
                 0, std::plus{});
         };
 
         auto scheduled = protocol
-            | filter([](const auto& e) { return e->getType() == des::EventType::MISSION_COMPLETE; })
-            | filter([](const auto& e) { return e->getOrder() && e->getOrder()->execution == des::ExecutionMode::SCHEDULED; });
+            | filter([](const auto& e) { return e->getType() == EventType::MISSION_COMPLETE; })
+            | filter([](const auto& e) { return e->getOrder() && e->getOrder()->execution == ExecutionMode::SCHEDULED; });
 
-        auto inState = [](const des::MissionState state) {
+        auto inState = [](const MissionState state) {
             return [state](const auto& e) { return e->getOrder()->state == state; };
         };
 
@@ -84,10 +84,10 @@ public:
             daily += std::format("{},{},{},{},{},{},{}\n",
                 m_roundSeed, m_scenario,
                 day.front()->time / SECONDS_PER_DAY,
-                std::ranges::count_if(day, inState(des::MissionState::COMPLETED)),
-                std::ranges::count_if(day, inState(des::MissionState::FAILED)),
+                std::ranges::count_if(day, inState(MissionState::COMPLETED)),
+                std::ranges::count_if(day, inState(MissionState::FAILED)),
                 std::ranges::count_if(day, withDetail("missed in building")),
-                std::ranges::count_if(day, inState(des::MissionState::REJECTED)));
+                std::ranges::count_if(day, inState(MissionState::REJECTED)));
         }
         write(m_dailyCsvPath, daily);
 
@@ -104,3 +104,4 @@ public:
 };
 
 }  // namespace des::metrics
+

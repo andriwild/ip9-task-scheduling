@@ -15,6 +15,8 @@
 #include "sighting.h"
 #include "state_log.h"
 
+namespace des {
+
 class IEvent;
 
 class Robot {
@@ -22,11 +24,11 @@ class Robot {
     std::unique_ptr<RobotState> m_state;
     std::string m_currentLocation;
     std::string m_targetLocation;
-    des::Point m_position;
-    des::Polygon m_visibility;
+    Point m_position;
+    Polygon m_visibility;
 
     SightingLog m_sightings;
-    des::StateLog m_stateLog;
+    StateLog m_stateLog;
     std::vector<int> m_chargeSessions;
     int m_now = 0;
     double m_odometer = 0.0;
@@ -48,10 +50,10 @@ public:
     bool m_batteryFullEventScheduled = false;
     bool m_opportunisticCharge = false;
 
-    explicit Robot(const std::shared_ptr<des::SimConfig>& config, int startTime = 0);
+    explicit Robot(const std::shared_ptr<SimConfig>& config, int startTime = 0);
 
     bool isBusy() const;
-    void updateConfig(const des::SimConfig& config);
+    void updateConfig(const SimConfig& config);
 
     std::string getLocation() const;
     void setLocation(const std::string& location);
@@ -59,19 +61,19 @@ public:
     std::string getTargetLocation() const;
     void setTargetLocation(const std::string& location);
 
-    des::Point getPosition() const;
-    void setPosition(const des::Point& position);
+    Point getPosition() const;
+    void setPosition(const Point& position);
 
-    const des::Polygon& getVisibility() const;
-    void setVisibility(const des::Polygon& visibility);
+    const Polygon& getVisibility() const;
+    void setVisibility(const Polygon& visibility);
 
     void changeState(std::unique_ptr<RobotState> newState, int time);
     RobotState* getState() const;
 
     void closeStateLog(int time);
-    void beginStateInterval(des::RobotStateType category, std::string name);
+    void beginStateInterval(RobotStateType category, std::string name);
     void endStateInterval();
-    const des::StateLog& getStateLog() const;
+    const StateLog& getStateLog() const;
 
     void addDistance(double distance);
     double getOdometer() const;
@@ -92,7 +94,7 @@ public:
     bool updateAndGetChargingRequired();
     void setChargingRequired(const bool isChargingRequired);
 
-    des::BatteryProps batteryStats() const;
+    BatteryProps batteryStats() const;
     double batteryVoltage() const;
     bool isBatteryLow() const;
     bool isBatteryDepleted() const;
@@ -104,7 +106,7 @@ public:
     void completeCharge();
     void setBatteryForceFull(const bool forceFull);
 
-    des::RobotStateType getStateType() const;
+    RobotStateType getStateType() const;
 
     double getCurrentSpeed() const;
     void setSpeed(const double newSpeed);
@@ -123,3 +125,5 @@ public:
     void flushRoomVisit();
     const SightingLog& getSightings() const;
 };
+
+}  // namespace des

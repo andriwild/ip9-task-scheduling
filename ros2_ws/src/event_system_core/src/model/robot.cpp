@@ -3,7 +3,9 @@
 #include "robot_state.h"
 #include "engine/contracts/i_event.h"
 
-Robot::Robot(const std::shared_ptr<des::SimConfig>& config, const int startTime)
+namespace des {
+
+Robot::Robot(const std::shared_ptr<SimConfig>& config, const int startTime)
     : m_state(std::make_unique<IdleState>())
 {
     m_now = startTime;
@@ -40,7 +42,7 @@ void Robot::closeStateLog(const int time) {
     m_stateLog.close(time, m_bat->getStats().soc);
 }
 
-void Robot::beginStateInterval(const des::RobotStateType category, std::string name) {
+void Robot::beginStateInterval(const RobotStateType category, std::string name) {
     m_stateLog.open(m_now, category, std::move(name), m_bat->getStats().soc);
 }
 
@@ -48,7 +50,7 @@ void Robot::endStateInterval() {
     m_stateLog.close(m_now, m_bat->getStats().soc);
 }
 
-const des::StateLog& Robot::getStateLog() const {
+const StateLog& Robot::getStateLog() const {
     return m_stateLog;
 }
 
@@ -74,10 +76,10 @@ double Robot::getDischargedAh() const {
 
 bool Robot::isBusy() const {
     const auto type = m_state->getType();
-    return type != des::RobotStateType::IDLE || isDriving();
+    return type != RobotStateType::IDLE || isDriving();
 }
 
-void Robot::updateConfig(const des::SimConfig& config) {
+void Robot::updateConfig(const SimConfig& config) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);
     m_dockLocation = config.dockLocation;
@@ -105,19 +107,19 @@ void Robot::setLocation(const std::string& location) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot location set to: %s", location.c_str());
 }
 
-des::Point Robot::getPosition() const {
+Point Robot::getPosition() const {
     return m_position;
 }
 
-void Robot::setPosition(const des::Point& position) {
+void Robot::setPosition(const Point& position) {
     m_position = position;
 }
 
-const des::Polygon& Robot::getVisibility() const {
+const Polygon& Robot::getVisibility() const {
     return m_visibility;
 }
 
-void Robot::setVisibility(const des::Polygon& visibility) {
+void Robot::setVisibility(const Polygon& visibility) {
     m_visibility = visibility;
 }
 
@@ -171,7 +173,7 @@ void Robot::setChargingRequired(const bool isChargingRequired) {
     m_chargingRequired = isChargingRequired;
 }
 
-des::BatteryProps Robot::batteryStats() const {
+BatteryProps Robot::batteryStats() const {
     return m_bat->getStats();
 }
 
@@ -215,7 +217,7 @@ void Robot::setBatteryForceFull(const bool forceFull) {
     m_bat->setForceFull(forceFull);
 }
 
-des::RobotStateType Robot::getStateType() const {
+RobotStateType Robot::getStateType() const {
     return m_state->getType();
 }
 
@@ -268,3 +270,5 @@ void Robot::flushRoomVisit() {
 const SightingLog& Robot::getSightings() const {
     return m_sightings;
 }
+
+}  // namespace des

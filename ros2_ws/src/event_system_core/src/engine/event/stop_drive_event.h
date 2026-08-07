@@ -8,6 +8,8 @@
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 
+namespace des {
+
 class StopDriveEvent final : public IEvent {
     std::shared_ptr<DriveTarget> m_target;
     double m_distance;
@@ -42,6 +44,8 @@ public:
     }
 
     std::string getName() const override { return "Arrived: " + m_target->label(); }
-    des::EventType getType() const override { return des::EventType::STOP_DRIVE; }
+    EventType getType() const override { return EventType::STOP_DRIVE; }
     double getDistance() const override { return m_distance; }
 };
+
+}  // namespace des

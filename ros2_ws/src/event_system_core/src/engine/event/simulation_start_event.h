@@ -4,6 +4,8 @@
 #include "engine/event/stop_drive_event.h"
 #include "model/robot_state.h"
 
+namespace des {
+
 class SimulationStartEvent final : public IEvent {
 public:
     explicit SimulationStartEvent(const int time) : IEvent(time) {}
@@ -22,5 +24,7 @@ public:
     }
 
     std::string getName() const override { return "Simulation Start"; }
-    des::EventType getType() const override { return des::EventType::SIMULATION_START; }
+    EventType getType() const override { return EventType::SIMULATION_START; }
 };
+
+}  // namespace des

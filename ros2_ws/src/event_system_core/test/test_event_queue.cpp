@@ -5,15 +5,15 @@
 #include "engine/event_queue.h"
 
 // Minimal concrete event for testing (no ROS dependency)
-class DummyEvent final : public IEvent {
+class DummyEvent final : public des::IEvent {
     des::EventType m_type;
 public:
     explicit DummyEvent(int time, des::EventType type = des::EventType::SIMULATION_START)
-        : IEvent(time), m_type(type) {}
-    void execute(ISimContext&) override {}
+        : des::IEvent(time), m_type(type) {}
+    void execute(des::ISimContext&) override {}
     std::string getName() const override { return "Dummy"; }
     des::EventType getType() const override { return m_type; }
-    std::shared_ptr<IEvent> withTime(int newTime) const override {
+    std::shared_ptr<des::IEvent> withTime(int newTime) const override {
         auto copy = std::make_shared<DummyEvent>(*this);
         copy->time = newTime;
         copy->cancelled = false;
@@ -23,13 +23,13 @@ public:
 
 class EventQueueTest : public ::testing::Test {
 protected:
-    EventQueue queue;
+    des::EventQueue queue;
 
-    static std::shared_ptr<IEvent> makeEvent(int time) {
+    static std::shared_ptr<des::IEvent> makeEvent(int time) {
         return std::make_shared<DummyEvent>(time);
     }
 
-    static std::shared_ptr<IEvent> makeEvent(int time, des::EventType type) {
+    static std::shared_ptr<des::IEvent> makeEvent(int time, des::EventType type) {
         return std::make_shared<DummyEvent>(time, type);
     }
 };
@@ -75,7 +75,7 @@ TEST_F(EventQueueTest, GetFirstEventTime) {
 }
 
 TEST_F(EventQueueTest, ExtendFromSortedEventQueue) {
-    SortedEventQueue sorted;
+    des::SortedEventQueue sorted;
     sorted.push(makeEvent(50));
     sorted.push(makeEvent(150));
 
@@ -87,7 +87,7 @@ TEST_F(EventQueueTest, ExtendFromSortedEventQueue) {
 }
 
 TEST_F(EventQueueTest, ExtendFromVector) {
-    EventList events = {
+    des::EventList events = {
         makeEvent(400),
         makeEvent(200),
     };
@@ -190,13 +190,13 @@ TEST_F(EventQueueTest, TimeTakesPrecedenceOverSeq) {
 }
 
 TEST_F(EventQueueTest, ExtendFromSortedEventQueuePreservesSeqOrderForSameTime) {
-    // The SortedEventQueue is a binary heap: not stable for equal times.
+    // The des::SortedEventQueue is a binary heap: not stable for equal times.
     // The seq tie-break must still yield creation order after extend().
     auto e0 = makeEvent(100, des::EventType::MISSION_DISPATCH);
     auto e1 = makeEvent(100, des::EventType::SIMULATION_END);
     auto e2 = makeEvent(100, des::EventType::SIMULATION_START);
 
-    SortedEventQueue sorted;
+    des::SortedEventQueue sorted;
     sorted.push(e2); // scrambled push order
     sorted.push(e0);
     sorted.push(e1);

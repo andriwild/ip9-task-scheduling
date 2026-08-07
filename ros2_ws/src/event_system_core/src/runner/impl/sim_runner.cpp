@@ -15,6 +15,8 @@
 #include "event_system_msgs/srv/set_system_state.hpp"
 
 
+namespace des {
+
 void SimRunner::reloadSimulationData() {
     m_orders = loadOrders(m_config->appointmentsPath, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(m_config->appointmentsPath);
@@ -80,7 +82,7 @@ void SimRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");
 }
 
-void SimRunner::updateConfig(std::shared_ptr<des::SimConfig> config) {
+void SimRunner::updateConfig(std::shared_ptr<SimConfig> config) {
     m_config = std::move(config);
     m_ctx->setConfig(m_config);
     DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.runner"), *m_config.get());
@@ -101,3 +103,5 @@ void SimRunner::enterPause() const {
 int SimRunner::loadAppState() const {
     return m_controllerNode->currentState.load();
 }
+
+}  // namespace des

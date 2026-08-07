@@ -4,9 +4,13 @@
 #include "engine/contracts/i_world_model.h"
 #include "util/types.h"
 
+namespace des {
+
 // Read-only slice of the simulation
 struct EstimationView {
     const IWorldModel& world;
     const ISimClock& clock;
-    const des::SimConfig& cfg;
+    const SimConfig& cfg;
 };
+
+}  // namespace des

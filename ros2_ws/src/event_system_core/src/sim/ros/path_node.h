@@ -17,6 +17,8 @@
 #include "../../util/types.h"
 #include "../i_path_planner.h"
 
+namespace des {
+
 struct SimplePose {
     double x, y, yaw;
 };
@@ -28,12 +30,12 @@ struct PathResult {
 
 using Cache = std::map<std::pair<std::string, std::string>, double>;
 
-class PathPlannerNode : public rclcpp::Node, public des::IPathPlanner {
+class PathPlannerNode : public rclcpp::Node, public IPathPlanner {
 public:
     using ComputePathToPose = nav2_msgs::action::ComputePathToPose;
     using GoalHandle = rclcpp_action::ClientGoalHandle<ComputePathToPose>;
 
-    PathPlannerNode(des::RoomMap rooms):
+    PathPlannerNode(RoomMap rooms):
         Node("event_system_planner_node"),
         m_rooms(std::move(rooms)) 
     {
@@ -161,5 +163,7 @@ private:
     std::condition_variable m_cv;
     bool m_resultReady{false};
     PathResult m_currentResult{false, 0.0};
-    des::RoomMap m_rooms;
+    RoomMap m_rooms;
 };
+
+}  // namespace des

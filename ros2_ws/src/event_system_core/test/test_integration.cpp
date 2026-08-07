@@ -33,7 +33,7 @@ public:
     }
 };
 
-class TrackingObserver : public IObserver {
+class TrackingObserver : public des::IObserver {
 public:
     std::vector<std::pair<int, des::EventType>> events;
     // Each state-change carries both the structural category and the
@@ -60,13 +60,13 @@ public:
 
 };
 
-static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+static std::shared_ptr<des::AccompanyOrder> makeAccompanyOrder(
         int id,
         const std::string& person,
         const std::string& room,
         int appointmentTime,
         const std::string& description = "Test") {
-    auto o = std::make_shared<AccompanyOrder>();
+    auto o = std::make_shared<des::AccompanyOrder>();
     o->id = id;
     o->type = "accompany";
     o->personName = person;
@@ -78,7 +78,7 @@ static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
 
 class IntegrationTest : public ::testing::Test {
 protected:
-    EventQueue eventQueue;
+    des::EventQueue eventQueue;
     std::shared_ptr<MockPathPlanner> planner;
     std::shared_ptr<des::SimConfig> config;
     des::PersonMap employees;
@@ -88,7 +88,7 @@ protected:
     static void SetUpTestSuite() {
         static bool registered = false;
         if (!registered) {
-            OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::AccompanyOrderPlugin>());
             registered = true;
         }
     }
@@ -105,7 +105,7 @@ protected:
 
         // Accompany-specific params live on the plugin now. Deterministic
         // (std=0, probability=1.0) so the integration scenario is reproducible.
-        OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName).loadConfig(nlohmann::json{
+        des::OrderRegistry::instance().get(des::AccompanyOrderPlugin::kTypeName).loadConfig(nlohmann::json{
             {"accompany_speed",            0.5},
             {"conversation_probability",   1.0},
             {"conversation_duration_mean", 30.0},
@@ -151,7 +151,7 @@ protected:
     }
 
     // Run the event loop similar to main.cpp
-    void runEventLoop(SimulationContext& ctx, int maxEvents = 200) {
+    void runEventLoop(des::SimulationContext& ctx, int maxEvents = 200) {
         int processed = 0;
         while (!eventQueue.empty() && processed < maxEvents) {
             auto e = eventQueue.top();
@@ -163,7 +163,7 @@ protected:
     }
 
     // Execute the next event from the queue and return it
-    std::shared_ptr<IEvent> step(SimulationContext& ctx) {
+    std::shared_ptr<des::IEvent> step(des::SimulationContext& ctx) {
         if (eventQueue.empty()) return nullptr;
         auto e = eventQueue.top();
         eventQueue.pop();
@@ -177,14 +177,14 @@ protected:
 // --- Config Roundtrip (kept here for completeness with integration) ---
 
 TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
-    auto original = ConfigLoader::loadSimConfig(TEST_FIXTURES_DIR + std::string("/test_sim_config.json"));
+    auto original = des::ConfigLoader::loadSimConfig(TEST_FIXTURES_DIR + std::string("/test_sim_config.json"));
     ASSERT_TRUE(original.has_value());
 
     std::string tmpFile = "/tmp/test_roundtrip_integration.json";
     auto ptr = std::make_shared<des::SimConfig>(*original);
-    ASSERT_TRUE(ConfigLoader::saveSimConfig(tmpFile, ptr));
+    ASSERT_TRUE(des::ConfigLoader::saveSimConfig(tmpFile, ptr));
 
-    auto reloaded = ConfigLoader::loadSimConfig(tmpFile);
+    auto reloaded = des::ConfigLoader::loadSimConfig(tmpFile);
     ASSERT_TRUE(reloaded.has_value());
 
     // Verify all distribution-related fields survive the roundtrip
@@ -197,12 +197,12 @@ TEST(ConfigRoundtrip, SaveAndReloadPreservesAllFields) {
 }
 
 TEST_F(IntegrationTest, ContextIsDestroyedAfterDroppingLastReference) {
-    std::weak_ptr<SimulationContext> observer;
+    std::weak_ptr<des::SimulationContext> observer;
     {
-        auto ctx = std::make_shared<SimulationContext>(
+        auto ctx = std::make_shared<des::SimulationContext>(
             eventQueue, config, planner, makePeople(), roomMap
         );
-        ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+        ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
         observer = ctx;
         EXPECT_FALSE(observer.expired());
     }
@@ -212,16 +212,16 @@ TEST_F(IntegrationTest, ContextIsDestroyedAfterDroppingLastReference) {
 // --- Event Loop: full scenario ---
 
 TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     // Create a simple scenario: one appointment
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000, "Test Meeting");
 
-    // Schedule mission (same as IAppRunner::createMissionQueue)
+    // Schedule mission (same as des::IAppRunner::createMissionQueue)
     des::OrderList orders = {order};
     auto missions = ctx->getScheduler().createMissionDispatchEvents(orders, "IMVS_Dock");
     for (auto& m : missions) {
@@ -232,8 +232,8 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
     // Add simulation start/end
     int startTime = eventQueue.getFirstEventTime() - ONE_HOUR;
     int endTime = 40000;
-    eventQueue.push(std::make_shared<SimulationStartEvent>(startTime));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(endTime));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(startTime));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(endTime));
 
     ctx->resetContext(startTime);
     ctx->setPersonLocation("Max", "Office");
@@ -269,7 +269,7 @@ TEST_F(IntegrationTest, PersonOutsideTheVisibilityPolygonIsNotSeen) {
         des::Point{10.0, 11.0, 0.0}
     };
 
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->setPersonLocation("Max", "Office");
@@ -296,15 +296,15 @@ TEST_F(IntegrationTest, PersonOutsideTheVisibilityPolygonIsNotSeen) {
 }
 
 TEST_F(IntegrationTest, EventLoopDrainsQueue) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     // Minimal scenario: just start and end
-    eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(2000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(1000));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(2000));
     ctx->resetContext(1000);
 
     runEventLoop(*ctx);
@@ -314,18 +314,18 @@ TEST_F(IntegrationTest, EventLoopDrainsQueue) {
 }
 
 TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000);
 
     // Start simulation, then dispatch mission
-    eventQueue.push(std::make_shared<SimulationStartEvent>(30000));
-    eventQueue.push(std::make_shared<MissionDispatchEvent>(34000, order));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(40000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(30000));
+    eventQueue.push(std::make_shared<des::MissionDispatchEvent>(34000, order));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(40000));
     ctx->resetContext(30000);
     ctx->setPersonLocation("Max", "Office");
 
@@ -343,16 +343,16 @@ TEST_F(IntegrationTest, MissionDispatchWithoutPriorStartIsPending) {
 // --- Reset behavior ---
 
 TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     // Run some events to change state
-    eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(1000));
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 5000);
-    eventQueue.push(std::make_shared<MissionDispatchEvent>(2000, order));
+    eventQueue.push(std::make_shared<des::MissionDispatchEvent>(2000, order));
     ctx->resetContext(1000);
 
     // Process start event
@@ -375,15 +375,15 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
 }
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     // First run
-    eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(2000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(1000));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(2000));
     ctx->resetContext(1000);
     runEventLoop(*ctx);
 
@@ -392,8 +392,8 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
 
     // Reset and run again
     ctx->resetContext(3000);
-    eventQueue.push(std::make_shared<SimulationStartEvent>(3000));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(4000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(3000));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(4000));
     runEventLoop(*ctx);
 
     // Should have processed more events
@@ -403,14 +403,14 @@ TEST_F(IntegrationTest, ResetContextAllowsRerun) {
 // --- Observer integration ---
 
 TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
-    eventQueue.push(std::make_shared<SimulationStartEvent>(1000));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(5000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(1000));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(5000));
     ctx->resetContext(1000);
 
     runEventLoop(*ctx);
@@ -425,11 +425,11 @@ TEST_F(IntegrationTest, ObserverReceivesEventsInOrder) {
 // --- Step-by-step event execution ---
 
 TEST_F(IntegrationTest, StepByStepSingleMission) {
-    auto ctx = std::make_shared<SimulationContext>(
+    auto ctx = std::make_shared<des::SimulationContext>(
         eventQueue, config, planner, makePeople(), roomMap
     );
     ctx->addObserver(observer);
-    ctx->setBehaviorTree(setupBehaviorTree(ctx.get()));
+    ctx->setBehaviorTree(des::setupBehaviorTree(ctx.get()));
 
     auto order = makeAccompanyOrder(0, "Max", "MeetingRoom", 36000, "Dokument abholen");
 
@@ -441,8 +441,8 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     }
 
     int startTime = eventQueue.getFirstEventTime() - ONE_HOUR;
-    eventQueue.push(std::make_shared<SimulationStartEvent>(startTime));
-    eventQueue.push(std::make_shared<SimulationEndEvent>(40000));
+    eventQueue.push(std::make_shared<des::SimulationStartEvent>(startTime));
+    eventQueue.push(std::make_shared<des::SimulationEndEvent>(40000));
     ctx->resetContext(startTime);
     ctx->setPersonLocation("Max", "Office");
 
@@ -470,7 +470,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(e->getType(), des::EventType::MISSION_DISPATCH);
     EXPECT_EQ(order->state, des::MissionState::PENDING);
 
-    // Step 4: MissionStart -> Robot enters SearchState
+    // Step 4: MissionStart -> des::Robot enters des::SearchState
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_START);
@@ -552,7 +552,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_EQ(ctx->getPersonLocation("Max"), "MeetingRoom");
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "accompany");
 
-    // Steps 16-17: PersonAccompanyArrived + StartDropOffConversation
+    // Steps 16-17: PersonAccompanyArrived + des::StartDropOffConversation
     {
         bool seenArrived = false;
         bool seenStartDropOff = false;

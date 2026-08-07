@@ -37,7 +37,7 @@ namespace op_build {
 
 struct PlannedNode {
     OpNode op;
-    des::OrderPtr order;
+    OrderPtr order;
 };
 
 inline PlannedNode anchorNode(const std::string& location) {

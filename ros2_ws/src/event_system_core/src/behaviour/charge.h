@@ -12,6 +12,8 @@
 #include "../model/robot.h"
 #include "engine/event.h"
 
+namespace des {
+
 class IsBatteryLow final : public BT::ConditionNode {
 public:
     IsBatteryLow(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -34,7 +36,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool isCharging = ctx->getRobot()->getState()->getType() == des::RobotStateType::CHARGING;
+        const bool isCharging = ctx->getRobot()->getState()->getType() == RobotStateType::CHARGING;
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge.is_charging"), "%d", isCharging);
         return isCharging ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
@@ -89,8 +91,8 @@ public:
         const auto type    = robot->getStateType();
         const bool driving = robot->isDriving();
         const bool available = !driving
-            && (type == des::RobotStateType::IDLE
-                || (type == des::RobotStateType::CHARGING && robot->m_opportunisticCharge));
+            && (type == RobotStateType::IDLE
+                || (type == RobotStateType::CHARGING && robot->m_opportunisticCharge));
         return available ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -159,7 +161,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         assert(ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation());
 
-        if (ctx->getRobot()->getStateType() != des::RobotStateType::CHARGING) {
+        if (ctx->getRobot()->getStateType() != RobotStateType::CHARGING) {
             ctx->changeRobotState(std::make_unique<ChargeState>());
         }
 
@@ -186,3 +188,5 @@ public:
         return BT::NodeStatus::SUCCESS;
     }
 };
+
+}  // namespace des

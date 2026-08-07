@@ -28,7 +28,7 @@ namespace des {
 inline std::optional<OpInstance> buildSearchInstance(
     const IWorldModel& world,
     const IPathPlanning& paths,
-    const des::SimConfig& cfg,
+    const SimConfig& cfg,
     const std::vector<OpNode>& roomNodes,
     const std::string& startLoc,
     const std::string& endLoc,
@@ -50,7 +50,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         if (room.name == startLoc || room.name == endLoc) {
             continue;
         }
-        const des::RoomTour& tour = world.room(room.name).m_tour;
+        const RoomTour& tour = world.room(room.name).m_tour;
         if (tour.empty()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.algo.search"), "No room tour for '%s'; excluded from search plan", room.name.c_str());
             continue;

@@ -12,10 +12,12 @@
 #include "plugins/clean/clean_plugin.h"
 #include "end_clean_event.h"
 
+namespace des {
+
 class StartCleanEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit StartCleanEvent(const int time, const des::OrderPtr& order)
+    explicit StartCleanEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -26,7 +28,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = des::MissionState::IN_PROGRESS;
+        m_order->state = MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
 
         const std::string& roomName = static_cast<const CleanOrder&>(*m_order).roomName;
@@ -46,5 +48,7 @@ public:
     }
 
     std::string getName() const override { return "Start Clean"; }
-    des::EventType getType() const override { return des::EventType::CLEAN_START; }
+    EventType getType() const override { return EventType::CLEAN_START; }
 };
+
+}  // namespace des

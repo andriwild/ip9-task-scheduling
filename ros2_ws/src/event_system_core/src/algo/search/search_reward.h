@@ -30,14 +30,14 @@ inline float roomProbability(int hits, int misses, float p0, double k) {
 // get the prior for a room
 // the workplace of a person has always the highest prior
 // useRolePrior: if true the prior for rooms is depending on the person role
-inline float occupancyPrior(bool isWorkplace, des::RoomType type, const std::vector<std::string>& roles, bool useRolePrior, float workplacePrior) {
+inline float occupancyPrior(bool isWorkplace, RoomType type, const std::vector<std::string>& roles, bool useRolePrior, float workplacePrior) {
     if (isWorkplace) {
         return workplacePrior;
     }
     if (!useRolePrior) {
         return 0.05f; // TODO: magic number
     }
-    return des::rolePrior(roles, type, 0.05f);
+    return rolePrior(roles, type, 0.05f);
 }
 
 // calculate the probability for each room according to its sightings
@@ -46,7 +46,7 @@ inline std::vector<OpNode> occupancyProbability(
     const std::string& person,
     const std::string& office,
     const std::vector<std::string>& allRooms,
-    const std::vector<des::RoomType>& roomTypes,
+    const std::vector<RoomType>& roomTypes,
     const std::vector<std::string>& roles,
     bool useRolePrior,
     double priorWeight,
@@ -56,7 +56,7 @@ inline std::vector<OpNode> occupancyProbability(
     for (std::size_t i = 0; i < allRooms.size(); ++i) {
         const std::string& room = allRooms[i];
         const SightingCounts c = sightings.counts(person, room);
-        const des::RoomType type = i < roomTypes.size() ? roomTypes[i] : des::RoomType::OTHER;
+        const RoomType type = i < roomTypes.size() ? roomTypes[i] : RoomType::OTHER;
         const double probability = roomProbability(c.hits, c.misses, occupancyPrior(office == room, type, roles, useRolePrior, workplacePrior), priorWeight);
         nodes.push_back({room, static_cast<float>(probability)});
     }

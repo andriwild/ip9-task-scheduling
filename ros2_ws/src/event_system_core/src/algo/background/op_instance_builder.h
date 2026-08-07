@@ -18,7 +18,7 @@ namespace des {
 
 struct OpProblem {
     OpInstance instance;
-    std::vector<des::OrderPtr> orderByNode;
+    std::vector<OrderPtr> orderByNode;
 };
 
 inline std::string formatRoute(const OpProblem& problem, const std::vector<int>& route, const std::string& startLoc, const std::string& endLoc) {
@@ -34,7 +34,7 @@ inline std::string formatRoute(const OpProblem& problem, const std::vector<int>&
 
 namespace op_build {
 
-inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const des::OrderPtr& order) {
+inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const OrderPtr& order) {
     const auto& plugin = OrderRegistry::instance().get(order->type);
     const auto target  = plugin.targetLocation(*order);
     if (!target) {
@@ -57,12 +57,12 @@ inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const 
 inline std::optional<OpProblem> buildMissionInstance(
     const EstimationView& view,
     const IPathPlanning& paths,
-    const std::vector<des::OrderPtr>& missions,
+    const std::vector<OrderPtr>& missions,
     const std::string& startLoc,
     const std::string& endLoc,
     const OpBudgets& budgets
 ) {
-    const des::SimConfig& cfg = view.cfg;
+    const SimConfig& cfg = view.cfg;
     const std::string& dock   = cfg.dockLocation;
     const int startNodeId   = 0;
     const int dockNodeId    = 1;
@@ -96,7 +96,7 @@ inline std::optional<OpProblem> buildMissionInstance(
     }
 
     std::vector<OpNode> nodes;
-    std::vector<des::OrderPtr> orderByNode;
+    std::vector<OrderPtr> orderByNode;
     nodes.reserve(planned.size());
     orderByNode.reserve(planned.size());
 

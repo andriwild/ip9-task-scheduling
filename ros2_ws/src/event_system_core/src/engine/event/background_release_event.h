@@ -6,10 +6,12 @@
 #include "engine/contracts/i_sim_context.h"
 #include "model/order.h"
 
+namespace des {
+
 class BackgroundReleaseEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit BackgroundReleaseEvent(int time, des::OrderPtr order)
+    explicit BackgroundReleaseEvent(int time, OrderPtr order)
         : IEvent(time), m_order(std::move(order)) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -27,9 +29,11 @@ public:
     std::string getName() const override {
         return std::format("Background Release ({})", m_order->type);
     }
-    des::EventType getType() const override { return des::EventType::BACKGROUND_RELEASE; }
+    EventType getType() const override { return EventType::BACKGROUND_RELEASE; }
     int getMissionId() const override { return m_order ? m_order->id : -1; }
-    des::OrderPtr getOrder() const override {
+    OrderPtr getOrder() const override {
         return m_order;
     }
 };
+
+}  // namespace des

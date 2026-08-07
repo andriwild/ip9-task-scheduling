@@ -30,7 +30,7 @@ class DistMat {
 public:
     // Writes the full snapshot. Areas come straight from each Location's m_area
     // (null when a waypoint has no matching search zone).
-    static bool saveMat(const Mat& mat, const std::vector<des::Room>& points) {
+    static bool saveMat(const Mat& mat, const std::vector<Room>& points) {
         nlohmann::json j;
         j["mat"] = mat;
 
@@ -42,7 +42,7 @@ public:
         nlohmann::json types      = nlohmann::json::array();
         for (const auto& p : points) {
             names.push_back(p.m_name);
-            types.push_back(des::roomTypeToString(p.m_roomType));
+            types.push_back(roomTypeToString(p.m_roomType));
             locations.push_back({
                 {"x",   p.m_waypoint.m_x},
                 {"y",   p.m_waypoint.m_y},
@@ -82,7 +82,7 @@ public:
 
     // Recomputes the entire matrix from scratch via the Nav2 planner and writes the snapshot.
     // `locations` must already carry coordinates + areas (the DB view from DBClient::rooms).
-    static bool rebuild(const std::vector<des::Room>& locations, std::shared_ptr<PathPlannerNode> planner) {
+    static bool rebuild(const std::vector<Room>& locations, std::shared_ptr<PathPlannerNode> planner) {
         const size_t n = locations.size();
         DES_LOG_INFO(rclcpp::get_logger("des.dist_mat"), "--- REBUILD DISTANCE MATRIX (%zu x %zu) ---", n, n);
 

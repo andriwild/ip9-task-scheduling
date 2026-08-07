@@ -6,6 +6,8 @@
 #include "model/robot.h"
 #include "model/robot_state.h"
 
+namespace des {
+
 class SimulationEndEvent final : public IEvent {
 public:
     explicit SimulationEndEvent(const int time) : IEvent(time) {}
@@ -27,5 +29,7 @@ public:
     }
 
     std::string getName() const override { return "Simulation End"; }
-    des::EventType getType() const override { return des::EventType::SIMULATION_END; }
+    EventType getType() const override { return EventType::SIMULATION_END; }
 };
+
+}  // namespace des

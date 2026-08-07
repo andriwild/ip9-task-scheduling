@@ -1,5 +1,7 @@
 #include "engine/service_log.h"
 
+namespace des {
+
 std::optional<int> ServiceLog::lastServiced(const std::string& room, const std::string& type) const {
     const auto it = m_lastServiced.find({room, type});
     if (it == m_lastServiced.end()) {
@@ -15,3 +17,5 @@ void ServiceLog::recordServiced(const std::string& room, const std::string& type
 void ServiceLog::clear() {
     m_lastServiced.clear();
 }
+
+}  // namespace des

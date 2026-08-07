@@ -12,6 +12,8 @@
 #include "plugins/data_acquisition/data_acquisition_order.h"
 #include "plugins/data_acquisition/events/start_acquisition_event.h"
 
+namespace des {
+
 class IsAtTargetLocation final : public BT::ConditionNode {
 public:
     IsAtTargetLocation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -68,7 +70,7 @@ public:
     BT::NodeStatus onStart() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (order && order->state == des::MissionState::PENDING) {
+        if (order && order->state == MissionState::PENDING) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "ExecuteAcquisition: start");
             ctx->pushEvent(std::make_shared<StartAcquisitionEvent>(ctx->getTime(), order));
         }
@@ -78,7 +80,7 @@ public:
     BT::NodeStatus onRunning() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == des::MissionState::COMPLETED) {
+        if (!order || order->state == MissionState::COMPLETED) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "ExecuteAcquisition: done");
             return BT::NodeStatus::SUCCESS;
         }
@@ -87,3 +89,5 @@ public:
 
     void onHalted() override {}
 };
+
+}  // namespace des

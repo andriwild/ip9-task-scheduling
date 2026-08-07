@@ -9,10 +9,12 @@
 #include "plugins/accompany/search_exclusion.h"
 #include "util/log.h"
 
+namespace des {
+
 class AbortSearchEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit AbortSearchEvent(const int time, const des::OrderPtr& order)
+    explicit AbortSearchEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -69,5 +71,7 @@ public:
         return "";
     }
 
-    des::EventType getType() const override { return des::EventType::ABORT_SEARCH; }
+    EventType getType() const override { return EventType::ABORT_SEARCH; }
 };
+
+}  // namespace des

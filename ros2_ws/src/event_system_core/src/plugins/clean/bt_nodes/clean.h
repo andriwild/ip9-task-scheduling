@@ -12,6 +12,8 @@
 #include "plugins/clean/clean_order.h"
 #include "plugins/clean/events/start_clean_event.h"
 
+namespace des {
+
 class CleanIsAtTargetLocation final : public BT::ConditionNode {
 public:
     CleanIsAtTargetLocation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -69,7 +71,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only push StartCleanEvent if mission hasn't been started yet.
-        if (order && order->state == des::MissionState::PENDING) {
+        if (order && order->state == MissionState::PENDING) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: start");
             ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime(), order));
         }
@@ -79,7 +81,7 @@ public:
     BT::NodeStatus onRunning() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == des::MissionState::COMPLETED) {
+        if (!order || order->state == MissionState::COMPLETED) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"), "ExecuteClean: done");
             return BT::NodeStatus::SUCCESS;
         }
@@ -88,3 +90,5 @@ public:
 
     void onHalted() override {}
 };
+
+}  // namespace des

@@ -18,14 +18,14 @@
 int main(const int argc, char *argv[]) {
     des::log::setConsoleDefaults();
 
-    std::unique_ptr<IAppRunner> app;
+    std::unique_ptr<des::IAppRunner> app;
     
     // load plugins
-    OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
-    OrderRegistry::instance().registerPlugin(std::make_unique<DataAcquisition>());
-    OrderRegistry::instance().registerPlugin(std::make_unique<CleanPlugin>());
-    OrderRegistry::instance().registerPlugin(std::make_unique<ChargePlugin>());
-    OrderRegistry::instance().registerPlugin(std::make_unique<InformationPlugin>());
+    des::OrderRegistry::instance().registerPlugin(std::make_unique<des::AccompanyOrderPlugin>());
+    des::OrderRegistry::instance().registerPlugin(std::make_unique<des::DataAcquisition>());
+    des::OrderRegistry::instance().registerPlugin(std::make_unique<des::CleanPlugin>());
+    des::OrderRegistry::instance().registerPlugin(std::make_unique<des::ChargePlugin>());
+    des::OrderRegistry::instance().registerPlugin(std::make_unique<des::InformationPlugin>());
 
     // ros parameter requires searching the flag (stability). ros2 launch drops
     // empty-string arguments, so a flag may be followed by the next flag.
@@ -44,16 +44,16 @@ int main(const int argc, char *argv[]) {
             mode = valueOf(i);
         }
         if (flag == "--config") {
-            ConfigLoader::s_overridePath = valueOf(i);
+            des::ConfigLoader::s_overridePath = valueOf(i);
         }
         if (flag == "--base-config") {
-            ConfigLoader::s_baseConfigPath = valueOf(i);
+            des::ConfigLoader::s_baseConfigPath = valueOf(i);
         }
         if (flag == "--out-dir") {
-            IAppRunner::s_outDir = valueOf(i);
+            des::IAppRunner::s_outDir = valueOf(i);
         }
         if (flag == "--run-id") {
-            IAppRunner::s_runId = valueOf(i);
+            des::IAppRunner::s_runId = valueOf(i);
         }
     }
 
@@ -61,7 +61,7 @@ int main(const int argc, char *argv[]) {
     if (mode == "build") {
         rclcpp::init(argc, argv);
         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "\n----- Building Snapshot Generation -----");
-        SnapshotBuilder builder;
+        des::SnapshotBuilder builder;
         const int rc = builder.run();
         rclcpp::shutdown();
         return rc;
@@ -71,9 +71,9 @@ int main(const int argc, char *argv[]) {
 
     // Initialize application runner
     if (headless) {
-        app = HeadlessRunner::create(argc, argv);
+        app = des::HeadlessRunner::create(argc, argv);
     } else {
-        app = SimRunner::create(argc, argv);
+        app = des::SimRunner::create(argc, argv);
     }
     try {
         app->setupApplication();
@@ -96,24 +96,24 @@ int main(const int argc, char *argv[]) {
 
             const int state = app->loadAppState();
             switch (state) {
-                case SystemState::Request::RESET:
+                case des::SystemState::Request::RESET:
                     app->reset();
                     app->enterPause();
                     break;
 
-                case SystemState::Request::PAUSE:
+                case des::SystemState::Request::PAUSE:
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     break;
 
-                case SystemState::Request::EXIT:
+                case des::SystemState::Request::EXIT:
                     running = false;
                     break;
 
-                case SystemState::Request::RUN: {
+                case des::SystemState::Request::RUN: {
                     auto handleSimComplete = [&] {
                         DES_LOG_DEBUG(rclcpp::get_logger("des.main"), "Simulation complete.");
                         if (headless) {
-                            auto* headlessApp = static_cast<HeadlessRunner*>(app.get());
+                            auto* headlessApp = static_cast<des::HeadlessRunner*>(app.get());
                             headlessApp->onSimulationComplete();
                         } else {
                             app->enterPause();

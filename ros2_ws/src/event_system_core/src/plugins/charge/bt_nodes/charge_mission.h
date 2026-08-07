@@ -11,6 +11,8 @@
 #include "engine/event/start_drive_event.h"
 #include "plugins/charge/events/start_charge_event.h"
 
+namespace des {
+
 class ChargeMissionIsAtDock final : public BT::ConditionNode {
 public:
     ChargeMissionIsAtDock(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -66,7 +68,7 @@ public:
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only start once.
-        if (order && order->state == des::MissionState::PENDING) {
+        if (order && order->state == MissionState::PENDING) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: start");
             ctx->pushEvent(std::make_shared<StartChargeEvent>(ctx->getTime(), order));
         }
@@ -76,7 +78,7 @@ public:
     BT::NodeStatus onRunning() override {
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == des::MissionState::COMPLETED) {
+        if (!order || order->state == MissionState::COMPLETED) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: done");
             return BT::NodeStatus::SUCCESS;
         }
@@ -85,3 +87,5 @@ public:
 
     void onHalted() override {}
 };
+
+}  // namespace des

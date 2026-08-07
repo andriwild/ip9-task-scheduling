@@ -21,6 +21,8 @@
 #include "search_exclusion.h"
 #include "states.h"
 
+namespace des {
+
 void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     // search
     factory.registerNodeType<IsSearching>("IsSearching");
@@ -47,7 +49,7 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
 }
 
-void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
+void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, IOrder& order) {
     auto accompanyOrder = static_cast<AccompanyOrder&>(order);
     const auto& personName = accompanyOrder.personName;
     if (!ctx.hasEmployee(personName)) {
@@ -55,7 +57,7 @@ void AccompanyOrderPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
     }
     auto person = ctx.getPersonByName(personName);
 
-    if (order.state != des::COMPLETED) {
+    if (order.state != COMPLETED) {
         person->busy = false;
         return;
     }
@@ -79,7 +81,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 
     const auto& excluded = ctx.getConfig()->searchExcludedRooms;
     std::vector<std::string> universe;
-    std::vector<des::RoomType> universeTypes;
+    std::vector<RoomType> universeTypes;
     for (const auto& name : ctx.roomNames()) {
         if (!isSearchExcluded(excluded, name)) {
             universe.push_back(name);
@@ -87,9 +89,9 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         }
     }
     const auto strategy = ctx.getConfig()->searchRewardStrategy;
-    const auto roomNodes = strategy == des::SearchRewardStrategy::FREQUENCY
-        ? des::frequencyReward(robot->getSightings(), a.personName, universe)
-        : des::occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
+    const auto roomNodes = strategy == SearchRewardStrategy::FREQUENCY
+        ? frequencyReward(robot->getSightings(), a.personName, universe)
+        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();
@@ -100,9 +102,9 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const int now           = ctx.getTime();
     const int deadline      = a.deadline.value_or(now);
 
-    const des::OpBudgets budgets {
+    const OpBudgets budgets {
         .timeBudget      = static_cast<float>(std::max(0, deadline - now)),
-        .energyBudget    = static_cast<float>(std::max(spendableWh, des::kMinEnergyBudgetWh)),
+        .energyBudget    = static_cast<float>(std::max(spendableWh, kMinEnergyBudgetWh)),
         .initialSoc      = static_cast<float>(currentWh),
         .endSocMin       = static_cast<float>(reserveWh),
         .socThreshold    = static_cast<float>(reserveWh),
@@ -112,11 +114,11 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         .cvEnergy        = static_cast<float>(capacityWh),
     };
 
-    auto instance = des::buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
+    auto instance = buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
     if (!instance) {
         return std::nullopt;
     }
-    const auto route = des::op_solver::greedySearchOrder(*instance);
+    const auto route = op_solver::greedySearchOrder(*instance);
     if (route.empty()) {
         return std::nullopt;
     }
@@ -136,9 +138,9 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 }
 }
 
-void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) {
+void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, IOrder& order) {
     auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
-    order.state          = des::MissionState::IN_PROGRESS;
+    order.state          = MissionState::IN_PROGRESS;
     const auto person    = ctx.getPersonByName(accompanyOrder.personName);
 
     std::vector<std::string> locations;
@@ -156,7 +158,7 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, des::IOrder& order) 
     ctx.changeRobotState(std::make_unique<SearchState>());
 }
 
-void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, des::IOrder& order) {
+void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, IOrder& order) {
     auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
     switch (accompanyOrder.phase) {
         case AccompanyPhase::SEARCH: {
@@ -181,11 +183,11 @@ void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, des::IOrder& order)
     }
 }
 
-void AccompanyOrderPlugin::onStartDriveEvent(ISimContext& ctx, des::IOrder& order) {
+void AccompanyOrderPlugin::onStartDriveEvent(ISimContext& ctx, IOrder& order) {
     // not implemented
 };
 
-void AccompanyOrderPlugin::onStopDriveEvent(ISimContext& ctx, des::IOrder& order) {
+void AccompanyOrderPlugin::onStopDriveEvent(ISimContext& ctx, IOrder& order) {
     auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(ctx.getOrderPtr());
     if (dynamic_cast<AccompanyState*>(ctx.getRobot()->getState()) != nullptr && accompany) {
         const auto& personName = accompany->personName;
@@ -198,7 +200,7 @@ void AccompanyOrderPlugin::onStopDriveEvent(ISimContext& ctx, des::IOrder& order
     }
 };
 
-des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
+OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
     auto o = std::make_shared<AccompanyOrder>();
     o->id          = j.at("id");
     o->type        = "accompany";
@@ -206,7 +208,7 @@ des::OrderPtr AccompanyOrderPlugin::fromJson(const nlohmann::json& j) const {
     o->description = j.value("description", "");
     o->personName  = j.at("personName");
     o->roomName    = j.at("roomName");
-    o->execution   = des::ExecutionMode::SCHEDULED;
+    o->execution   = ExecutionMode::SCHEDULED;
     return o;
 }
 
@@ -229,12 +231,12 @@ MeetingEstimate meetingViaWorkplace(const Scheduler& sched, const std::string& w
 }
 }
 
-int AccompanyOrderPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, const std::string& startPos) const {
+int AccompanyOrderPlugin::planDispatchTime(const IOrder& order, const Scheduler& s, const std::string& startPos) const {
     const auto& mission = static_cast<const AccompanyOrder&>(order);
     return *mission.deadline - s.timeBuffer();
 }
 
-bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContext& context) const {
+bool AccompanyOrderPlugin::isFeasible(const IOrder& order, const ISimContext& context) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
 
     const auto robotLocation     = context.getRobot()->getLocation();
@@ -255,11 +257,11 @@ bool AccompanyOrderPlugin::isFeasible(const des::IOrder& order, const ISimContex
     return false;
 }
 
-std::optional<std::string> AccompanyOrderPlugin::targetLocation(const des::IOrder& order) const {
+std::optional<std::string> AccompanyOrderPlugin::targetLocation(const IOrder& order) const {
     return static_cast<const AccompanyOrder&>(order).roomName;
 }
 
-std::string AccompanyOrderPlugin::outcomeDetail(const des::IOrder& order) const {
+std::string AccompanyOrderPlugin::outcomeDetail(const IOrder& order) const {
     switch (static_cast<const AccompanyOrder&>(order).abortReason) {
         case SearchAbortReason::OUTSIDE:                 return "person outside";
         case SearchAbortReason::IN_BUILDING_FINDABLE:    return "missed in building";
@@ -268,7 +270,7 @@ std::string AccompanyOrderPlugin::outcomeDetail(const des::IOrder& order) const 
     }
 }
 
-double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+double AccompanyOrderPlugin::estimateMissionEnergy(const IOrder& order, const ISimContext& context, const std::string& startLocation) const {
     const auto& a     = static_cast<const AccompanyOrder&>(order);
     const auto& cfg   = *context.getConfig();
     const auto& sched = context.getScheduler();
@@ -287,7 +289,7 @@ double AccompanyOrderPlugin::estimateMissionEnergy(const des::IOrder& order, con
     return searchWh + appointmentWh + driveBackWh;
 }
 
-double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+double AccompanyOrderPlugin::estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& startLocation) const {
     const auto& a     = static_cast<const AccompanyOrder&>(order);
     const auto& cfg   = *context.getConfig();
     const auto& sched = context.getScheduler();
@@ -304,7 +306,7 @@ double AccompanyOrderPlugin::estimateMissionDuration(const des::IOrder& order, c
     return searchSec + accompanyConfig().appointmentDuration + driveBackSec;
 }
 
-void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
+void AccompanyOrderPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
     observer.publishMeeting(
         a.id,
@@ -317,3 +319,5 @@ void AccompanyOrderPlugin::publishTimeline(const des::IOrder& order, int startTi
         a.description,
         static_cast<int>(a.execution));
 }
+
+}  // namespace des

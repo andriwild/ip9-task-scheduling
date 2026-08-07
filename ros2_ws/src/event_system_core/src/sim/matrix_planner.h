@@ -8,7 +8,9 @@
 
 #include "i_path_planner.h"
 
-class MatrixPlanner : public des::IPathPlanner {
+namespace des {
+
+class MatrixPlanner : public IPathPlanner {
     std::vector<std::vector<float>> m_mat;
     std::unordered_map<std::string, int> m_index;
 
@@ -29,3 +31,5 @@ public:
         return m_mat[f->second][t->second];
     }
 };
+
+}  // namespace des

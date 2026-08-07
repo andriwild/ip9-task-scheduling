@@ -8,6 +8,8 @@
 
 #include "engine/contracts/i_sim_context.h"
 
+namespace des {
+
 class IsInterruptActive final : public BT::ConditionNode {
 public:
     IsInterruptActive(const std::string& name, const BT::NodeConfig& cfg)
@@ -21,3 +23,5 @@ public:
                                          : BT::NodeStatus::FAILURE;
     }
 };
+
+}  // namespace des

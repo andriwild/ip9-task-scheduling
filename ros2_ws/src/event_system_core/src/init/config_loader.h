@@ -19,6 +19,8 @@
 #include "../plugins/accompany/accompany_order.h"
 
 
+namespace des {
+
 // Baked in by CMake from the workspace layout, overridable at runtime via the
 // DES_CONFIG_DIR environment variable.
 #ifndef DES_CONFIG_DIR
@@ -42,8 +44,8 @@ constexpr int SIM_DURATION   = 43200;
 
 struct InterruptGeneratorConfig {
     std::string type;
-    des::ExecutionMode execution;   // always INTERRUPT
-    des::DistributionType distribution;
+    ExecutionMode execution;   // always INTERRUPT
+    DistributionType distribution;
     double ratePerSecond;     // rate_per_hour / 3600
     int from;
     int to;
@@ -82,7 +84,7 @@ public:
         return resolvePath(s_baseConfigPath);
     }
 
-    static std::optional<des::OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY) {
+    static std::optional<OrderList> loadOrderConfig(const std::string& filePath, const int simStartTime = 0, const int simEndTime = SECONDS_PER_DAY) {
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -91,7 +93,7 @@ public:
             assert(json.has_value());
         }
 
-        des::OrderList orders;
+        OrderList orders;
         int instanceId = 200000; // TODO magic number
         for (const auto& j : json.value().at("orders")) {
             const std::string& type = j.at("type").get_ref<const std::string&>();
@@ -148,7 +150,7 @@ public:
         std::vector<InterruptGeneratorConfig> generators;
         for (const auto& j : json.value().at("ad_hoc_generators")) {
             const std::string& type                  = j.at("type").get_ref<const std::string&>();
-            const des::DistributionType distribution = des::distributionTypeFromString(j.value("distribution", "exponential"));
+            const DistributionType distribution = distributionTypeFromString(j.value("distribution", "exponential"));
             const double ratePerHour                 = j.at("rate_per_hour").get<double>() / 3600.0;
             const int from                           = j.at("active_window").at("from").get<int>();
             const int to                             = j.at("active_window").at("to").get<int>();
@@ -161,25 +163,25 @@ public:
                         "Interrupt generator (type='" + type + "') has execution='" + exec);
                 }
             }
-            const des::ExecutionMode execution = des::ExecutionMode::INTERRUPT;
+            const ExecutionMode execution = ExecutionMode::INTERRUPT;
 
             generators.push_back({type, execution, distribution, ratePerHour, from, to, params });
         }
         return generators;
     };
 
-    static std::optional<des::PersonList> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
+    static std::optional<PersonList> loadEmployees(const std::string& filePath = DEFAULT_EMPLOYEE_FILE) {
         auto jsonOpt = getJson(filePath);
         if (!jsonOpt.has_value()) {
             return std::nullopt;
         }
 
-        des::PersonList employees;
+        PersonList employees;
         try {
             const auto& jsonArray = jsonOpt.value().at("employees");
 
             for (const auto& item : jsonArray) {
-                des::Person p;
+                Person p;
                 p.id               = item.at("id").get<int>();
                 p.firstName        = item.at("firstName").get<std::string>();
                 p.lastName         = item.at("lastName").get<std::string>();
@@ -194,7 +196,7 @@ public:
                     DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Matrix dimension does not match roomLabels for %s", p.firstName.c_str());
                 }
 
-                employees.push_back(std::make_unique<des::Person>(std::move(p)));
+                employees.push_back(std::make_unique<Person>(std::move(p)));
             }
         } catch (const nlohmann::json::exception& e) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "JSON Parsing Error: %s", e.what());
@@ -204,7 +206,7 @@ public:
         return employees;
     }
 
-    static std::optional<des::SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
+    static std::optional<SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Base config not readable: %s", filePath.c_str());
@@ -224,7 +226,7 @@ public:
                 j.merge_patch(overrideJson.value());
                 DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Applied config override: %s", resolved.c_str());
             }
-            des::SimConfig config;
+            SimConfig config;
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();
             config.timeBuffer               = j.at("timeBuffer").get<double>();
@@ -239,11 +241,11 @@ public:
             config.arrivalStd               = j.value("arrival_std", 3600.0);
             config.departureMean            = j.value("departure_mean", 17.0 * 3600);
             config.departureStd             = j.value("departure_std", 3600.0);
-            config.arrivalDistribution      = des::distributionTypeFromString(j.value("arrival_distribution", "normal"));
-            config.departureDistribution    = des::distributionTypeFromString(j.value("departure_distribution", "normal"));
+            config.arrivalDistribution      = distributionTypeFromString(j.value("arrival_distribution", "normal"));
+            config.departureDistribution    = distributionTypeFromString(j.value("departure_distribution", "normal"));
             config.lunchMean                = j.value("lunch_mean", 12.0 * 3600);
             config.lunchStd                 = j.value("lunch_std", 1800.0);
-            config.lunchDistribution        = des::distributionTypeFromString(j.value("lunch_distribution", "normal"));
+            config.lunchDistribution        = distributionTypeFromString(j.value("lunch_distribution", "normal"));
             config.lunchDurationMean        = j.value("lunch_duration_mean", 2400.0);
             config.lunchDurationStd         = j.value("lunch_duration_std", 600.0);
             config.dockLocation             = j.at("dock_location").get<std::string>();
@@ -265,14 +267,14 @@ public:
             config.metricsCsvExport   = j.value("metrics_csv_export", true);
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
-            config.searchRewardStrategy = des::searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
+            config.searchRewardStrategy = searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.searchRolePrior = j.value("search_role_prior", false);
             config.searchPriorWeight = j.value("search_prior_weight", 4.0);
             config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
-            config.energyReserveStrategy = des::energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
+            config.energyReserveStrategy = energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
             config.seed = j.value("seed", 42u);
-            config.roundMode = des::roundModeFromString(j.value("round_mode", "replication"));
+            config.roundMode = roundModeFromString(j.value("round_mode", "replication"));
 
             for (auto* plugin : OrderRegistry::instance().all()) {
                 plugin->loadConfig(j.value(plugin->typeName(), nlohmann::json::object()));
@@ -284,9 +286,9 @@ public:
         }
     }
 
-    static std::vector<des::Person*> filterByAppointments(
-        const des::PersonList& employees,
-        const des::OrderList& orders
+    static std::vector<Person*> filterByAppointments(
+        const PersonList& employees,
+        const OrderList& orders
     ) {
         std::set<std::string> needed;
         for (const auto& order : orders) {
@@ -294,7 +296,7 @@ public:
                 needed.insert(accompany->personName);
             }
         }
-        std::vector<des::Person*> filtered;
+        std::vector<Person*> filtered;
         for (const auto& p : employees) {
             if (needed.contains(p->firstName)) {
                 filtered.push_back(p.get());
@@ -307,7 +309,7 @@ public:
         return std::round(value * 1000.0) / 1000.0;
     }
 
-    static nlohmann::json configToJson(const des::SimConfig& config, nlohmann::json j = nlohmann::json::object()) {
+    static nlohmann::json configToJson(const SimConfig& config, nlohmann::json j = nlohmann::json::object()) {
         j["drive_time_std"]                 = roundValue(config.driveTimeStd);
         j["robot_speed"]                    = roundValue(config.robotSpeed);
         j["timeBuffer"]                     = roundValue(config.timeBuffer);
@@ -322,11 +324,11 @@ public:
         j["arrival_std"]                    = roundValue(config.arrivalStd);
         j["departure_mean"]                 = roundValue(config.departureMean);
         j["departure_std"]                  = roundValue(config.departureStd);
-        j["arrival_distribution"]           = des::distributionTypeToString(config.arrivalDistribution);
-        j["departure_distribution"]         = des::distributionTypeToString(config.departureDistribution);
+        j["arrival_distribution"]           = distributionTypeToString(config.arrivalDistribution);
+        j["departure_distribution"]         = distributionTypeToString(config.departureDistribution);
         j["lunch_mean"]                     = roundValue(config.lunchMean);
         j["lunch_std"]                      = roundValue(config.lunchStd);
-        j["lunch_distribution"]             = des::distributionTypeToString(config.lunchDistribution);
+        j["lunch_distribution"]             = distributionTypeToString(config.lunchDistribution);
         j["lunch_duration_mean"]            = roundValue(config.lunchDurationMean);
         j["lunch_duration_std"]             = roundValue(config.lunchDurationStd);
         j["dock_location"]                  = config.dockLocation;
@@ -347,14 +349,14 @@ public:
         j["metrics_csv_export"]             = config.metricsCsvExport;
         j["replan_background_on_interrupt"] = config.replanBackgroundOnInterrupt;
         j["search_excluded_rooms"]          = config.searchExcludedRooms;
-        j["search_reward_strategy"]         = des::searchRewardStrategyToString(config.searchRewardStrategy);
+        j["search_reward_strategy"]         = searchRewardStrategyToString(config.searchRewardStrategy);
         j["search_role_prior"]              = config.searchRolePrior;
         j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
         j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);
-        j["energy_reserve_strategy"]        = des::energyReserveStrategyToString(config.energyReserveStrategy);
+        j["energy_reserve_strategy"]        = energyReserveStrategyToString(config.energyReserveStrategy);
         j["energy_reserve_horizon"]         = config.energyReserveHorizon;
         j["seed"]                           = config.seed;
-        j["round_mode"]                     = des::roundModeToString(config.roundMode);
+        j["round_mode"]                     = roundModeToString(config.roundMode);
 
         // each plugin serialises its own sub-object under
         for (auto* plugin : OrderRegistry::instance().all()) {
@@ -366,7 +368,7 @@ public:
         return j;
     }
 
-    static bool saveSimConfig(const std::string& filePath, const std::shared_ptr<des::SimConfig>& config) {
+    static bool saveSimConfig(const std::string& filePath, const std::shared_ptr<SimConfig>& config) {
         const nlohmann::json j = configToJson(*config, getJson(filePath).value_or(nlohmann::json::object()));
 
         std::ofstream file(filePath);
@@ -402,19 +404,19 @@ public:
         return j.contains(key) && j.at(key).is_array() ? j.at(key) : empty;
     }
 
-    static std::vector<des::Point> parsePoints(const nlohmann::json& array) {
-        std::vector<des::Point> points;
+    static std::vector<Point> parsePoints(const nlohmann::json& array) {
+        std::vector<Point> points;
         if (!array.is_array()) {
             return points;
         }
         for (const auto& p : array) {
-            points.push_back(des::Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
+            points.push_back(Point{p.at(0).get<double>(), p.at(1).get<double>(), 0.0});
         }
         return points;
     }
 
-    static des::RoomTour parseRoomTour(const nlohmann::json& entry) {
-        des::RoomTour tour;
+    static RoomTour parseRoomTour(const nlohmann::json& entry) {
+        RoomTour tour;
         tour.m_distance = entry.value("distance", 0.0);
         if (entry.contains("path")) {
             tour.m_path = parsePoints(entry.at("path"));
@@ -427,7 +429,7 @@ public:
         return tour;
     }
 
-    static std::optional<std::string> invalidTourReason(const des::RoomTour& tour, const des::Point& waypoint) {
+    static std::optional<std::string> invalidTourReason(const RoomTour& tour, const Point& waypoint) {
         constexpr double kToleranceM = 1e-3;
         if (tour.empty()) {
             return "has no path";
@@ -441,7 +443,7 @@ public:
 
     // add a sightseeing tour to a given room
     // the tours are stored in a config file (e.g. tours_r2.json)
-    static std::optional<std::size_t> mergeRoomTours(const std::string& filePath, des::RoomMap& rooms) {
+    static std::optional<std::size_t> mergeRoomTours(const std::string& filePath, RoomMap& rooms) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -459,7 +461,7 @@ public:
                 DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Tour for unknown room '%s'; dropped", name.c_str());
                 continue;
             }
-            des::RoomTour tour = parseRoomTour(entry);
+            RoomTour tour = parseRoomTour(entry);
             if (!tour.m_visPolys.empty() && tour.m_visPolys.size() != tour.m_path.size()) {
                 DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' has %zu visibility polygons for %zu points; visibility dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
                 tour.m_visPolys.clear();
@@ -476,7 +478,7 @@ public:
 
     // TODO: refactor
     // Loads the building snapshot into a name -> Location map (coords + optional area)
-    static std::optional<des::RoomMap> loadBuildingSnapshot(const std::string& filePath) {
+    static std::optional<RoomMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
             return std::nullopt;
@@ -507,13 +509,13 @@ public:
             DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Building snapshot %s has no 'types', falling back to name-based room types; re-bake via ./build_snapshot.sh", filePath.c_str());
         }
 
-        des::RoomMap map;
+        RoomMap map;
         for (size_t i = 0; i < names.size(); ++i) {
             const std::string name = names.at(i).get<std::string>();
             const auto& l = locs.at(i);
 
-            des::Room room(name, des::Point{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) });
-            room.m_roomType = i < types.size() ? des::roomTypeFromString(types.at(i).get<std::string>()) : des::parseRoomName(name);
+            Room room(name, Point{ l.at("x").get<double>(), l.at("y").get<double>(), l.value("yaw", 0.0) });
+            room.m_roomType = i < types.size() ? roomTypeFromString(types.at(i).get<std::string>()) : parseRoomName(name);
             if (i < areas.size() && !areas.at(i).is_null()) {
                 room.m_area = areas.at(i).get<double>();
             }
@@ -542,3 +544,5 @@ public:
             j.at("mat").get<std::vector<std::vector<float>>>());
     }
 };
+
+}  // namespace des

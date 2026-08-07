@@ -25,8 +25,8 @@ public:
     }
 };
 
-// Set the (singleton) AccompanyOrderPlugin's config — accompany_speed and
-// related params live on the plugin now, not on SimConfig.
+// Set the (singleton) des::AccompanyOrderPlugin's config — accompany_speed and
+// related params live on the plugin now, not on des::SimConfig.
 static void setAccompanyConfig(double accompanySpeed,
                                double conversationProbability = 0.5,
                                double conversationDurationMean = 30.0,
@@ -39,7 +39,7 @@ static void setAccompanyConfig(double accompanySpeed,
         {"conversation_duration_std",  conversationDurationStd},
         {"appointment_duration",       appointmentDuration},
     };
-    OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName).loadConfig(j);
+    des::OrderRegistry::instance().get(des::AccompanyOrderPlugin::kTypeName).loadConfig(j);
 }
 
 class SchedulerTest : public ::testing::Test {
@@ -53,7 +53,7 @@ protected:
     static void SetUpTestSuite() {
         static bool registered = false;
         if (!registered) {
-            OrderRegistry::instance().registerPlugin(std::make_unique<AccompanyOrderPlugin>());
+            des::OrderRegistry::instance().registerPlugin(std::make_unique<des::AccompanyOrderPlugin>());
             registered = true;
         }
     }
@@ -98,17 +98,17 @@ protected:
         planner->setDistance("Kitchen", "HallA", 18.0);
     }
 
-    std::unique_ptr<Scheduler> makeScheduler() {
-        return std::make_unique<Scheduler>(config, planner, locationMap);
+    std::unique_ptr<des::Scheduler> makeScheduler() {
+        return std::make_unique<des::Scheduler>(config, planner, locationMap);
     }
 
-    static std::shared_ptr<AccompanyOrder> makeAccompanyOrder(
+    static std::shared_ptr<des::AccompanyOrder> makeAccompanyOrder(
             int id,
             const std::string& person,
             const std::string& room,
             int appointmentTime,
             const std::string& description = "Test") {
-        auto o = std::make_shared<AccompanyOrder>();
+        auto o = std::make_shared<des::AccompanyOrder>();
         o->id = id;
         o->type = "accompany";
         o->personName = person;
@@ -130,7 +130,7 @@ TEST_F(SchedulerTest, SimplePlanCalculatesCorrectStartTimes) {
     ASSERT_EQ(missions.size(), 1u);
 
     EXPECT_EQ(missions[0]->time, 35940);
-    auto accompany = std::dynamic_pointer_cast<AccompanyOrder>(missions[0]->orderPtr);
+    auto accompany = std::dynamic_pointer_cast<des::AccompanyOrder>(missions[0]->orderPtr);
     ASSERT_NE(accompany, nullptr);
     EXPECT_EQ(accompany->personName, "Max");
 }

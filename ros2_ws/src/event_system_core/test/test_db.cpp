@@ -10,11 +10,11 @@ static char* argv[] = {arg0};
 class DBTest : public ::testing::Test {
 protected:
     std::unique_ptr<QCoreApplication> app;
-    std::unique_ptr<DBClient> db;
+    std::unique_ptr<des::DBClient> db;
 
     void SetUp() override {
         app = std::make_unique<QCoreApplication>(argc, argv);
-        db = std::make_unique<DBClient>(DBConfig{"wsr_user", "wsr_password"});
+        db = std::make_unique<des::DBClient>(des::DBConfig{"wsr_user", "wsr_password"});
     }
 };
 

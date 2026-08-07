@@ -10,6 +10,8 @@
 #include <string>
 #include <utility>
 
+namespace des {
+
 class ServiceLog {
     std::map<std::pair<std::string, std::string>, int> m_lastServiced;
 
@@ -18,3 +20,5 @@ public:
     void recordServiced(const std::string& room, const std::string& type, int time);
     void clear();
 };
+
+}  // namespace des

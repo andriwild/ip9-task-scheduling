@@ -9,37 +9,39 @@
 #include "states.h"
 #include "../../util/rnd.h"
 
+namespace des {
+
 void InformationPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<ExecuteInformation>("ExecuteInformation");
 }
 
-void InformationPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
+void InformationPlugin::onMissionStart(ISimContext& ctx, IOrder& /*order*/) {
     ctx.changeRobotState(std::make_unique<InformationState>());
 }
 
 // pre-interrupt state is restored by popInterrupt
-void InformationPlugin::onMissionEnd(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
-void InformationPlugin::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
-void InformationPlugin::onStopDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void InformationPlugin::onMissionEnd(ISimContext& /*ctx*/, IOrder& /*order*/) {}
+void InformationPlugin::onStartDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
+void InformationPlugin::onStopDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
 
-des::OrderPtr InformationPlugin::fromJson(const nlohmann::json& j) const {
+OrderPtr InformationPlugin::fromJson(const nlohmann::json& j) const {
     auto o = std::make_shared<InformationOrder>();
     o->id          = j.at("id");
     o->type        = "information";
     o->description = j.value("description", "Information");
-    o->execution   = des::ExecutionMode::INTERRUPT;
+    o->execution   = ExecutionMode::INTERRUPT;
     return o;
 }
 
-int InformationPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& /*s*/, const std::string& /*startPos*/) const {
+int InformationPlugin::planDispatchTime(const IOrder& order, const Scheduler& /*s*/, const std::string& /*startPos*/) const {
     return order.dispatchTime;
 }
 
-bool InformationPlugin::isFeasible(const des::IOrder& /*order*/, const ISimContext& /*context*/) const {
+bool InformationPlugin::isFeasible(const IOrder& /*order*/, const ISimContext& /*context*/) const {
     return true;
 }
 
-double InformationPlugin::estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& /*startLocation*/) const {
+double InformationPlugin::estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& /*startLocation*/) const {
     const auto& info = static_cast<const InformationOrder&>(order);
     if (info.sampledDuration < 0.0) {
         const auto& cfg = informationConfig();
@@ -48,7 +50,7 @@ double InformationPlugin::estimateMissionDuration(const des::IOrder& order, cons
     return info.sampledDuration;
 }
 
-void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
+void InformationPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
     observer.publishMeeting(
         order.id,
         startTime,
@@ -60,3 +62,5 @@ void InformationPlugin::publishTimeline(const des::IOrder& order, int startTime,
         order.description,
         static_cast<int>(order.execution));
 }
+
+}  // namespace des

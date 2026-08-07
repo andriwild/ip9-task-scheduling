@@ -6,19 +6,21 @@
 #include "util/rnd.h"
 #include "sim/scheduler.h"
 
+namespace des {
+
 SimulationContext::SimulationContext(
     EventQueue& queue,
-    std::shared_ptr<des::SimConfig> simConfig,
-    std::shared_ptr<des::IPathPlanner> plannerNode,
-    des::PersonList people,
-    des::RoomMap rooms
+    std::shared_ptr<SimConfig> simConfig,
+    std::shared_ptr<IPathPlanner> plannerNode,
+    PersonList people,
+    RoomMap rooms
 )
     : m_simConfig(std::move(simConfig))
     , m_queue(queue)
     , m_scheduler(std::make_unique<Scheduler>(m_simConfig, plannerNode, m_rooms))
     , m_plannerNode(std::move(plannerNode))
     , m_rooms(std::move(rooms))
-    , m_persons(std::move(people), m_rooms, m_simConfig->seed + des::PLACEMENT_SEED_OFFSET)
+    , m_persons(std::move(people), m_rooms, m_simConfig->seed + PLACEMENT_SEED_OFFSET)
     , m_missions(m_queue, m_eventBus)
 {
     reseed(m_simConfig->seed);
@@ -29,13 +31,13 @@ SimulationContext::SimulationContext(
 void SimulationContext::reseed(const unsigned int seed) {
     m_activeSeed = seed;
     m_worldRng.seed(seed);
-    m_robotRng.seed(seed + des::ROBOT_SEED_OFFSET);
-    m_persons.reseed(seed + des::PLACEMENT_SEED_OFFSET);
+    m_robotRng.seed(seed + ROBOT_SEED_OFFSET);
+    m_persons.reseed(seed + PLACEMENT_SEED_OFFSET);
     DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "RNG seeded with %u", seed);
 }
 
 void SimulationContext::reseedPersons() {
-    m_persons.reseedPersons(m_activeSeed + des::PERSON_SEED_BASE);
+    m_persons.reseedPersons(m_activeSeed + PERSON_SEED_BASE);
 }
 
 unsigned int SimulationContext::activeSeed() const {
@@ -58,7 +60,7 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     return { travelTimeRnd, distance.value() };
 }
 
-void SimulationContext::completeOrder(const des::OrderPtr& order) {
+void SimulationContext::completeOrder(const OrderPtr& order) {
     m_missions.complete(*this, order);
 }
 
@@ -71,15 +73,15 @@ void SimulationContext::resetContext(const int newTime) {
     resetRobot();
 }
 
-des::OrderPtr SimulationContext::peekNextScheduledOrder() const {
+OrderPtr SimulationContext::peekNextScheduledOrder() const {
     return m_missions.peekNextScheduledOrder();
 }
 
-std::vector<des::OrderPtr> SimulationContext::peekScheduledOrdersUntil(const int untilTime) const {
+std::vector<OrderPtr> SimulationContext::peekScheduledOrdersUntil(const int untilTime) const {
     return m_missions.peekScheduledOrdersUntil(untilTime);
 }
 
-void SimulationContext::setConfig(const std::shared_ptr<des::SimConfig> &newConfig) {
+void SimulationContext::setConfig(const std::shared_ptr<SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
     DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Config updated");
@@ -92,13 +94,13 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
         && current->getType() == newType
         && current->getName() == newState->getName();
     const bool leavingOpportunisticCharge = current
-        && current->getType() == des::RobotStateType::CHARGING
-        && newType != des::RobotStateType::CHARGING
+        && current->getType() == RobotStateType::CHARGING
+        && newType != RobotStateType::CHARGING
         && m_robot->m_opportunisticCharge;
     m_robot->changeState(std::move(newState), m_currentTime);
     if (leavingOpportunisticCharge) {
-        m_queue.cancelByType(des::EventType::BATTERY_FULL);
-        m_queue.cancelByType(des::EventType::CHARGE_PHASE_TRANSITION);
+        m_queue.cancelByType(EventType::BATTERY_FULL);
+        m_queue.cancelByType(EventType::CHARGE_PHASE_TRANSITION);
         m_robot->m_batteryFullEventScheduled = false;
         m_robot->m_opportunisticCharge = false;
     }
@@ -107,11 +109,11 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
     }
 }
 
-bool SimulationContext::pushInterrupt(const des::OrderPtr& order) {
+bool SimulationContext::pushInterrupt(const OrderPtr& order) {
     return m_missions.pushInterrupt(*this, order);
 }
 
-void SimulationContext::popInterrupt(const des::OrderPtr& completedOrder) {
+void SimulationContext::popInterrupt(const OrderPtr& completedOrder) {
     m_missions.popInterrupt(*this, completedOrder);
 }
 
@@ -140,7 +142,7 @@ int SimulationContext::getTime() const {
     return m_currentTime;
 }
 
-std::shared_ptr<des::SimConfig> SimulationContext::getConfig() const {
+std::shared_ptr<SimConfig> SimulationContext::getConfig() const {
     return m_simConfig;
 }
 
@@ -204,11 +206,11 @@ void SimulationContext::setBTBlackboard(const std::string& key, const std::strin
     m_behaviorTree->rootBlackboard()->set(key, value);
 }
 
-des::Person* SimulationContext::getPersonByName(const std::string& person) const {
+Person* SimulationContext::getPersonByName(const std::string& person) const {
     return m_persons.getByName(person);
 }
 
-const des::PersonList& SimulationContext::getAllPersons() const {
+const PersonList& SimulationContext::getAllPersons() const {
     return m_persons.all();
 }
 
@@ -228,7 +230,7 @@ void SimulationContext::setPersonLocation(const std::string& name, const std::st
     m_persons.setRoom(name, room);
 }
 
-std::optional<des::Point> SimulationContext::getPersonPosition(const std::string& name) const {
+std::optional<Point> SimulationContext::getPersonPosition(const std::string& name) const {
     return m_persons.position(name);
 }
 
@@ -240,7 +242,7 @@ bool SimulationContext::robotSeesPerson(const std::string& name) const {
     if (!pos) {
         return false;
     }
-    const des::Point robotPos = m_robot->getPosition();
+    const Point robotPos = m_robot->getPosition();
     if (std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) > m_simConfig->personDetectionRange) {
         return false;
     }
@@ -264,8 +266,8 @@ std::vector<std::string> SimulationContext::roomNames() const {
     return names;
 }
 
-const des::Room& SimulationContext::room(const std::string& name) const {
-    static const des::Room unknown{"", des::Point{}};
+const Room& SimulationContext::room(const std::string& name) const {
+    static const Room unknown{"", Point{}};
     const auto it = m_rooms.find(name);
     if (it == m_rooms.end()) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Room '%s' not found", name.c_str());
@@ -274,19 +276,19 @@ const des::Room& SimulationContext::room(const std::string& name) const {
     return it->second;
 }
 
-void SimulationContext::setOrderPtr(const des::OrderPtr& orderPtr) {
+void SimulationContext::setOrderPtr(const OrderPtr& orderPtr) {
     m_missions.setCurrent(orderPtr);
 }
 
-des::OrderPtr SimulationContext::getOrderPtr() const {
+OrderPtr SimulationContext::getOrderPtr() const {
     return m_missions.effective();
 }
 
-void SimulationContext::updateOrderState(const des::MissionState& newState) {
+void SimulationContext::updateOrderState(const MissionState& newState) {
     m_missions.updateState(newState);
 }
 
-void SimulationContext::addScheduledMission(const des::OrderPtr orderPtr) {
+void SimulationContext::addScheduledMission(const OrderPtr orderPtr) {
     m_missions.addScheduled(orderPtr);
 }
 
@@ -294,15 +296,15 @@ bool SimulationContext::hasScheduledMission() const {
     return m_missions.hasScheduled();
 }
 
-des::OrderPtr SimulationContext::nextScheduledMission() {
+OrderPtr SimulationContext::nextScheduledMission() {
     return m_missions.nextScheduled();
 }
 
-des::OrderPtr SimulationContext::popScheduledMission() {
+OrderPtr SimulationContext::popScheduledMission() {
     return m_missions.popScheduled();
 }
 
-void SimulationContext::addBackgroundMission(const des::OrderPtr orderPtr) {
+void SimulationContext::addBackgroundMission(const OrderPtr orderPtr) {
     m_missions.addBackground(orderPtr);
 }
 
@@ -310,7 +312,7 @@ bool SimulationContext::hasBackgroundMission() const {
     return m_missions.hasBackground();
 }
 
-des::OrderPtr SimulationContext::acceptFeasibleBackgroundMission() {
+OrderPtr SimulationContext::acceptFeasibleBackgroundMission() {
     return m_missions.acceptFeasibleBackground(*this);
 }
 
@@ -319,10 +321,10 @@ std::optional<int> SimulationContext::getNextScheduledDispatchTime() const {
 }
 
 std::optional<int> SimulationContext::getSimulationEndTime() const {
-    return m_queue.nextEventTime(des::EventType::SIMULATION_END);
+    return m_queue.nextEventTime(EventType::SIMULATION_END);
 }
 
-void SimulationContext::publishMission(const des::OrderPtr& order, const int time) {
+void SimulationContext::publishMission(const OrderPtr& order, const int time) {
     m_eventBus.notifyMissionPublished(order, time);
 }
 
@@ -361,7 +363,7 @@ void SimulationContext::notifyEvent(const IEvent& event) const {
 
 void SimulationContext::notifyChargeStarted() const {
     m_robot->beginChargeSession(m_currentTime);
-    m_eventBus.notifyEvent(m_currentTime, des::EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
+    m_eventBus.notifyEvent(m_currentTime, EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
 }
 
 void SimulationContext::robotMoved(const std::string& location, const double distance) const {
@@ -373,7 +375,7 @@ void SimulationContext::robotMoved(const std::string& location, const double dis
     }
 }
 
-void SimulationContext::robotMovedTo(const des::Point& position, const double distance) const {
+void SimulationContext::robotMovedTo(const Point& position, const double distance) const {
     m_robot->setPosition(position);
     m_robot->addDistance(distance);
 }
@@ -381,3 +383,5 @@ void SimulationContext::robotMovedTo(const des::Point& position, const double di
 double SimulationContext::getDriveTimeStd() const {
     return m_simConfig->driveTimeStd;
 }
+
+}  // namespace des

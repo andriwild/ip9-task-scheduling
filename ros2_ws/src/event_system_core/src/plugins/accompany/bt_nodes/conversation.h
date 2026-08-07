@@ -12,6 +12,8 @@
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
 
+namespace des {
+
 class IsConversating final : public BT::ConditionNode {
 public:
     IsConversating(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -40,7 +42,7 @@ public:
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
         DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
-        if (convResult == des::Result::RUNNING) {
+        if (convResult == Result::RUNNING) {
             return BT::NodeStatus::FAILURE;
         }
         return BT::NodeStatus::SUCCESS;
@@ -57,8 +59,8 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == des::Result::SUCCESS ? "Yes" : "No");
-        if (convResult == des::Result::SUCCESS) {
+        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == Result::SUCCESS ? "Yes" : "No");
+        if (convResult == Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;
@@ -118,4 +120,6 @@ public:
         return BT::NodeStatus::FAILURE;
     }
 };
+
+}  // namespace des
 

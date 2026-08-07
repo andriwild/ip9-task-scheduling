@@ -13,8 +13,8 @@ constexpr double kPower    = 500.0;  // W
 constexpr double kCvThreshold   = 0.85;
 constexpr double kTaperFraction = 0.5;
 
-Battery makeBattery(const double initialCapacity, const bool chargeToFull) {
-    return Battery(kCapacity, initialCapacity, kLow, kFull, kVoltage,
+des::Battery makeBattery(const double initialCapacity, const bool chargeToFull) {
+    return des::Battery(kCapacity, initialCapacity, kLow, kFull, kVoltage,
                    kCvThreshold, kTaperFraction, chargeToFull);
 }
 
@@ -39,7 +39,7 @@ TEST(Battery, PhaseTransitionOnlyWhenChargingIntoPhaseTwo) {
 }
 
 TEST(Battery, TransitionTimePlusTaperedPhaseEqualsTotal) {
-    Battery bat = makeBattery(10.0, true);
+    des::Battery bat = makeBattery(10.0, true);
     const double transition = bat.timeToPhaseTransition(kPower);
     const double total      = bat.timeToFull(kPower);
 

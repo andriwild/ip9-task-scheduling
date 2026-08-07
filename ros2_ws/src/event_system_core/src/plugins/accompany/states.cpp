@@ -7,6 +7,8 @@
 #include "../../model/robot.h"
 #include "accompany_plugin.h"
 
+namespace des {
+
 void SearchState::enter(Robot& robot) {
     RobotState::enter(robot);
     DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Search");
@@ -24,6 +26,8 @@ void ConversateState::enter(Robot& robot) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.state"), "Enter Conversate");
     robot.setSpeed(robot.getDriveSpeed());
 }
-double ConversateState::getEnergyConsumption(const Robot& /*robot*/, const des::SimConfig& cfg) const {
+double ConversateState::getEnergyConsumption(const Robot& /*robot*/, const SimConfig& cfg) const {
     return cfg.energyConsumptionBase;
 }
+
+}  // namespace des

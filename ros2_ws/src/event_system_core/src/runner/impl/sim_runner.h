@@ -13,6 +13,8 @@
 #include "../../sim/ros/path_node.h"
 #include "../runner.h"
 
+namespace des {
+
 class SimRunner final : public IAppRunner {
 public:
 
@@ -62,10 +64,12 @@ private:
     void reloadSimulationData();
     void buildSimulation();
     void rebuildEventQueue();
-    void updateConfig(std::shared_ptr<des::SimConfig> config);
+    void updateConfig(std::shared_ptr<SimConfig> config);
 
     std::shared_ptr<ControllerNode> m_controllerNode;
     std::shared_ptr<ConfigNode> m_systemConfigNode;
     std::thread m_simThread;
     std::shared_ptr<RosObserver> m_rosObserver;
 };
+
+}  // namespace des

@@ -18,6 +18,8 @@
 #include "plugins/order_registry.h"
 #include "util/types.h"
 
+namespace des {
+
 class DriveTarget {
 public:
     virtual ~DriveTarget() = default;
@@ -30,7 +32,7 @@ public:
 
 inline void observeSightings(ISimContext& ctx) {
     for (const auto& [name, personRoom] : ctx.getAllPersonLocations()) {
-        const des::Person* person = ctx.getPersonByName(name);
+        const Person* person = ctx.getPersonByName(name);
         if (person && person->busy) {
             continue;
         }
@@ -71,15 +73,15 @@ public:
 };
 
 class PointTarget final : public DriveTarget {
-    des::Point m_point;
-    des::Polygon m_visibility;
+    Point m_point;
+    Polygon m_visibility;
 
 public:
-    explicit PointTarget(const des::Point& point, des::Polygon visibility)
+    explicit PointTarget(const Point& point, Polygon visibility)
         : m_point(point), m_visibility(std::move(visibility)) {}
 
     std::pair<int, double> travel(ISimContext& ctx) const override {
-        const des::Point from = ctx.getRobot()->getPosition();
+        const Point from = ctx.getRobot()->getPosition();
         const double dist = std::hypot(m_point.m_x - from.m_x, m_point.m_y - from.m_y);
         const double speed = ctx.getRobot()->getCurrentSpeed();
         const int duration = std::max(1, static_cast<int>(std::lround(dist / speed)));
@@ -96,3 +98,5 @@ public:
         return "(" + std::to_string(m_point.m_x) + ", " + std::to_string(m_point.m_y) + ")";
     }
 };
+
+}  // namespace des

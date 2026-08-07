@@ -4,9 +4,11 @@
 
 #include "util/geometry.h"
 
+namespace des {
+
 PersonRegistry::PersonRegistry(
-    des::PersonList people,
-    const des::RoomMap& rooms,
+    PersonList people,
+    const RoomMap& rooms,
     const unsigned int seed
 )
     : m_people(std::move(people))
@@ -18,7 +20,7 @@ PersonRegistry::PersonRegistry(
     }
 }
 
-const des::PersonList& PersonRegistry::all() const {
+const PersonList& PersonRegistry::all() const {
     return m_people;
 }
 
@@ -36,7 +38,7 @@ bool PersonRegistry::hasEmployee(const std::string& name) const {
     return m_employees.contains(name);
 }
 
-des::Person* PersonRegistry::getByName(const std::string& name) const {
+Person* PersonRegistry::getByName(const std::string& name) const {
     return m_employees.at(name);
 }
 
@@ -57,7 +59,7 @@ void PersonRegistry::setRoom(const std::string& person, const std::string& room)
     }
 }
 
-std::optional<des::Point> PersonRegistry::position(const std::string& person) const {
+std::optional<Point> PersonRegistry::position(const std::string& person) const {
     const auto it = m_positionByPerson.find(person);
     if (it == m_positionByPerson.end()) {
         return std::nullopt;
@@ -77,7 +79,7 @@ void PersonRegistry::clearRooms() {
     m_roomByPerson.clear();
 }
 
-std::optional<des::Point> PersonRegistry::samplePosition(const std::string& room) {
+std::optional<Point> PersonRegistry::samplePosition(const std::string& room) {
     const auto it = m_rooms.find(room);
     if (it == m_rooms.end()) {
         return std::nullopt;
@@ -87,3 +89,5 @@ std::optional<des::Point> PersonRegistry::samplePosition(const std::string& room
     }
     return it->second.m_waypoint;
 }
+
+}  // namespace des

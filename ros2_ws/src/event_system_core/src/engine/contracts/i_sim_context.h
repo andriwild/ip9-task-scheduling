@@ -13,6 +13,8 @@
 #include "engine/contracts/i_sim_clock.h"
 #include "engine/contracts/i_world_model.h"
 
+namespace des {
+
 class ISimContext
     : public ISimClock
     , public IEventSink
@@ -28,3 +30,5 @@ class ISimContext
 public:
     ~ISimContext() override = default;
 };
+
+}  // namespace des

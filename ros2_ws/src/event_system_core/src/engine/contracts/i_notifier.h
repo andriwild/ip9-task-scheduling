@@ -2,6 +2,8 @@
 
 #include "model/order.h"
 
+namespace des {
+
 class IEvent;
 
 class INotifier {
@@ -10,5 +12,7 @@ public:
     virtual void notifyEvent(const IEvent& event) const = 0;
     virtual void notifyBatteryChanged() const = 0;
     virtual void notifyChargeStarted() const = 0;
-    virtual void publishMission(const des::OrderPtr& order, int time) = 0;
+    virtual void publishMission(const OrderPtr& order, int time) = 0;
 };
+
+}  // namespace des

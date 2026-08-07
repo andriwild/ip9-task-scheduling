@@ -5,6 +5,8 @@
 #include "engine/contracts/i_interrupts.h"
 #include "engine/contracts/i_scheduled_missions.h"
 
+namespace des {
+
 class IMissionBoard
     : public ICurrentOrder
     , public IScheduledMissions
@@ -13,3 +15,5 @@ class IMissionBoard
 public:
     ~IMissionBoard() override = default;
 };
+
+}  // namespace des

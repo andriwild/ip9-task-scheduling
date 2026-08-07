@@ -5,11 +5,13 @@
 #include "model/robot.h"
 #include "model/robot_state.h"
 
+namespace des {
+
 class DropOffConversationCompleteEvent : public IEvent {
 public:
     explicit DropOffConversationCompleteEvent(const int time) : IEvent(time) {}
     std::string getName() const override { return "Conversation complete"; }
-    des::EventType getType() const override { return des::EventType::DROP_OFF_CONV_COMPLETE; }
+    EventType getType() const override { return EventType::DROP_OFF_CONV_COMPLETE; }
 };
 
 class SuccessDropOffConversationCompleteEvent final : public DropOffConversationCompleteEvent {
@@ -26,7 +28,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        ctx.getRobot()->getState()->setResult(des::Result::SUCCESS);
+        ctx.getRobot()->getState()->setResult(Result::SUCCESS);
         ctx.getRobot()->setIsPersonVisible(false);
         ctx.notifyEvent(*this);
         ctx.tickBT();
@@ -49,10 +51,12 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        ctx.getRobot()->getState()->setResult(des::Result::FAILURE);
+        ctx.getRobot()->getState()->setResult(Result::FAILURE);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }
 
     std::string getName() const override { return "Conversation Failed "; }
 };
+
+}  // namespace des

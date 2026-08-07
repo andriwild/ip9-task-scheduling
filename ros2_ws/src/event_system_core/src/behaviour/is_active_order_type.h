@@ -10,6 +10,8 @@
 #include "engine/contracts/i_sim_context.h"
 #include "../model/robot_state.h"
 
+namespace des {
+
 class IsActiveOrderType final : public BT::ConditionNode {
 public:
     IsActiveOrderType(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -32,3 +34,5 @@ public:
         return BT::NodeStatus::FAILURE;
     }
 };
+
+}  // namespace des

@@ -9,10 +9,12 @@
 #include "engine/contracts/i_sim_context.h"
 #include "util/types.h"
 
+namespace des {
+
 class MissionCompleteEvent final : public IEvent {
 public:
-    des::OrderPtr orderPtr;
-    explicit MissionCompleteEvent(const int time, const des::OrderPtr& order)
+    OrderPtr orderPtr;
+    explicit MissionCompleteEvent(const int time, const OrderPtr& order)
         : IEvent(time)
         , orderPtr(order)
     {}
@@ -29,12 +31,12 @@ public:
 
         std::string execStr;
         switch (orderPtr->execution) {
-            case des::ExecutionMode::SCHEDULED:  execStr = "scheduled"; break;
-            case des::ExecutionMode::BACKGROUND: execStr = "background"; break;
-            case des::ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
+            case ExecutionMode::SCHEDULED:  execStr = "scheduled"; break;
+            case ExecutionMode::BACKGROUND: execStr = "background"; break;
+            case ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
         };
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.event.mission_complete"), "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), des::missionStateStr(orderPtr->state).c_str(), execStr.c_str());
+        DES_LOG_DEBUG(rclcpp::get_logger("des.event.mission_complete"), "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), missionStateStr(orderPtr->state).c_str(), execStr.c_str());
         plugin.onMissionEnd(ctx, *orderPtr);
         ctx.completeOrder(this->orderPtr);
         ctx.notifyEvent(*this);
@@ -42,11 +44,13 @@ public:
     }
 
     std::string getName() const override {
-        return std::format("Mission {} Complete: {}", orderPtr->id, des::missionStateStr(orderPtr->state));
+        return std::format("Mission {} Complete: {}", orderPtr->id, missionStateStr(orderPtr->state));
     }
-    des::EventType getType() const override { return des::EventType::MISSION_COMPLETE; }
+    EventType getType() const override { return EventType::MISSION_COMPLETE; }
     int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
-    des::OrderPtr getOrder() const override {
+    OrderPtr getOrder() const override {
         return orderPtr;
     }
 };
+
+}  // namespace des

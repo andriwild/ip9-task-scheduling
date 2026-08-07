@@ -11,6 +11,8 @@
 #include "../../util/dist_mat.h"
 #include "../../util/log.h"
 
+namespace des {
+
 //TODO: replace with config
 const std::string DB_USER     = "wsr_user";
 const std::string DB_PASSWORD = "wsr_password";
@@ -49,13 +51,13 @@ public:
         });
 
         // Matrix index order follows the (name-sorted) RoomMap iteration.
-        std::vector<des::Room> locations;
+        std::vector<Room> locations;
         locations.reserve(rooms->size());
         for (const auto& [_, loc] : rooms.value()) {
             locations.push_back(loc);
         }
 
-        const bool ok = des::DistMat::rebuild(locations, m_planner);
+        const bool ok = DistMat::rebuild(locations, m_planner);
         shutdown();
         return ok ? 0 : 1;
     }
@@ -69,3 +71,5 @@ public:
         }
     }
 };
+
+}  // namespace des

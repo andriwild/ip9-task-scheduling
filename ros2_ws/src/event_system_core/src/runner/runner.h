@@ -19,6 +19,8 @@
 #include "util/constants.h"
 
 #include "metrics/metrics_reporter.h"
+namespace des {
+
 const std::string CONFIG_PATH = CONFIG_DIR;
 
 class IAppRunner {
@@ -41,12 +43,12 @@ public:
     EventList m_protocol;
     std::shared_ptr<SimulationContext> m_ctx;
 
-    des::metrics::MetricsReporter& reporter() {
+    metrics::MetricsReporter& reporter() {
         return m_reporter;
     }
 
     static SortedEventQueue createMissionQueue(
-        des::OrderList& orders,
+        OrderList& orders,
         Scheduler& scheduler,
         std::string idleLocation
     ) {
@@ -63,7 +65,7 @@ public:
     }
 
     static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(
-        const des::PersonList& people
+        const PersonList& people
     ) {
         auto events = std::vector<std::shared_ptr<IEvent>> {};
         for (const auto& p: people) {
@@ -74,21 +76,21 @@ public:
     }
 
     static void scheduleOccupancy(
-        const des::SimConfig& config,
-        const des::PersonList& people
+        const SimConfig& config,
+        const PersonList& people
     ) {
         for (const auto& p: people) {
-            des::sampleOccupancy(config, p->rng, 0, *p);
+            sampleOccupancy(config, p->rng, 0, *p);
         }
     }
 
 protected:
-    des::RoomMap m_rooms;
-    std::shared_ptr<des::SimConfig> m_config;
-    std::shared_ptr<des::IPathPlanner> m_planner;
+    RoomMap m_rooms;
+    std::shared_ptr<SimConfig> m_config;
+    std::shared_ptr<IPathPlanner> m_planner;
     std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
-    des::metrics::MetricsReporter m_reporter;
-    des::OrderList m_orders;
+    metrics::MetricsReporter m_reporter;
+    OrderList m_orders;
     std::vector<BackgroundTemplate> m_backgroundTemplates;
     std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
     std::thread m_rosThread;
@@ -120,7 +122,7 @@ protected:
             throw std::runtime_error("populateEventQueue requires initialized SimulationContext");
         }
 
-        const des::PersonList& people = m_ctx->getAllPersons();
+        const PersonList& people = m_ctx->getAllPersons();
 
         m_ctx->reseedPersons();
         scheduleOccupancy(*m_config, people);
@@ -149,7 +151,7 @@ protected:
         }
     }
 
-    static des::OrderList loadOrders(const std::string& path, const int simStartTime, const int simEndTime) {
+    static OrderList loadOrders(const std::string& path, const int simStartTime, const int simEndTime) {
         DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load orders: %s", path.c_str());
         const auto orders = ConfigLoader::loadOrderConfig(path.c_str(), simStartTime, simEndTime);
         if (!orders.has_value()) {
@@ -208,14 +210,14 @@ protected:
                 j["id"] = bgId++;
                 const std::string& type = j.at("type").get_ref<const std::string&>();
                 auto order = OrderRegistry::instance().get(type).fromJson(j);
-                order->execution = des::ExecutionMode::BACKGROUND;
+                order->execution = ExecutionMode::BACKGROUND;
                 m_eventQueue.push(std::make_shared<BackgroundReleaseEvent>(releaseTime, order));
             }
         }
     }
 
     // Runtime building geometry comes from the generated snapshot (json file), not the DB.
-    des::RoomMap loadRooms() {
+    RoomMap loadRooms() {
         auto map = ConfigLoader::loadBuildingSnapshot(BUILDING_FILE);
         if (!map.has_value()) {
             throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE + ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
@@ -281,3 +283,5 @@ protected:
     }
 
 };
+
+}  // namespace des

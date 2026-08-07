@@ -7,6 +7,8 @@
 #include <vector>
 #include "../runner.h"
 
+namespace des {
+
 class HeadlessRunner final : public IAppRunner {
     static constexpr int kRounds = 1;
 
@@ -14,7 +16,7 @@ class HeadlessRunner final : public IAppRunner {
     bool m_runComplete = false;
 
     unsigned int roundSeed(const int round) const {
-        return m_config->seed + des::ROUND_SEED_STRIDE * static_cast<unsigned int>(round);
+        return m_config->seed + ROUND_SEED_STRIDE * static_cast<unsigned int>(round);
     }
 
 
@@ -74,3 +76,5 @@ public:
 private:
     bool loadNextRound();
 };
+
+}  // namespace des

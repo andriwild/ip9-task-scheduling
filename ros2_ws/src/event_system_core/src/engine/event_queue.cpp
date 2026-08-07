@@ -4,6 +4,8 @@
 
 #include "util/log.h"
 
+namespace des {
+
 void EventQueue::extend(SortedEventQueue queue) {
     while (!queue.empty()) {
         m_events.insert(queue.top());
@@ -49,7 +51,7 @@ int EventQueue::getFirstEventTime() const {
     return t ? t->time : 0;
 }
 
-std::shared_ptr<IEvent> EventQueue::nextEvent(const des::EventType type) const {
+std::shared_ptr<IEvent> EventQueue::nextEvent(const EventType type) const {
     for (const auto& e : m_events) {
         if (e->getType() == type && !e->cancelled) {
             return e;
@@ -58,7 +60,7 @@ std::shared_ptr<IEvent> EventQueue::nextEvent(const des::EventType type) const {
     return nullptr;
 }
 
-void EventQueue::cancelByType(const des::EventType type) const {
+void EventQueue::cancelByType(const EventType type) const {
     for (const auto& e : m_events) {
         if (e->getType() == type && !e->cancelled) {
             e->cancelled = true;
@@ -66,17 +68,17 @@ void EventQueue::cancelByType(const des::EventType type) const {
     }
 }
 
-std::optional<int> EventQueue::nextEventTime(const des::EventType type) const {
+std::optional<int> EventQueue::nextEventTime(const EventType type) const {
     const auto e = nextEvent(type);
     return e ? std::optional<int>(e->time) : std::nullopt;
 }
 
 std::optional<int> EventQueue::nextDispatchTime() const {
-    return nextEventTime(des::EventType::MISSION_DISPATCH);
+    return nextEventTime(EventType::MISSION_DISPATCH);
 }
 
 std::shared_ptr<IEvent> EventQueue::nextDispatchEvent() const {
-    return nextEvent(des::EventType::MISSION_DISPATCH);
+    return nextEvent(EventType::MISSION_DISPATCH);
 }
 
 std::vector<std::shared_ptr<IEvent>> EventQueue::dispatchEventsUntil(const int untilTime) const {
@@ -85,7 +87,7 @@ std::vector<std::shared_ptr<IEvent>> EventQueue::dispatchEventsUntil(const int u
         if (e->time > untilTime) {
             break;
         }
-        if (e->getType() == des::EventType::MISSION_DISPATCH && !e->cancelled) {
+        if (e->getType() == EventType::MISSION_DISPATCH && !e->cancelled) {
             events.push_back(e);
         }
     }
@@ -97,3 +99,5 @@ void EventQueue::print() const {
         DES_LOG_DEBUG(rclcpp::get_logger("des.event_queue"), "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
     }
 }
+
+}  // namespace des

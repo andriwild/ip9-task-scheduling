@@ -14,13 +14,15 @@
 #include "plugins/charge/charge_order.h"
 #include "util/log.h"
 
+namespace des {
+
 MissionBoard::MissionBoard(EventQueue& queue, EventBus& bus)
     : m_queue(queue)
     , m_bus(bus)
 {
 }
 
-void MissionBoard::setCurrent(const des::OrderPtr& orderPtr) {
+void MissionBoard::setCurrent(const OrderPtr& orderPtr) {
     if (orderPtr) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission set: %d (type=%s)", orderPtr->id, orderPtr->type.c_str());
     } else if (m_current) {
@@ -29,39 +31,39 @@ void MissionBoard::setCurrent(const des::OrderPtr& orderPtr) {
     m_current = orderPtr;
 }
 
-des::OrderPtr MissionBoard::current() const {
+OrderPtr MissionBoard::current() const {
     return m_current;
 }
 
-des::OrderPtr MissionBoard::effective() const {
+OrderPtr MissionBoard::effective() const {
     if (auto interrupt = m_interrupt.active()) {
         return interrupt;
     }
     return m_current;
 }
 
-void MissionBoard::updateState(const des::MissionState& newState) {
+void MissionBoard::updateState(const MissionState& newState) {
     assert(m_current != nullptr);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), des::missionStateStr(m_current->state).c_str(), des::missionStateStr(newState).c_str());
+    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), missionStateStr(m_current->state).c_str(), missionStateStr(newState).c_str());
     m_current->state = newState;
 }
 
-void MissionBoard::complete(ISimContext& ctx, const des::OrderPtr& order) {
+void MissionBoard::complete(ISimContext& ctx, const OrderPtr& order) {
     assert(order != nullptr);
     if (order->type != kChargeOrderType) {
         const int deadline = order->deadline.value_or(ctx.getTime());
         const int timeDiff = ctx.getTime() - deadline;
 
         const std::string detail = OrderRegistry::instance().get(order->type).outcomeDetail(*order);
-        std::string summary = des::missionStateStr(order->state);
+        std::string summary = missionStateStr(order->state);
         if (!detail.empty()) {
             summary += " (" + detail + ")";
         }
         if (order->deadline.has_value()) {
             summary += std::format(" [{:+d}s]", timeDiff);
         }
-        const bool routine = order->execution != des::ExecutionMode::SCHEDULED
-            && order->state == des::MissionState::COMPLETED;
+        const bool routine = order->execution != ExecutionMode::SCHEDULED
+            && order->state == MissionState::COMPLETED;
         if (routine) {
             DES_LOG_DEBUG(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
         } else {
@@ -73,7 +75,7 @@ void MissionBoard::complete(ISimContext& ctx, const des::OrderPtr& order) {
     }
 }
 
-void MissionBoard::addScheduled(const des::OrderPtr& orderPtr) {
+void MissionBoard::addScheduled(const OrderPtr& orderPtr) {
     m_scheduled.add(orderPtr);
 }
 
@@ -81,11 +83,11 @@ bool MissionBoard::hasScheduled() const {
     return m_scheduled.has();
 }
 
-des::OrderPtr MissionBoard::nextScheduled() {
+OrderPtr MissionBoard::nextScheduled() {
     return m_scheduled.peek();
 }
 
-des::OrderPtr MissionBoard::popScheduled() {
+OrderPtr MissionBoard::popScheduled() {
     return m_scheduled.pop();
 }
 
@@ -93,7 +95,7 @@ std::optional<int> MissionBoard::nextScheduledDispatchTime() const {
     return m_queue.nextDispatchTime();
 }
 
-des::OrderPtr MissionBoard::peekNextScheduledOrder() const {
+OrderPtr MissionBoard::peekNextScheduledOrder() const {
     auto event = m_queue.nextDispatchEvent();
     if (!event) {
         return nullptr;
@@ -102,8 +104,8 @@ des::OrderPtr MissionBoard::peekNextScheduledOrder() const {
     return dispatch ? dispatch->orderPtr : nullptr;
 }
 
-std::vector<des::OrderPtr> MissionBoard::peekScheduledOrdersUntil(const int untilTime) const {
-    std::vector<des::OrderPtr> orders;
+std::vector<OrderPtr> MissionBoard::peekScheduledOrdersUntil(const int untilTime) const {
+    std::vector<OrderPtr> orders;
     for (const auto& event : m_queue.dispatchEventsUntil(untilTime)) {
         auto dispatch = std::dynamic_pointer_cast<MissionDispatchEvent>(event);
         if (dispatch && dispatch->orderPtr) {
@@ -113,7 +115,7 @@ std::vector<des::OrderPtr> MissionBoard::peekScheduledOrdersUntil(const int unti
     return orders;
 }
 
-void MissionBoard::addBackground(const des::OrderPtr& orderPtr) {
+void MissionBoard::addBackground(const OrderPtr& orderPtr) {
     m_background.add(orderPtr);
 }
 
@@ -121,7 +123,7 @@ bool MissionBoard::hasBackground() const {
     return m_background.has();
 }
 
-des::OrderPtr MissionBoard::acceptFeasibleBackground(ISimContext& ctx) {
+OrderPtr MissionBoard::acceptFeasibleBackground(ISimContext& ctx) {
     if (!m_background.hasPlanned()) {
         m_background.plan(ctx);
     }
@@ -132,8 +134,8 @@ des::OrderPtr MissionBoard::acceptFeasibleBackground(ISimContext& ctx) {
     return accepted;
 }
 
-bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
-    assert(order->execution == des::ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
+bool MissionBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
+    assert(order->execution == ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
     const auto robot = ctx.getRobot();
     if (robot->isBatteryLow()) {
         DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), robot->batteryStats().soc * 100.0);
@@ -162,7 +164,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
 
     if (wasDriving) {
         robot->setDriving(false);
-        m_bus.notifyEvent(ctx.getTime(), des::EventType::STOP_DRIVE, "Drive paused: " + robot->getLocation(), false, robot->isCharging(), "", order->id);
+        m_bus.notifyEvent(ctx.getTime(), EventType::STOP_DRIVE, "Drive paused: " + robot->getLocation(), false, robot->isCharging(), "", order->id);
     }
 
     m_interrupt.suspend(wasDriving);
@@ -170,7 +172,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const des::OrderPtr& order) {
     return true;
 }
 
-void MissionBoard::popInterrupt(ISimContext& ctx, const des::OrderPtr& completedOrder) {
+void MissionBoard::popInterrupt(ISimContext& ctx, const OrderPtr& completedOrder) {
     const auto robot = ctx.getRobot();
     m_interrupt.pop(completedOrder);
     bool resumeDrive = false;
@@ -184,7 +186,7 @@ void MissionBoard::popInterrupt(ISimContext& ctx, const des::OrderPtr& completed
     }
     if (resumeDrive && robot->getLocation() != robot->getTargetLocation()) {
         robot->setDriving(true);
-        m_bus.notifyEvent(ctx.getTime(), des::EventType::START_DRIVE, "Drive resumed: " + robot->getTargetLocation(), true, robot->isCharging(), "", -1);
+        m_bus.notifyEvent(ctx.getTime(), EventType::START_DRIVE, "Drive resumed: " + robot->getTargetLocation(), true, robot->isCharging(), "", -1);
     }
     if (ctx.getConfig()->replanBackgroundOnInterrupt) {
         m_background.invalidatePlan();
@@ -203,3 +205,5 @@ void MissionBoard::reset() {
     m_background.clear();
     m_interrupt.clear();
 }
+
+}  // namespace des

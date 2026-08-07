@@ -4,6 +4,8 @@
 
 #include "../util/log.h"
 
+namespace des {
+
 bool Battery::chargesToFull() const {
     return m_chargeToFull || m_forceFull;
 }
@@ -111,7 +113,7 @@ void Battery::reset(const int startTime) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
 }
 
-des::BatteryProps Battery::getStats() const {
+BatteryProps Battery::getStats() const {
     return { m_currentCapacity / m_designCapacity, m_designCapacity, m_lowBatteryThreshold };
 }
 
@@ -174,3 +176,5 @@ double Battery::chargingConsumption(const double chargingRate, const double base
     const double net     = (chargesToFull() && m_currentCapacity >= cvCap) ? netFull * m_taperFraction : netFull;
     return -net;
 }
+
+}  // namespace des

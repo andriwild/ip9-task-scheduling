@@ -7,6 +7,8 @@
 
 #include "i_order_plugin.h"
 
+namespace des {
+
 class OrderRegistry {
     std::unordered_map<std::string, std::unique_ptr<IOrderPlugin>> m_byType;
     std::vector<IOrderPlugin*> m_order;
@@ -33,3 +35,5 @@ public:
     }
     const std::vector<IOrderPlugin*>& all() const { return m_order; };
 };
+
+}  // namespace des

@@ -9,10 +9,11 @@
 #include "./clean_subtree.h"
 
 
+namespace des {
+
 class Scheduler;
 class ISimContext;
 class RosObserver;
-
 struct CleanConfig {
     double cleaningArea = 0.09;
     double rewardWeight = 0.23;
@@ -28,22 +29,22 @@ public:
 
     std::string typeName() const override { return kTypeName; }
     std::string rootSubtreeId() const override { return "CleanRoutine"; }
-    des::ExecutionMode executionMode() const override { return des::ExecutionMode::BACKGROUND; }
+    ExecutionMode executionMode() const override { return ExecutionMode::BACKGROUND; }
 
-    void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
-    void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
-    virtual void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) override;
-    virtual void onStopDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+    void onMissionStart(ISimContext& ctx, IOrder& order) override;
+    void onMissionEnd(ISimContext& ctx, IOrder& order) override;
+    virtual void onStartDriveEvent(ISimContext& ctx, IOrder& order) override;
+    virtual void onStopDriveEvent(ISimContext& ctx, IOrder& order) override;
 
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
     std::string subtreeXml() const override { return CLEAN_SUBTREE_XML; }
-    des::OrderPtr fromJson(const nlohmann::json& j) const override;
-    int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
-    bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
-    std::optional<std::string> targetLocation(const des::IOrder& order) const override;
-    double estimateServiceDuration(const des::IOrder& order, const EstimationView& view) const override;
-    double estimateReward(const des::IOrder& order, const EstimationView& view) const override;
-    void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
+    OrderPtr fromJson(const nlohmann::json& j) const override;
+    int planDispatchTime(const IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
+    bool isFeasible(const IOrder& order, const ISimContext& context) const override;
+    std::optional<std::string> targetLocation(const IOrder& order) const override;
+    double estimateServiceDuration(const IOrder& order, const EstimationView& view) const override;
+    double estimateReward(const IOrder& order, const EstimationView& view) const override;
+    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
 
     const CleanConfig& config() const { return m_config; }
 
@@ -65,3 +66,5 @@ inline const CleanConfig& cleanConfig() {
     return static_cast<const CleanPlugin&>(
         OrderRegistry::instance().get(CleanPlugin::kTypeName)).config();
 }
+
+}  // namespace des

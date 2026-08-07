@@ -4,7 +4,11 @@
 #include <string>
 #include "model/order.h"
 
-struct DataAcquisitionOrder : des::IOrder {
+namespace des {
+
+struct DataAcquisitionOrder : IOrder {
     std::string roomName;
     std::optional<double> acquisitionInterval;
 };
+
+}  // namespace des

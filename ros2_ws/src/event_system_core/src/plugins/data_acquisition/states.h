@@ -6,6 +6,8 @@
 #include "../../model/robot_state.h"
 #include "../../util/types.h"
 
+namespace des {
+
 class Robot;
 class ISimContext;
 
@@ -16,7 +18,9 @@ class AcquireState final : public RobotState {
 public:
     explicit AcquireState() = default;
     void enter(Robot& robot) override;
-    des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "acquire"; }
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<AcquireState>(*this); }
 };
+
+}  // namespace des

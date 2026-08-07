@@ -13,6 +13,8 @@
 #include "event_system_msgs/srv/set_system_config.hpp"
 
 
+namespace des {
+
 class ConfigNode final : public rclcpp::Node {
 public:
     explicit ConfigNode() : Node("des_config_node") {
@@ -27,17 +29,17 @@ public:
         const auto loadedConfig = ConfigLoader::loadSimConfig();
         if (loadedConfig.has_value()) {
             RCLCPP_INFO(this->get_logger(), "Initial Simulation Config loaded!");
-            m_currentConfig = std::make_shared<des::SimConfig>(loadedConfig.value());
+            m_currentConfig = std::make_shared<SimConfig>(loadedConfig.value());
         } else {
             RCLCPP_WARN(this->get_logger(), "Failed to load sim_config.json, using defaults.");
-            m_currentConfig = std::make_shared<des::SimConfig>();
+            m_currentConfig = std::make_shared<SimConfig>();
             m_currentConfig->robotSpeed = 1.0;
             m_currentConfig->appointmentsPath = "appointments.json";
         }
         publishConfig();
     }
 
-    std::shared_ptr<des::SimConfig> getConfig() {
+    std::shared_ptr<SimConfig> getConfig() {
         std::lock_guard lock(m_configMutex);
         return m_currentConfig;
     }
@@ -75,8 +77,8 @@ private:
             config.arrivalStd             = request->arrival_std;
             config.departureMean          = request->departure_mean;
             config.departureStd           = request->departure_std;
-            config.arrivalDistribution    = des::distributionTypeFromString(request->arrival_distribution);
-            config.departureDistribution  = des::distributionTypeFromString(request->departure_distribution);
+            config.arrivalDistribution    = distributionTypeFromString(request->arrival_distribution);
+            config.departureDistribution  = distributionTypeFromString(request->departure_distribution);
             config.dockLocation           = request->dock_location;
             config.cacheEnabled           = request->cache_enabled;
             config.appointmentsPath       = request->appointments_path;
@@ -90,7 +92,7 @@ private:
             config.chargeToFull           = request->charge_to_full;
             config.alwaysChargeAtDock     = request->always_charge_at_dock;
 
-            m_currentConfig = std::make_shared<des::SimConfig>(config);
+            m_currentConfig = std::make_shared<SimConfig>(config);
             m_dirtyConfig = true;
         }
 
@@ -118,8 +120,8 @@ private:
             msg.arrival_std                = m_currentConfig->arrivalStd;
             msg.departure_mean             = m_currentConfig->departureMean;
             msg.departure_std              = m_currentConfig->departureStd;
-            msg.arrival_distribution       = des::distributionTypeToString(m_currentConfig->arrivalDistribution);
-            msg.departure_distribution     = des::distributionTypeToString(m_currentConfig->departureDistribution);
+            msg.arrival_distribution       = distributionTypeToString(m_currentConfig->arrivalDistribution);
+            msg.departure_distribution     = distributionTypeToString(m_currentConfig->departureDistribution);
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;
@@ -141,5 +143,7 @@ private:
     rclcpp::Publisher<event_system_msgs::msg::SystemConfig>::SharedPtr m_publisher;
     std::mutex m_configMutex;
     bool m_dirtyConfig{};
-    std::shared_ptr<des::SimConfig> m_currentConfig;
+    std::shared_ptr<SimConfig> m_currentConfig;
 };
+
+}  // namespace des

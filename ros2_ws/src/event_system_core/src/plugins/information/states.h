@@ -6,6 +6,8 @@
 #include "../../model/robot_state.h"
 #include "../../util/types.h"
 
+namespace des {
+
 class Robot;
 class ISimContext;
 
@@ -13,8 +15,10 @@ class InformationState final : public RobotState {
 public:
     explicit InformationState() = default;
     void enter(Robot& robot) override;
-    des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "information"; }
-    double getEnergyConsumption(const Robot& robot, const des::SimConfig& cfg) const override;
+    double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const override;
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<InformationState>(*this); }
 };
+
+}  // namespace des

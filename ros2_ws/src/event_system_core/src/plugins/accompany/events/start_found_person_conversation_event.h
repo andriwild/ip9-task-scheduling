@@ -12,6 +12,8 @@
 #include "plugins/accompany/states.h"
 #include "util/rnd.h"
 
+namespace des {
+
 class StartFoundPersonConversationEvent final : public IEvent {
 public:
     explicit StartFoundPersonConversationEvent(const int time) : IEvent(time) {}
@@ -39,5 +41,7 @@ public:
     }
 
     std::string getName() const override { return "Found Person Conversation"; }
-    des::EventType getType() const override { return des::EventType::START_FOUND_PERSON_CONV; }
+    EventType getType() const override { return EventType::START_FOUND_PERSON_CONV; }
 };
+
+}  // namespace des

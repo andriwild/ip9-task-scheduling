@@ -12,6 +12,8 @@
 #include "plugins/accompany/states.h"
 #include "util/rnd.h"
 
+namespace des {
+
 class StartDropOffConversationEvent final : public IEvent {
 public:
     explicit StartDropOffConversationEvent(const int time) : IEvent(time) {}
@@ -39,5 +41,7 @@ public:
     }
 
     std::string getName() const override { return "Start Drop Off Conversation"; }
-    des::EventType getType() const override { return des::EventType::START_DROP_OFF_CONV; }
+    EventType getType() const override { return EventType::START_DROP_OFF_CONV; }
 };
+
+}  // namespace des

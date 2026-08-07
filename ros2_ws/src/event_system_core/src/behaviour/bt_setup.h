@@ -17,6 +17,8 @@
 #include "mission_outcome.h"
 
 
+namespace des {
+
 constexpr bool W_OUT_TREE   = true;
 const std::string TREE_FILE = "bt_config.xml";
 
@@ -142,7 +144,7 @@ inline std::string buildXml() {
                     <SubTree ID="MissionControlRoutine" _autoremap="true"/>)";
 
     for (auto* plugin : OrderRegistry::instance().all()) {
-        if (plugin->executionMode() != des::ExecutionMode::INTERRUPT) {
+        if (plugin->executionMode() != ExecutionMode::INTERRUPT) {
             xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
         }
     }
@@ -166,7 +168,7 @@ inline std::string buildXml() {
     )";
     bool anyInterruptPlugin = false;
     for (auto* plugin : OrderRegistry::instance().all()) {
-        if (plugin->executionMode() == des::ExecutionMode::INTERRUPT) {
+        if (plugin->executionMode() == ExecutionMode::INTERRUPT) {
             xml += "<SubTree ID=\"" + plugin->rootSubtreeId() + "\" _autoremap=\"true\"/>\n";
             anyInterruptPlugin = true;
         }
@@ -218,3 +220,5 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(ISimContext* ctx) {
     DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Behaviour Tree created");
     return tree;
 }
+
+}  // namespace des

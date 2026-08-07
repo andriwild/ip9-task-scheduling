@@ -6,10 +6,12 @@
 #include "plugins/data_acquisition/data_acquisition_plugin.h"
 #include "execute_acquisition_event.h"
 
+namespace des {
+
 class StartAcquisitionEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit StartAcquisitionEvent(const int time, const des::OrderPtr& order)
+    explicit StartAcquisitionEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -20,12 +22,14 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = des::MissionState::IN_PROGRESS;
+        m_order->state = MissionState::IN_PROGRESS;
         ctx.notifyEvent(*this);
         const int duration = static_cast<int>(dataAcquisitionConfig().dataAcquisitionDuration);
         ctx.startActivity(std::make_shared<EndAcquisitionEvent>(this->time + duration, m_order));
     }
 
     std::string getName() const override { return "Start Acquisition"; }
-    des::EventType getType() const override { return des::EventType::DATA_ACQUISITION_START; }
+    EventType getType() const override { return EventType::DATA_ACQUISITION_START; }
 };
+
+}  // namespace des

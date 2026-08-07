@@ -6,6 +6,8 @@
 #include "../../model/robot_state.h"
 #include "../../util/types.h"
 
+namespace des {
+
 class Robot;
 class ISimContext;
 
@@ -16,7 +18,7 @@ class ISimContext;
 class SearchState final : public RobotState {
 public:
     void enter(Robot& robot) override;
-    des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "search"; }
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<SearchState>(*this); }
 };
@@ -24,7 +26,7 @@ public:
 class AccompanyState final : public RobotState {
 public:
     void enter(Robot& robot) override;
-    des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "accompany"; }
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<AccompanyState>(*this); }
 };
@@ -36,8 +38,10 @@ public:
     ConversateState(const Type type = Type::FOUND_PERSON) : conversationType(type) {}
 
     void enter(Robot& robot) override;
-    des::RobotStateType getType() const override { return des::RobotStateType::MISSION; }
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "conversate"; }
-    double getEnergyConsumption(const Robot& robot, const des::SimConfig& cfg) const override;
+    double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const override;
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<ConversateState>(*this); }
 };
+
+}  // namespace des

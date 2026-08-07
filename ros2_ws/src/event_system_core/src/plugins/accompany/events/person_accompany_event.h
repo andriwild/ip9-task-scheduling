@@ -9,13 +9,15 @@
 #include "engine/contracts/i_sim_context.h"
 #include "model/person.h"
 
+namespace des {
+
 class PersonAccompanyDepartureEvent final : public IEvent {
 public:
-    des::Person* const person;
+    Person* const person;
     const std::string currentRoom;
 
     PersonAccompanyDepartureEvent(const int time,
-                                  des::Person* p,
+                                  Person* p,
                                   std::string currentRoom)
         : IEvent(time)
         , person(std::move(p))
@@ -36,17 +38,17 @@ public:
     std::string getName() const override {
         return std::format("{} moved to {}", person->firstName, currentRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_ACCOMPANY_DEPARTURE; }
+    EventType getType() const override { return EventType::PERSON_ACCOMPANY_DEPARTURE; }
     std::string getColor() const override { return person->color; }
 };
 
 class PersonAccompanyArrivedEvent final : public IEvent {
 public:
-    des::Person* const person;
+    Person* const person;
     const std::string arrivalRoom;
 
     PersonAccompanyArrivedEvent(const int time,
-                                des::Person* p,
+                                Person* p,
                                 std::string arrivalRoom)
         : IEvent(time)
         , person(std::move(p))
@@ -67,6 +69,8 @@ public:
     std::string getName() const override {
         return std::format("{} arrived to {}", person->firstName, arrivalRoom);
     }
-    des::EventType getType() const override { return des::EventType::PERSON_ACCOMPANY_ARRIVED; }
+    EventType getType() const override { return EventType::PERSON_ACCOMPANY_ARRIVED; }
     std::string getColor() const override { return person->color; }
 };
+
+}  // namespace des

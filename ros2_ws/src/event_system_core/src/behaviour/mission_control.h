@@ -12,6 +12,8 @@
 #include "../model/robot.h"
 #include "../plugins/order_registry.h"
 
+namespace des {
+
 class HasPendingMission final : public BT::ConditionNode {
 public:
     HasPendingMission(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
@@ -102,7 +104,7 @@ public:
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"),
                      "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
                      order->id, order->type.c_str());
-        order->state     = des::MissionState::REJECTED;
+        order->state     = MissionState::REJECTED;
         ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }
@@ -179,3 +181,5 @@ public:
         return BT::NodeStatus::FAILURE;
     }
 };
+
+}  // namespace des

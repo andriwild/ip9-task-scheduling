@@ -11,10 +11,12 @@
 #include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "engine/event_queue.h"
 
+namespace des {
+
 void HeadlessRunner::setupApplication() {
     DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
 
-    m_config = std::make_shared<des::SimConfig>(ConfigLoader::loadSimConfig().value());
+    m_config = std::make_shared<SimConfig>(ConfigLoader::loadSimConfig().value());
 
     if (!std::filesystem::is_regular_file(m_config->appointmentsPath)) {
         throw std::runtime_error("Appointments file does not exist: " + m_config->appointmentsPath);
@@ -55,7 +57,7 @@ bool HeadlessRunner::loadNextRound() {
     }
     m_protocol.clear();
 
-    if (m_config->roundMode == des::RoundMode::REPLICATION) {
+    if (m_config->roundMode == RoundMode::REPLICATION) {
         m_ctx->reseed(roundSeed(m_currentRound));
     }
 
@@ -103,3 +105,5 @@ void HeadlessRunner::enterPause() const {
 void HeadlessRunner::updateConfig() {
     // not needed in headless mode
 }
+
+}  // namespace des

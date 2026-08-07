@@ -12,6 +12,8 @@
 
 #include "../util/types.h"
 
+namespace des {
+
 class Battery {
     int m_lastBalanceUpdate = 0;
 
@@ -57,7 +59,7 @@ public:
     void setForceFull(const bool forceFull);
     bool isDepleted() const;
     void reset(const int startTime);
-    des::BatteryProps getStats() const;
+    BatteryProps getStats() const;
     double getVoltage() const;
     bool isBatteryLow() const;
     bool isBatteryFull() const;
@@ -72,3 +74,5 @@ private:
         return std::max(lower, std::min(n, upper));
     }
 };
+
+}  // namespace des

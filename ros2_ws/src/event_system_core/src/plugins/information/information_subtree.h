@@ -1,5 +1,7 @@
 #pragma once
 
+namespace des {
+
 inline constexpr const char* INFORMATION_SUBTREE_XML = R"(
   <BehaviorTree ID="InformationRoutine">
     <ReactiveSequence>
@@ -8,3 +10,5 @@ inline constexpr const char* INFORMATION_SUBTREE_XML = R"(
     </ReactiveSequence>
   </BehaviorTree>
 )";
+
+}  // namespace des

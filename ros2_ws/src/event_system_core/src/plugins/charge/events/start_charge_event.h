@@ -9,10 +9,12 @@
 #include "model/order.h"
 #include "end_charge_event.h"
 
+namespace des {
+
 class StartChargeEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit StartChargeEvent(const int time, const des::OrderPtr& order)
+    explicit StartChargeEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -23,7 +25,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = des::MissionState::IN_PROGRESS;
+        m_order->state = MissionState::IN_PROGRESS;
         ctx.getRobot()->beginChargeSession(this->time);
         ctx.notifyEvent(*this);
 
@@ -40,5 +42,7 @@ public:
     }
 
     std::string getName() const override { return "Start Charge"; }
-    des::EventType getType() const override { return des::EventType::CHARGE_MISSION_START; }
+    EventType getType() const override { return EventType::CHARGE_MISSION_START; }
 };
+
+}  // namespace des

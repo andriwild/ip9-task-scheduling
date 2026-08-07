@@ -8,10 +8,12 @@
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"
 
+namespace des {
+
 class StartAccompanyEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit StartAccompanyEvent(const int time, const des::OrderPtr& order)
+    explicit StartAccompanyEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -32,7 +34,7 @@ public:
         ctx.changeRobotState(std::make_unique<AccompanyState>());
         static_cast<AccompanyOrder&>(*m_order).phase = AccompanyPhase::ACCOMPANY;
 
-        const des::Room& currentRoom = ctx.room(ctx.getRobot()->getLocation());
+        const Room& currentRoom = ctx.room(ctx.getRobot()->getLocation());
         auto roomDrive = std::make_shared<StartDriveEvent>(time, std::make_shared<RoomTarget>(accompany.roomName));
         requestDrive(ctx, currentRoom.m_waypoint, currentRoom.m_tour.visibilityAt(0), roomDrive);
 
@@ -40,5 +42,7 @@ public:
     }
 
     std::string getName() const override { return "Start Accompany"; }
-    des::EventType getType() const override { return des::EventType::START_ACCOMPANY; }
+    EventType getType() const override { return EventType::START_ACCOMPANY; }
 };
+
+}  // namespace des

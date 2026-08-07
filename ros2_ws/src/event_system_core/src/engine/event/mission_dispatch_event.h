@@ -5,14 +5,15 @@
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_sim_context.h"
 
+namespace des {
+
 class IEvent;
 class Robot;
 class Scheduler;
-
 class MissionDispatchEvent final : public IEvent {
 public:
-    des::OrderPtr orderPtr;
-    explicit MissionDispatchEvent(const int time, des::OrderPtr order)
+    OrderPtr orderPtr;
+    explicit MissionDispatchEvent(const int time, OrderPtr order)
         : IEvent(time)
         , orderPtr(order)
     {}
@@ -34,9 +35,11 @@ public:
     std::string getName() const override {
         return std::format("Mission {} Dispatch", orderPtr->id);
     }
-    des::EventType getType() const override { return des::EventType::MISSION_DISPATCH; }
+    EventType getType() const override { return EventType::MISSION_DISPATCH; }
     int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
-    des::OrderPtr getOrder() const override {
+    OrderPtr getOrder() const override {
         return orderPtr;
     }
 };
+
+}  // namespace des

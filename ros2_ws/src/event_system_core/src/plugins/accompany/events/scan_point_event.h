@@ -7,11 +7,13 @@
 #include "plugins/accompany/accompany_order.h"
 #include "util/log.h"
 
+namespace des {
+
 class ScanPointEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 
 public:
-    explicit ScanPointEvent(const int time, const des::OrderPtr& order)
+    explicit ScanPointEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -39,5 +41,7 @@ public:
     }
 
     std::string getName() const override { return "Scan"; }
-    des::EventType getType() const override { return des::EventType::SCAN; }
+    EventType getType() const override { return EventType::SCAN; }
 };
+
+}  // namespace des

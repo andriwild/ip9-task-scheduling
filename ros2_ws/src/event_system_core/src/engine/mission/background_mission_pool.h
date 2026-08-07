@@ -21,6 +21,8 @@
 #include "algo/background/op_solver.h"
 #include "plugins/charge/charge_order.h"
 
+namespace des {
+
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 constexpr double kReserveMarginPerMissionWh      = 1.5;
 constexpr int kGraspIterations = 200;
@@ -41,8 +43,8 @@ inline MissionReserve computeMissionReserve(
     const auto cfg          = ctx.getConfig();
     const double netChargeW = cfg->chargingRate - cfg->energyConsumptionBase;
 
-    std::vector<des::OrderPtr> orders;
-    if (cfg->energyReserveStrategy == des::EnergyReserveStrategy::HORIZON) {
+    std::vector<OrderPtr> orders;
+    if (cfg->energyReserveStrategy == EnergyReserveStrategy::HORIZON) {
         orders = ctx.peekScheduledOrdersUntil(ctx.getTime() + cfg->energyReserveHorizon);
     } else if (const auto next = ctx.peekNextScheduledOrder()) {
         orders.push_back(next);
@@ -88,12 +90,12 @@ inline MissionReserve computeMissionReserve(
 
 // Pool of opportunistic background missions executed to fill idle time.
 class BackgroundMissionPool {
-    std::vector<des::OrderPtr> m_missions;
-    std::queue<des::OrderPtr> m_pending;
+    std::vector<OrderPtr> m_missions;
+    std::queue<OrderPtr> m_pending;
     int m_chargeOrderSeq = 0;  // negative-id generator for synthesized charge stops
 
 public:
-    void add(const des::OrderPtr& order) {
+    void add(const OrderPtr& order) {
         m_missions.push_back(order);
         DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Background mission added - list size: %zu", m_missions.size());
     }
@@ -116,7 +118,7 @@ public:
     }
 
     // Next mission of the current plan; also removed from the pool.
-    des::OrderPtr popPlanned() {
+    OrderPtr popPlanned() {
         if (m_pending.empty()) { return nullptr; }
         const auto order = m_pending.front();
         m_pending.pop();
@@ -178,9 +180,9 @@ public:
         const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : 1e9f;
         const float cvEnergy = static_cast<float>(cfg->cvThreshold * capacityWh);
 
-        const des::OpBudgets budgets {
+        const OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
-            .energyBudget    = static_cast<float>(std::max(energyBudget, des::kMinEnergyBudgetWh)),
+            .energyBudget    = static_cast<float>(std::max(energyBudget, kMinEnergyBudgetWh)),
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
             .socThreshold    = static_cast<float>(socThreshold),
@@ -198,8 +200,8 @@ public:
         }
 
         // index based route (tour)
-        const int graspSeed = static_cast<int>(ctx.getConfig()->seed + des::GRASP_SEED_OFFSET);
-        const auto route = des::op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
+        const int graspSeed = static_cast<int>(ctx.getConfig()->seed + GRASP_SEED_OFFSET);
+        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
 
         DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 
@@ -218,7 +220,7 @@ public:
                 auto charge         = std::make_shared<ChargeOrder>();
                 charge->id          = -1 - m_chargeOrderSeq++;
                 charge->type        = kChargeOrderType;
-                charge->execution   = des::ExecutionMode::BACKGROUND;
+                charge->execution   = ExecutionMode::BACKGROUND;
                 charge->description = "Charge";
                 charge->dockLocation = dockLoc;
                 m_pending.push(charge);
@@ -229,6 +231,8 @@ public:
         DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"),
                     "Planned %zu/%zu background missions (%d charge stops, time=%ds, energy=%.1fWh, reserve=%.1fWh over %zu scheduled, strategy=%s)",
                     m_pending.size(), m_missions.size(), chargeStops, timeBudget, energyBudget, requiredWh, reserve.missionCount,
-                    des::energyReserveStrategyToString(cfg->energyReserveStrategy).c_str());
+                    energyReserveStrategyToString(cfg->energyReserveStrategy).c_str());
     }
 };
+
+}  // namespace des

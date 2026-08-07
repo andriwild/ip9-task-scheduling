@@ -1,5 +1,7 @@
 #pragma once
 
+namespace des {
+
 inline constexpr const char* CHARGE_SUBTREE_XML = R"(
   <BehaviorTree ID="BackgroundChargeRoutine">
     <ReactiveSequence>
@@ -18,3 +20,5 @@ inline constexpr const char* CHARGE_SUBTREE_XML = R"(
     </Sequence>
   </BehaviorTree>
 )";
+
+}  // namespace des

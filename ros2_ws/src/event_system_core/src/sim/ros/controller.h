@@ -13,6 +13,8 @@
 #include "event_system_msgs/srv/set_system_state.hpp"
 
 
+namespace des {
+
 using SystemState = event_system_msgs::srv::SetSystemState;
 
 class ControllerNode : public rclcpp::Node {
@@ -59,3 +61,5 @@ private:
 
   rclcpp::Service<event_system_msgs::srv::SetSystemState>::SharedPtr m_subscription;
 };
+
+}  // namespace des

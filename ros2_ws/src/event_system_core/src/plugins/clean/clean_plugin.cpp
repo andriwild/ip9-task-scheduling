@@ -13,25 +13,27 @@
 #include "states.h"
 #include "util/types.h"
 
+namespace des {
+
 void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<CleanIsAtTargetLocation>("CleanIsAtTargetLocation");
     factory.registerNodeType<CleanGoToLocation>("CleanGoToLocation");
     factory.registerNodeType<ExecuteClean>("ExecuteClean");
 }
 
-void CleanPlugin::onMissionStart(ISimContext& ctx, des::IOrder& /*order*/) {
+void CleanPlugin::onMissionStart(ISimContext& ctx, IOrder& /*order*/) {
     ctx.changeRobotState(std::make_unique<CleanState>());
 }
 
-void CleanPlugin::onMissionEnd(ISimContext& ctx, des::IOrder& order) {
-    if (order.state == des::COMPLETED) {
+void CleanPlugin::onMissionEnd(ISimContext& ctx, IOrder& order) {
+    if (order.state == COMPLETED) {
         const auto& o = static_cast<const CleanOrder&>(order);
         ctx.recordServiced(o.roomName, kTypeName, ctx.getTime());
     }
     ctx.changeRobotState(std::make_unique<IdleState>());
 }
 
-double CleanPlugin::estimateReward(const des::IOrder& order, const EstimationView& view) const {
+double CleanPlugin::estimateReward(const IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     const double areaUtility = std::min(1.0, view.world.room(o.roomName).m_area.value_or(1.0) / 100.0);
     const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
@@ -44,11 +46,11 @@ double CleanPlugin::estimateReward(const des::IOrder& order, const EstimationVie
     return m_config.rewardWeight * areaUtility * urgency;
 }
 
-void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
 
-void CleanPlugin::onStopDriveEvent(ISimContext& /*ctx*/, des::IOrder& /*order*/) {}
+void CleanPlugin::onStopDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
 
-des::OrderPtr CleanPlugin::fromJson(const nlohmann::json& j) const {
+OrderPtr CleanPlugin::fromJson(const nlohmann::json& j) const {
     auto o = std::make_shared<CleanOrder>();
     o->id          = j.at("id");
     o->type        = "clean";
@@ -58,11 +60,11 @@ des::OrderPtr CleanPlugin::fromJson(const nlohmann::json& j) const {
     if (j.contains("cleaning_interval")) {
         o->cleaningInterval = j.at("cleaning_interval").get<double>();
     }
-    o->execution   = des::ExecutionMode::BACKGROUND;
+    o->execution   = ExecutionMode::BACKGROUND;
     return o;
 }
 
-int CleanPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, const std::string& startPos) const {
+int CleanPlugin::planDispatchTime(const IOrder& order, const Scheduler& s, const std::string& startPos) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     if (!o.deadline.has_value()) {
         return o.dispatchTime;
@@ -71,7 +73,7 @@ int CleanPlugin::planDispatchTime(const des::IOrder& order, const Scheduler& s, 
     return *o.deadline - static_cast<int>(driveTime) - s.timeBuffer();
 }
 
-bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& context) const {
+bool CleanPlugin::isFeasible(const IOrder& order, const ISimContext& context) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     if (!o.deadline.has_value()) {
         return true;
@@ -88,11 +90,11 @@ bool CleanPlugin::isFeasible(const des::IOrder& order, const ISimContext& contex
     return true;
 }
 
-std::optional<std::string> CleanPlugin::targetLocation(const des::IOrder& order) const {
+std::optional<std::string> CleanPlugin::targetLocation(const IOrder& order) const {
     return static_cast<const CleanOrder&>(order).roomName;
 }
 
-double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const EstimationView& view) const {
+double CleanPlugin::estimateServiceDuration(const IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     const auto& cfg = view.cfg;
 
@@ -102,7 +104,7 @@ double CleanPlugin::estimateServiceDuration(const des::IOrder& order, const Esti
     return steps * (2.0 * cleaningSide / cfg.robotSpeed);
 }
 
-void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const {
+void CleanPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     observer.publishMeeting(
         o.id,
@@ -115,3 +117,5 @@ void CleanPlugin::publishTimeline(const des::IOrder& order, int startTime, RosOb
         o.description,
         static_cast<int>(o.execution));
 }
+
+}  // namespace des

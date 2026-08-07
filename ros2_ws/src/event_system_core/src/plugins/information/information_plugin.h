@@ -7,10 +7,11 @@
 #include "../order_registry.h"
 #include "./information_subtree.h"
 
+namespace des {
+
 class Scheduler;
 class ISimContext;
 class RosObserver;
-
 struct InformationConfig {
     double informationDurationMin = 30.0;
     double informationDurationMax = 120.0;
@@ -25,20 +26,20 @@ public:
 
     std::string typeName() const override { return kTypeName; }
     std::string rootSubtreeId() const override { return "InformationRoutine"; }
-    des::ExecutionMode executionMode() const override { return des::ExecutionMode::INTERRUPT; }
+    ExecutionMode executionMode() const override { return ExecutionMode::INTERRUPT; }
 
-    void onMissionStart(ISimContext& ctx, des::IOrder& order) override;
-    void onMissionEnd(ISimContext& ctx, des::IOrder& order) override;
-    void onStartDriveEvent(ISimContext& ctx, des::IOrder& order) override;
-    void onStopDriveEvent(ISimContext& ctx, des::IOrder& order) override;
+    void onMissionStart(ISimContext& ctx, IOrder& order) override;
+    void onMissionEnd(ISimContext& ctx, IOrder& order) override;
+    void onStartDriveEvent(ISimContext& ctx, IOrder& order) override;
+    void onStopDriveEvent(ISimContext& ctx, IOrder& order) override;
 
     void registeredNodes(BT::BehaviorTreeFactory& factory) override;
     std::string subtreeXml() const override { return INFORMATION_SUBTREE_XML; }
-    des::OrderPtr fromJson(const nlohmann::json& j) const override;
-    int planDispatchTime(const des::IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
-    bool isFeasible(const des::IOrder& order, const ISimContext& context) const override;
-    double estimateMissionDuration(const des::IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
-    void publishTimeline(const des::IOrder& order, int startTime, RosObserver& observer) const override;
+    OrderPtr fromJson(const nlohmann::json& j) const override;
+    int planDispatchTime(const IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
+    bool isFeasible(const IOrder& order, const ISimContext& context) const override;
+    double estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
+    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
 
     const InformationConfig& config() const { return m_config; }
 
@@ -58,3 +59,5 @@ inline const InformationConfig& informationConfig() {
     return static_cast<const InformationPlugin&>(
         OrderRegistry::instance().get(InformationPlugin::kTypeName)).config();
 }
+
+}  // namespace des

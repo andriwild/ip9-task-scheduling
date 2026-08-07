@@ -2,6 +2,8 @@
 
 #include <memory>
 
+namespace des {
+
 class IEvent;
 
 class IEventSink {
@@ -14,3 +16,5 @@ public:
     // so that interrupts can shift it. For everything else, use pushEvent.
     virtual void startActivity(const std::shared_ptr<IEvent>& endEvent) = 0;
 };
+
+}  // namespace des

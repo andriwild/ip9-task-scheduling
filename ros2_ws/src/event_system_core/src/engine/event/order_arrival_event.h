@@ -9,10 +9,12 @@
 #include "model/order.h"
 #include "util/types.h"
 
+namespace des {
+
 class OrderArrivalEvent final : public IEvent {
-    des::OrderPtr m_order;
+    OrderPtr m_order;
 public:
-    explicit OrderArrivalEvent(int time, des::OrderPtr order)
+    explicit OrderArrivalEvent(int time, OrderPtr order)
         : IEvent(time), m_order(std::move(order)) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
@@ -25,13 +27,13 @@ public:
     void execute(ISimContext& ctx) override {
         ctx.publishMission(m_order, time);
         switch (m_order->execution) {
-            case des::ExecutionMode::BACKGROUND:
-            case des::ExecutionMode::SCHEDULED:
+            case ExecutionMode::BACKGROUND:
+            case ExecutionMode::SCHEDULED:
                 ctx.addScheduledMission(m_order);
                 break;
-            case des::ExecutionMode::INTERRUPT:
+            case ExecutionMode::INTERRUPT:
                 if (!ctx.pushInterrupt(m_order)) {
-                    m_order->state = des::MissionState::REJECTED;
+                    m_order->state = MissionState::REJECTED;
                     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
                 }
                 break;
@@ -43,9 +45,11 @@ public:
     std::string getName() const override {
         return std::format("Order Arrival ({})", m_order->type);
     }
-    des::EventType getType() const override { return des::EventType::ORDER_ARRIVAL; }
+    EventType getType() const override { return EventType::ORDER_ARRIVAL; }
     int getMissionId() const override { return m_order ? m_order->id : -1; }
-    des::OrderPtr getOrder() const override {
+    OrderPtr getOrder() const override {
         return m_order;
     }
 };
+
+}  // namespace des

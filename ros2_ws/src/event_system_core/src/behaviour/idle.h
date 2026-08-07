@@ -13,6 +13,8 @@
 #include "../model/robot.h"
 #include "engine/event.h"
 
+namespace des {
+
 class IsIdle final : public BT::ConditionNode {
 public:
     IsIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
@@ -22,7 +24,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
-        const bool isIdle = ctx->getRobot()->getStateType() == des::RobotStateType::IDLE && !ctx->getRobot()->isDriving();
+        const bool isIdle = ctx->getRobot()->getStateType() == RobotStateType::IDLE && !ctx->getRobot()->isDriving();
         DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "IsIdle: %d", isIdle);
         if (isIdle) {
             return BT::NodeStatus::SUCCESS;
@@ -70,3 +72,5 @@ public:
         return BT::NodeStatus::FAILURE;
     }
 };
+
+}  // namespace des

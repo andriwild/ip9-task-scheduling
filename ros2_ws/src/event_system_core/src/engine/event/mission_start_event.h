@@ -8,10 +8,12 @@
 #include "model/robot_state.h"
 #include "plugins/order_registry.h"
 
+namespace des {
+
 class MissionStartEvent final : public IEvent {
 public:
-    des::OrderPtr orderPtr;
-    explicit MissionStartEvent(const int time, const des::OrderPtr& order)
+    OrderPtr orderPtr;
+    explicit MissionStartEvent(const int time, const OrderPtr& order)
         : IEvent(time)
         , orderPtr(order)
     {}
@@ -34,6 +36,8 @@ public:
     std::string getName() const override {
         return std::format("Mission {} Start", orderPtr->id);
     }
-    des::EventType getType() const override { return des::EventType::MISSION_START; }
+    EventType getType() const override { return EventType::MISSION_START; }
     int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
 };
+
+}  // namespace des

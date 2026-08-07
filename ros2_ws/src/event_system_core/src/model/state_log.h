@@ -19,7 +19,7 @@ namespace des {
 struct StateInterval {
     int time;
     int endTime;
-    des::RobotStateType category;
+    RobotStateType category;
     std::string name;
     double socFrom;
     double socTo;
@@ -30,7 +30,7 @@ class StateLog {
     bool m_open = false;
 
 public:
-    void open(const int time, const des::RobotStateType category, std::string name, const double soc) {
+    void open(const int time, const RobotStateType category, std::string name, const double soc) {
         if (m_open) {
             close(time, soc);
         }

@@ -10,6 +10,8 @@
 #include "model/robot.h"
 #include "util/types.h"
 
+namespace des {
+
 class StartDriveEvent final : public IEvent {
     std::shared_ptr<DriveTarget> m_target;
     std::shared_ptr<IEvent> m_onArrive;
@@ -41,7 +43,7 @@ public:
     }
 
     std::string getName() const override { return "Departing: " + m_target->label(); }
-    des::EventType getType() const override { return des::EventType::START_DRIVE; }
+    EventType getType() const override { return EventType::START_DRIVE; }
 };
 
 inline void requestDrive(ISimContext& ctx, const std::string& target) {
@@ -54,6 +56,8 @@ inline void requestDrive(ISimContext& ctx, const std::string& target) {
     ctx.pushEvent(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<RoomTarget>(target)));
 }
 
-inline void requestDrive(ISimContext& ctx, const des::Point& target, const des::Polygon& visibility, std::shared_ptr<IEvent> onArrive = nullptr) {
+inline void requestDrive(ISimContext& ctx, const Point& target, const Polygon& visibility, std::shared_ptr<IEvent> onArrive = nullptr) {
     ctx.startActivity(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<PointTarget>(target, visibility), std::move(onArrive)));
 }
+
+}  // namespace des
