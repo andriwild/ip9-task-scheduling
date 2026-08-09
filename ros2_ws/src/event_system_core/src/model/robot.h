@@ -40,6 +40,7 @@ class Robot {
     bool m_isCharging       = false;
     bool m_chargingRequired = false;
     bool m_isPersonVisible  = false;
+    bool m_servicing        = false;
 
     std::weak_ptr<IEvent> m_inFlightEvent;
 
@@ -120,6 +121,9 @@ public:
     void clearInFlight();
 
     void beginRoomVisit(const std::string& location);
+    void markRoomVisitCovered();
+    void setServicing(bool servicing);
+    bool isServicing() const;
     void observePerson(const int time, const std::string& personName, const bool seen);
     void flushRoomVisit();
     const SightingLog& getSightings() const;

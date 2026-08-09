@@ -80,7 +80,8 @@ int main(int argc, char** argv) {
     auto validRooms = rooms | std::views::filter([](const TSP::Room& r) { return r.m_footprint.size() >= 3; });
 
     for (const TSP::Room& room : validRooms) {
-        TSP::RoomTour tour = TSP::twoOpt(TSP::nearestNeighbor(dropRepeatedStops(sightseeingTour(room, radius))));
+        TSP::RoomTour tour = sightseeingTour(room, radius);
+        tour.m_distance = TSP::pathDistance(tour);
         addVisibility(tour, room.m_footprint);
         std::cout << tour.m_roomName << "  steps=" << tour.m_steps << "  distance=" << tour.m_distance << "\n";
         tours.push_back(std::move(tour));

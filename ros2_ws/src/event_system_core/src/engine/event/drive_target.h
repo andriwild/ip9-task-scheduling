@@ -75,15 +75,16 @@ public:
 class PointTarget final : public DriveTarget {
     Point m_point;
     Polygon m_visibility;
+    double m_speed;
 
 public:
-    explicit PointTarget(const Point& point, Polygon visibility)
-        : m_point(point), m_visibility(std::move(visibility)) {}
+    explicit PointTarget(const Point& point, Polygon visibility, const double speed = 0.0)
+        : m_point(point), m_visibility(std::move(visibility)), m_speed(speed) {}
 
     std::pair<int, double> travel(ISimContext& ctx) const override {
         const Point from = ctx.getRobot()->getPosition();
         const double dist = std::hypot(m_point.m_x - from.m_x, m_point.m_y - from.m_y);
-        const double speed = ctx.getRobot()->getCurrentSpeed();
+        const double speed = m_speed > 0.0 ? m_speed : ctx.getRobot()->getCurrentSpeed();
         const int duration = std::max(1, static_cast<int>(std::lround(dist / speed)));
         return { duration, dist };
     }

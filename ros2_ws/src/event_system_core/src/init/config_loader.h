@@ -35,7 +35,7 @@ inline std::string configRoot() {
 
 const std::string CONFIG_DIR            = configRoot();
 const std::string DEFAULT_ORDER_FILE    = CONFIG_DIR + "appointments.json";
-const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "employee.json";
+const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "employee_roles.json";
 const std::string SIM_CONFIG_FILE       = CONFIG_DIR + "sim_config.json";
 const std::string BUILDING_FILE         = CONFIG_DIR + "building.json";
 

@@ -25,6 +25,8 @@ struct StayDurationConfig {
     double workplaceMax = 3600 * 2;
     double classroomMin = 60 * 45;
     double classroomMax = 60 * 90;
+    double meetingMin = 60 * 30;
+    double meetingMax = 60 * 90;
     double kitchenMin = 30;
     double kitchenMax = 1800;
     double toiletMu = 4.8;
@@ -74,6 +76,8 @@ public:
                 return rnd::uni(rng, stayDuration.workplaceMin, stayDuration.workplaceMax);
             case RoomType::CLASSROOM:
                 return rnd::uni(rng, stayDuration.classroomMin, stayDuration.classroomMax);
+            case RoomType::MEETING:
+                return rnd::uni(rng, stayDuration.meetingMin, stayDuration.meetingMax);
             case RoomType::TOILET:
                 return rnd::logNormal(rng, stayDuration.toiletMu, stayDuration.toiletSigma);
             case RoomType::KITCHEN:

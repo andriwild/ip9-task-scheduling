@@ -32,19 +32,11 @@ public:
         ctx.notifyEvent(*this);
 
         const std::string& roomName = static_cast<const CleanOrder&>(*m_order).roomName;
-        const auto area             = ctx.room(roomName).m_area;
-        if (!area.has_value()) {
+        if (!ctx.room(roomName).m_area.has_value()) {
             DES_LOG_WARN("des.plugin.clean", "Room '%s' has no area, cleaning mission %d falls back to 1m2", roomName.c_str(), m_order->id);
         }
-        const double roomArea       = area.value_or(1.0);
-        const double cleaningArea = cleanConfig().cleaningArea;
-        assert(cleaningArea > 0.0);
-        const double cleaningSide = std::sqrt(cleaningArea);
-        const double steps        = (roomArea / cleaningArea) + 1;
-        const int cleanTime       = static_cast<int>(steps * (2.0 * cleaningSide / ctx.getConfig()->robotSpeed));
-        assert(cleanTime > 0);
-
-        ctx.startActivity(std::make_shared<EndCleanEvent>(this->time + cleanTime, m_order));
+        static_cast<CleanOrder&>(*m_order).sweepIndex = 0;
+        ctx.tickBT();
     }
 
     std::string getName() const override { return "Start Clean"; }

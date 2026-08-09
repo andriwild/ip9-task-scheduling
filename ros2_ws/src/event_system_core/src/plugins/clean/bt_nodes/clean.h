@@ -10,7 +10,9 @@
 #include "model/robot.h"
 #include "engine/event/start_drive_event.h"
 #include "plugins/clean/clean_order.h"
+#include "plugins/clean/clean_plugin.h"
 #include "plugins/clean/events/start_clean_event.h"
+#include "plugins/clean/events/end_clean_event.h"
 
 namespace des {
 
@@ -74,8 +76,10 @@ public:
         if (order && order->state == MissionState::PENDING) {
             DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: start");
             ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime(), order));
+            return BT::NodeStatus::RUNNING;
         }
-        return BT::NodeStatus::RUNNING;
+        // Resumed after an interrupt: continue the sweep now instead of waiting for the next tick.
+        return onRunning();
     }
 
     BT::NodeStatus onRunning() override {
@@ -83,8 +87,43 @@ public:
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == MissionState::COMPLETED) {
             DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: done");
+            ctx->getRobot()->setServicing(false);
             return BT::NodeStatus::SUCCESS;
         }
+        const auto robot = ctx->getRobot();
+        if (order->state != MissionState::IN_PROGRESS || robot->isDriving()) {
+            return BT::NodeStatus::RUNNING;
+        }
+
+        auto& cleanOrder = static_cast<CleanOrder&>(*order);
+        const Room& room = ctx->room(cleanOrder.roomName);
+        const RoomTour& tour = room.m_tour;
+
+        const double duration = cleanDurationSeconds(room.m_area.value_or(1.0), ctx->getConfig()->robotSpeed);
+        const double sweepDistance = tour.m_distance;
+
+        robot->setServicing(true);
+
+        if (sweepDistance <= 0.0) {
+            DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: %s has no drivable tour, cleaning in place", cleanOrder.roomName.c_str());
+            robot->setServicing(false);
+            robot->markRoomVisitCovered();
+            ctx->startActivity(std::make_shared<EndCleanEvent>(ctx->getTime() + static_cast<int>(duration), order));
+            return BT::NodeStatus::RUNNING;
+        }
+
+        if (cleanOrder.sweepIndex >= tour.m_path.size()) {
+            DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: swept %zu points of %s", tour.m_path.size(), cleanOrder.roomName.c_str());
+            robot->setServicing(false);
+            robot->markRoomVisitCovered();
+            ctx->startActivity(std::make_shared<EndCleanEvent>(ctx->getTime(), order));
+            return BT::NodeStatus::RUNNING;
+        }
+
+        const double sweepSpeed = sweepDistance / duration;
+        const std::size_t point = cleanOrder.sweepIndex;
+        cleanOrder.sweepIndex++;
+        requestDrive(*ctx, tour.m_path[point], tour.visibilityAt(point), nullptr, sweepSpeed);
         return BT::NodeStatus::RUNNING;
     }
 

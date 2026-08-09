@@ -13,4 +13,13 @@ void CleanState::enter(Robot& robot) {
     robot.setSpeed(robot.getDriveSpeed());
 }
 
+// Sweeping the room is part of the cleaning service, its energy is already
+// modelled by the service duration at base load, not by the travel rate.
+double CleanState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const {
+    if (robot.isServicing()) {
+        return cfg.energyConsumptionBase;
+    }
+    return RobotState::getEnergyConsumption(robot, cfg);
+}
+
 }  // namespace des

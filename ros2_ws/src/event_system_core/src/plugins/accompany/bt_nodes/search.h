@@ -104,6 +104,7 @@ public:
         if (point < tour.m_path.size()) {
             requestDrive(*ctx, tour.m_path[point], tour.visibilityAt(point), scan);
         } else {
+            ctx->getRobot()->markRoomVisitCovered();
             ctx->startActivity(scan);
         }
         return BT::NodeStatus::SUCCESS;

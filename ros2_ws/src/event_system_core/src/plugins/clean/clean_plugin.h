@@ -19,6 +19,8 @@ struct CleanConfig {
     double cleaningInterval = SECONDS_PER_DAY;
 };
 
+double cleanDurationSeconds(double roomArea, double robotSpeed);
+
 class CleanPlugin: public IOrderPlugin {
     CleanConfig m_config;
 public:

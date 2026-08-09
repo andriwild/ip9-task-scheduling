@@ -93,14 +93,17 @@ std::optional<std::string> CleanPlugin::targetLocation(const IOrder& order) cons
     return static_cast<const CleanOrder&>(order).roomName;
 }
 
+// Cleaning is modelled as a lawnmower pass over the room area.
+double cleanDurationSeconds(const double roomArea, const double robotSpeed) {
+    const double cleaningArea = cleanConfig().cleaningArea;
+    const double cleaningSide = std::sqrt(cleaningArea);
+    const double steps        = (roomArea / cleaningArea) + 1;
+    return steps * (2.0 * cleaningSide / robotSpeed);
+}
+
 double CleanPlugin::estimateServiceDuration(const IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    const auto& cfg = view.cfg;
-
-    const double roomArea     = view.world.room(o.roomName).m_area.value_or(1.0);
-    const double cleaningSide = std::sqrt(m_config.cleaningArea);
-    const double steps        = (roomArea / m_config.cleaningArea) + 1;
-    return steps * (2.0 * cleaningSide / cfg.robotSpeed);
+    return cleanDurationSeconds(view.world.room(o.roomName).m_area.value_or(1.0), view.cfg.robotSpeed);
 }
 
 void CleanPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {

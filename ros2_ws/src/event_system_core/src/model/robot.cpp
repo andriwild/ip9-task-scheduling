@@ -259,6 +259,18 @@ void Robot::beginRoomVisit(const std::string& location) {
     m_sightings.beginVisit(location);
 }
 
+void Robot::setServicing(const bool servicing) {
+    m_servicing = servicing;
+}
+
+bool Robot::isServicing() const {
+    return m_servicing;
+}
+
+void Robot::markRoomVisitCovered() {
+    m_sightings.markVisitCovered();
+}
+
 void Robot::observePerson(const int time, const std::string& personName, const bool seen) {
     m_sightings.observe(time, personName, seen);
 }

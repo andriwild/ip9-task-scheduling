@@ -33,11 +33,18 @@ class SightingLog {
     std::map<std::string, std::map<std::string, SightingCounts>> m_tally;
     std::string m_visitLocation;
     std::map<std::string, Sighting> m_visit;
+    bool m_visitCovered = false;
 
 public:
     void beginVisit(const std::string& location) {
         flushVisit();
         m_visitLocation = location;
+        m_visitCovered  = false;
+    }
+
+    // Only a robot that swept the whole room may claim a person was absent from it.
+    void markVisitCovered() {
+        m_visitCovered = true;
     }
 
     void observe(const int time, const std::string& personName, const bool seen) {
@@ -59,10 +66,14 @@ public:
 
     void flushVisit() {
         for (const auto& [name, sighting] : m_visit) {
+            if (sighting.kind == SightingKind::ABSENT && !m_visitCovered) {
+                continue;
+            }
             add(sighting);
         }
         m_visit.clear();
         m_visitLocation.clear();
+        m_visitCovered = false;
     }
 
     void add(const Sighting& sighting) {

@@ -23,7 +23,7 @@ public:
         , m_onArrive(std::move(onArrive))
     {}
 
-    std::shared_ptr<IEvent> withTime(int newTime) const override {
+    std::shared_ptr<IEvent> withTime(const int newTime) const override {
         auto copy = std::make_shared<StartDriveEvent>(*this);
         copy->time = newTime;
         copy->cancelled = false;
@@ -56,8 +56,8 @@ inline void requestDrive(ISimContext& ctx, const std::string& target) {
     ctx.pushEvent(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<RoomTarget>(target)));
 }
 
-inline void requestDrive(ISimContext& ctx, const Point& target, const Polygon& visibility, std::shared_ptr<IEvent> onArrive = nullptr) {
-    ctx.startActivity(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<PointTarget>(target, visibility), std::move(onArrive)));
+inline void requestDrive(ISimContext& ctx, const Point& target, const Polygon& visibility, std::shared_ptr<IEvent> onArrive = nullptr, const double speed = 0.0) {
+    ctx.startActivity(std::make_shared<StartDriveEvent>(ctx.getTime(), std::make_shared<PointTarget>(target, visibility, speed), std::move(onArrive)));
 }
 
 }  // namespace des

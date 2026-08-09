@@ -14,6 +14,7 @@ namespace des {
 enum class RoomType {
     WORKPLACE,
     CLASSROOM,
+    MEETING,
     TOILET,
     KITCHEN,
     OTHER
@@ -25,6 +26,9 @@ inline RoomType roomTypeFromString(const std::string& type) {
     }
     if (type == "CLASSROOM") {
         return RoomType::CLASSROOM;
+    }
+    if (type == "MEETING") {
+        return RoomType::MEETING;
     }
     if (type == "TOILET") {
         return RoomType::TOILET;
@@ -39,6 +43,7 @@ inline std::string roomTypeToString(const RoomType type) {
     switch (type) {
         case RoomType::WORKPLACE: return "WORKPLACE";
         case RoomType::CLASSROOM: return "CLASSROOM";
+        case RoomType::MEETING:   return "MEETING";
         case RoomType::TOILET:    return "TOILET";
         case RoomType::KITCHEN:   return "KITCHEN";
         case RoomType::OTHER:     return "OTHER";

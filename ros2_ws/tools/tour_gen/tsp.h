@@ -45,6 +45,15 @@ inline double distance(const Vec2& from, const Vec2& to) {
     return std::hypot(to.m_x - from.m_x, to.m_y - from.m_y);
 }
 
+// The only authority on how long a tour is: the points the robot actually drives.
+inline double pathDistance(const RoomTour& tour) {
+    double total = 0.0;
+    for (std::size_t i = 1; i < tour.m_path.size(); ++i) {
+        total += distance(tour.m_path[i - 1], tour.m_path[i]);
+    }
+    return total;
+}
+
 
 
 /**
