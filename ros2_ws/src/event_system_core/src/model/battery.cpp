@@ -1,6 +1,5 @@
 #include "battery.h"
 
-#include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
 
@@ -60,7 +59,7 @@ void Battery::updateConfig(
     m_cvThreshold          = cvThreshold;
     m_taperFraction        = taperFraction;
     m_chargeToFull         = chargeToFull;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Config updated");
+    DES_LOG_DEBUG("des.battery", "Config updated");
 }
 
 void Battery::updateBalance(const int time, const double energyConsumption) {
@@ -72,14 +71,14 @@ void Battery::updateBalance(const int time, const double energyConsumption) {
     const double capacityBefore = m_currentCapacity;
     m_currentCapacity -= capacityDiff;
 
-    //DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
+    //DES_LOG_DEBUG("des.battery", "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
 
     if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Battery Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
+        DES_LOG_DEBUG("des.battery", "Battery Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
     }
 
     if (m_currentCapacity <= 0) {
-        DES_LOG_ERROR(rclcpp::get_logger("des.battery"), "Battery discharged - no energy left");
+        DES_LOG_ERROR("des.battery", "Battery discharged - no energy left");
         m_depleted = true;
     }
     m_currentCapacity = clip(m_currentCapacity, 0.0, m_designCapacity);
@@ -110,7 +109,7 @@ void Battery::reset(const int startTime) {
     m_forceFull = false;
     m_depleted = false;
     m_dischargedAh = 0.0;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Reset: initial capactiy: %.1f", m_initialCapacity);
+    DES_LOG_DEBUG("des.battery", "Reset: initial capactiy: %.1f", m_initialCapacity);
 }
 
 BatteryProps Battery::getStats() const {
@@ -123,13 +122,13 @@ double Battery::getVoltage() const {
 
 bool Battery::isBatteryLow() const {
     const bool isLow = m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity;
-    //DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "isBatteryLow: %d", isLow);
+    //DES_LOG_DEBUG("des.battery", "isBatteryLow: %d", isLow);
     return isLow;
 }
 
 bool Battery::isBatteryFull() const {
     const bool isFull = m_currentCapacity > m_fullBatteryThreshold / 100 * m_designCapacity;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "isBatteryFull: %d", isFull);
+    DES_LOG_DEBUG("des.battery", "isBatteryFull: %d", isFull);
     return isFull;
 }
 
@@ -154,7 +153,7 @@ double Battery::timeToFull(const double phaseOnePowerWatts) const {
         const double phaseTwoStart = std::max(m_currentCapacity, cvCap);
         duration += capacityToTime(targetCap - phaseTwoStart, phaseOnePowerWatts * m_taperFraction);
     }
-    DES_LOG_DEBUG(rclcpp::get_logger("des.battery"), "Calculate time to full: %f", duration);
+    DES_LOG_DEBUG("des.battery", "Calculate time to full: %f", duration);
     return duration;
 }
 

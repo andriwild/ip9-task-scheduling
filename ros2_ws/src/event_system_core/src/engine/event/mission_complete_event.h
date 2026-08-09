@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
 #include "engine/contracts/i_event.h"
@@ -36,7 +35,7 @@ public:
             case ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
         };
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.event.mission_complete"), "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), missionStateStr(orderPtr->state).c_str(), execStr.c_str());
+        DES_LOG_DEBUG("des.event.mission_complete", "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), missionStateStr(orderPtr->state).c_str(), execStr.c_str());
         plugin.onMissionEnd(ctx, *orderPtr);
         ctx.completeOrder(this->orderPtr);
         ctx.notifyEvent(*this);

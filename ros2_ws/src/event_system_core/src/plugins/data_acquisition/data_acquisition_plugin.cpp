@@ -7,7 +7,6 @@
 #include "sim/scheduler.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "observer/ros.h"
 #include "data_acquisition_order.h"
 #include "states.h"
 
@@ -79,7 +78,7 @@ bool DataAcquisition::isFeasible(const IOrder& order, const ISimContext& context
         context.getRobot()->getLocation(), o.roomName);
     const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
     if (slack < 0) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"),
+        DES_LOG_DEBUG("des.plugin.data_acquisition",
                      "Mission %d infeasible: deadline %d, driveTime %.0fs from %s, now %d → slack %ds",
                      o.id, *o.deadline, driveTime, context.getRobot()->getLocation().c_str(),
                      context.getTime(), slack);
@@ -96,9 +95,9 @@ double DataAcquisition::estimateServiceDuration(const IOrder& /*order*/, const E
     return m_config.dataAcquisitionDuration;
 }
 
-void DataAcquisition::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
+void DataAcquisition::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {
     const auto& o = static_cast<const DataAcquisitionOrder&>(order);
-    observer.publishMeeting(
+    sink.publishMeeting(
         o.id,
         startTime,
         o.deadline.value_or(startTime),

@@ -1,6 +1,5 @@
 #include "states.h"
 
-#include <rclcpp/rclcpp.hpp>
 
 #include "../../util/log.h"
 #include "engine/contracts/i_sim_context.h"
@@ -10,7 +9,7 @@ namespace des {
 
 void InformationState::enter(Robot& robot) {
     RobotState::enter(robot);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.information.state"), "Enter Information");
+    DES_LOG_DEBUG("des.plugin.information.state", "Enter Information");
 }
 
 double InformationState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const {

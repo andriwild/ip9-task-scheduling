@@ -23,7 +23,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isConversating = dynamic_cast<ConversateState*>(ctx->getRobot()->getState()) != nullptr;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsConversating: %d", isConversating);
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsConversating: %d", isConversating);
         if (isConversating) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -41,7 +41,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "ConversationFinished (result: %d)", static_cast<int>(convResult));
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "ConversationFinished (result: %d)", static_cast<int>(convResult));
         if (convResult == Result::RUNNING) {
             return BT::NodeStatus::FAILURE;
         }
@@ -59,7 +59,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const auto convResult = ctx->getRobot()->getState()->getResult();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "WasConversationSuccessful: %s", convResult == Result::SUCCESS ? "Yes" : "No");
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "WasConversationSuccessful: %s", convResult == Result::SUCCESS ? "Yes" : "No");
         if (convResult == Result::SUCCESS) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -76,7 +76,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<StartAccompanyEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "Start Accompany Action");
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "Start Accompany Action");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -93,7 +93,7 @@ public:
         const auto convState = dynamic_cast<ConversateState*>(currentState);
         
         const bool isFoundPerson = convState && convState->conversationType == ConversateState::Type::FOUND_PERSON;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsFoundPersonConversation: %d", isFoundPerson);
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsFoundPersonConversation: %d", isFoundPerson);
         if (isFoundPerson) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -113,7 +113,7 @@ public:
         const auto convState = dynamic_cast<ConversateState*>(currentState);
 
         const bool isDropOff = convState && convState->conversationType == ConversateState::Type::DROP_OFF;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.conversation"), "IsDropOffConversation: %d", isDropOff);
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsDropOffConversation: %d", isDropOff);
         if (isDropOff) {
             return BT::NodeStatus::SUCCESS;
         }

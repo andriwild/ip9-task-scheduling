@@ -80,7 +80,11 @@ struct Room {
     RoomType m_roomType = RoomType::OTHER;
     RoomTour m_tour;
 
-    explicit Room(const std::string& name, const Point waypoint, const std::optional<double> area = std::nullopt) : m_name(name), m_waypoint(waypoint), m_area(area) {}
+    explicit Room(const std::string& name, const Point& waypoint, const std::optional<double> area = std::nullopt)
+    : m_name(name)
+    , m_waypoint(waypoint)
+    , m_area(area)
+    {}
 
     friend std::ostream& operator<<(std::ostream& os, const Room& r) {
         os << r.m_name << r.m_waypoint;

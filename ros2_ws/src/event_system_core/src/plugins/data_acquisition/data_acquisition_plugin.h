@@ -13,7 +13,6 @@ namespace des {
 
 class Scheduler;
 class ISimContext;
-class RosObserver;
 struct DataAcquisitionConfig {
     double dataAcquisitionDuration = 120.0;
     double rewardWeight = 0.12;
@@ -44,7 +43,7 @@ public:
     std::optional<std::string> targetLocation(const IOrder& order) const override;
     double estimateServiceDuration(const IOrder& order, const EstimationView& view) const override;
     double estimateReward(const IOrder& order, const EstimationView& view) const override;
-    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
+    void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const override;
 
     const DataAcquisitionConfig& config() const { return m_config; }
 

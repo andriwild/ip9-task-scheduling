@@ -25,7 +25,7 @@ SimulationContext::SimulationContext(
 {
     reseed(m_simConfig->seed);
     m_robot = std::make_unique<Robot>(m_simConfig, m_currentTime);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Simulation Context created!");
+    DES_LOG_DEBUG("des.context", "Simulation Context created!");
 }
 
 void SimulationContext::reseed(const unsigned int seed) {
@@ -33,7 +33,7 @@ void SimulationContext::reseed(const unsigned int seed) {
     m_worldRng.seed(seed);
     m_robotRng.seed(seed + ROBOT_SEED_OFFSET);
     m_persons.reseed(seed + PLACEMENT_SEED_OFFSET);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "RNG seeded with %u", seed);
+    DES_LOG_DEBUG("des.context", "RNG seeded with %u", seed);
 }
 
 void SimulationContext::reseedPersons() {
@@ -84,7 +84,7 @@ std::vector<OrderPtr> SimulationContext::peekScheduledOrdersUntil(const int unti
 void SimulationContext::setConfig(const std::shared_ptr<SimConfig> &newConfig) {
     m_simConfig = newConfig;
     m_robot->updateConfig(*newConfig);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Config updated");
+    DES_LOG_DEBUG("des.context", "Config updated");
 }
 
 void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) const {
@@ -270,7 +270,7 @@ const Room& SimulationContext::room(const std::string& name) const {
     static const Room unknown{"", Point{}};
     const auto it = m_rooms.find(name);
     if (it == m_rooms.end()) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context"), "Room '%s' not found", name.c_str());
+        DES_LOG_DEBUG("des.context", "Room '%s' not found", name.c_str());
         return unknown;
     }
     return it->second;

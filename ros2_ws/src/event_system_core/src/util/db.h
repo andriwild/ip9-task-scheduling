@@ -5,7 +5,6 @@
 #include <QSqlQuery>
 #include <QVariant>
 #include <optional>
-#include <rclcpp/rclcpp.hpp>
 #include <utility>
 
 #include "../model/person.h"
@@ -52,7 +51,7 @@ public:
         m_db.setPassword(m_pw.data());
 
         if (!m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "cant open db connection to %s [ %s, %s ]", m_dbName.c_str(), m_user.c_str(), m_pw.c_str());
+            DES_LOG_ERROR("des.io.db", "cant open db connection to %s [ %s, %s ]", m_dbName.c_str(), m_user.c_str(), m_pw.c_str());
             return false;
         }
         return true;
@@ -60,17 +59,17 @@ public:
 
     std::optional<Person> personByName(const std::string& firstName, const std::string& lastName) {
         if (!m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
+            DES_LOG_ERROR("des.io.db", "Database not connected");
             return std::nullopt;
         }
-        DES_LOG_DEBUG(rclcpp::get_logger("des.io.db"), "personByName");
+        DES_LOG_DEBUG("des.io.db", "personByName");
         QSqlQuery query;
         query.prepare("SELECT * FROM people WHERE first_name = :firstName AND last_name = :lastName");
         query.bindValue(":firstName", QString::fromStdString(firstName));
         query.bindValue(":lastName", QString::fromStdString(lastName));
 
         if (!query.exec()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "personByName Query error: %s %s", firstName.c_str(), lastName.c_str());
+            DES_LOG_ERROR("des.io.db", "personByName Query error: %s %s", firstName.c_str(), lastName.c_str());
             return std::nullopt;
         }
 
@@ -89,7 +88,7 @@ public:
 
     std::optional<double> areaByName(const std::string& zoneName) {
         if (!m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database not connected");
+            DES_LOG_ERROR("des.io.db", "Database not connected");
             return std::nullopt;
         }
         QSqlQuery query;
@@ -97,7 +96,7 @@ public:
         query.bindValue(":zoneName", QString::fromStdString(zoneName));
 
         if (!query.exec()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "areaByName Query error: %s", zoneName.c_str());
+            DES_LOG_ERROR("des.io.db", "areaByName Query error: %s", zoneName.c_str());
             return std::nullopt;
         }
 
@@ -109,7 +108,7 @@ public:
 
     std::optional<RoomMap> rooms() {
         if (!m_db.isOpen() && !m_db.open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "Database error: %s", m_db.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR("des.io.db", "Database error: %s", m_db.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         QSqlQuery query;
@@ -121,7 +120,7 @@ public:
                 "LEFT JOIN LATERAL ST_DumpPoints(ST_ExteriorRing(sz.polygon)) d ON true "
                 "WHERE d.path IS NULL OR d.path[1] < ST_NPoints(ST_ExteriorRing(sz.polygon)) "
                 "ORDER BY p.name, d.path[1]")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.db"), "rooms Query failed: %s", query.lastError().text().toStdString().c_str());
+            DES_LOG_ERROR("des.io.db", "rooms Query failed: %s", query.lastError().text().toStdString().c_str());
             return std::nullopt;
         }
         RoomMap rooms;

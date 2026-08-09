@@ -25,7 +25,7 @@ public:
         const auto& order = static_cast<DataAcquisitionOrder&>(*ctx->getOrderPtr());
         const auto robot = ctx->getRobot();
         const bool atTarget = robot->getLocation() == order.roomName && !robot->isDriving();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "IsAtTargetLocation: %d", atTarget);
+        DES_LOG_DEBUG("des.plugin.data_acquisition", "IsAtTargetLocation: %d", atTarget);
         return atTarget ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -42,7 +42,7 @@ public:
             return BT::NodeStatus::RUNNING;  // resumed mid-drive after interrupt
         }
         const auto& order = static_cast<DataAcquisitionOrder&>(*ctx->getOrderPtr());
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "GoToLocation: -> %s", order.roomName.c_str());
+        DES_LOG_DEBUG("des.plugin.data_acquisition", "GoToLocation: -> %s", order.roomName.c_str());
         requestDrive(*ctx, order.roomName);
         return BT::NodeStatus::RUNNING;
     }
@@ -52,7 +52,7 @@ public:
         const auto& order = static_cast<DataAcquisitionOrder&>(*ctx->getOrderPtr());
         const auto robot = ctx->getRobot();
         if (robot->getLocation() == order.roomName && !robot->isDriving()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "GoToLocation: arrived at %s", order.roomName.c_str());
+            DES_LOG_DEBUG("des.plugin.data_acquisition", "GoToLocation: arrived at %s", order.roomName.c_str());
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;
@@ -71,7 +71,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         if (order && order->state == MissionState::PENDING) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "ExecuteAcquisition: start");
+            DES_LOG_DEBUG("des.plugin.data_acquisition", "ExecuteAcquisition: start");
             ctx->pushEvent(std::make_shared<StartAcquisitionEvent>(ctx->getTime(), order));
         }
         return BT::NodeStatus::RUNNING;
@@ -81,7 +81,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == MissionState::COMPLETED) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.data_acquisition"), "ExecuteAcquisition: done");
+            DES_LOG_DEBUG("des.plugin.data_acquisition", "ExecuteAcquisition: done");
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;

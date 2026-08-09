@@ -6,11 +6,10 @@
 #include "engine/context.h"
 #include "engine/event.h"
 #include "../model/occupancy.h"
-#include "../sim/ros/path_node.h"
 #include "../sim/matrix_planner.h"
 #include "../init/config_loader.h"
-#include "../observer/ros.h"
 #include "engine/event_queue.h"
+#include "runner/run_state.h"
 #include "engine/contracts/i_event.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
@@ -34,8 +33,9 @@ public:
 
     virtual void setupApplication() = 0;
     virtual void updateConfig() = 0;
-    [[nodiscard]] virtual int loadAppState() const = 0;
+    [[nodiscard]] virtual RunState loadAppState() const = 0;
     virtual void enterPause() const = 0;
+    virtual void onSimulationComplete() = 0;
     virtual void reset() = 0;
     virtual void shutdown() = 0;
 
@@ -52,7 +52,7 @@ public:
         Scheduler& scheduler,
         std::string idleLocation
     ) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Start filling event queue");
+        DES_LOG_DEBUG("des.runner", "Start filling event queue");
         SortedEventQueue queue;
 
         const auto missions = scheduler.createMissionDispatchEvents(orders, idleLocation);
@@ -60,7 +60,7 @@ public:
         for (const auto& mission : missions) {
             queue.push(mission);
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
+        DES_LOG_INFO("des.runner", "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
         return queue;
     }
 
@@ -88,12 +88,14 @@ protected:
     RoomMap m_rooms;
     std::shared_ptr<SimConfig> m_config;
     std::shared_ptr<IPathPlanner> m_planner;
-    std::shared_ptr<PathPlannerNode> m_plannerNode;  // null in matrix mode
     metrics::MetricsReporter m_reporter;
     OrderList m_orders;
     std::vector<BackgroundTemplate> m_backgroundTemplates;
-    std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> m_executor;
-    std::thread m_rosThread;
+
+    // Only the ROS-aware runners can serve this, see RosRunner.
+    virtual std::shared_ptr<IPathPlanner> createNav2Planner() {
+        throw std::runtime_error("use_distance_matrix=false requires the ROS runner");
+    }
 
     void createPlanner() {
         const auto config = ConfigLoader::loadSimConfig();
@@ -108,11 +110,10 @@ protected:
                 throw std::runtime_error("use_distance_matrix=true but no matrix in " + BUILDING_FILE);
             }
             m_planner = std::make_shared<MatrixPlanner>(std::move(data->first), std::move(data->second));
-            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: matrix (%s)", BUILDING_FILE.c_str());
+            DES_LOG_INFO("des.runner", "Distance source: matrix (%s)", BUILDING_FILE.c_str());
         } else {
-            m_plannerNode = std::make_shared<PathPlannerNode>(m_rooms);
-            m_planner = m_plannerNode;
-            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Distance source: Nav2 planner");
+            m_planner = createNav2Planner();
+            DES_LOG_INFO("des.runner", "Distance source: Nav2 planner");
         }
     }
 
@@ -131,7 +132,7 @@ protected:
 
         const int simStartTime = m_config->simStartTime;
         const int simEndTime   = m_config->simStartTime + m_config->simDuration;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Sim window: %d → %d", simStartTime, simEndTime);
+        DES_LOG_DEBUG("des.runner", "Sim window: %d → %d", simStartTime, simEndTime);
 
         m_eventQueue.push(std::make_shared<SimulationStartEvent>(simStartTime));
         m_eventQueue.push(std::make_shared<SimulationEndEvent>(simEndTime));
@@ -152,18 +153,18 @@ protected:
     }
 
     static OrderList loadOrders(const std::string& path, const int simStartTime, const int simEndTime) {
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load orders: %s", path.c_str());
+        DES_LOG_INFO("des.runner", "Load orders: %s", path.c_str());
         const auto orders = ConfigLoader::loadOrderConfig(path.c_str(), simStartTime, simEndTime);
         if (!orders.has_value()) {
             throw std::runtime_error("Could not load orders from file");
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu orders", orders.value().size());
+        DES_LOG_INFO("des.runner", "Successful loaded %zu orders", orders.value().size());
         return orders.value();
     }
 
     // generate interrupt events on a daily basis within a time window
     void addEventsFromInterruptGenerators(const std::string& path) {
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Load ad-hoc generators: %s", path.c_str());
+        DES_LOG_INFO("des.runner", "Load ad-hoc generators: %s", path.c_str());
 
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
         int eventId = 100000; // TODO: magic number
@@ -190,7 +191,7 @@ protected:
                 }
             }
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
+        DES_LOG_INFO("des.runner", "Successful loaded %zu ad-hoc generators", adHocGenerators->size());
     }
 
     void addBackgroundReleaseEvents(const int simStartTime, const int simEndTime) {
@@ -222,7 +223,7 @@ protected:
         if (!map.has_value()) {
             throw std::runtime_error("Could not load building snapshot from " + BUILDING_FILE + ". Generate it first with ./build_snapshot.sh (needs DB + Nav2).");
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Loaded %zu rooms from building snapshot", map.value().size());
+        DES_LOG_INFO("des.runner", "Loaded %zu rooms from building snapshot", map.value().size());
         return map.value();
     }
 
@@ -238,7 +239,7 @@ protected:
         if (!merged.has_value()) {
             throw std::runtime_error("Could not load room tours from " + path + ". Generate them first with ./build_tours.sh " + radius.str());
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Merged %zu room tours from %s", merged.value(), path.c_str());
+        DES_LOG_INFO("des.runner", "Merged %zu room tours from %s", merged.value(), path.c_str());
 
         // check if some rooms have no tours
         // docks are stored as room without tours
@@ -253,34 +254,10 @@ protected:
             for (std::size_t i = 0; i < withoutTour.size(); ++i) {
                 oss << (i ? ", " : "") << withoutTour[i];
             }
-            DES_LOG_WARN(rclcpp::get_logger("des.runner"), "%zu room(s) without tour: %s", withoutTour.size(), oss.str().c_str());
+            DES_LOG_WARN("des.runner", "%zu room(s) without tour: %s", withoutTour.size(), oss.str().c_str());
         }
     }
 
-    // if distance matrix is not used, the distance between waypoints are fetchted by a nav2 planner
-    virtual void initROS(const std::vector<std::shared_ptr<rclcpp::Node>> &nodes) {
-        // leads to spam messages on lower logger level
-        rclcpp::get_logger("event_system_planner_node.rclcpp_action").set_level(rclcpp::Logger::Level::Warn);
-
-        if (m_plannerNode) {
-            if (!m_plannerNode->isReady()) {
-                throw std::runtime_error("Nav2 Planner initialization failed");
-            }
-            DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Planner ready");
-        }
-
-        m_executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
-        m_rosThread = std::thread([this, nodes] {
-            for (const auto& node : nodes) {
-                m_executor->add_node(node);
-            }
-            m_executor->spin();
-            for (const auto& node : nodes) {
-                m_executor->remove_node(node);
-            }
-        });
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Launched all ROS Nodes");
-    }
 
 };
 

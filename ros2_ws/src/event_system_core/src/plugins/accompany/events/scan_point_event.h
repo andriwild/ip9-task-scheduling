@@ -28,7 +28,7 @@ public:
         const auto& personName = accompany.personName;
         const bool seen = ctx.robotSeesPerson(personName);
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "ScanPoint t=%d room=%s point=%zu person=%s seen=%d", this->time, ctx.getRobot()->getLocation().c_str(), accompany.scanIndex, personName.c_str(), seen);
+        DES_LOG_DEBUG("des.plugin.accompany.search", "ScanPoint t=%d room=%s point=%zu person=%s seen=%d", this->time, ctx.getRobot()->getLocation().c_str(), accompany.scanIndex, personName.c_str(), seen);
 
         if (seen) {
             ctx.getRobot()->setIsPersonVisible(true);

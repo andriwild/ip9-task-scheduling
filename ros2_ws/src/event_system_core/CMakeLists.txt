@@ -22,24 +22,18 @@ find_package(event_system_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets Charts Sql REQUIRED)
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+# des_core and des_headless are ROS-free and live in their own CMake project.
+add_subdirectory(src)
+
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h" "src/*.hpp")
 
-get_filename_component(DES_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../config" ABSOLUTE)
-add_compile_definitions(DES_CONFIG_DIR="${DES_CONFIG_DIR}")
-
-add_executable(event_system_core ${SOURCES} ${HEADERS})
-
-target_include_directories(event_system_core PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-  $<INSTALL_INTERFACE:include>
+add_executable(event_system_core
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/runner/impl/sim_runner.cpp
 )
-
 target_link_libraries(event_system_core
+  des_core
   Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Charts Qt5::Sql
-  nlohmann_json::nlohmann_json
-  atomic
 )
 
 ament_target_dependencies(event_system_core
@@ -53,7 +47,7 @@ ament_target_dependencies(event_system_core
   nav2_msgs
 )
 
-install(TARGETS event_system_core
+install(TARGETS event_system_core des_headless
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -69,6 +63,8 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   set(TEST_FIXTURES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/fixtures")
+  get_filename_component(DES_CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../config" ABSOLUTE)
+  add_compile_definitions(DES_CONFIG_DIR="${DES_CONFIG_DIR}")
 
   # EventQueue tests
   ament_add_gtest(test_event_queue test/test_event_queue.cpp src/engine/event_queue.cpp)

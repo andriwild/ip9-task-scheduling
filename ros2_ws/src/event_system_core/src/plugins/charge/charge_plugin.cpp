@@ -46,6 +46,6 @@ std::optional<std::string> ChargePlugin::targetLocation(const IOrder& order) con
     return static_cast<const ChargeOrder&>(order).dockLocation;
 }
 
-void ChargePlugin::publishTimeline(const IOrder& /*order*/, int /*startTime*/, RosObserver& /*observer*/) const {}
+void ChargePlugin::publishTimeline(const IOrder& /*order*/, int /*startTime*/, ITimelineSink& /*sink*/) const {}
 
 }  // namespace des

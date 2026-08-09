@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "observer.h"
+#include "engine/contracts/i_timeline_sink.h"
 #include "../plugins/order_registry.h"
 
 #include "event_system_msgs/msg/timeline_event.hpp"
@@ -13,7 +14,7 @@
 
 namespace des {
 
-class RosObserver final : public IObserver {
+class RosObserver final : public IObserver, public ITimelineSink {
 public:
     explicit RosObserver(rclcpp::Node::SharedPtr node) : m_node(std::move(node)) {
         auto qos = rclcpp::QoS(rclcpp::KeepAll()).reliable().transient_local();
@@ -69,7 +70,7 @@ public:
                         const std::string& personName,
                         const std::string& roomName,
                         const std::string& description,
-                        const int executionMode) {
+                        const int executionMode) override {
         auto msg = event_system_msgs::msg::TimelineMeeting();
         msg.start_time       = startTime;
         msg.id               = id;

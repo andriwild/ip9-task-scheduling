@@ -80,7 +80,7 @@ bool Robot::isBusy() const {
 }
 
 void Robot::updateConfig(const SimConfig& config) {
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot: Updating configuration");
+    DES_LOG_DEBUG("des.robot", "Robot: Updating configuration");
     setDriveSpeed(config.robotSpeed);
     m_dockLocation = config.dockLocation;
     m_bat->updateConfig(
@@ -104,7 +104,7 @@ void Robot::setLocation(const std::string& location) {
     if (m_currentLocation == getIdleLocation()) {
         m_isCharging = true;
     }
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot location set to: %s", location.c_str());
+    DES_LOG_DEBUG("des.robot", "Robot location set to: %s", location.c_str());
 }
 
 Point Robot::getPosition() const {
@@ -129,7 +129,7 @@ std::string Robot::getTargetLocation() const {
 
 void Robot::setTargetLocation(const std::string& location) {
     m_targetLocation = location;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot target location set to: %s", location.c_str());
+    DES_LOG_DEBUG("des.robot", "Robot target location set to: %s", location.c_str());
 }
 
 RobotState* Robot::getState() const {
@@ -165,7 +165,7 @@ bool Robot::updateAndGetChargingRequired() {
     if (m_bat->isBatteryLow()) {
         m_chargingRequired = true;
     }
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot charging required: %d", m_chargingRequired);
+    DES_LOG_DEBUG("des.robot", "Robot charging required: %d", m_chargingRequired);
     return m_chargingRequired;
 }
 
@@ -227,7 +227,7 @@ double Robot::getCurrentSpeed() const {
 
 void Robot::setSpeed(const double newSpeed) {
     m_currentSpeed = newSpeed;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot speed set to: %.2f", newSpeed);
+    DES_LOG_DEBUG("des.robot", "Robot speed set to: %.2f", newSpeed);
 }
 
 double Robot::getDriveSpeed() const {
@@ -236,7 +236,7 @@ double Robot::getDriveSpeed() const {
 
 void Robot::setDriveSpeed(const double speed) {
     m_driveSpeed = speed;
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot"), "Robot drive speed set to: %.2f", speed);
+    DES_LOG_DEBUG("des.robot", "Robot drive speed set to: %.2f", speed);
 }
 
 std::string Robot::getIdleLocation() const {

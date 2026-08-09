@@ -24,7 +24,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasPending = ctx->hasScheduledMission();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasPendingMission: %d", hasPending);
+        DES_LOG_DEBUG("des.bt.mission_control", "HasPendingMission: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
@@ -40,7 +40,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx    = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isBusy = ctx->getRobot()->isBusy();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsRobotBusy: %d", isBusy);
+        DES_LOG_DEBUG("des.bt.mission_control", "IsRobotBusy: %d", isBusy);
         if (isBusy) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -62,7 +62,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx      = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool assigned = ctx->getOrderPtr() != nullptr;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "IsMissionAssigned: %d", assigned);
+        DES_LOG_DEBUG("des.bt.mission_control", "IsMissionAssigned: %d", assigned);
         return assigned ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -78,7 +78,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "AcceptMissionAction for order %d (type=%s)",
+        DES_LOG_DEBUG("des.bt.mission_control", "AcceptMissionAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
         // PENDING -> IN_PROGRESS transition happens in the plugin's StartXxxEvent,
@@ -101,7 +101,7 @@ public:
 
         assert(ctx->hasScheduledMission());
         const auto order = ctx->popScheduledMission();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"),
+        DES_LOG_DEBUG("des.bt.mission_control",
                      "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
                      order->id, order->type.c_str());
         order->state     = MissionState::REJECTED;
@@ -120,7 +120,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx     = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasBg   = ctx->hasBackgroundMission();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "HasBackgroundMission: %d", hasBg);
+        DES_LOG_DEBUG("des.bt.mission_control", "HasBackgroundMission: %d", hasBg);
         return hasBg ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -168,13 +168,13 @@ public:
         const double missionWh = plugin.estimateMissionEnergy(*order, *ctx, robot->getLocation());
         const bool energyFeasible = currentWh - missionWh >= reserveWh;
         if (!energyFeasible) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin"),
+            DES_LOG_DEBUG("des.plugin",
                          "Mission %d infeasible: energy %.1fWh, mission needs %.1fWh, reserve %.1fWh — charge first",
                          order->id, currentWh, missionWh, reserveWh);
         }
 
         const bool isFeasible = timeFeasible && energyFeasible;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_control"), "MissionFeasibilityCheck: %d", isFeasible);
+        DES_LOG_DEBUG("des.bt.mission_control", "MissionFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;
         }

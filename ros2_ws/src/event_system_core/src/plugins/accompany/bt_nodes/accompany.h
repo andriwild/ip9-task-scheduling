@@ -25,7 +25,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isAccompany = dynamic_cast<AccompanyState*>(ctx->getRobot()->getState()) != nullptr;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "IsAccompany: %d", isAccompany);
+        DES_LOG_DEBUG("des.plugin.accompany.accompany", "IsAccompany: %d", isAccompany);
         return isAccompany ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -40,7 +40,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot = ctx->getRobot();
         const bool arrived = !robot->isDriving() && robot->getLocation() == robot->getTargetLocation();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "HasArrived: %d", arrived);
+        DES_LOG_DEBUG("des.plugin.accompany.accompany", "HasArrived: %d", arrived);
         return arrived ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -55,7 +55,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
         const bool arrived = ctx->getRobot()->getLocation() == order.roomName;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "ArrivedWithPerson: %d", arrived);
+        DES_LOG_DEBUG("des.plugin.accompany.accompany", "ArrivedWithPerson: %d", arrived);
         return arrived ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -69,7 +69,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.accompany"), "Start Drop-off Conversation");
+        DES_LOG_DEBUG("des.plugin.accompany.accompany", "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;
     }
 };

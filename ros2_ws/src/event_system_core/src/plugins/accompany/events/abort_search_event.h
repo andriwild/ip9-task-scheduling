@@ -30,14 +30,14 @@ public:
             const std::string loc  = ctx.getPersonLocation(personName);
             if (loc == "OUTDOOR") {
                 accompany->abortReason = SearchAbortReason::OUTSIDE;
-                DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Abort Search for %s: person is OUTSIDE the building", personName.c_str());
+                DES_LOG_DEBUG("des.plugin.accompany.search", "Abort Search for %s: person is OUTSIDE the building", personName.c_str());
             } else {
                 const bool unreachable = isSearchExcluded(ctx.getConfig()->searchExcludedRooms, loc);
                 accompany->abortReason = unreachable ? SearchAbortReason::IN_BUILDING_UNREACHABLE
                                                      : SearchAbortReason::IN_BUILDING_FINDABLE;
                 const auto& plan    = accompany->plannedSearch;
                 const bool searched = std::find(plan.begin(), plan.end(), loc) != plan.end();
-                DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"),
+                DES_LOG_DEBUG("des.plugin.accompany.search",
                              "Abort Search for %s: person was IN BUILDING at %s (%s)",
                              personName.c_str(), loc.c_str(),
                              unreachable ? "unreachable room (excluded from search)" : (searched ? "searched room, timing miss" : "unsearched room, belief miss"));

@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
 #include "model/order.h"
@@ -97,7 +96,7 @@ class BackgroundMissionPool {
 public:
     void add(const OrderPtr& order) {
         m_missions.push_back(order);
-        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Background mission added - list size: %zu", m_missions.size());
+        DES_LOG_DEBUG("des.mission.background", "Background mission added - list size: %zu", m_missions.size());
     }
 
     bool has() const {
@@ -195,7 +194,7 @@ public:
         // builds a problem instance containing parameters (constraints, budget) and a list of locations to visit 
         const auto problem = buildMissionInstance(EstimationView{ctx, ctx, *cfg}, ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "No plannable background missions (pool=%zu)", m_missions.size());
+            DES_LOG_DEBUG("des.mission.background", "No plannable background missions (pool=%zu)", m_missions.size());
             return;
         }
 
@@ -203,7 +202,7 @@ public:
         const int graspSeed = static_cast<int>(ctx.getConfig()->seed + GRASP_SEED_OFFSET);
         const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"), "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
+        DES_LOG_DEBUG("des.mission.background", "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 
 
         // generate a tour of orderPtr, which the robot can process
@@ -228,7 +227,7 @@ public:
             }
         }
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.mission.background"),
+        DES_LOG_DEBUG("des.mission.background",
                     "Planned %zu/%zu background missions (%d charge stops, time=%ds, energy=%.1fWh, reserve=%.1fWh over %zu scheduled, strategy=%s)",
                     m_pending.size(), m_missions.size(), chargeStops, timeBudget, energyBudget, requiredWh, reserve.missionCount,
                     energyReserveStrategyToString(cfg->energyReserveStrategy).c_str());

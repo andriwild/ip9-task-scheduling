@@ -10,3 +10,5 @@ bt_config.xml
 **/__pycache__
 bench
 vislib_test
+build-headless/
+cmake-build-*/

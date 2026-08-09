@@ -25,7 +25,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         const bool isIdle = ctx->getRobot()->getStateType() == RobotStateType::IDLE && !ctx->getRobot()->isDriving();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "IsIdle: %d", isIdle);
+        DES_LOG_DEBUG("des.bt.idle", "IsIdle: %d", isIdle);
         if (isIdle) {
             return BT::NodeStatus::SUCCESS;
         }
@@ -44,15 +44,15 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Docking: already at dock");
+            DES_LOG_DEBUG("des.bt.idle", "Docking: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
         // If the robot is already driving back, do nothing. The in-flight StopDriveEvent will trigger the next tick.
         if (!ctx->getRobot()->isDriving()) {
             requestDrive(*ctx, ctx->getRobot()->getIdleLocation());
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
+            DES_LOG_DEBUG("des.bt.idle", "Not at dock — start driving to %s", ctx->getRobot()->getIdleLocation().c_str());
         } else {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "Already driving back to dock");
+            DES_LOG_DEBUG("des.bt.idle", "Already driving back to dock");
         }
         return BT::NodeStatus::FAILURE;
     }
@@ -67,7 +67,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool hasPending = ctx->hasScheduledMission();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.idle"), "HasPendingMissionIdle: %d", hasPending);
+        DES_LOG_DEBUG("des.bt.idle", "HasPendingMissionIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }

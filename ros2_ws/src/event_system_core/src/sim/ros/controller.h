@@ -11,6 +11,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "event_system_msgs/srv/set_system_state.hpp"
+#include "runner/run_state.h"
 
 
 namespace des {
@@ -19,7 +20,7 @@ using SystemState = event_system_msgs::srv::SetSystemState;
 
 class ControllerNode : public rclcpp::Node {
 public:
-  std::atomic<int> currentState{ SystemState::Request::PAUSE };
+  std::atomic<RunState> currentState{ RunState::Pause };
 
   ControllerNode() : Node("des_controller_node") {
         m_subscription = this->create_service<SystemState>(
@@ -39,23 +40,22 @@ private:
         const std::shared_ptr<SystemState::Response> &response
     ) {
     response->success = true;
-    int old_state = currentState.load();
-    currentState.store(request->command_id);
-
     switch (request->command_id) {
         case SystemState::Request::RUN:
+            currentState.store(RunState::Run);
             response->message = "Running";
             break;
         case SystemState::Request::PAUSE:
+            currentState.store(RunState::Pause);
             response->message = "Paused";
             break;
         case SystemState::Request::RESET:
+            currentState.store(RunState::Reset);
             response->message = "Reset";
             break;
         default:
             response->success = false;
             response->message = "failed";
-            currentState.store(old_state);
     }
   }
 

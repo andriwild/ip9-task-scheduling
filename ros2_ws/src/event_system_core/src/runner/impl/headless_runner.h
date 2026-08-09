@@ -36,42 +36,25 @@ public:
         m_rooms = loadRooms();
 
         createPlanner();
-        std::vector<std::shared_ptr<rclcpp::Node>> nodes;
-        if (m_plannerNode) nodes.push_back(m_plannerNode);
-        IAppRunner::initROS(nodes);
     }
 
-    ~HeadlessRunner() override {
-        if (rclcpp::ok()) {
-            HeadlessRunner::shutdown();
-            rclcpp::shutdown();
-        }
+    ~HeadlessRunner() override = default;
 
-        if (m_rosThread.joinable()) {
-            m_rosThread.join();
-        }
-    }
-
-    static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
-        rclcpp::init(argc, argv);
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "\n----- Descrete Event Sytem: Headless Mode -----");
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
+    static std::unique_ptr<IAppRunner> create(int, char**) {
+        DES_LOG_INFO("des.runner", "\n----- Descrete Event Sytem: Headless Mode -----");
+        DES_LOG_INFO("des.runner", "C++ Version: %ld", __cplusplus);
 
         return std::make_unique<HeadlessRunner>();
     }
 
     void setupApplication() override;
     void updateConfig() override;
-    int loadAppState() const override;
+    RunState loadAppState() const override;
     void enterPause() const override;
     void reset() override;
-    void onSimulationComplete();
+    void onSimulationComplete() override;
 
-    void shutdown() override {
-        if (m_executor) {
-            m_executor->cancel();
-        }
-    }
+    void shutdown() override {}
 
 private:
     bool loadNextRound();

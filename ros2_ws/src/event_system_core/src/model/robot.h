@@ -6,7 +6,6 @@
 #pragma once
 
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
 #include <vector>
 
 #include "../util/log.h"

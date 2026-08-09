@@ -23,7 +23,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool chargingRequired = ctx->getRobot()->updateAndGetChargingRequired();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "IsBatteryLow: %d", chargingRequired);
+        DES_LOG_DEBUG("des.bt.charge", "IsBatteryLow: %d", chargingRequired);
         return chargingRequired ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
 };
@@ -37,7 +37,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isCharging = ctx->getRobot()->getState()->getType() == RobotStateType::CHARGING;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge.is_charging"), "%d", isCharging);
+        DES_LOG_DEBUG("des.bt.charge.is_charging", "%d", isCharging);
         return isCharging ? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
 };
@@ -107,7 +107,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx          = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isTaskActive = ctx->getOrderPtr() != nullptr;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "IsTaskActive: %d", isTaskActive);
+        DES_LOG_DEBUG("des.bt.charge", "IsTaskActive: %d", isTaskActive);
         return isTaskActive? BT::NodeStatus::SUCCESS: BT::NodeStatus::FAILURE;
     }
 };
@@ -120,17 +120,17 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "GoToDock");
+        DES_LOG_DEBUG("des.bt.charge", "GoToDock");
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
         ctx->changeRobotState(std::make_unique<ChargeState>());
         if (ctx->getRobot()->getLocation() == ctx->getRobot()->getIdleLocation()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Docking check: already at dock");
+            DES_LOG_DEBUG("des.bt.charge", "Docking check: already at dock");
             return BT::NodeStatus::SUCCESS;
         }
         if (!ctx->getRobot()->isDriving()) {
             requestDrive(*ctx, ctx->getRobot()->getIdleLocation());
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Not at dock, start driving to dock");
+            DES_LOG_DEBUG("des.bt.charge", "Not at dock, start driving to dock");
         }
         return BT::NodeStatus::FAILURE;
     }
@@ -179,12 +179,12 @@ public:
         const double timeToTransition = ctx->getRobot()->batteryTimeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
             ctx->pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(ctx->getTime() + timeToTransition)));
-            DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Phase transition in: %.1fs", timeToTransition);
+            DES_LOG_DEBUG("des.bt.charge", "Phase transition in: %.1fs", timeToTransition);
         }
 
         ctx->getRobot()->m_batteryFullEventScheduled = true;
         ctx->notifyChargeStarted();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.bt.charge"), "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
+        DES_LOG_DEBUG("des.bt.charge", "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
         return BT::NodeStatus::SUCCESS;
     }
 };

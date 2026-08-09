@@ -4,7 +4,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
 
 #include "../op.h"
 #include "../op_build.h"
@@ -38,7 +37,7 @@ inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const 
     const auto& plugin = OrderRegistry::instance().get(order->type);
     const auto target  = plugin.targetLocation(*order);
     if (!target) {
-        DES_LOG_WARN(rclcpp::get_logger("des.algo.op"), "Mission %d (type=%s) has no target location, excluded from plan", order->id, order->type.c_str());
+        DES_LOG_WARN("des.algo.op", "Mission %d (type=%s) has no target location, excluded from plan", order->id, order->type.c_str());
         return std::nullopt;
     }
     return PlannedNode{

@@ -4,7 +4,6 @@
 #include <memory>
 
 #include "bt_nodes/information.h"
-#include "observer/ros.h"
 #include "information_order.h"
 #include "states.h"
 #include "../../util/rnd.h"
@@ -50,8 +49,8 @@ double InformationPlugin::estimateMissionDuration(const IOrder& order, const ISi
     return info.sampledDuration;
 }
 
-void InformationPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
-    observer.publishMeeting(
+void InformationPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {
+    sink.publishMeeting(
         order.id,
         startTime,
         startTime,

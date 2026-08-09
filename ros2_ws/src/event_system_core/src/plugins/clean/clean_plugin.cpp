@@ -7,7 +7,6 @@
 #include "sim/scheduler.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
-#include "observer/ros.h"
 #include <algorithm>
 #include "clean_order.h"
 #include "states.h"
@@ -81,7 +80,7 @@ bool CleanPlugin::isFeasible(const IOrder& order, const ISimContext& context) co
     const double driveTime = context.getScheduler().robotDriveTime(context.getRobot()->getLocation(), o.roomName);
     const int slack = static_cast<int>(*o.deadline - driveTime - context.getTime());
     if (slack < 0) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.clean"),
+        DES_LOG_DEBUG("des.plugin.clean",
                      "Mission %d infeasible: deadline %d, driveTime %.0fs from %s, now %d → slack %ds",
                      o.id, *o.deadline, driveTime, context.getRobot()->getLocation().c_str(),
                      context.getTime(), slack);
@@ -104,9 +103,9 @@ double CleanPlugin::estimateServiceDuration(const IOrder& order, const Estimatio
     return steps * (2.0 * cleaningSide / cfg.robotSpeed);
 }
 
-void CleanPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
+void CleanPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    observer.publishMeeting(
+    sink.publishMeeting(
         o.id,
         startTime,
         o.deadline.value_or(startTime),

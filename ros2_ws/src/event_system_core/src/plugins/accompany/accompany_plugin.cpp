@@ -17,7 +17,6 @@
 #include "algo/search/search_instance_builder.h"
 #include "algo/search/search_reward.h"
 #include "algo/search/search_solver.h"
-#include "observer/ros.h"
 #include "search_exclusion.h"
 #include "states.h"
 
@@ -246,10 +245,10 @@ bool AccompanyOrderPlugin::isFeasible(const IOrder& order, const ISimContext& co
     const int slack = static_cast<int>(std::floor(order.deadline.value() - missionDuration - context.getTime()));
 
     if (slack >= 0) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"), "Mission %u is feasible", order.id);
+        DES_LOG_DEBUG("des.plugin.accompany", "Mission %u is feasible", order.id);
         return true;
     }
-    DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany"),
+    DES_LOG_DEBUG("des.plugin.accompany",
                  "Mission %u (%s -> %s) infeasible: deadline %d, optimistic mission %.0fs from %s, now %d → slack %ds",
                  order.id, a.personName.c_str(), a.roomName.c_str(),
                  *order.deadline, missionDuration, robotLocation.c_str(),
@@ -306,9 +305,9 @@ double AccompanyOrderPlugin::estimateMissionDuration(const IOrder& order, const 
     return searchSec + accompanyConfig().appointmentDuration + driveBackSec;
 }
 
-void AccompanyOrderPlugin::publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const {
+void AccompanyOrderPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {
     const auto& a = static_cast<const AccompanyOrder&>(order);
-    observer.publishMeeting(
+    sink.publishMeeting(
         a.id,
         startTime,
         a.deadline.value_or(0),

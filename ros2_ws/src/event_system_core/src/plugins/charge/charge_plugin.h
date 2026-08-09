@@ -11,7 +11,6 @@ namespace des {
 
 class Scheduler;
 class ISimContext;
-class RosObserver;
 class ChargePlugin : public IOrderPlugin {
 public:
     static constexpr auto kTypeName = kChargeOrderType;
@@ -33,7 +32,7 @@ public:
     int planDispatchTime(const IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const IOrder& order, const ISimContext& context) const override;
     std::optional<std::string> targetLocation(const IOrder& order) const override;
-    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
+    void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const override;
 };
 
 }  // namespace des

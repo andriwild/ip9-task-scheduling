@@ -10,7 +10,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
 
 #include "op_types.h"
 #include "engine/contracts/i_path_planning.h"
@@ -51,7 +50,7 @@ inline std::optional<Mat> distanceMatrix(const IPathPlanning& paths, const std::
         for (size_t j = i + 1; j < n; ++j) {
             const auto d = paths.getDistance(planned[i].op.name, planned[j].op.name);
             if (!d) {
-                DES_LOG_ERROR(rclcpp::get_logger("des.algo.op"), "No distance %s -> %s", planned[i].op.name.c_str(), planned[j].op.name.c_str());
+                DES_LOG_ERROR("des.algo.op", "No distance %s -> %s", planned[i].op.name.c_str(), planned[j].op.name.c_str());
                 return std::nullopt;
             }
             mat[i][j] = static_cast<float>(*d);

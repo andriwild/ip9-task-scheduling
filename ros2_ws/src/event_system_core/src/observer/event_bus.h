@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
 #include "observer.h"
@@ -15,7 +14,7 @@ class EventBus {
 
 public:
     void addObserver(const std::shared_ptr<IObserver>& observer) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.event_bus"), "Observer added: %s", observer->getName().c_str());
+        DES_LOG_DEBUG("des.event_bus", "Observer added: %s", observer->getName().c_str());
         m_observers.emplace_back(observer);
     }
 

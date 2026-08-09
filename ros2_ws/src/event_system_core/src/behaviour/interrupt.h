@@ -1,6 +1,5 @@
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
 #include <behaviortree_cpp/basic_types.h>
 #include <behaviortree_cpp/blackboard.h>
 #include <behaviortree_cpp/bt_factory.h>

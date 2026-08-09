@@ -11,7 +11,6 @@ namespace des {
 
 class Scheduler;
 class ISimContext;
-class RosObserver;
 struct InformationConfig {
     double informationDurationMin = 30.0;
     double informationDurationMax = 120.0;
@@ -39,7 +38,7 @@ public:
     int planDispatchTime(const IOrder& order, const Scheduler& scheduler, const std::string& startPos) const override;
     bool isFeasible(const IOrder& order, const ISimContext& context) const override;
     double estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
-    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
+    void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const override;
 
     const InformationConfig& config() const { return m_config; }
 

@@ -13,7 +13,6 @@ namespace des {
 
 class Scheduler;
 class ISimContext;
-class RosObserver;
 struct AccompanyConfig {
     double accompanySpeed             = 0.20;
     double conversationProbability    = 0.8;
@@ -48,7 +47,7 @@ public:
     std::string outcomeDetail(const IOrder& order) const override;
     double estimateMissionEnergy(const IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
     double estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& startLocation) const override;
-    void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const override;
+    void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const override;
 
     const AccompanyConfig& config() const { return m_config; }
 

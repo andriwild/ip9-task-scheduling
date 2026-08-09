@@ -8,13 +8,12 @@
 #include <tuple>
 #include <vector>
 #include "../../behaviour/bt_setup.h"
-#include "event_system_msgs/srv/detail/set_system_state__struct.hpp"
 #include "engine/event_queue.h"
 
 namespace des {
 
 void HeadlessRunner::setupApplication() {
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Application...");
+    DES_LOG_INFO("des.runner", "Setup Application...");
 
     m_config = std::make_shared<SimConfig>(ConfigLoader::loadSimConfig().value());
 
@@ -44,7 +43,7 @@ void HeadlessRunner::setupApplication() {
 
     loadNextRound();
 
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Setup Complete!");
+    DES_LOG_INFO("des.runner", "Setup Complete!");
 }
 
 bool HeadlessRunner::loadNextRound() {
@@ -62,18 +61,18 @@ bool HeadlessRunner::loadNextRound() {
     }
 
     const std::string& path = m_config->appointmentsPath;
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Starting round %d/%d: %s", m_currentRound + 1, kRounds, path.c_str());
+    DES_LOG_INFO("des.runner", "Starting round %d/%d: %s", m_currentRound + 1, kRounds, path.c_str());
     m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_ctx->activeSeed());
 
     auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
     if (!appts.has_value()) {
-        DES_LOG_ERROR(rclcpp::get_logger("des.runner"), "Failed to load appointments from: %s", path.c_str());
+        DES_LOG_ERROR("des.runner", "Failed to load appointments from: %s", path.c_str());
         return false;
     }
     m_orders = appts.value();
 
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
-    DES_LOG_INFO(rclcpp::get_logger("des.runner"), "Successful loaded %zu background templates", m_backgroundTemplates.size());
+    DES_LOG_INFO("des.runner", "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
     populateEventQueue();
     m_eventQueue.print();
@@ -87,11 +86,8 @@ void HeadlessRunner::onSimulationComplete() {
     }
 }
 
-int HeadlessRunner::loadAppState() const {
-    if (m_runComplete) {
-        return event_system_msgs::srv::SetSystemState::Request::EXIT;
-    }
-    return event_system_msgs::srv::SetSystemState::Request::RUN;
+RunState HeadlessRunner::loadAppState() const {
+    return m_runComplete ? RunState::Exit : RunState::Run;
 }
 
 void HeadlessRunner::reset() {

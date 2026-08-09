@@ -1,6 +1,5 @@
 #include "robot_state.h"
 
-#include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
 #include "robot.h"
@@ -25,7 +24,7 @@ double RobotState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg
 
 void IdleState::enter(Robot& robot) {
     RobotState::enter(robot);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Idle");
+    DES_LOG_DEBUG("des.robot.state", "Enter Idle");
     robot.setSpeed(robot.getDriveSpeed());
 }
 double IdleState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const {
@@ -40,7 +39,7 @@ double IdleState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg)
 
 void ChargeState::enter(Robot& robot) {
     RobotState::enter(robot);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.robot.state"), "Enter Charge");
+    DES_LOG_DEBUG("des.robot.state", "Enter Charge");
 }
 double ChargeState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const {
     auto energyConsumption = cfg.energyConsumptionBase;

@@ -13,7 +13,7 @@
 namespace des {
 
 inline void finishMission(ISimContext& ctx, const MissionState state) {
-    DES_LOG_DEBUG(rclcpp::get_logger("des.bt.mission_outcome"), "Finish mission as %s", missionStateStr(state).c_str());
+    DES_LOG_DEBUG("des.bt.mission_outcome", "Finish mission as %s", missionStateStr(state).c_str());
     ctx.updateOrderState(state);
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(ctx.getTime(), ctx.getOrderPtr()));

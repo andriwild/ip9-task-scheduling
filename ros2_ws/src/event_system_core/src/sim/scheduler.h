@@ -6,7 +6,6 @@
 #include <cassert>
 #include <optional>
 #include <map>
-#include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
 #include "engine/event.h"
@@ -37,7 +36,7 @@ public:
     }
 
     std::vector<std::shared_ptr<MissionDispatchEvent>> createMissionDispatchEvents(OrderList& orders, const std::string& startPos) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "[SimplePlan] Schedule %zu appointments", orders.size());
+        DES_LOG_DEBUG("des.scheduler", "[SimplePlan] Schedule %zu appointments", orders.size());
         std::vector<std::shared_ptr<MissionDispatchEvent>> events;
 
         for (const auto& order : orders) {
@@ -66,7 +65,7 @@ public:
     [[nodiscard]] double getScanTime(const std::string& room) const {
         auto it = m_rooms.find(room);
         if (it == m_rooms.end() || m_simConfig->robotSpeed <= 0.0) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.scheduler"), "No scan time for '%s', defaulting to 0", room.c_str());
+            DES_LOG_DEBUG("des.scheduler", "No scan time for '%s', defaulting to 0", room.c_str());
             return 0.0;
         }
         return it->second.m_tour.m_distance / m_simConfig->robotSpeed;

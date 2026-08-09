@@ -12,10 +12,11 @@
 #include "../../sim/ros/controller.h"
 #include "../../sim/ros/path_node.h"
 #include "../runner.h"
+#include "ros_runner.h"
 
 namespace des {
 
-class SimRunner final : public IAppRunner {
+class SimRunner final : public RosRunner {
 public:
 
     explicit SimRunner() {
@@ -27,30 +28,28 @@ public:
 
         std::vector<std::shared_ptr<rclcpp::Node>> nodes = { m_controllerNode, m_systemConfigNode };
         if (m_plannerNode) nodes.push_back(m_plannerNode);
-        IAppRunner::initROS(nodes);
+        initROS(nodes);
     }
 
     ~SimRunner() override { SimRunner::shutdown(); }
 
     static std::unique_ptr<IAppRunner> create(int argc, char* argv[]) {
         rclcpp::init(argc, argv);
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "\n----- Descrete Event Sytem -----");
-        DES_LOG_INFO(rclcpp::get_logger("des.runner"), "C++ Version: %ld", __cplusplus);
+        DES_LOG_INFO("des.runner", "\n----- Descrete Event Sytem -----");
+        DES_LOG_INFO("des.runner", "C++ Version: %ld", __cplusplus);
         return std::make_unique<SimRunner>();
     }
 
     void setupApplication() override;
     void updateConfig() override;
-    int loadAppState() const override;
+    RunState loadAppState() const override;
     void enterPause() const override;
+    void onSimulationComplete() override { enterPause(); }
     void reset() override;
 
     void shutdown() override {
-        m_executor->cancel();
+        stopROS();
 
-        if (m_rosThread.joinable()) {
-            m_rosThread.join();
-        }
         if (m_simThread.joinable()) {
             m_simThread.join();
         }

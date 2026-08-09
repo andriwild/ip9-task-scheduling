@@ -1,6 +1,5 @@
 #include "engine/event_queue.h"
 
-#include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
 
@@ -96,7 +95,7 @@ std::vector<std::shared_ptr<IEvent>> EventQueue::dispatchEventsUntil(const int u
 
 void EventQueue::print() const {
     for (const auto& e : m_events) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.event_queue"), "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
+        DES_LOG_DEBUG("des.event_queue", "%d: %d - %s%s", e->time, static_cast<int>(e->getType()), e->getName().c_str(), e->cancelled ? " (cancelled)" : "");
     }
 }
 

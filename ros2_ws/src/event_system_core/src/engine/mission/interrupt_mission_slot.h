@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <string>
-#include <rclcpp/rclcpp.hpp>
 
 #include "util/log.h"
 #include "model/order.h"
@@ -31,25 +30,25 @@ public:
     // Returns false if the slot is already occupied. `current` is the mission being preempted (logging only).
     bool push(const OrderPtr& order, const OrderPtr& current) {
         if (m_mission) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) rejected — interrupt %d already active", order->id, order->type.c_str(), m_mission->id);
+            DES_LOG_DEBUG("des.mission.interrupt", "Interrupt %d (type=%s) rejected — interrupt %d already active", order->id, order->type.c_str(), m_mission->id);
             return false;
         }
         m_mission = order;
         if (current) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) accepted — preempting mission %d", order->id, order->type.c_str(), current->id);
+            DES_LOG_DEBUG("des.mission.interrupt", "Interrupt %d (type=%s) accepted — preempting mission %d", order->id, order->type.c_str(), current->id);
         } else {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) accepted — preempting none", order->id, order->type.c_str());
+            DES_LOG_DEBUG("des.mission.interrupt", "Interrupt %d (type=%s) accepted — preempting none", order->id, order->type.c_str());
         }
         return true;
     }
 
     void pop(const OrderPtr& completedOrder) {
         if (m_mission == completedOrder) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) popped", completedOrder->id, completedOrder->type.c_str());
+            DES_LOG_DEBUG("des.mission.interrupt", "Interrupt %d (type=%s) popped", completedOrder->id, completedOrder->type.c_str());
             m_mission = nullptr;
         } else {
             const std::string activeId = m_mission ? std::to_string(m_mission->id) : "none";
-            DES_LOG_WARN(rclcpp::get_logger("des.mission.interrupt"), "Interrupt %d (type=%s) completed but is not the active interrupt (active=%s) — already popped or superseded, ignoring", completedOrder->id, completedOrder->type.c_str(), activeId.c_str());
+            DES_LOG_WARN("des.mission.interrupt", "Interrupt %d (type=%s) completed but is not the active interrupt (active=%s) — already popped or superseded, ignoring", completedOrder->id, completedOrder->type.c_str(), activeId.c_str());
         }
     }
 

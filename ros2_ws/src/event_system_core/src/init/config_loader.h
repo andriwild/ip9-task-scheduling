@@ -88,7 +88,7 @@ public:
 
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Use default appointment config file: %s", DEFAULT_ORDER_FILE.c_str());
+            DES_LOG_DEBUG("des.io.config", "Use default appointment config file: %s", DEFAULT_ORDER_FILE.c_str());
             json = getJson(DEFAULT_ORDER_FILE);
             assert(json.has_value());
         }
@@ -140,7 +140,7 @@ public:
     static std::optional<std::vector<InterruptGeneratorConfig>> loadInterruptGenerators(const std::string& filePath) {
         auto json = getJson(filePath);
         if (!json.has_value()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "No scenario file found at %s — skipping ad-hoc generators", filePath.c_str());
+            DES_LOG_DEBUG("des.io.config", "No scenario file found at %s — skipping ad-hoc generators", filePath.c_str());
             return std::vector<InterruptGeneratorConfig>{};
         }
         if (!json.value().contains("ad_hoc_generators")) {
@@ -193,13 +193,13 @@ public:
                 p.transitionMatrix = item.at("transitionMatrix").get<std::vector<std::vector<double>>>();
 
                 if (p.transitionMatrix.size() != p.roomLabels.size()) {
-                    DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Matrix dimension does not match roomLabels for %s", p.firstName.c_str());
+                    DES_LOG_WARN("des.io.config", "Matrix dimension does not match roomLabels for %s", p.firstName.c_str());
                 }
 
                 employees.push_back(std::make_unique<Person>(std::move(p)));
             }
         } catch (const nlohmann::json::exception& e) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "JSON Parsing Error: %s", e.what());
+            DES_LOG_ERROR("des.io.config", "JSON Parsing Error: %s", e.what());
             return std::nullopt;
         }
 
@@ -209,7 +209,7 @@ public:
     static std::optional<SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Base config not readable: %s", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Base config not readable: %s", filePath.c_str());
             return std::nullopt;
         }
 
@@ -220,11 +220,11 @@ public:
                 const std::string resolved = resolvePath(overridePath);
                 const auto overrideJson = getJson(resolved);
                 if (!overrideJson.has_value()) {
-                    DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not read override config: %s", resolved.c_str());
+                    DES_LOG_ERROR("des.io.config", "Could not read override config: %s", resolved.c_str());
                     return std::nullopt;
                 }
                 j.merge_patch(overrideJson.value());
-                DES_LOG_DEBUG(rclcpp::get_logger("des.io.config"), "Applied config override: %s", resolved.c_str());
+                DES_LOG_DEBUG("des.io.config", "Applied config override: %s", resolved.c_str());
             }
             SimConfig config;
             config.driveTimeStd             = j.at("drive_time_std").get<double>();
@@ -281,7 +281,7 @@ public:
             }
             return config;
         } catch (const nlohmann::json::type_error& e) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Failed to parse sim config json: %s", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Failed to parse sim config json: %s", filePath.c_str());
             return std::nullopt;
         }
     }
@@ -373,7 +373,7 @@ public:
 
         std::ofstream file(filePath);
         if (!file.is_open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not write to file: %s", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Could not write to file: %s", filePath.c_str());
             return false;
         }
         file << std::setw(4) << j << std::endl;
@@ -384,7 +384,7 @@ public:
         // open file
         std::ifstream file(filePath);
         if (!file.is_open()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not read file from path: %s", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Could not read file from path: %s", filePath.c_str());
             return std::nullopt;
         }
 
@@ -393,7 +393,7 @@ public:
         try {
             file >> json;
         } catch (const nlohmann::json::parse_error& e) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Could not parse json file: %s", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Could not parse json file: %s", filePath.c_str());
             return std::nullopt;
         }
         return json;
@@ -446,7 +446,7 @@ public:
         }
         const auto& j = json.value();
         if (!j.contains("rooms")) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour config %s missing 'rooms'", filePath.c_str());
+            DES_LOG_ERROR("des.io.config", "Tour config %s missing 'rooms'", filePath.c_str());
             return std::nullopt;
         }
 
@@ -454,16 +454,16 @@ public:
         for (const auto& [name, entry] : j.at("rooms").items()) {
             const auto it = rooms.find(name);
             if (it == rooms.end()) {
-                DES_LOG_WARN(rclcpp::get_logger("des.io.config"), "Tour for unknown room '%s'; dropped", name.c_str());
+                DES_LOG_WARN("des.io.config", "Tour for unknown room '%s'; dropped", name.c_str());
                 continue;
             }
             RoomTour tour = parseRoomTour(entry);
             if (!tour.m_visPolys.empty() && tour.m_visPolys.size() != tour.m_path.size()) {
-                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' has %zu visibility polygons for %zu points; visibility dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
+                DES_LOG_ERROR("des.io.config", "Tour for '%s' has %zu visibility polygons for %zu points; visibility dropped", name.c_str(), tour.m_visPolys.size(), tour.m_path.size());
                 tour.m_visPolys.clear();
             }
             if (const auto reason = invalidTourReason(tour, it->second.m_waypoint)) {
-                DES_LOG_ERROR(rclcpp::get_logger("des.io.config"), "Tour for '%s' %s; dropped", name.c_str(), reason->c_str());
+                DES_LOG_ERROR("des.io.config", "Tour for '%s' %s; dropped", name.c_str(), reason->c_str());
                 continue;
             }
             it->second.m_tour = std::move(tour);

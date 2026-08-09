@@ -34,7 +34,7 @@ public:
         const std::string& roomName = static_cast<const CleanOrder&>(*m_order).roomName;
         const auto area             = ctx.room(roomName).m_area;
         if (!area.has_value()) {
-            DES_LOG_WARN(rclcpp::get_logger("des.plugin.clean"), "Room '%s' has no area, cleaning mission %d falls back to 1m2", roomName.c_str(), m_order->id);
+            DES_LOG_WARN("des.plugin.clean", "Room '%s' has no area, cleaning mission %d falls back to 1m2", roomName.c_str(), m_order->id);
         }
         const double roomArea       = area.value_or(1.0);
         const double cleaningArea = cleanConfig().cleaningArea;

@@ -23,7 +23,7 @@ public:
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot = ctx->getRobot();
         const bool atDock = robot->getLocation() == robot->getIdleLocation() && !robot->isDriving();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionIsAtDock: %d", atDock);
+        DES_LOG_DEBUG("des.plugin.charge", "ChargeMissionIsAtDock: %d", atDock);
         return atDock ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -40,7 +40,7 @@ public:
             return BT::NodeStatus::RUNNING;  // resumed mid-drive after interrupt
         }
         const auto dock = ctx->getRobot()->getIdleLocation();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionGoToDock: -> %s", dock.c_str());
+        DES_LOG_DEBUG("des.plugin.charge", "ChargeMissionGoToDock: -> %s", dock.c_str());
         requestDrive(*ctx, dock);
         return BT::NodeStatus::RUNNING;
     }
@@ -49,7 +49,7 @@ public:
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto robot = ctx->getRobot();
         if (robot->getLocation() == robot->getIdleLocation() && !robot->isDriving()) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ChargeMissionGoToDock: arrived at dock");
+            DES_LOG_DEBUG("des.plugin.charge", "ChargeMissionGoToDock: arrived at dock");
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;
@@ -69,7 +69,7 @@ public:
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only start once.
         if (order && order->state == MissionState::PENDING) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: start");
+            DES_LOG_DEBUG("des.plugin.charge", "ExecuteChargeMission: start");
             ctx->pushEvent(std::make_shared<StartChargeEvent>(ctx->getTime(), order));
         }
         return BT::NodeStatus::RUNNING;
@@ -79,7 +79,7 @@ public:
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         if (!order || order->state == MissionState::COMPLETED) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.charge"), "ExecuteChargeMission: done");
+            DES_LOG_DEBUG("des.plugin.charge", "ExecuteChargeMission: done");
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::RUNNING;

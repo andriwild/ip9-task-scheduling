@@ -12,7 +12,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <rclcpp/rclcpp.hpp>
 
 #include "../op.h"
 #include "../op_types.h"
@@ -52,7 +51,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         }
         const RoomTour& tour = world.room(room.name).m_tour;
         if (tour.empty()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.algo.search"), "No room tour for '%s'; excluded from search plan", room.name.c_str());
+            DES_LOG_ERROR("des.algo.search", "No room tour for '%s'; excluded from search plan", room.name.c_str());
             continue;
         }
         const double scanTime    = tour.m_distance / cfg.robotSpeed;

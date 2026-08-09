@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <rclcpp/rclcpp.hpp>
 
 #include "engine/contracts/i_event.h"
 #include "engine/event/mission_complete_event.h"

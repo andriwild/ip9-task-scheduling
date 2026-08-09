@@ -8,6 +8,7 @@
 #include "../util/types.h"
 #include "engine/contracts/estimation_view.h"
 #include "engine/contracts/i_sim_context.h"
+#include "engine/contracts/i_timeline_sink.h"
 
 namespace BT { class BehaviorTreeFactory; }
 
@@ -15,7 +16,6 @@ namespace des {
 
 
 class Scheduler;
-class RosObserver;
 class IOrderPlugin {
 public:
     virtual ~IOrderPlugin() = default;
@@ -89,7 +89,7 @@ public:
         return 0.0;
     }
 
-    virtual void publishTimeline(const IOrder& order, int startTime, RosObserver& observer) const = 0;
+    virtual void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const = 0;
 };
 
 }  // namespace des

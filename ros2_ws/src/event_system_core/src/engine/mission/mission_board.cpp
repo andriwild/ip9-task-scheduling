@@ -24,9 +24,9 @@ MissionBoard::MissionBoard(EventQueue& queue, EventBus& bus)
 
 void MissionBoard::setCurrent(const OrderPtr& orderPtr) {
     if (orderPtr) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission set: %d (type=%s)", orderPtr->id, orderPtr->type.c_str());
+        DES_LOG_DEBUG("des.context.mission", "Current mission set: %d (type=%s)", orderPtr->id, orderPtr->type.c_str());
     } else if (m_current) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Current mission cleared (was %d)", m_current->id);
+        DES_LOG_DEBUG("des.context.mission", "Current mission cleared (was %d)", m_current->id);
     }
     m_current = orderPtr;
 }
@@ -44,7 +44,7 @@ OrderPtr MissionBoard::effective() const {
 
 void MissionBoard::updateState(const MissionState& newState) {
     assert(m_current != nullptr);
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), missionStateStr(m_current->state).c_str(), missionStateStr(newState).c_str());
+    DES_LOG_DEBUG("des.context.mission", "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), missionStateStr(m_current->state).c_str(), missionStateStr(newState).c_str());
     m_current->state = newState;
 }
 
@@ -65,9 +65,9 @@ void MissionBoard::complete(ISimContext& ctx, const OrderPtr& order) {
         const bool routine = order->execution != ExecutionMode::SCHEDULED
             && order->state == MissionState::COMPLETED;
         if (routine) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
+            DES_LOG_DEBUG("des.mission", "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
         } else {
-            DES_LOG_INFO(rclcpp::get_logger("des.mission"), "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
+            DES_LOG_INFO("des.mission", "Mission %d (%s) %s", order->id, order->type.c_str(), summary.c_str());
         }
     }
     if (m_current == order) {
@@ -138,7 +138,7 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
     assert(order->execution == ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
     const auto robot = ctx.getRobot();
     if (robot->isBatteryLow()) {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), robot->batteryStats().soc * 100.0);
+        DES_LOG_DEBUG("des.context.interrupt", "Reject %d (type=%s) — battery low (SoC %.0f%%), heading to dock", order->id, order->type.c_str(), robot->batteryStats().soc * 100.0);
         return false;
     }
     if (!m_interrupt.push(order, m_current)) {
@@ -157,9 +157,9 @@ bool MissionBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
         e->cancelled = true;
         auto shifted = e->withTime(newTime);
         ctx.startActivity(shifted);
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, ctx.getTime(), e->getName().c_str(), oldTime, newTime);
+        DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, ctx.getTime(), e->getName().c_str(), oldTime, newTime);
     } else {
-        DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, ctx.getTime());
+        DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, ctx.getTime());
     }
 
     if (wasDriving) {
@@ -191,7 +191,7 @@ void MissionBoard::popInterrupt(ISimContext& ctx, const OrderPtr& completedOrder
     if (ctx.getConfig()->replanBackgroundOnInterrupt) {
         m_background.invalidatePlan();
     }
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context.interrupt"), "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), ctx.getTime());
+    DES_LOG_DEBUG("des.context.interrupt", "Pop %d (type=%s) at t=%d — resuming main mission", completedOrder->id, completedOrder->type.c_str(), ctx.getTime());
 }
 
 bool MissionBoard::hasActiveInterrupt() const {
@@ -199,7 +199,7 @@ bool MissionBoard::hasActiveInterrupt() const {
 }
 
 void MissionBoard::reset() {
-    DES_LOG_DEBUG(rclcpp::get_logger("des.context.mission"), "Reset (pending=%zu, background=%zu, interrupt=%s cleared)", m_scheduled.size(), m_background.size(), m_interrupt.has() ? "yes" : "no");
+    DES_LOG_DEBUG("des.context.mission", "Reset (pending=%zu, background=%zu, interrupt=%s cleared)", m_scheduled.size(), m_background.size(), m_interrupt.has() ? "yes" : "no");
     m_current = nullptr;
     m_scheduled.clear();
     m_background.clear();

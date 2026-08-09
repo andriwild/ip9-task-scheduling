@@ -30,7 +30,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool isSearching = !ctx->getRobot()->isDriving()
             && dynamic_cast<SearchState*>(ctx->getRobot()->getState()) != nullptr;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "IsSearching: %d", isSearching);
+        DES_LOG_DEBUG("des.plugin.accompany.search", "IsSearching: %d", isSearching);
         return isSearching ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -44,7 +44,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool visible = ctx->getRobot()->isPersonVisible();
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "FoundPerson: %d", visible);
+        DES_LOG_DEBUG("des.plugin.accompany.search", "FoundPerson: %d", visible);
         return visible ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -58,7 +58,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Start Accompany Conversation");
+        DES_LOG_DEBUG("des.plugin.accompany.search", "Start Accompany Conversation");
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -75,12 +75,12 @@ public:
         const std::string room = ctx->getRobot()->getLocation();
 
         if (isSearchExcluded(ctx->getConfig()->searchExcludedRooms, room)) {
-            DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "HasScanPoint: room '%s' is excluded from search", room.c_str());
+            DES_LOG_DEBUG("des.plugin.accompany.search", "HasScanPoint: room '%s' is excluded from search", room.c_str());
             return BT::NodeStatus::FAILURE;
         }
 
         const size_t scanPoints = std::max<size_t>(1, ctx->room(room).m_tour.m_path.size());
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "HasScanPoint: room=%s point %zu of %zu", room.c_str(), order.scanIndex, scanPoints);
+        DES_LOG_DEBUG("des.plugin.accompany.search", "HasScanPoint: room=%s point %zu of %zu", room.c_str(), order.scanIndex, scanPoints);
         return order.scanIndex < scanPoints ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
@@ -100,7 +100,7 @@ public:
         order.scanIndex++;
         auto scan = std::make_shared<ScanPointEvent>(ctx->getTime(), ctx->getOrderPtr());
 
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "ScanNextPoint: point %zu of %zu", point, tour.m_path.size());
+        DES_LOG_DEBUG("des.plugin.accompany.search", "ScanNextPoint: point %zu of %zu", point, tour.m_path.size());
         if (point < tour.m_path.size()) {
             requestDrive(*ctx, tour.m_path[point], tour.visibilityAt(point), scan);
         } else {
@@ -119,7 +119,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "HasNextLocation: %zu locations remaining", order.remainingSearch.size());
+        DES_LOG_DEBUG("des.plugin.accompany.search", "HasNextLocation: %zu locations remaining", order.remainingSearch.size());
         return order.remainingSearch.empty() ? BT::NodeStatus::FAILURE : BT::NodeStatus::SUCCESS;
     }
 };
@@ -137,7 +137,7 @@ public:
         const std::string nextLocation = order.remainingSearch.front();
         order.remainingSearch.erase(order.remainingSearch.begin());
         order.scanIndex = 0;
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "MoveToNextLocation: %s", nextLocation.c_str());
+        DES_LOG_DEBUG("des.plugin.accompany.search", "MoveToNextLocation: %s", nextLocation.c_str());
         requestDrive(*ctx, nextLocation);
         return BT::NodeStatus::SUCCESS;
     }
@@ -152,7 +152,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         ctx->pushEvent(std::make_shared<AbortSearchEvent>(ctx->getTime(), ctx->getOrderPtr()));
-        DES_LOG_DEBUG(rclcpp::get_logger("des.plugin.accompany.search"), "Report Search Abort");
+        DES_LOG_DEBUG("des.plugin.accompany.search", "Report Search Abort");
         return BT::NodeStatus::SUCCESS;
     }
 };

@@ -27,19 +27,27 @@ public:
     SnapshotBuilder() : m_db({DB_USER, DB_PASSWORD}) {}
     ~SnapshotBuilder() { shutdown(); }
 
+    static int build(const int argc, char* argv[]) {
+        rclcpp::init(argc, argv);
+        SnapshotBuilder builder;
+        const int rc = builder.run();
+        rclcpp::shutdown();
+        return rc;
+    }
+
     int run() {
         const auto rooms = m_db.rooms();
         if (!rooms.has_value()) {
             throw std::runtime_error("Could not load rooms from DB");
         }
-        DES_LOG_INFO(rclcpp::get_logger("des.snapshot"), "Loaded %zu rooms from DB", rooms->size());
+        DES_LOG_INFO("des.snapshot", "Loaded %zu rooms from DB", rooms->size());
         for (const auto& [_, room] : rooms.value()) {
-            DES_LOG_DEBUG_STREAM(rclcpp::get_logger("des.snapshot"), room);
+            DES_LOG_DEBUG_STREAM("des.snapshot", room);
         }
 
         m_planner = std::make_shared<PathPlannerNode>(rooms.value());
         if (!m_planner->isReady()) {
-            DES_LOG_ERROR(rclcpp::get_logger("des.snapshot"), "Nav2 planner not available — is planner.sh running?");
+            DES_LOG_ERROR("des.snapshot", "Nav2 planner not available — is planner.sh running?");
             return 1;
         }
 

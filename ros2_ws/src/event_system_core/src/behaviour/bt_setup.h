@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fstream>
-#include <rclcpp/rclcpp.hpp>
 
 #include "../util/log.h"
 #include <behaviortree_cpp/bt_factory.h>
@@ -191,7 +190,7 @@ inline std::string buildXml() {
 }
 
 inline std::shared_ptr<BT::Tree> setupBehaviorTree(ISimContext* ctx) {
-    DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Create Behaviour Tree");
+    DES_LOG_DEBUG("des.runner", "Create Behaviour Tree");
     BT::BehaviorTreeFactory factory;
 
     registerCoreNodes(factory);
@@ -213,11 +212,11 @@ inline std::shared_ptr<BT::Tree> setupBehaviorTree(ISimContext* ctx) {
         if (file.is_open()) {
             file << xml_full_tree;
             file.close();
-            DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "BehaviorTree and model written to file: %s", TREE_FILE.c_str());
+            DES_LOG_DEBUG("des.runner", "BehaviorTree and model written to file: %s", TREE_FILE.c_str());
         }
     }
 
-    DES_LOG_DEBUG(rclcpp::get_logger("des.runner"), "Behaviour Tree created");
+    DES_LOG_DEBUG("des.runner", "Behaviour Tree created");
     return tree;
 }
 

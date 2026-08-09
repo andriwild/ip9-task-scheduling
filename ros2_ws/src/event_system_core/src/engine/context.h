@@ -15,7 +15,6 @@
 #include <memory>
 #include <optional>
 #include <random>
-#include <rclcpp/rclcpp.hpp>
 
 #include "engine/mission/mission_board.h"
 #include "engine/person_registry.h"
