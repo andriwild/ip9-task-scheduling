@@ -24,6 +24,7 @@ class MetricsReporter {
     std::string m_dailyCsvPath;
     std::string m_scenario;
     unsigned int m_roundSeed = 0;
+    int m_roundsWritten = 0;
 
 public:
     void enableCsv(std::string path) {
@@ -93,14 +94,20 @@ public:
             return std::pair{ seconds, metres };
         };
 
-        auto write = [](const std::string& path, const std::string& text) {
+        const bool firstRound = m_roundsWritten == 0;
+        auto write = [firstRound](const std::string& path, const std::string& header, const std::string& rows) {
             std::error_code ec;
             std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
-            std::ofstream(path) << text;
-            std::cout << text;
+            std::ofstream out(path, firstRound ? std::ios::trunc : std::ios::app);
+            if (firstRound) {
+                out << header;
+                std::cout << header;
+            }
+            out << rows;
+            std::cout << rows;
         };
 
-        std::string daily = "seed,scenario,day,completed,failed,findable_miss,rejected,scans,search_s,search_m\n";
+        std::string daily;
         for (auto day : scheduled | chunk_by(sameDay)) {
             const int dayIndex = day.front()->time / SECONDS_PER_DAY;
             const auto [searchSeconds, searchMetres] = searchOn(dayIndex);
@@ -113,17 +120,18 @@ public:
                 std::ranges::count_if(day, inState(MissionState::REJECTED)),
                 scansOn(dayIndex), searchSeconds, searchMetres);
         }
-        write(m_dailyCsvPath, daily);
+        write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,search_s,search_m\n", daily);
 
         const std::string run = std::format(
-            "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions\n"
             "{},{},{},{},{},{},{},{:g},{}\n",
             m_roundSeed, m_scenario,
             secondsIn("idle"), secondsIn("search"), secondsIn("accompany"),
             secondsIn("charging"), secondsIn("conversate"),
             ctx.getRobot()->getOdometer(),
             std::ranges::distance(scheduled));
-        write(m_csvPath, run);
+        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions\n", run);
+
+        ++m_roundsWritten;
     }
 };
 

@@ -10,8 +10,6 @@
 namespace des {
 
 class HeadlessRunner final : public IAppRunner {
-    static constexpr int kRounds = 1;
-
     int m_currentRound = 0;
     bool m_runComplete = false;
 

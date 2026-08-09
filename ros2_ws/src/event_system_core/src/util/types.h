@@ -167,6 +167,7 @@ struct SimConfig {
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
     unsigned int seed = 42;
+    int rounds = 1;
     RoundMode roundMode = RoundMode::REPLICATION;
 
     friend std::ostream& operator<<(std::ostream& os, const SimConfig& config) {
@@ -204,6 +205,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;
         os << std::left << std::setw(W) << "seed" << ": " << config.seed << std::endl;
+        os << std::left << std::setw(W) << "rounds" << ": " << config.rounds << std::endl;
         os << std::left << std::setw(W) << "roundMode" << ": " << roundModeToString(config.roundMode) << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;

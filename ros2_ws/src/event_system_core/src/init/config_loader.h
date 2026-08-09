@@ -275,6 +275,7 @@ public:
             config.energyReserveStrategy = energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
             config.seed = j.value("seed", 42u);
+            config.rounds = j.value("rounds", 1);
             config.roundMode = roundModeFromString(j.value("round_mode", "replication"));
 
             for (auto* plugin : OrderRegistry::instance().all()) {
@@ -358,6 +359,7 @@ public:
         j["energy_reserve_strategy"]        = energyReserveStrategyToString(config.energyReserveStrategy);
         j["energy_reserve_horizon"]         = config.energyReserveHorizon;
         j["seed"]                           = config.seed;
+        j["rounds"]                         = config.rounds;
         j["round_mode"]                     = roundModeToString(config.roundMode);
 
         // each plugin serialises its own sub-object under

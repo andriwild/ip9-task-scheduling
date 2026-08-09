@@ -47,7 +47,7 @@ void HeadlessRunner::setupApplication() {
 }
 
 bool HeadlessRunner::loadNextRound() {
-    if (m_currentRound >= kRounds) {
+    if (m_currentRound >= m_config->rounds) {
         return false;
     }
 
@@ -61,7 +61,7 @@ bool HeadlessRunner::loadNextRound() {
     }
 
     const std::string& path = m_config->appointmentsPath;
-    DES_LOG_INFO("des.runner", "Starting round %d/%d: %s", m_currentRound + 1, kRounds, path.c_str());
+    DES_LOG_INFO("des.runner", "Starting round %d/%d: %s", m_currentRound + 1, m_config->rounds, path.c_str());
     m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_ctx->activeSeed());
 
     auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
