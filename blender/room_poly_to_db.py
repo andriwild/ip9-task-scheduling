@@ -10,6 +10,7 @@ DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr"
 MATCH_TOLERANCE = 0.15
 TYPE_COLLECTIONS = {
     "Classrooms": "CLASSROOM",
+    "Meeting": "MEETING",
 }
 # ---------------------
 
