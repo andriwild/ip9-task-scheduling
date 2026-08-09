@@ -23,6 +23,8 @@ struct StateInterval {
     std::string name;
     double socFrom;
     double socTo;
+    double distFrom;
+    double distTo;
 };
 
 class StateLog {
@@ -30,15 +32,15 @@ class StateLog {
     bool m_open = false;
 
 public:
-    void open(const int time, const RobotStateType category, std::string name, const double soc) {
+    void open(const int time, const RobotStateType category, std::string name, const double soc, const double distance) {
         if (m_open) {
-            close(time, soc);
+            close(time, soc, distance);
         }
-        m_entries.push_back(StateInterval{ time, time, category, std::move(name), soc, soc });
+        m_entries.push_back(StateInterval{ time, time, category, std::move(name), soc, soc, distance, distance });
         m_open = true;
     }
 
-    void close(const int time, const double soc) {
+    void close(const int time, const double soc, const double distance) {
         if (!m_open) {
             return;
         }
@@ -46,6 +48,7 @@ public:
         StateInterval& last = m_entries.back();
         last.endTime = std::max(time, last.time);
         last.socTo   = soc;
+        last.distTo  = distance;
     }
 
     bool isOpen() const {

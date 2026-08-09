@@ -93,6 +93,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         .cvEnergy        = budgets.cvEnergy,
         .driveSpeed      = static_cast<float>(cfg.robotSpeed),
         .driveEnergy     = driveEnergyPerMeter,
+        .costAware       = cfg.searchRouteStrategy == SearchRouteStrategy::COST_AWARE,
     };
 
     return OpInstance(std::move(nodes), std::move(*mat), {}, params);

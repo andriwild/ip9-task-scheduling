@@ -88,10 +88,18 @@ TEST(OccupancyProbability, MissesPushTheWorkplaceBelowItsPrior) {
     EXPECT_LT(rewardOf(nodes, "office"), 0.60f);
 }
 
-TEST(FrequencyReward, OnlyRoomsWithHitsAreListed) {
+TEST(FrequencyReward, HitsCountAndUnseenRoomsStayRankable) {
     const auto nodes = des::frequencyReward(logWith(3, 0, "kitchen"), "anna", kRooms);
 
-    ASSERT_EQ(nodes.size(), 1u);
-    EXPECT_EQ(nodes.front().name, "kitchen");
-    EXPECT_FLOAT_EQ(nodes.front().reward, 3.0f);
+    ASSERT_EQ(nodes.size(), 2u);
+    EXPECT_FLOAT_EQ(rewardOf(nodes, "kitchen"), 3.0f);
+    EXPECT_FLOAT_EQ(rewardOf(nodes, "office"), des::kUnseenRoomReward);
+}
+
+TEST(FrequencyReward, AnUnseenRoomIsOrderedByCostNotDropped) {
+    const auto nodes = des::frequencyReward(des::SightingLog{}, "anna", kRooms);
+
+    ASSERT_EQ(nodes.size(), 2u);
+    EXPECT_GT(rewardOf(nodes, "office"), 0.0f);
+    EXPECT_GT(rewardOf(nodes, "kitchen"), 0.0f);
 }

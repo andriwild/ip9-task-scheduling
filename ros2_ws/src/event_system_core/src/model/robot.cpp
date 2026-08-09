@@ -39,15 +39,15 @@ void Robot::changeState(std::unique_ptr<RobotState> newState, const int time) {
 
 void Robot::closeStateLog(const int time) {
     m_now = time;
-    m_stateLog.close(time, m_bat->getStats().soc);
+    m_stateLog.close(time, m_bat->getStats().soc, m_odometer);
 }
 
 void Robot::beginStateInterval(const RobotStateType category, std::string name) {
-    m_stateLog.open(m_now, category, std::move(name), m_bat->getStats().soc);
+    m_stateLog.open(m_now, category, std::move(name), m_bat->getStats().soc, m_odometer);
 }
 
 void Robot::endStateInterval() {
-    m_stateLog.close(m_now, m_bat->getStats().soc);
+    m_stateLog.close(m_now, m_bat->getStats().soc, m_odometer);
 }
 
 const StateLog& Robot::getStateLog() const {

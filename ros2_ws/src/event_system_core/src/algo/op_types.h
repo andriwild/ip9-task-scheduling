@@ -37,6 +37,7 @@ struct OpParams {
     float cvEnergy        = 0.0f;
     float driveSpeed      = 1.0f;
     float driveEnergy     = 0.0f;
+    bool costAware        = true;
 };
 
 }  // namespace des

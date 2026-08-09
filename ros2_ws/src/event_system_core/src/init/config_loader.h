@@ -268,6 +268,7 @@ public:
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
             config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
             config.searchRewardStrategy = searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
+            config.searchRouteStrategy = searchRouteStrategyFromString(j.value("search_route_strategy", "cost_aware"));
             config.searchRolePrior = j.value("search_role_prior", false);
             config.searchPriorWeight = j.value("search_prior_weight", 4.0);
             config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
@@ -350,6 +351,7 @@ public:
         j["replan_background_on_interrupt"] = config.replanBackgroundOnInterrupt;
         j["search_excluded_rooms"]          = config.searchExcludedRooms;
         j["search_reward_strategy"]         = searchRewardStrategyToString(config.searchRewardStrategy);
+        j["search_route_strategy"]          = searchRouteStrategyToString(config.searchRouteStrategy);
         j["search_role_prior"]              = config.searchRolePrior;
         j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
         j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);

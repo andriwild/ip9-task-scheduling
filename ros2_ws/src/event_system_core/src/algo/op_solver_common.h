@@ -27,7 +27,7 @@ inline float greedyValue(const OpInstance& op, const int curId, const int candId
     const float load_e = (d * p.driveEnergy + node.serviceEnergy) / p.energyBudget;
     const float load_t = (d / p.driveSpeed  + node.serviceTime)   / p.timeBudget;
     const float maxLoad = std::max({ load_e, load_t, 1e-12f });
-    return node.reward / maxLoad;
+    return p.costAware ? node.reward / maxLoad : node.reward;
 }
 
 namespace detail {

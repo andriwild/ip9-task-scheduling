@@ -56,6 +56,23 @@ inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& st
     return SearchRewardStrategy::BETA_SMOOTHED;
 }
 
+enum class SearchRouteStrategy {
+    COST_AWARE,
+    PROBABILITY_ONLY
+};
+
+inline std::string searchRouteStrategyToString(const SearchRouteStrategy strategy) {
+    switch (strategy) {
+        case SearchRouteStrategy::PROBABILITY_ONLY: return "probability_only";
+        default:                                    return "cost_aware";
+    }
+}
+
+inline SearchRouteStrategy searchRouteStrategyFromString(const std::string& str) {
+    if (str == "probability_only") return SearchRouteStrategy::PROBABILITY_ONLY;
+    return SearchRouteStrategy::COST_AWARE;
+}
+
 enum class EnergyReserveStrategy {
     NEXT_MISSION,
     HORIZON
@@ -143,6 +160,7 @@ struct SimConfig {
     std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
     std::string employeesPath = "";
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
+    SearchRouteStrategy searchRouteStrategy = SearchRouteStrategy::COST_AWARE;
     bool searchRolePrior = false;
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
@@ -181,6 +199,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
+        os << std::left << std::setw(W) << "searchRouteStrategy" << ": " << searchRouteStrategyToString(config.searchRouteStrategy) << std::endl;
         os << std::left << std::setw(W) << "searchRolePrior" << ": " << config.searchRolePrior << std::endl;
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;

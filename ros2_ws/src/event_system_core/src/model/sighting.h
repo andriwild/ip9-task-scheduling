@@ -29,6 +29,7 @@ struct SightingCounts {
 
 class SightingLog {
     std::vector<Sighting> m_entries;
+    // TODO: rename tally
     std::map<std::string, std::map<std::string, SightingCounts>> m_tally;
     std::string m_visitLocation;
     std::map<std::string, Sighting> m_visit;

@@ -45,6 +45,8 @@ public:
         using std::views::chunk_by;
 
         const auto& states = ctx.getRobot()->getStateLog().entries();
+        // TODO: roboter knowledge
+        ctx.getRobot()->getSightings();
 
         auto secondsIn = [&states](const std::string& stateName) {
             return std::ranges::fold_left(
@@ -72,6 +74,25 @@ public:
             return a->time / SECONDS_PER_DAY == b->time / SECONDS_PER_DAY;
         };
 
+        auto scansOn = [&protocol](const int day) {
+            return std::ranges::count_if(protocol, [day](const auto& e) {
+                return e->getType() == EventType::SCAN && e->time / SECONDS_PER_DAY == day;
+            });
+        };
+
+        auto searchOn = [&states](const int day) {
+            auto intervals = states | filter([day](const StateInterval& s) {
+                return s.name == "search" && s.time / SECONDS_PER_DAY == day;
+            });
+            const int seconds = std::ranges::fold_left(
+                intervals | transform([](const StateInterval& s) { return s.endTime - s.time; }),
+                0, std::plus{});
+            const double metres = std::ranges::fold_left(
+                intervals | transform([](const StateInterval& s) { return s.distTo - s.distFrom; }),
+                0.0, std::plus{});
+            return std::pair{ seconds, metres };
+        };
+
         auto write = [](const std::string& path, const std::string& text) {
             std::error_code ec;
             std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
@@ -79,15 +100,18 @@ public:
             std::cout << text;
         };
 
-        std::string daily = "seed,scenario,day,completed,failed,findable_miss,rejected\n";
+        std::string daily = "seed,scenario,day,completed,failed,findable_miss,rejected,scans,search_s,search_m\n";
         for (auto day : scheduled | chunk_by(sameDay)) {
-            daily += std::format("{},{},{},{},{},{},{}\n",
+            const int dayIndex = day.front()->time / SECONDS_PER_DAY;
+            const auto [searchSeconds, searchMetres] = searchOn(dayIndex);
+            daily += std::format("{},{},{},{},{},{},{},{},{},{:g}\n",
                 m_roundSeed, m_scenario,
-                day.front()->time / SECONDS_PER_DAY,
+                dayIndex,
                 std::ranges::count_if(day, inState(MissionState::COMPLETED)),
                 std::ranges::count_if(day, inState(MissionState::FAILED)),
                 std::ranges::count_if(day, withDetail("missed in building")),
-                std::ranges::count_if(day, inState(MissionState::REJECTED)));
+                std::ranges::count_if(day, inState(MissionState::REJECTED)),
+                scansOn(dayIndex), searchSeconds, searchMetres);
         }
         write(m_dailyCsvPath, daily);
 
