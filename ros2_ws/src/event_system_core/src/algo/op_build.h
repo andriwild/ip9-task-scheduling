@@ -19,6 +19,7 @@
 namespace des {
 
 constexpr double kMinEnergyBudgetWh = 1e-3;
+constexpr float kChargingPricedOut = 1e9f;
 
 struct OpBudgets {
     float timeBudget;

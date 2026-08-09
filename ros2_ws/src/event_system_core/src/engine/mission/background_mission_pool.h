@@ -174,9 +174,9 @@ public:
         if (timeBudget <= 0) { return; }
 
         // netChargeW <= 0: charging never pays off, price stations out of the tour
-        const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : 1e9f;
+        const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : kChargingPricedOut;
         const double taperedW = netChargeW * cfg->taperFraction;
-        const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : 1e9f;
+        const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : kChargingPricedOut;
         const float cvEnergy = static_cast<float>(cfg->cvThreshold * capacityWh);
 
         const OpBudgets budgets {

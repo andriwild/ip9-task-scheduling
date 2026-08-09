@@ -4,8 +4,10 @@
 
 namespace {
 
-const std::vector<std::string> kRooms = { "office", "kitchen" };
-const std::vector<des::RoomType> kTypes = { des::RoomType::WORKPLACE, des::RoomType::KITCHEN };
+const std::vector<des::SearchRoom> kRooms = {
+    { "office", des::RoomType::WORKPLACE },
+    { "kitchen", des::RoomType::KITCHEN },
+};
 
 des::SightingLog logWith(const int hits, const int misses, const std::string& room) {
     des::SightingLog log;
@@ -66,7 +68,7 @@ TEST(OccupancyPrior, WithRolePriorTheRoleDecides) {
 }
 
 TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
-    const auto nodes = des::occupancyProbability(des::SightingLog{}, "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(des::SightingLog{}, "anna", "office", kRooms, {}, false, kPriorWeight, kWorkplacePrior);
 
     ASSERT_EQ(nodes.size(), 2u);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
@@ -74,14 +76,14 @@ TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
 }
 
 TEST(OccupancyProbability, SightingsRaiseTheRoomAboveItsPrior) {
-    const auto nodes = des::occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, {}, false, kPriorWeight, kWorkplacePrior);
 
     EXPECT_NEAR(rewardOf(nodes, "kitchen"), 2.2f / 6.0f, 1e-6f);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
 }
 
 TEST(OccupancyProbability, MissesPushTheWorkplaceBelowItsPrior) {
-    const auto nodes = des::occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, kTypes, {}, false, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, {}, false, kPriorWeight, kWorkplacePrior);
 
     EXPECT_LT(rewardOf(nodes, "office"), 0.60f);
 }

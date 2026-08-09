@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 
 #include "bt_nodes/search.h"
 #include "bt_nodes/accompany.h"
@@ -73,24 +74,21 @@ struct SearchPlan {
     double durationSec;
 };
 
-// TODO: refactor
 std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const AccompanyOrder& a, const std::string& startLoc) {
+    const auto cfg    = ctx.getConfig();
     const auto person = ctx.getPersonByName(a.personName);
     const auto robot  = ctx.getRobot();
 
-    const auto& excluded = ctx.getConfig()->searchExcludedRooms;
-    std::vector<std::string> universe;
-    std::vector<RoomType> universeTypes;
-    for (const auto& name : ctx.roomNames()) {
-        if (!isSearchExcluded(excluded, name)) {
-            universe.push_back(name);
-            universeTypes.push_back(ctx.room(name).m_roomType);
-        }
-    }
-    const auto strategy = ctx.getConfig()->searchRewardStrategy;
-    const auto roomNodes = strategy == SearchRewardStrategy::FREQUENCY
-        ? frequencyReward(robot->getSightings(), a.personName, universe)
-        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, universe, universeTypes, person->roles, ctx.getConfig()->searchRolePrior, ctx.getConfig()->searchPriorWeight, static_cast<float>(ctx.getConfig()->searchWorkplacePrior));
+    const auto allNames = ctx.roomNames();
+    auto searchable = allNames
+        | std::views::filter([&](const std::string& name) { return !isSearchExcluded(cfg->searchExcludedRooms, name); })
+        | std::views::transform([&](const std::string& name) { return SearchRoom{ name, ctx.room(name).m_roomType }; })
+        | std::views::common;
+    const std::vector<SearchRoom> searchableRooms(searchable.begin(), searchable.end());
+
+    const auto roomNodes = cfg->searchRewardStrategy == SearchRewardStrategy::FREQUENCY
+        ? frequencyReward(robot->getSightings(), a.personName, searchableRooms)
+        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, person->roles, cfg->searchRolePrior, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();
@@ -108,12 +106,12 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         .endSocMin       = static_cast<float>(reserveWh),
         .socThreshold    = static_cast<float>(reserveWh),
         .maxEnergy       = static_cast<float>(capacityWh),
-        .chargeTimePerWh = 1e9f,
-        .chargeTimePerWhTapered = 1e9f,
+        .chargeTimePerWh = kChargingPricedOut,
+        .chargeTimePerWhTapered = kChargingPricedOut,
         .cvEnergy        = static_cast<float>(capacityWh),
     };
 
-    auto instance = buildSearchInstance(ctx, ctx, *ctx.getConfig(), roomNodes, startLoc, a.roomName, budgets);
+    auto instance = buildSearchInstance(ctx, ctx, *cfg, roomNodes, startLoc, a.roomName, budgets);
     if (!instance) {
         return std::nullopt;
     }
@@ -122,7 +120,6 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         return std::nullopt;
     }
 
-    const auto cfg           = ctx.getConfig();
     const double driveWhPerM = cfg->energyConsumptionDrive / (3600.0 * cfg->robotSpeed);
     const double driveDist   = instance->routeDriveDistance(route);
     double energyWh          = driveDist * driveWhPerM;

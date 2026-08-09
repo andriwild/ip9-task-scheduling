@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,11 @@
 #include "model/sighting.h"
 
 namespace des {
+
+struct SearchRoom {
+    std::string name;
+    RoomType type = RoomType::OTHER;
+};
 
 // calculate the probability of a room using beta-binomial model
 inline float roomProbability(int hits, int misses, float p0, double k) {
@@ -45,31 +51,27 @@ inline std::vector<OpNode> occupancyProbability(
     const SightingLog& sightings,
     const std::string& person,
     const std::string& office,
-    const std::vector<std::string>& allRooms,
-    const std::vector<RoomType>& roomTypes,
+    const std::vector<SearchRoom>& allRooms,
     const std::vector<std::string>& roles,
     bool useRolePrior,
     double priorWeight,
     float workplacePrior)
 {
-    std::vector<OpNode> nodes;
-    for (std::size_t i = 0; i < allRooms.size(); ++i) {
-        const std::string& room = allRooms[i];
-        const SightingCounts c = sightings.counts(person, room);
-        const RoomType type = i < roomTypes.size() ? roomTypes[i] : RoomType::OTHER;
-        const double probability = roomProbability(c.hits, c.misses, occupancyPrior(office == room, type, roles, useRolePrior, workplacePrior), priorWeight);
-        nodes.push_back({room, static_cast<float>(probability)});
-    }
-    return nodes;
+    auto scored = allRooms | std::views::transform([&](const SearchRoom& room) {
+        const SightingCounts c = sightings.counts(person, room.name);
+        const float prior = occupancyPrior(office == room.name, room.type, roles, useRolePrior, workplacePrior);
+        return OpNode{ room.name, roomProbability(c.hits, c.misses, prior, priorWeight) };
+    });
+    return { scored.begin(), scored.end() };
 }
 
 // naive approach - if a person was seeing in a room, its probability is increased
-inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const std::string& person, const std::vector<std::string>& allRooms) {
+inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const std::string& person, const std::vector<SearchRoom>& allRooms) {
     std::vector<OpNode> nodes;
-    for(const auto& room: allRooms) {
-        const int hits = sightings.counts(person, room).hits;
-        if(hits > 0) {
-            nodes.push_back({room, static_cast<float>(hits)});
+    for (const auto& room : allRooms) {
+        const int hits = sightings.counts(person, room.name).hits;
+        if (hits > 0) {
+            nodes.push_back({ room.name, static_cast<float>(hits) });
         }
     }
     return nodes;
