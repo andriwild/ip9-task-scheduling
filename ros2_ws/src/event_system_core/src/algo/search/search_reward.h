@@ -24,6 +24,8 @@ struct SearchRoom {
     RoomType type = RoomType::OTHER;
 };
 
+constexpr float kUnseenRoomReward = 1e-3f;
+
 // calculate the probability of a room using beta-binomial model
 inline float roomProbability(int hits, int misses, float p0, double k) {
     const double alpha = k * p0;
@@ -67,14 +69,11 @@ inline std::vector<OpNode> occupancyProbability(
 
 // naive approach - if a person was seeing in a room, its probability is increased
 inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const std::string& person, const std::vector<SearchRoom>& allRooms) {
-    std::vector<OpNode> nodes;
-    for (const auto& room : allRooms) {
+    auto scored = allRooms | std::views::transform([&](const SearchRoom& room) {
         const int hits = sightings.counts(person, room.name).hits;
-        if (hits > 0) {
-            nodes.push_back({ room.name, static_cast<float>(hits) });
-        }
-    }
-    return nodes;
+        return OpNode{ room.name, hits > 0 ? static_cast<float>(hits) : kUnseenRoomReward };
+    });
+    return { scored.begin(), scored.end() };
 }
 
 }  // namespace des
