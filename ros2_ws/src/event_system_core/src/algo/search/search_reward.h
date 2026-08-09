@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <random>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -25,6 +26,12 @@ struct SearchRoom {
 };
 
 constexpr float kUnseenRoomReward = 1e-3f;
+constexpr std::size_t kSectorPrefixLength = 4;
+
+// rooms are named <building>.<floor><sector><number>, e.g. 5.2B10 sits in sector 5.2B
+inline std::string roomSector(const std::string& name) {
+    return name.substr(0, kSectorPrefixLength);
+}
 
 // calculate the probability of a room using beta-binomial model
 inline float roomProbability(int hits, int misses, float p0, double k) {
@@ -65,6 +72,30 @@ inline std::vector<OpNode> occupancyProbability(
         return OpNode{ room.name, roomProbability(c.hits, c.misses, prior, priorWeight) };
     });
     return { scored.begin(), scored.end() };
+}
+
+// no knowledge at all, every room gets an arbitrary score
+inline std::vector<OpNode> randomReward(std::mt19937& rng, const std::vector<SearchRoom>& allRooms) {
+    std::uniform_real_distribution<float> uniform(0.0f, 1.0f);
+    std::vector<OpNode> nodes;
+    nodes.reserve(allRooms.size());
+    for (const auto& room : allRooms) {
+        nodes.push_back({ room.name, uniform(rng) });
+    }
+    return nodes;
+}
+
+// only the building layout is known: the sector of the workplace comes first, arbitrary within
+inline std::vector<OpNode> sectorReward(std::mt19937& rng, const std::vector<SearchRoom>& allRooms, const std::string& office) {
+    const std::string sector = roomSector(office);
+    std::uniform_real_distribution<float> uniform(0.0f, 1.0f);
+    std::vector<OpNode> nodes;
+    nodes.reserve(allRooms.size());
+    for (const auto& room : allRooms) {
+        const float sameSector = roomSector(room.name) == sector ? 1.0f : 0.0f;
+        nodes.push_back({ room.name, uniform(rng) + sameSector });
+    }
+    return nodes;
 }
 
 // naive approach - if a person was seeing in a room, its probability is increased

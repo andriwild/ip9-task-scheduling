@@ -41,18 +41,24 @@ inline DistributionType distributionTypeFromString(const std::string& str) {
 
 enum class SearchRewardStrategy {
     BETA_SMOOTHED,
-    FREQUENCY
+    FREQUENCY,
+    RANDOM,
+    RANDOM_SECTOR
 };
 
 inline std::string searchRewardStrategyToString(const SearchRewardStrategy strategy) {
     switch (strategy) {
-        case SearchRewardStrategy::FREQUENCY: return "frequency";
-        default:                              return "beta_smoothed";
+        case SearchRewardStrategy::FREQUENCY:     return "frequency";
+        case SearchRewardStrategy::RANDOM:        return "random";
+        case SearchRewardStrategy::RANDOM_SECTOR: return "random_sector";
+        default:                                  return "beta_smoothed";
     }
 }
 
 inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& str) {
     if (str == "frequency") return SearchRewardStrategy::FREQUENCY;
+    if (str == "random") return SearchRewardStrategy::RANDOM;
+    if (str == "random_sector") return SearchRewardStrategy::RANDOM_SECTOR;
     return SearchRewardStrategy::BETA_SMOOTHED;
 }
 

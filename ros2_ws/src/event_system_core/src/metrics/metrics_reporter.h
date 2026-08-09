@@ -46,7 +46,7 @@ public:
         using std::views::chunk_by;
 
         const auto& states = ctx.getRobot()->getStateLog().entries();
-        // TODO: roboter knowledge
+        // TODO: roboter knowledge vs. makov
         ctx.getRobot()->getSightings();
 
         auto secondsIn = [&states](const std::string& stateName) {

@@ -96,6 +96,30 @@ TEST(FrequencyReward, HitsCountAndUnseenRoomsStayRankable) {
     EXPECT_FLOAT_EQ(rewardOf(nodes, "office"), des::kUnseenRoomReward);
 }
 
+TEST(RandomReward, EveryRoomGetsAScoreAndTheDrawIsSeedDeterministic) {
+    std::mt19937 a(7);
+    std::mt19937 b(7);
+    const auto first  = des::randomReward(a, kRooms);
+    const auto second = des::randomReward(b, kRooms);
+
+    ASSERT_EQ(first.size(), 2u);
+    EXPECT_FLOAT_EQ(first.front().reward, second.front().reward);
+    EXPECT_FLOAT_EQ(first.back().reward, second.back().reward);
+}
+
+TEST(SectorReward, TheWorkplaceSectorAlwaysOutranksTheRest) {
+    const std::vector<des::SearchRoom> rooms = {
+        { "5.2A01", des::RoomType::WORKPLACE },
+        { "5.2B10", des::RoomType::WORKPLACE },
+        { "5.2B22", des::RoomType::KITCHEN },
+    };
+    std::mt19937 rng(7);
+    const auto nodes = des::sectorReward(rng, rooms, "5.2B10");
+
+    EXPECT_GT(rewardOf(nodes, "5.2B10"), rewardOf(nodes, "5.2A01"));
+    EXPECT_GT(rewardOf(nodes, "5.2B22"), rewardOf(nodes, "5.2A01"));
+}
+
 TEST(FrequencyReward, AnUnseenRoomIsOrderedByCostNotDropped) {
     const auto nodes = des::frequencyReward(des::SightingLog{}, "anna", kRooms);
 

@@ -86,9 +86,22 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
         | std::views::common;
     const std::vector<SearchRoom> searchableRooms(searchable.begin(), searchable.end());
 
-    const auto roomNodes = cfg->searchRewardStrategy == SearchRewardStrategy::FREQUENCY
-        ? frequencyReward(robot->getSightings(), a.personName, searchableRooms)
-        : occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, person->roles, cfg->searchRolePrior, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
+    const auto roomNodes = [&]() {
+        switch (cfg->searchRewardStrategy) {
+            case SearchRewardStrategy::RANDOM: {
+                return randomReward(ctx.robotRng(), searchableRooms);
+            }
+            case SearchRewardStrategy::RANDOM_SECTOR: {
+                return sectorReward(ctx.robotRng(), searchableRooms, person->workplace);
+            }
+            case SearchRewardStrategy::FREQUENCY: {
+                return frequencyReward(robot->getSightings(), a.personName, searchableRooms);
+            }
+            default: {
+                return occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, person->roles, cfg->searchRolePrior, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
+            }
+        }
+    }();
 
     const auto bat          = robot->batteryStats();
     const double voltage    = robot->batteryVoltage();
