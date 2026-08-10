@@ -261,7 +261,7 @@ TEST_F(IntegrationTest, SingleMissionCompletesSuccessfully) {
 }
 
 TEST_F(IntegrationTest, PersonOutsideTheVisibilityPolygonIsNotSeen) {
-    config->personDetectionRange = 100.0;
+    config->personIdentificationRange = 100.0;
     roomMap.at("Office").m_footprint = {
         des::Point{10.0, 10.0, 0.0},
         des::Point{11.0, 10.0, 0.0},

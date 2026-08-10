@@ -228,6 +228,10 @@ public:
         return it->second == robot->getLocation();
     }
 
+    bool robotRecognizesPerson(const std::string& name) const override {
+        return robotSeesPerson(name);
+    }
+
     std::map<std::pair<std::string, std::string>, int> lastServicedMap;
     std::optional<int> lastServiced(const std::string& room, const std::string& type) const override {
         auto it = lastServicedMap.find({room, type});
@@ -467,7 +471,7 @@ TEST(EventExecute, MissionStartSeedsSearchFromRoomUniverse) {
     std::vector<std::string> got = order->remainingSearch;
     std::sort(got.begin(), got.end());
     EXPECT_EQ(got, (std::vector<std::string>{"Kitchen", "Lab", "Office"}));
-    EXPECT_EQ(order->scanIndex, 0u);
+    EXPECT_TRUE(order->scanQueue.empty());
 }
 
 // --- des::AbortSearchEvent ---

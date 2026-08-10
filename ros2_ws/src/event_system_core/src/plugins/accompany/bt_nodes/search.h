@@ -5,6 +5,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <behaviortree_cpp/condition_node.h>
 #include <algorithm>
+#include <deque>
 #include <memory>
 
 #include "../../../util/log.h"
@@ -19,6 +20,18 @@
 #include "plugins/accompany/states.h"
 
 namespace des {
+
+// A room without a tour still gets one scan, taken where the robot stands.
+inline std::deque<ScanStop> scanRoute(const RoomTour& tour) {
+    if (tour.m_path.empty()) {
+        return { ScanStop{ Point{}, Polygon{}, false } };
+    }
+    std::deque<ScanStop> route;
+    for (std::size_t i = 0; i < tour.m_path.size(); ++i) {
+        route.push_back(ScanStop{ tour.m_path[i], tour.visibilityAt(i), true });
+    }
+    return route;
+}
 
 class IsSearching final : public BT::ConditionNode {
 public:
@@ -71,7 +84,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
+        auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
         const std::string room = ctx->getRobot()->getLocation();
 
         if (isSearchExcluded(ctx->getConfig()->searchExcludedRooms, room)) {
@@ -79,9 +92,17 @@ public:
             return BT::NodeStatus::FAILURE;
         }
 
-        const size_t scanPoints = std::max<size_t>(1, ctx->room(room).m_tour.m_path.size());
-        DES_LOG_DEBUG("des.plugin.accompany.search", "HasScanPoint: room=%s point %zu of %zu", room.c_str(), order.scanIndex, scanPoints);
-        return order.scanIndex < scanPoints ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+        if (order.scanRoom != room) {
+            order.scanRoom = room;
+            order.scanQueue = scanRoute(ctx->room(room).m_tour);
+        }
+        DES_LOG_DEBUG("des.plugin.accompany.search", "HasScanPoint: room=%s %zu stops left", room.c_str(), order.scanQueue.size());
+        if (order.scanQueue.empty()) {
+            // Only a fully worked off route justifies claiming the person was absent.
+            ctx->getRobot()->markRoomVisitCovered();
+            return BT::NodeStatus::FAILURE;
+        }
+        return BT::NodeStatus::SUCCESS;
     }
 };
 
@@ -93,18 +114,17 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
+        // TODO: fix static to dynamic cast
         auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
-        const RoomTour& tour = ctx->room(ctx->getRobot()->getLocation()).m_tour;
 
-        const size_t point = order.scanIndex;
-        order.scanIndex++;
-        auto scan = std::make_shared<ScanPointEvent>(ctx->getTime(), ctx->getOrderPtr());
+        const ScanStop stop = order.scanQueue.front();
+        order.scanQueue.pop_front();
+        const auto scan = std::make_shared<ScanPointEvent>(ctx->getTime(), ctx->getOrderPtr());
 
-        DES_LOG_DEBUG("des.plugin.accompany.search", "ScanNextPoint: point %zu of %zu", point, tour.m_path.size());
-        if (point < tour.m_path.size()) {
-            requestDrive(*ctx, tour.m_path[point], tour.visibilityAt(point), scan);
+        DES_LOG_DEBUG("des.plugin.accompany.search", "ScanNextPoint: %zu stops left", order.scanQueue.size());
+        if (stop.drive) {
+            requestDrive(*ctx, stop.point, stop.visibility, scan);
         } else {
-            ctx->getRobot()->markRoomVisitCovered();
             ctx->startActivity(scan);
         }
         return BT::NodeStatus::SUCCESS;
@@ -137,7 +157,8 @@ public:
 
         const std::string nextLocation = order.remainingSearch.front();
         order.remainingSearch.erase(order.remainingSearch.begin());
-        order.scanIndex = 0;
+        order.scanRoom.clear();
+        order.scanQueue.clear();
         DES_LOG_DEBUG("des.plugin.accompany.search", "MoveToNextLocation: %s", nextLocation.c_str());
         requestDrive(*ctx, nextLocation);
         return BT::NodeStatus::SUCCESS;

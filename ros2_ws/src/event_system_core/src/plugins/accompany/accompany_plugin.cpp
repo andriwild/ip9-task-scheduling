@@ -162,7 +162,8 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, IOrder& order) {
 
     accompanyOrder.plannedSearch = locations;
     accompanyOrder.remainingSearch = locations;
-    accompanyOrder.scanIndex = 0;
+    accompanyOrder.scanRoom.clear();
+    accompanyOrder.scanQueue.clear();
     accompanyOrder.phase = AccompanyPhase::SEARCH;
     ctx.changeRobotState(std::make_unique<SearchState>());
 }

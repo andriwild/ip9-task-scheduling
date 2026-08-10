@@ -86,6 +86,7 @@ public:
     unsigned int activeSeed() const;
 
     void addMissionId(IEvent& event) const;
+    bool personInSight(const std::string& name, double range) const;
     void pushEvent(const std::shared_ptr<IEvent>& event) override;
     void startActivity(const std::shared_ptr<IEvent>& endEvent) override;
     void executeEvent(const std::shared_ptr<IEvent>& event);
@@ -102,6 +103,7 @@ public:
     void setPersonLocation(const std::string& name, const std::string& room) override;
     std::optional<Point> getPersonPosition(const std::string& name) const override;
     bool robotSeesPerson(const std::string& name) const override;
+    bool robotRecognizesPerson(const std::string& name) const override;
 
     std::optional<int> lastServiced(const std::string& room, const std::string& type) const override;
     void recordServiced(const std::string& room, const std::string& type, int time) override;

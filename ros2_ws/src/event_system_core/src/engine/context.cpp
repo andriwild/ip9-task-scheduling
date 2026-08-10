@@ -234,7 +234,7 @@ std::optional<Point> SimulationContext::getPersonPosition(const std::string& nam
     return m_persons.position(name);
 }
 
-bool SimulationContext::robotSeesPerson(const std::string& name) const {
+bool SimulationContext::personInSight(const std::string& name, const double range) const {
     if (!m_persons.isAt(name, m_robot->getLocation())) {
         return false;
     }
@@ -243,10 +243,18 @@ bool SimulationContext::robotSeesPerson(const std::string& name) const {
         return false;
     }
     const Point robotPos = m_robot->getPosition();
-    if (std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) > m_simConfig->personDetectionRange) {
+    if (std::hypot(pos->m_x - robotPos.m_x, pos->m_y - robotPos.m_y) > range) {
         return false;
     }
     return geom::isVisible(*pos, m_robot->getVisibility());
+}
+
+bool SimulationContext::robotSeesPerson(const std::string& name) const {
+    return personInSight(name, m_simConfig->personIdentificationRange);
+}
+
+bool SimulationContext::robotRecognizesPerson(const std::string& name) const {
+    return personInSight(name, m_simConfig->personRecognitionRange);
 }
 
 std::optional<int> SimulationContext::lastServiced(const std::string& room, const std::string& type) const {

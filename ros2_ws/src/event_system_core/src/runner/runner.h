@@ -229,9 +229,10 @@ protected:
 
     void mergeRoomTours() {
 
-        // get the configured precalculated tour config file (e.g. tous_r2.5.json)
+        // The tour raster follows the recognition range: every point of the room must
+        // be perceivable from the route, identification then needs a detour.
         std::ostringstream radius;
-        radius << m_config->personDetectionRange;
+        radius << m_config->personRecognitionRange;
         const std::string path = CONFIG_DIR + "tours_r" + radius.str() + ".json";
 
         // add tours through to existing rooms

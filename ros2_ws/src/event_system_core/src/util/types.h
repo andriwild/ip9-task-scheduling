@@ -146,7 +146,8 @@ struct SimConfig {
     bool cacheEnabled;
     std::string appointmentsPath;
     std::string peopleSpawnLocation;
-    double personDetectionRange = 5.0;
+    double personIdentificationRange = 5.0;
+    double personRecognitionRange = 5.0;
     double personSpeed = 1.4;
     int simStartTime = 25200;  // 07:00
     int simDuration  = 43200;
@@ -170,6 +171,7 @@ struct SimConfig {
     bool searchRolePrior = false;
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
+    double personDirectionsProbability = 0.0;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
     unsigned int seed = 42;
@@ -214,7 +216,9 @@ struct SimConfig {
         os << std::left << std::setw(W) << "rounds" << ": " << config.rounds << std::endl;
         os << std::left << std::setw(W) << "roundMode" << ": " << roundModeToString(config.roundMode) << std::endl;
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
-        os << std::left << std::setw(W) << "personDetectionRange" << ": " << config.personDetectionRange << std::endl;
+        os << std::left << std::setw(W) << "personIdentificationRange" << ": " << config.personIdentificationRange << std::endl;
+        os << std::left << std::setw(W) << "personRecognitionRange" << ": " << config.personRecognitionRange << std::endl;
+        os << std::left << std::setw(W) << "personDirectionsProbability" << ": " << config.personDirectionsProbability << std::endl;
         os << std::left << std::setw(W) << "personSpeed" << ": " << config.personSpeed << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simDuration" << ": " << config.simDuration << std::endl;

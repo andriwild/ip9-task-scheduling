@@ -21,6 +21,7 @@ public:
     virtual void setPersonLocation(const std::string& name, const std::string& room) = 0;
     virtual std::optional<Point> getPersonPosition(const std::string& name) const = 0;
     virtual bool robotSeesPerson(const std::string& name) const = 0;
+    virtual bool robotRecognizesPerson(const std::string& name) const = 0;
 };
 
 }  // namespace des

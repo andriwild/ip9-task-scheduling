@@ -19,6 +19,9 @@
 #include "../plugins/accompany/accompany_order.h"
 
 
+
+// TODO: better solution for config key's
+
 namespace des {
 
 // Baked in by CMake from the workspace layout, overridable at runtime via the
@@ -254,7 +257,9 @@ public:
             config.appointmentsPath = resolvePath(j.value("appointments_path", std::string("appointments.json")));
             config.employeesPath    = resolvePath(j.value("employees_path", DEFAULT_EMPLOYEE_FILE));
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
-            config.personDetectionRange = j.value("person_detection_range", 5.0);
+            config.personIdentificationRange = j.value("person_identification_range", j.value("person_detection_range", 5.0));
+            config.personRecognitionRange = std::max(config.personIdentificationRange, j.value("person_recognition_range", config.personIdentificationRange));
+            config.personDirectionsProbability = j.value("person_gives_directions_probability", 0.0);
             config.personSpeed = j.value("person_speed", 1.4);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
@@ -338,7 +343,9 @@ public:
         j["appointments_path"]              = config.appointmentsPath;
         j["employees_path"]                 = config.employeesPath;
         j["people_spawn_location"]          = config.peopleSpawnLocation;
-        j["person_detection_range"]         = roundValue(config.personDetectionRange);
+        j["person_identification_range"]    = roundValue(config.personIdentificationRange);
+        j["person_recognition_range"]       = roundValue(config.personRecognitionRange);
+        j["person_gives_directions_probability"] = roundValue(config.personDirectionsProbability);
         j["person_speed"]                   = roundValue(config.personSpeed);
         j["sim_start_time"]                 = config.simStartTime;
         j["sim_duration"]                   = config.simDuration;

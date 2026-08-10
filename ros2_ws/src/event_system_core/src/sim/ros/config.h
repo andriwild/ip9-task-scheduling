@@ -83,7 +83,7 @@ private:
             config.cacheEnabled           = request->cache_enabled;
             config.appointmentsPath       = request->appointments_path;
             config.peopleSpawnLocation    = request->people_spawn_location;
-            config.personDetectionRange   = request->person_detection_range;
+            config.personIdentificationRange = request->person_detection_range;
             config.simStartTime           = request->sim_start_time;
             config.simDuration            = request->sim_duration;
             config.batteryVoltage         = request->battery_voltage;
@@ -126,7 +126,7 @@ private:
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
             msg.appointments_path          = m_currentConfig->appointmentsPath;
             msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
-            msg.person_detection_range     = m_currentConfig->personDetectionRange;
+            msg.person_detection_range     = m_currentConfig->personIdentificationRange;
             msg.sim_start_time             = m_currentConfig->simStartTime;
             msg.sim_duration               = m_currentConfig->simDuration;
             msg.battery_voltage            = m_currentConfig->batteryVoltage;
