@@ -2,7 +2,7 @@
  * Log of who the robot saw where or not.
  * Observations are buffered per room visit and flushed on the next.
  * beginVisit(), one room visit yields at most one entry per person.
- * The tally feeds the search priors of the accompany plugin.
+ * The counts feed the search priors of the accompany plugin.
  *
  */
 
@@ -29,8 +29,7 @@ struct SightingCounts {
 
 class SightingLog {
     std::vector<Sighting> m_entries;
-    // TODO: rename tally
-    std::map<std::string, std::map<std::string, SightingCounts>> m_tally;
+    std::map<std::string, std::map<std::string, SightingCounts>> m_counts;
     std::string m_visitLocation;
     std::map<std::string, Sighting> m_visit;
     bool m_visitCovered = false;
@@ -78,7 +77,7 @@ public:
 
     void add(const Sighting& sighting) {
         m_entries.push_back(sighting);
-        SightingCounts& c = m_tally[sighting.personName][sighting.location];
+        SightingCounts& c = m_counts[sighting.personName][sighting.location];
         if (sighting.kind == SightingKind::PRESENT) {
             c.hits++;
         } else {
@@ -87,8 +86,8 @@ public:
     }
 
     SightingCounts counts(const std::string& person, const std::string& room) const {
-        const auto p = m_tally.find(person);
-        if (p == m_tally.end()) {
+        const auto p = m_counts.find(person);
+        if (p == m_counts.end()) {
             return {};
         }
         const auto r = p->second.find(room);
@@ -102,13 +101,17 @@ public:
         return m_entries;
     }
 
+    const std::map<std::string, std::map<std::string, SightingCounts>>& allCounts() const {
+        return m_counts;
+    }
+
     std::size_t size() const {
         return m_entries.size();
     }
 
     void clear() {
         m_entries.clear();
-        m_tally.clear();
+        m_counts.clear();
         m_visit.clear();
         m_visitLocation.clear();
     }

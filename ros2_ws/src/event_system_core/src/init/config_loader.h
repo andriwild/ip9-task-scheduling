@@ -260,6 +260,7 @@ public:
             config.personIdentificationRange = j.value("person_identification_range", j.value("person_detection_range", 5.0));
             config.personRecognitionRange = std::max(config.personIdentificationRange, j.value("person_recognition_range", config.personIdentificationRange));
             config.personDirectionsProbability = j.value("person_gives_directions_probability", 0.0);
+            config.debugExport = j.value("debug_export", j.value("move_trace_export", false));
             config.personSpeed = j.value("person_speed", 1.4);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
@@ -346,6 +347,7 @@ public:
         j["person_identification_range"]    = roundValue(config.personIdentificationRange);
         j["person_recognition_range"]       = roundValue(config.personRecognitionRange);
         j["person_gives_directions_probability"] = roundValue(config.personDirectionsProbability);
+        j["debug_export"]                   = config.debugExport;
         j["person_speed"]                   = roundValue(config.personSpeed);
         j["sim_start_time"]                 = config.simStartTime;
         j["sim_duration"]                   = config.simDuration;

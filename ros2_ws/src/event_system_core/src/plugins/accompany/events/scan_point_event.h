@@ -46,8 +46,7 @@ public:
     }
 
     // Walk up to the recognized person and come back to the point we are standing on.
-    // They lie inside the current visibility polygon, so the way there is free and the
-    // same polygon serves for the identification at the far end.
+    // They lie inside the current visibility polygon, so the way there is free and the same polygon serves for the identification
     static void insertDetour(ISimContext& ctx, AccompanyOrder& order, const std::string& recognizedPerson) {
         const auto target = ctx.getPersonPosition(recognizedPerson);
         if (!target) {
@@ -61,8 +60,7 @@ public:
         DES_LOG_DEBUG("des.plugin.accompany.search", "Detour to %s in %s, %zu stops queued", recognizedPerson.c_str(), robot->getLocation().c_str(), order.scanQueue.size());
     }
 
-    // The person the robot just identified may know where the wanted one is. That is
-    // the person's knowledge, not the robot's, so reading the true location is fair.
+    // The person the robot just identified may know where the wanted one is
     static void askForDirections(ISimContext& ctx, AccompanyOrder& order, const std::string& informant) {
         const double chance = ctx.getConfig()->personDirectionsProbability;
         if (chance <= 0.0 || rnd::uni(ctx.robotRng()) >= chance) {

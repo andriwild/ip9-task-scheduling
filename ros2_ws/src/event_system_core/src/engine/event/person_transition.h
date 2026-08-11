@@ -42,14 +42,22 @@ class PersonTransitionEvent : public IEvent {
 public:
     Person* const person;
     std::string targetRoom;
+
+    // Set on every move, read by the move trace.
+    // OUTDOOR and IN_TRANSIT are no rooms, so they have a name but no position.
+    std::string m_room;
+    std::optional<Point> m_at;
     explicit PersonTransitionEvent(const int time, Person* p) :
         IEvent(time),
         person(std::move(p))
     {}
 
-    void moveTo(ISimContext& ctx, const std::string& room) const {
+    void moveTo(ISimContext& ctx, const std::string& room) {
         ctx.setPersonLocation(person->firstName, room);
+        m_room = room;
+        m_at = ctx.getPersonPosition(person->firstName);
     }
+
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
         auto copy = std::make_shared<PersonTransitionEvent>(*this);
@@ -66,6 +74,7 @@ public:
     EventType getType() const override { return EventType::PERSON_TRANSITION; }
     std::string getColor() const override { return person->color; }
     int getMissionId() const override { return -1; }
+
 };
 
 class PersonArrivedEvent final : public PersonTransitionEvent {

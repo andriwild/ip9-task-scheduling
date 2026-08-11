@@ -158,6 +158,7 @@ struct SimConfig {
     bool chargeToFull = true;
     bool alwaysChargeAtDock = false;
     bool metricsCsvExport = true;
+    bool debugExport = false;
     bool replanBackgroundOnInterrupt = true;
     double lunchMean = 12.0 * 3600;
     double lunchStd = 1800.0;

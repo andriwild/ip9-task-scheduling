@@ -46,6 +46,8 @@ class PersonAccompanyArrivedEvent final : public IEvent {
 public:
     Person* const person;
     const std::string arrivalRoom;
+    // Filled on arrival, read by the move trace.
+    std::optional<Point> m_at;
 
     PersonAccompanyArrivedEvent(const int time,
                                 Person* p,
@@ -63,6 +65,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
+        m_at = ctx.getPersonPosition(person->firstName);
         ctx.notifyEvent(*this);
     }
 

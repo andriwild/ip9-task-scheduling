@@ -16,6 +16,10 @@ class StopDriveEvent final : public IEvent {
     std::shared_ptr<IEvent> m_onArrive;
 
 public:
+    // Filled on arrival, read by the move trace.
+    std::string m_room;
+    std::optional<Point> m_at;
+
     explicit StopDriveEvent(const int time, std::shared_ptr<DriveTarget> target, const double distance, std::shared_ptr<IEvent> onArrive = nullptr)
         : IEvent(time)
         , m_target(std::move(target))
@@ -32,6 +36,8 @@ public:
 
     void execute(ISimContext& ctx) override {
         m_target->arrive(ctx, m_distance);
+        m_room = ctx.getRobot()->getLocation();
+        m_at = ctx.getRobot()->getPosition();
         ctx.getRobot()->setDriving(false);
         ctx.notifyEvent(*this);
         ctx.notifyBatteryChanged();

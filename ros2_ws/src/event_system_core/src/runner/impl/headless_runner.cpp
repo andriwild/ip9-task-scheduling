@@ -38,6 +38,9 @@ void HeadlessRunner::setupApplication() {
         m_reporter.enableCsv(outputPath("metrics", ".csv"));
         m_reporter.enableDailyCsv(outputPath("metrics_daily", ".csv"));
     }
+    if (m_config->debugExport) {
+        m_reporter.enableDebugTrace(outputPath("debug", "/"));
+    }
 
     m_ctx->setBehaviorTree(setupBehaviorTree(m_ctx.get()));
 

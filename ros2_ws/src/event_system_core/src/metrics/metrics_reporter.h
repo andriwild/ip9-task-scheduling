@@ -15,6 +15,7 @@
 #include "model/robot.h"
 #include "plugins/order_registry.h"
 #include "util/constants.h"
+#include "metrics/debug_trace.h"
 #include "util/types.h"
 
 namespace des::metrics {
@@ -24,6 +25,7 @@ class MetricsReporter {
     std::string m_dailyCsvPath;
     std::string m_scenario;
     unsigned int m_roundSeed = 0;
+    std::string m_debugDir;
     int m_roundsWritten = 0;
 
 public:
@@ -33,6 +35,10 @@ public:
 
     void enableDailyCsv(std::string path) {
         m_dailyCsvPath = std::move(path);
+    }
+
+    void enableDebugTrace(std::string directory) {
+        m_debugDir = std::move(directory);
     }
 
     void setRunInfo(std::string scenario, const unsigned int roundSeed) {
@@ -130,6 +136,15 @@ public:
             ctx.getRobot()->getOdometer(),
             std::ranges::distance(scheduled));
         write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions\n", run);
+
+        if (!m_debugDir.empty()) {
+            const std::string dir = m_debugDir.back() == '/' ? m_debugDir : m_debugDir + "/";
+            writeMoveTrace(dir + "moves.csv", protocol);
+            writeEventTrace(dir + "events.csv", protocol);
+            writeStateTrace(dir + "states.csv", ctx.getRobot()->getStateLog());
+            writeSightingTrace(dir + "sightings.csv", ctx.getRobot()->getSightings());
+            writeKnowledgeTrace(dir + "knowledge.csv", ctx.getRobot()->getSightings());
+        }
 
         ++m_roundsWritten;
     }
