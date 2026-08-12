@@ -26,13 +26,13 @@ private:
         const auto order = ctx->getOrderPtr();
         if (!order) return BT::NodeStatus::FAILURE;
 
-        if (order->state == MissionState::PENDING) {
+        if (order->state == OrderState::PENDING) {
             DES_LOG_DEBUG("des.plugin.information", "ExecuteInformation: start (order id=%d type=%s)", order->id, order->type.c_str());
-            order->state = MissionState::IN_PROGRESS;
+            order->state = OrderState::IN_PROGRESS;
             ctx->pushEvent(std::make_shared<StartInformationEvent>(ctx->getTime(), order));
             return BT::NodeStatus::RUNNING;
         }
-        if (order->state == MissionState::COMPLETED) {
+        if (order->state == OrderState::COMPLETED) {
             DES_LOG_DEBUG("des.plugin.information", "ExecuteInformation: done (order id=%d type=%s)", order->id, order->type.c_str());
             return BT::NodeStatus::SUCCESS;
         }

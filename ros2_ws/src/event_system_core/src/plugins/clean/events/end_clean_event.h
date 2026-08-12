@@ -21,7 +21,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = MissionState::COMPLETED;
+        m_order->state = OrderState::COMPLETED;
         ctx.notifyEvent(*this);
         ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
         ctx.tickBT();

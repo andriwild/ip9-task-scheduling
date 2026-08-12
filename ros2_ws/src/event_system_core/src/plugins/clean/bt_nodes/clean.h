@@ -73,7 +73,7 @@ public:
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
         // Idempotent on resume after interrupt: only push StartCleanEvent if mission hasn't been started yet.
-        if (order && order->state == MissionState::PENDING) {
+        if (order && order->state == OrderState::PENDING) {
             DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: start");
             ctx->pushEvent(std::make_shared<StartCleanEvent>(ctx->getTime(), order));
             return BT::NodeStatus::RUNNING;
@@ -85,13 +85,13 @@ public:
     BT::NodeStatus onRunning() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == MissionState::COMPLETED) {
+        if (!order || order->state == OrderState::COMPLETED) {
             DES_LOG_DEBUG("des.plugin.clean", "ExecuteClean: done");
             ctx->getRobot()->setServicing(false);
             return BT::NodeStatus::SUCCESS;
         }
         const auto robot = ctx->getRobot();
-        if (order->state != MissionState::IN_PROGRESS || robot->isDriving()) {
+        if (order->state != OrderState::IN_PROGRESS || robot->isDriving()) {
             return BT::NodeStatus::RUNNING;
         }
 

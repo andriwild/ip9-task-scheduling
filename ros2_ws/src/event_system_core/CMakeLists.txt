@@ -155,7 +155,7 @@ if(BUILD_TESTING)
     src/engine/event_queue.cpp
     src/engine/person_registry.cpp
     src/engine/service_log.cpp
-    src/engine/mission/mission_board.cpp
+    src/engine/order/order_board.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
   )

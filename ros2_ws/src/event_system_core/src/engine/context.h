@@ -1,7 +1,7 @@
 /*
  * Central simulation hub and ISimContext implementation.
  * Owns clock, robot, RNG streams and the sub-registries, and mostly
- * delegates to PersonRegistry, ServiceLog, MissionBoard and EventBus.
+ * delegates to PersonRegistry, ServiceLog, OrderBoard and EventBus.
  *
  */
 
@@ -16,7 +16,7 @@
 #include <optional>
 #include <random>
 
-#include "engine/mission/mission_board.h"
+#include "engine/order/order_board.h"
 #include "engine/person_registry.h"
 #include "engine/service_log.h"
 #include "model/robot.h"
@@ -52,7 +52,7 @@ class SimulationContext : public ISimContext {
     RoomMap m_rooms;
     PersonRegistry m_persons;
     ServiceLog m_services;
-    MissionBoard m_missions;
+    OrderBoard m_missions;
 
 public:
     explicit SimulationContext(
@@ -114,16 +114,16 @@ public:
     // Mission management — current mission plus the three mission channels.
     void setOrderPtr(const OrderPtr& orderPtr) override;
     OrderPtr getOrderPtr() const override;
-    void updateOrderState(const MissionState& newState) override;
+    void updateOrderState(const OrderState& newState) override;
 
-    void addScheduledMission(const OrderPtr orderPtr) override;
-    bool hasScheduledMission() const override;
-    OrderPtr nextScheduledMission() override;
-    OrderPtr popScheduledMission() override;
+    void addScheduledOrder(const OrderPtr orderPtr) override;
+    bool hasScheduledOrder() const override;
+    OrderPtr nextScheduledOrder() override;
+    OrderPtr popScheduledOrder() override;
 
-    void addBackgroundMission(const OrderPtr orderPtr) override;
-    bool hasBackgroundMission() const override;
-    OrderPtr acceptFeasibleBackgroundMission() override;
+    void addBackgroundOrder(const OrderPtr orderPtr) override;
+    bool hasBackgroundOrder() const override;
+    OrderPtr acceptFeasibleBackgroundOrder() override;
 
     std::optional<int> getNextScheduledDispatchTime() const override;
     OrderPtr peekNextScheduledOrder() const override;

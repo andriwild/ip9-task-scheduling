@@ -28,11 +28,11 @@ public:
         switch (m_order->execution) {
             case ExecutionMode::BACKGROUND:
             case ExecutionMode::SCHEDULED:
-                ctx.addScheduledMission(m_order);
+                ctx.addScheduledOrder(m_order);
                 break;
             case ExecutionMode::INTERRUPT:
                 if (!ctx.pushInterrupt(m_order)) {
-                    m_order->state = MissionState::REJECTED;
+                    m_order->state = OrderState::REJECTED;
                     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(this->time, m_order));
                 }
                 break;

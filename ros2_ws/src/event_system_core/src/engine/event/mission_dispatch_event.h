@@ -27,7 +27,7 @@ public:
 
     void execute(ISimContext& ctx) override {
         ctx.publishMission(this->orderPtr, time);
-        ctx.addScheduledMission(this->orderPtr);
+        ctx.addScheduledOrder(this->orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }

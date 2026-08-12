@@ -70,7 +70,7 @@ public:
     BT::NodeStatus onStart() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (order && order->state == MissionState::PENDING) {
+        if (order && order->state == OrderState::PENDING) {
             DES_LOG_DEBUG("des.plugin.data_acquisition", "ExecuteAcquisition: start");
             ctx->pushEvent(std::make_shared<StartAcquisitionEvent>(ctx->getTime(), order));
         }
@@ -80,7 +80,7 @@ public:
     BT::NodeStatus onRunning() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
         const auto order = ctx->getOrderPtr();
-        if (!order || order->state == MissionState::COMPLETED) {
+        if (!order || order->state == OrderState::COMPLETED) {
             DES_LOG_DEBUG("des.plugin.data_acquisition", "ExecuteAcquisition: done");
             return BT::NodeStatus::SUCCESS;
         }

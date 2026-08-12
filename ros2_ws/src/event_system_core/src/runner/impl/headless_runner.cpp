@@ -67,12 +67,12 @@ bool HeadlessRunner::loadNextRound() {
     DES_LOG_INFO("des.runner", "Starting round %d/%d: %s", m_currentRound + 1, m_config->rounds, path.c_str());
     m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_ctx->activeSeed());
 
-    auto appts = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
-    if (!appts.has_value()) {
+    auto orders = ConfigLoader::loadOrderConfig(path, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
+    if (!orders.has_value()) {
         DES_LOG_ERROR("des.runner", "Failed to load appointments from: %s", path.c_str());
         return false;
     }
-    m_orders = appts.value();
+    m_orders = orders.value();
 
     m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(path);
     DES_LOG_INFO("des.runner", "Successful loaded %zu background templates", m_backgroundTemplates.size());

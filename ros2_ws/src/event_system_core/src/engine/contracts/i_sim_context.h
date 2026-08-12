@@ -4,7 +4,7 @@
 #include "engine/contracts/i_config_access.h"
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_event_sink.h"
-#include "engine/contracts/i_mission_board.h"
+#include "engine/contracts/i_order_board.h"
 #include "engine/contracts/i_notifier.h"
 #include "engine/contracts/i_path_planning.h"
 #include "engine/contracts/i_person_registry.h"
@@ -22,7 +22,7 @@ class ISimContext
     , public IRobotAccess
     , public IPathPlanning
     , public INotifier
-    , public IMissionBoard
+    , public IOrderBoard
     , public IPersonRegistry
     , public IWorldModel
     , public IConfigAccess

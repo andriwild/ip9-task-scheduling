@@ -371,7 +371,7 @@ TEST_F(IntegrationTest, ResetContextClearsStateAndResetsRobot) {
     EXPECT_EQ(ctx->getRobot()->getLocation(), config->dockLocation);
     EXPECT_FALSE(ctx->getRobot()->isDriving());
     EXPECT_EQ(ctx->getOrderPtr(), nullptr);
-    EXPECT_FALSE(ctx->hasScheduledMission());
+    EXPECT_FALSE(ctx->hasScheduledOrder());
 }
 
 TEST_F(IntegrationTest, ResetContextAllowsRerun) {
@@ -468,7 +468,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_DISPATCH);
-    EXPECT_EQ(order->state, des::MissionState::PENDING);
+    EXPECT_EQ(order->state, des::OrderState::PENDING);
 
     // Step 4: MissionStart -> des::Robot enters des::SearchState
     e = step(*ctx);
@@ -571,7 +571,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::DROP_OFF_CONV_COMPLETE);
-    EXPECT_EQ(order->state, des::MissionState::COMPLETED);
+    EXPECT_EQ(order->state, des::OrderState::COMPLETED);
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
 
     // Step 19: MissionComplete
@@ -579,7 +579,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     ASSERT_NE(e, nullptr);
     EXPECT_EQ(e->getType(), des::EventType::MISSION_COMPLETE);
     EXPECT_TRUE(observer->sawEvent(des::EventType::MISSION_COMPLETE));
-    EXPECT_EQ(order->state, des::MissionState::COMPLETED);
+    EXPECT_EQ(order->state, des::OrderState::COMPLETED);
 
     // Step 20: StartDrive back to Dock
     e = step(*ctx);
@@ -607,7 +607,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     EXPECT_TRUE(seenSimEnd) << "SimulationEnd event must be processed";
 
     EXPECT_TRUE(eventQueue.empty());
-    EXPECT_EQ(order->state, des::MissionState::COMPLETED);
+    EXPECT_EQ(order->state, des::OrderState::COMPLETED);
 
     // Verify key state transitions happened in correct order
     bool foundSearch = false, foundAccompany = false, foundComplete = false;

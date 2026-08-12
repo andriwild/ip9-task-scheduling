@@ -25,21 +25,21 @@ const std::string MISSION_CONTROL_ROUTINE = R"(
   <BehaviorTree ID="MissionControlRoutine">
     <Sequence name="Seq_HandleMissions">
       <IsAvailable/>
-      <Inverter><IsMissionAssigned/></Inverter>
+      <Inverter><IsOrderAssigned/></Inverter>
       <Fallback name="Fallback_PendingOrBackground">
         <Sequence name="Seq_HandlePending">
-          <HasPendingMission/>
+          <HasPendingOrder/>
           <Fallback name="AcceptOrDeclineMission">
             <Sequence name="AcceptMissionSequence">
-              <MissionFeasibilityCheck/>
-              <AcceptMissionAction/>
+              <OrderFeasibilityCheck/>
+              <AcceptOrderAction/>
             </Sequence>
-            <RejectMissionAction/>
+            <RejectOrderAction/>
           </Fallback>
         </Sequence>
         <Sequence name="Seq_HandleBackground">
-          <HasBackgroundMission/>
-          <AcceptBackgroundMissionAction/>
+          <HasBackgroundOrder/>
+          <AcceptBackgroundOrderAction/>
         </Sequence>
       </Fallback>
     </Sequence>
@@ -113,17 +113,17 @@ inline void registerCoreNodes(BT::BehaviorTreeFactory& factory) {
     // idle
     factory.registerNodeType<IsIdle>("IsIdle");
     factory.registerNodeType<Docking>("Docking");
-    factory.registerNodeType<HasPendingMissionIdle>("HasPendingMissionIdle");
+    factory.registerNodeType<HasPendingOrderIdle>("HasPendingOrderIdle");
 
     // mission control
-    factory.registerNodeType<HasPendingMission>("HasPendingMission");
-    factory.registerNodeType<HasBackgroundMission>("HasBackgroundMission");
+    factory.registerNodeType<HasPendingOrder>("HasPendingOrder");
+    factory.registerNodeType<HasBackgroundOrder>("HasBackgroundOrder");
     factory.registerNodeType<IsRobotBusy>("IsRobotBusy");
-    factory.registerNodeType<IsMissionAssigned>("IsMissionAssigned");
-    factory.registerNodeType<AcceptMissionAction>("AcceptMissionAction");
-    factory.registerNodeType<AcceptBackgroundMissionAction>("AcceptBackgroundMissionAction");
-    factory.registerNodeType<RejectMissionAction>("RejectMissionAction");
-    factory.registerNodeType<MissionFeasibilityCheck>("MissionFeasibilityCheck");
+    factory.registerNodeType<IsOrderAssigned>("IsOrderAssigned");
+    factory.registerNodeType<AcceptOrderAction>("AcceptOrderAction");
+    factory.registerNodeType<AcceptBackgroundOrderAction>("AcceptBackgroundOrderAction");
+    factory.registerNodeType<RejectOrderAction>("RejectOrderAction");
+    factory.registerNodeType<OrderFeasibilityCheck>("OrderFeasibilityCheck");
     factory.registerNodeType<IsInterruptActive>("IsInterruptActive");
 
     // mission outcome

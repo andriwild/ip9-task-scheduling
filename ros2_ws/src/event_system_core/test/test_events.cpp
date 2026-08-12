@@ -131,32 +131,32 @@ public:
         return currentOrder;
     }
 
-    void updateOrderState(const des::MissionState& newState) override {
+    void updateOrderState(const des::OrderState& newState) override {
         if (currentOrder) currentOrder->state = newState;
     }
 
-    void addScheduledMission(const des::OrderPtr order) override {
+    void addScheduledOrder(const des::OrderPtr order) override {
         pendingMissions.push_back(order);
     }
 
-    bool hasScheduledMission() const override { return !pendingMissions.empty(); }
+    bool hasScheduledOrder() const override { return !pendingMissions.empty(); }
 
-    des::OrderPtr nextScheduledMission() override {
+    des::OrderPtr nextScheduledOrder() override {
         return pendingMissions.empty() ? nullptr : pendingMissions.front();
     }
 
-    des::OrderPtr popScheduledMission() override {
+    des::OrderPtr popScheduledOrder() override {
         if (pendingMissions.empty()) return nullptr;
         auto front = pendingMissions.front();
         pendingMissions.erase(pendingMissions.begin());
         return front;
     }
 
-    void addBackgroundMission(const des::OrderPtr order) override {
+    void addBackgroundOrder(const des::OrderPtr order) override {
         m_backgroundMissions.push_back(order);
     }
-    bool hasBackgroundMission() const override { return !m_backgroundMissions.empty(); }
-    des::OrderPtr acceptFeasibleBackgroundMission() override {
+    bool hasBackgroundOrder() const override { return !m_backgroundMissions.empty(); }
+    des::OrderPtr acceptFeasibleBackgroundOrder() override {
         if (m_backgroundMissions.empty()) return nullptr;
         auto order = m_backgroundMissions.front();
         m_backgroundMissions.erase(m_backgroundMissions.begin());
@@ -480,7 +480,7 @@ TEST(EventExecute, AbortSearchReportsReasonWithoutEndingTheMission) {
     MockSimContext ctx;
 
     auto order = makeAccompanyOrder(1, "Max");
-    order->state = des::MissionState::IN_PROGRESS;
+    order->state = des::OrderState::IN_PROGRESS;
     ctx.currentOrder = order;
     ctx.personLocations["Max"] = "OUTDOOR";
 
@@ -488,7 +488,7 @@ TEST(EventExecute, AbortSearchReportsReasonWithoutEndingTheMission) {
     event.execute(ctx);
 
     EXPECT_EQ(order->abortReason, des::SearchAbortReason::OUTSIDE);
-    EXPECT_EQ(ctx.currentOrder->state, des::MissionState::IN_PROGRESS);
+    EXPECT_EQ(ctx.currentOrder->state, des::OrderState::IN_PROGRESS);
     EXPECT_TRUE(ctx.pushedEvents.empty());
     EXPECT_FALSE(ctx.notifiedEvents.empty());
 }
@@ -497,7 +497,7 @@ TEST(EventExecute, AbortSearchInBuildingSetsReason) {
     MockSimContext ctx;
 
     auto order = makeAccompanyOrder(1, "Max");
-    order->state = des::MissionState::IN_PROGRESS;
+    order->state = des::OrderState::IN_PROGRESS;
     order->plannedSearch = {"5.2B03"};
     ctx.currentOrder = order;
     ctx.personLocations["Max"] = "5.2B10";
@@ -681,7 +681,7 @@ TEST(EventExecute, MissionCompleteCallsCompleteOrderAndTicks) {
     MockSimContext ctx;
 
     auto order = makeAccompanyOrder(1, "Max");
-    order->state = des::MissionState::COMPLETED;
+    order->state = des::OrderState::COMPLETED;
     ctx.setOrderPtr(order);
 
     des::MissionCompleteEvent event(36500, order);

@@ -22,7 +22,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        ctx.addBackgroundMission(m_order);
+        ctx.addBackgroundOrder(m_order);
         ctx.tickBT();
     }
 

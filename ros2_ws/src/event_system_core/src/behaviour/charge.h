@@ -145,7 +145,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx       = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundMission();
+        const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundOrder();
         ctx->getRobot()->setBatteryForceFull(forceFull);
         return BT::NodeStatus::SUCCESS;
     }

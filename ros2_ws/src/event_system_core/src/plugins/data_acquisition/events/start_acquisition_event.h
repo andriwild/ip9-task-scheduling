@@ -22,7 +22,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = MissionState::IN_PROGRESS;
+        m_order->state = OrderState::IN_PROGRESS;
         ctx.notifyEvent(*this);
         const int duration = static_cast<int>(dataAcquisitionConfig().dataAcquisitionDuration);
         ctx.startActivity(std::make_shared<EndAcquisitionEvent>(this->time + duration, m_order));

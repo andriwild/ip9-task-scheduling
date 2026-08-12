@@ -295,7 +295,7 @@ enum class EventType : int {
     SCAN                       = 36
 };
 
-enum MissionState {
+enum OrderState {
     PENDING,
     COMPLETED,
     IN_PROGRESS,
@@ -304,7 +304,7 @@ enum MissionState {
     REJECTED
 };
 
-inline std::string missionStateStr(const MissionState state) {
+inline std::string orderStateStr(const OrderState state) {
     switch(state) {
         case PENDING: return "Pending";
         case COMPLETED: return "Completed";

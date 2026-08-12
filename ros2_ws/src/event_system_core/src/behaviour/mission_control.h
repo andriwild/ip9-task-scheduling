@@ -14,17 +14,17 @@
 
 namespace des {
 
-class HasPendingMission final : public BT::ConditionNode {
+class HasPendingOrder final : public BT::ConditionNode {
 public:
-    HasPendingMission(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
+    HasPendingOrder(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
         const auto ctx        = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool hasPending = ctx->hasScheduledMission();
-        DES_LOG_DEBUG("des.bt.mission_control", "HasPendingMission: %d", hasPending);
+        const bool hasPending = ctx->hasScheduledOrder();
+        DES_LOG_DEBUG("des.bt.mission_control", "HasPendingOrder: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }
@@ -48,9 +48,9 @@ public:
     }
 };
 
-class IsMissionAssigned final : public BT::ConditionNode {
+class IsOrderAssigned final : public BT::ConditionNode {
 public:
-    IsMissionAssigned(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
+    IsOrderAssigned(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
@@ -62,23 +62,23 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx      = config().blackboard.get()->get<ISimContext*>("ctx");
         const bool assigned = ctx->getOrderPtr() != nullptr;
-        DES_LOG_DEBUG("des.bt.mission_control", "IsMissionAssigned: %d", assigned);
+        DES_LOG_DEBUG("des.bt.mission_control", "IsOrderAssigned: %d", assigned);
         return assigned ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
-class AcceptMissionAction final : public BT::SyncActionNode {
+class AcceptOrderAction final : public BT::SyncActionNode {
 public:
-    AcceptMissionAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
+    AcceptOrderAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        assert(ctx->hasScheduledMission());
-        const auto order = ctx->popScheduledMission();
-        DES_LOG_DEBUG("des.bt.mission_control", "AcceptMissionAction for order %d (type=%s)",
+        assert(ctx->hasScheduledOrder());
+        const auto order = ctx->popScheduledOrder();
+        DES_LOG_DEBUG("des.bt.mission_control", "AcceptOrderAction for order %d (type=%s)",
                     order->id, order->type.c_str());
         ctx->setOrderPtr(order);
         // PENDING -> IN_PROGRESS transition happens in the plugin's StartXxxEvent,
@@ -89,9 +89,9 @@ public:
     }
 };
 
-class RejectMissionAction final : public BT::SyncActionNode {
+class RejectOrderAction final : public BT::SyncActionNode {
 public:
-    RejectMissionAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
+    RejectOrderAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
@@ -99,35 +99,35 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
-        assert(ctx->hasScheduledMission());
-        const auto order = ctx->popScheduledMission();
+        assert(ctx->hasScheduledOrder());
+        const auto order = ctx->popScheduledOrder();
         DES_LOG_DEBUG("des.bt.mission_control",
                      "Reject mission %d (type=%s) — see preceding 'infeasible' log for the concrete deadline/slack",
                      order->id, order->type.c_str());
-        order->state     = MissionState::REJECTED;
+        order->state     = OrderState::REJECTED;
         ctx->pushEvent(std::make_shared<MissionCompleteEvent>(ctx->getTime(), order));
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class HasBackgroundMission final : public BT::ConditionNode {
+class HasBackgroundOrder final : public BT::ConditionNode {
 public:
-    HasBackgroundMission(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
+    HasBackgroundOrder(const std::string &name, const BT::NodeConfig &config) : ConditionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
 
     BT::NodeStatus tick() override {
         const auto ctx     = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool hasBg   = ctx->hasBackgroundMission();
-        DES_LOG_DEBUG("des.bt.mission_control", "HasBackgroundMission: %d", hasBg);
+        const bool hasBg   = ctx->hasBackgroundOrder();
+        DES_LOG_DEBUG("des.bt.mission_control", "HasBackgroundOrder: %d", hasBg);
         return hasBg ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 };
 
-class AcceptBackgroundMissionAction final : public BT::SyncActionNode {
+class AcceptBackgroundOrderAction final : public BT::SyncActionNode {
 public:
-    AcceptBackgroundMissionAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
+    AcceptBackgroundOrderAction(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
@@ -136,7 +136,7 @@ public:
     // feasible mission, the outer BT falls through to charging/idle.
     BT::NodeStatus tick() override {
         const auto ctx   = config().blackboard.get()->get<ISimContext*>("ctx");
-        const auto order = ctx->acceptFeasibleBackgroundMission();
+        const auto order = ctx->acceptFeasibleBackgroundOrder();
         if (!order) {
             return BT::NodeStatus::FAILURE;
         }
@@ -146,9 +146,9 @@ public:
     }
 };
 
-class MissionFeasibilityCheck final : public BT::SyncActionNode {
+class OrderFeasibilityCheck final : public BT::SyncActionNode {
 public:
-    MissionFeasibilityCheck(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
+    OrderFeasibilityCheck(const std::string &name, const BT::NodeConfig &config) : SyncActionNode(name, config) {
     }
 
     static BT::PortsList providedPorts() { return {BT::InputPort<int>("ctx")}; }
@@ -156,7 +156,7 @@ public:
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
 
-        const auto order = ctx->nextScheduledMission();
+        const auto order = ctx->nextScheduledOrder();
         const auto& plugin = OrderRegistry::instance().get(order->type);
         const bool timeFeasible = plugin.isFeasible(*order, *ctx);
 
@@ -174,7 +174,7 @@ public:
         }
 
         const bool isFeasible = timeFeasible && energyFeasible;
-        DES_LOG_DEBUG("des.bt.mission_control", "MissionFeasibilityCheck: %d", isFeasible);
+        DES_LOG_DEBUG("des.bt.mission_control", "OrderFeasibilityCheck: %d", isFeasible);
         if (isFeasible) {
             return BT::NodeStatus::SUCCESS;
         }

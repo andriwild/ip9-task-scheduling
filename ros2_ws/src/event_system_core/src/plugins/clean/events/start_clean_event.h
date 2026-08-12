@@ -28,7 +28,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = MissionState::IN_PROGRESS;
+        m_order->state = OrderState::IN_PROGRESS;
         ctx.notifyEvent(*this);
 
         const std::string& roomName = static_cast<const CleanOrder&>(*m_order).roomName;

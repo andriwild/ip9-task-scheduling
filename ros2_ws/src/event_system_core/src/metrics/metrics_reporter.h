@@ -66,7 +66,7 @@ public:
             | filter([](const auto& e) { return e->getType() == EventType::MISSION_COMPLETE; })
             | filter([](const auto& e) { return e->getOrder() && e->getOrder()->execution == ExecutionMode::SCHEDULED; });
 
-        auto inState = [](const MissionState state) {
+        auto inState = [](const OrderState state) {
             return [state](const auto& e) { return e->getOrder()->state == state; };
         };
 
@@ -120,10 +120,10 @@ public:
             daily += std::format("{},{},{},{},{},{},{},{},{},{:g}\n",
                 m_roundSeed, m_scenario,
                 dayIndex,
-                std::ranges::count_if(day, inState(MissionState::COMPLETED)),
-                std::ranges::count_if(day, inState(MissionState::FAILED)),
+                std::ranges::count_if(day, inState(OrderState::COMPLETED)),
+                std::ranges::count_if(day, inState(OrderState::FAILED)),
                 std::ranges::count_if(day, withDetail("missed in building")),
-                std::ranges::count_if(day, inState(MissionState::REJECTED)),
+                std::ranges::count_if(day, inState(OrderState::REJECTED)),
                 scansOn(dayIndex), searchSeconds, searchMetres);
         }
         write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,search_s,search_m\n", daily);

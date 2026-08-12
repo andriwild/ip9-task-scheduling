@@ -292,35 +292,35 @@ OrderPtr SimulationContext::getOrderPtr() const {
     return m_missions.effective();
 }
 
-void SimulationContext::updateOrderState(const MissionState& newState) {
+void SimulationContext::updateOrderState(const OrderState& newState) {
     m_missions.updateState(newState);
 }
 
-void SimulationContext::addScheduledMission(const OrderPtr orderPtr) {
+void SimulationContext::addScheduledOrder(const OrderPtr orderPtr) {
     m_missions.addScheduled(orderPtr);
 }
 
-bool SimulationContext::hasScheduledMission() const {
+bool SimulationContext::hasScheduledOrder() const {
     return m_missions.hasScheduled();
 }
 
-OrderPtr SimulationContext::nextScheduledMission() {
+OrderPtr SimulationContext::nextScheduledOrder() {
     return m_missions.nextScheduled();
 }
 
-OrderPtr SimulationContext::popScheduledMission() {
+OrderPtr SimulationContext::popScheduledOrder() {
     return m_missions.popScheduled();
 }
 
-void SimulationContext::addBackgroundMission(const OrderPtr orderPtr) {
+void SimulationContext::addBackgroundOrder(const OrderPtr orderPtr) {
     m_missions.addBackground(orderPtr);
 }
 
-bool SimulationContext::hasBackgroundMission() const {
+bool SimulationContext::hasBackgroundOrder() const {
     return m_missions.hasBackground();
 }
 
-OrderPtr SimulationContext::acceptFeasibleBackgroundMission() {
+OrderPtr SimulationContext::acceptFeasibleBackgroundOrder() {
     return m_missions.acceptFeasibleBackground(*this);
 }
 

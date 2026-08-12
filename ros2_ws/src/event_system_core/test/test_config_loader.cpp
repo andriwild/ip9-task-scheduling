@@ -75,7 +75,7 @@ TEST(ConfigLoaderOrders, DefaultStateIsPending) {
     auto result = des::ConfigLoader::loadOrderConfig(fixturesDir() + "/test_appointments.json");
     ASSERT_TRUE(result.has_value());
     for (const auto& order : *result) {
-        EXPECT_EQ(order->state, des::MissionState::PENDING);
+        EXPECT_EQ(order->state, des::OrderState::PENDING);
     }
 }
 

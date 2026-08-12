@@ -35,7 +35,7 @@ public:
             case ExecutionMode::INTERRUPT:  execStr = "interrupt"; break;
         };
 
-        DES_LOG_DEBUG("des.event.mission_complete", "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), missionStateStr(orderPtr->state).c_str(), execStr.c_str());
+        DES_LOG_DEBUG("des.event.mission_complete", "id=%d type=%s state=%s exec=%s — onMissionEnd", orderPtr->id, orderPtr->type.c_str(), orderStateStr(orderPtr->state).c_str(), execStr.c_str());
         plugin.onMissionEnd(ctx, *orderPtr);
         ctx.completeOrder(this->orderPtr);
         ctx.notifyEvent(*this);
@@ -43,7 +43,7 @@ public:
     }
 
     std::string getName() const override {
-        return std::format("Mission {} Complete: {}", orderPtr->id, missionStateStr(orderPtr->state));
+        return std::format("Mission {} Complete: {}", orderPtr->id, orderStateStr(orderPtr->state));
     }
     EventType getType() const override { return EventType::MISSION_COMPLETE; }
     int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }

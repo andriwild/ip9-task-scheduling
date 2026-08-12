@@ -58,16 +58,16 @@ public:
     }
 };
 
-class HasPendingMissionIdle final : public BT::ConditionNode {
+class HasPendingOrderIdle final : public BT::ConditionNode {
 public:
-    HasPendingMissionIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+    HasPendingOrderIdle(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool hasPending = ctx->hasScheduledMission();
-        DES_LOG_DEBUG("des.bt.idle", "HasPendingMissionIdle: %d", hasPending);
+        const bool hasPending = ctx->hasScheduledOrder();
+        DES_LOG_DEBUG("des.bt.idle", "HasPendingOrderIdle: %d", hasPending);
         if (hasPending) { return BT::NodeStatus::SUCCESS; }
         return BT::NodeStatus::FAILURE;
     }

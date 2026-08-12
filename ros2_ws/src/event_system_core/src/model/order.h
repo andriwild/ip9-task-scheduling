@@ -15,7 +15,7 @@ struct IOrder {
     std::string type;
     std::optional<int> deadline;
     std::string description;
-    MissionState state = PENDING;
+    OrderState state = PENDING;
     ExecutionMode execution = ExecutionMode::BACKGROUND;
 
     virtual ~IOrder() = default;

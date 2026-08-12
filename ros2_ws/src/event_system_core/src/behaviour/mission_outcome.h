@@ -12,8 +12,8 @@
 
 namespace des {
 
-inline void finishMission(ISimContext& ctx, const MissionState state) {
-    DES_LOG_DEBUG("des.bt.mission_outcome", "Finish mission as %s", missionStateStr(state).c_str());
+inline void finishMission(ISimContext& ctx, const OrderState state) {
+    DES_LOG_DEBUG("des.bt.mission_outcome", "Finish mission as %s", orderStateStr(state).c_str());
     ctx.updateOrderState(state);
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(ctx.getTime(), ctx.getOrderPtr()));
@@ -27,7 +27,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        finishMission(*ctx, MissionState::COMPLETED);
+        finishMission(*ctx, OrderState::COMPLETED);
         return BT::NodeStatus::SUCCESS;
     }
 };
@@ -40,7 +40,7 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        finishMission(*ctx, MissionState::FAILED);
+        finishMission(*ctx, OrderState::FAILED);
         return BT::NodeStatus::SUCCESS;
     }
 };

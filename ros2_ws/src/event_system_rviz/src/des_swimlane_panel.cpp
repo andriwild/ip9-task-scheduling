@@ -1035,7 +1035,7 @@ void DesSwimlanePanel::redraw() {
             if (id < 0) continue;
 
             // BG/SCHED missions become active at MISSION_START (fired by the
-            // BT's AcceptMissionAction). Interrupts have no MISSION_START —
+            // BT's AcceptOrderAction). Interrupts have no MISSION_START —
             // they become active directly at ORDER_ARRIVAL.
             bool spanStart = (e.type == TE::MISSION_START);
             if (e.type == TE::ORDER_ARRIVAL) {

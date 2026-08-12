@@ -24,7 +24,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = MissionState::IN_PROGRESS;
+        m_order->state = OrderState::IN_PROGRESS;
         ctx.notifyEvent(*this);
         double sampled = static_cast<const InformationOrder&>(*m_order).sampledDuration;
         if (sampled < 0.0) {

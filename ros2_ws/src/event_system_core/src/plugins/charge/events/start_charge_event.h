@@ -25,7 +25,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        m_order->state = MissionState::IN_PROGRESS;
+        m_order->state = OrderState::IN_PROGRESS;
         ctx.getRobot()->beginChargeSession(this->time);
         ctx.notifyEvent(*this);
 
