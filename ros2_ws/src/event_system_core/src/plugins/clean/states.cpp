@@ -4,6 +4,7 @@
 #include "../../util/log.h"
 #include "engine/contracts/i_sim_context.h"
 #include "../../model/robot.h"
+#include "clean_plugin.h"
 
 namespace des {
 
@@ -13,11 +14,13 @@ void CleanState::enter(Robot& robot) {
     robot.setSpeed(robot.getDriveSpeed());
 }
 
-// Sweeping the room is part of the cleaning service, its energy is already
-// modelled by the service duration at base load, not by the travel rate.
+// Sweeping runs the drive and the cleaning unit at the same time, so it draws
+// the configured cleaning power rather than the base load. Must stay in sync
+// with CleanPlugin::estimateServiceEnergy, otherwise the planner reserves an
+// amount the simulation never books.
 double CleanState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const {
     if (robot.isServicing()) {
-        return cfg.energyConsumptionBase;
+        return cleanConfig().cleaningPower;
     }
     return RobotState::getEnergyConsumption(robot, cfg);
 }

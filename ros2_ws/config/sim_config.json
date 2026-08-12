@@ -19,6 +19,7 @@
     "clean": {
         "cleaning_area": 0.09,
         "cleaning_interval": 86400.0,
+        "cleaning_power": 120.0,
         "reward_weight": 0.23
     },
     "cv_threshold": 0.8,

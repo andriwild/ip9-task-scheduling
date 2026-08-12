@@ -33,9 +33,8 @@ inline std::optional<OpInstance> buildSearchInstance(
     const std::string& endLoc,
     const OpBudgets& budgets
 ) {
-
-    const int startNodeId = 0;
-    std::vector<op_build::PlannedNode> planned = { op_build::anchorNode(startLoc) };
+    constexpr int startNodeId = 0;
+    std::vector planned = { op_build::anchorNode(startLoc) };
 
     int endNodeId = startNodeId;
     if (endLoc != startLoc) {
@@ -74,8 +73,8 @@ inline std::optional<OpInstance> buildSearchInstance(
 
     std::vector<OpNode> nodes;
     nodes.reserve(planned.size());
-    for (auto& node : planned) {
-        nodes.push_back(std::move(node.op));
+    for (auto& [op, _] : planned) {
+        nodes.push_back(std::move(op));
     }
 
     const auto driveEnergyPerMeter = static_cast<float>(cfg.energyConsumptionDrive / (3600.0 * cfg.robotSpeed));

@@ -17,6 +17,7 @@ struct CleanConfig {
     double cleaningArea = 0.09;
     double rewardWeight = 0.23;
     double cleaningInterval = SECONDS_PER_DAY;
+    double cleaningPower = 120.0;
 };
 
 double cleanDurationSeconds(double roomArea, double robotSpeed);
@@ -44,6 +45,7 @@ public:
     bool isFeasible(const IOrder& order, const ISimContext& context) const override;
     std::optional<std::string> targetLocation(const IOrder& order) const override;
     double estimateServiceDuration(const IOrder& order, const EstimationView& view) const override;
+    double estimateServiceEnergy(const IOrder& order, const EstimationView& view) const override;
     double estimateReward(const IOrder& order, const EstimationView& view) const override;
     void publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const override;
 
@@ -53,12 +55,14 @@ public:
         m_config.cleaningArea     = j.value("cleaning_area", m_config.cleaningArea);
         m_config.rewardWeight     = j.value("reward_weight", m_config.rewardWeight);
         m_config.cleaningInterval = j.value("cleaning_interval", m_config.cleaningInterval);
+        m_config.cleaningPower    = j.value("cleaning_power", m_config.cleaningPower);
     }
     nlohmann::json saveConfig() const override {
         return {
             {"cleaning_area", m_config.cleaningArea},
             {"reward_weight", m_config.rewardWeight},
             {"cleaning_interval", m_config.cleaningInterval},
+            {"cleaning_power", m_config.cleaningPower},
         };
     }
 };

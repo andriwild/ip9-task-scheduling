@@ -54,8 +54,7 @@ inline float rolePrior(const std::vector<std::string>& roles, const RoomType typ
     float best = -1.0f;
     for (const auto& role : roles) {
         const auto& table = rolePriors();
-        const auto it = std::find_if(table.begin(), table.end(),
-            [&role](const RolePrior& p) { return role == p.role; });
+        const auto it = std::ranges::find_if(table, [&role](const RolePrior& p) { return role == p.role; });
         if (it != table.end()) {
             best = std::max(best, priorFor(*it, type));
         }

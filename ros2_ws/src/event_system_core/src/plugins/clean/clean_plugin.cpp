@@ -106,6 +106,10 @@ double CleanPlugin::estimateServiceDuration(const IOrder& order, const Estimatio
     return cleanDurationSeconds(view.world.room(o.roomName).m_area.value_or(1.0), view.cfg.robotSpeed);
 }
 
+double CleanPlugin::estimateServiceEnergy(const IOrder& order, const EstimationView& view) const {
+    return estimateServiceDuration(order, view) * m_config.cleaningPower / 3600.0;
+}
+
 void CleanPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {
     const auto& o = static_cast<const CleanOrder&>(order);
     sink.publishMeeting(
