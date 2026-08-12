@@ -87,7 +87,7 @@ public:
         auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
         const std::string room = ctx->getRobot()->getLocation();
 
-        if (isSearchExcluded(ctx->getConfig()->searchExcludedRooms, room)) {
+        if (isSearchExcluded(*ctx, room)) {
             DES_LOG_DEBUG("des.plugin.accompany.search", "HasScanPoint: room '%s' is excluded from search", room.c_str());
             return BT::NodeStatus::FAILURE;
         }

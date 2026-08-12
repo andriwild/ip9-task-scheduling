@@ -16,23 +16,28 @@
 
 #include "../util/rnd.h"
 #include "room.h"
+#include "util/constants.h"
 
 namespace des {
 
 // TODO: add to sim config file
 struct StayDurationConfig {
-    double workplaceMin = 60 * 10;
-    double workplaceMax = 3600 * 2;
+    double officeMin = 60 * 10;
+    double officeMax = ONE_HOUR * 2;
     double classroomMin = 60 * 45;
     double classroomMax = 60 * 90;
     double meetingMin = 60 * 30;
     double meetingMax = 60 * 90;
     double kitchenMin = 30;
-    double kitchenMax = 1800;
+    double kitchenMax = ONE_HOUR / 2;
     double toiletMu = 4.8;
     double toiletSigma = 0.7;
-    double otherMin = 60;
-    double otherMax = 3600;
+    double spaceMin = ONE_HOUR / 2;
+    double spaceMax = ONE_HOUR * 4;
+    double miscMin = 60;
+    double miscMax = 60 * 5;
+    double accessMin = 60;
+    double accessMax = 120;
 };
 
 class Person {
@@ -72,8 +77,8 @@ public:
 
     double getStayDuration(const RoomType roomType, std::mt19937& rng) const {
         switch (roomType) {
-            case RoomType::WORKPLACE:
-                return rnd::uni(rng, stayDuration.workplaceMin, stayDuration.workplaceMax);
+            case RoomType::OFFICE:
+                return rnd::uni(rng, stayDuration.officeMin, stayDuration.officeMax);
             case RoomType::CLASSROOM:
                 return rnd::uni(rng, stayDuration.classroomMin, stayDuration.classroomMax);
             case RoomType::MEETING:
@@ -82,10 +87,14 @@ public:
                 return rnd::logNormal(rng, stayDuration.toiletMu, stayDuration.toiletSigma);
             case RoomType::KITCHEN:
                 return rnd::uni(rng, stayDuration.kitchenMin, stayDuration.kitchenMax);
-            case RoomType::OTHER:
-                return rnd::uni(rng, stayDuration.otherMin, stayDuration.otherMax);
+            case RoomType::ACCESS:
+                return rnd::uni(rng, stayDuration.accessMin, stayDuration.accessMax);
+            case RoomType::SPACE:
+                return rnd::uni(rng, stayDuration.spaceMin, stayDuration.spaceMax);
+            case RoomType::MISC:
+                return rnd::uni(rng, stayDuration.miscMin, stayDuration.miscMax);
         }
-        return rnd::uni(rng, stayDuration.otherMin, stayDuration.otherMax);
+        return rnd::uni(rng, stayDuration.miscMin, stayDuration.miscMax);
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Person& p) {

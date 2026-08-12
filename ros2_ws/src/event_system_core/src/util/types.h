@@ -167,7 +167,7 @@ struct SimConfig {
     DistributionType lunchDistribution = DistributionType::NORMAL;
     double lunchDurationMean = 2400.0;
     double lunchDurationStd = 600.0;
-    std::vector<std::string> searchExcludedRooms = {"Elevator", "Stairwell", "Dock"};
+    std::vector<RoomType> searchExcludedRoomTypes = { RoomType::ACCESS, RoomType::TOILET };
     std::string employeesPath = "";
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
     SearchRouteStrategy searchRouteStrategy = SearchRouteStrategy::COST_AWARE;
@@ -235,9 +235,9 @@ struct SimConfig {
         os << std::left << std::setw(W) << "alwaysChargeAtDock" << ": " << config.alwaysChargeAtDock << std::endl;
         os << std::left << std::setw(W) << "metricsCsvExport" << ": " << config.metricsCsvExport << std::endl;
         os << std::left << std::setw(W) << "replanBackgroundOnInterrupt" << ": " << config.replanBackgroundOnInterrupt << std::endl;
-        os << std::left << std::setw(W) << "searchExcludedRooms" << ": ";
-        for (size_t i = 0; i < config.searchExcludedRooms.size(); ++i) {
-            os << (i ? ", " : "") << config.searchExcludedRooms[i];
+        os << std::left << std::setw(W) << "searchExcludedRoomTypes" << ": ";
+        for (size_t i = 0; i < config.searchExcludedRoomTypes.size(); ++i) {
+            os << (i ? ", " : "") << roomTypeToString(config.searchExcludedRoomTypes[i]);
         }
         os << std::endl;
         os << "----------------------------\n"

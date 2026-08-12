@@ -274,7 +274,11 @@ public:
             config.alwaysChargeAtDock = j.value("always_charge_at_dock", false);
             config.metricsCsvExport   = j.value("metrics_csv_export", true);
             config.replanBackgroundOnInterrupt = j.value("replan_background_on_interrupt", true);
-            config.searchExcludedRooms = j.value("search_excluded_rooms", std::vector<std::string>{"Elevator", "Stairwell", "Dock"});
+            config.searchExcludedRoomTypes.clear();
+            for (const auto& name : j.value("search_excluded_room_types", std::vector<std::string>{"ACCESS", "TOILET"})) {
+                const auto type = roomTypeFromString(name);
+                config.searchExcludedRoomTypes.push_back(type.value());
+            }
             config.searchRewardStrategy = searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.searchRouteStrategy = searchRouteStrategyFromString(j.value("search_route_strategy", "cost_aware"));
             config.searchRolePrior = j.value("search_role_prior", false);
@@ -363,7 +367,11 @@ public:
         j["always_charge_at_dock"]          = config.alwaysChargeAtDock;
         j["metrics_csv_export"]             = config.metricsCsvExport;
         j["replan_background_on_interrupt"] = config.replanBackgroundOnInterrupt;
-        j["search_excluded_rooms"]          = config.searchExcludedRooms;
+        std::vector<std::string> excludedTypes;
+        for (const auto type : config.searchExcludedRoomTypes) {
+            excludedTypes.push_back(roomTypeToString(type));
+        }
+        j["search_excluded_room_types"]     = excludedTypes;
         j["search_reward_strategy"]         = searchRewardStrategyToString(config.searchRewardStrategy);
         j["search_route_strategy"]          = searchRouteStrategyToString(config.searchRouteStrategy);
         j["search_role_prior"]              = config.searchRolePrior;
@@ -501,7 +509,9 @@ public:
         for (const auto& entry : json->at("rooms")) {
             const std::string name = entry.at("name").get<std::string>();
             Room room(name, Point{ entry.at("x").get<double>(), entry.at("y").get<double>(), entry.at("yaw").get<double>() });
-            room.m_roomType = roomTypeFromString(entry.at("type").get<std::string>());
+            const auto typeName = entry.at("type").get<std::string>();
+            const auto roomType = roomTypeFromString(typeName);
+            room.m_roomType = roomType.value_or(RoomType::MISC);
             if (entry.contains("area")) {
                 room.m_area = entry.at("area").get<double>();
             }

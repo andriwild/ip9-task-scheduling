@@ -132,8 +132,8 @@ public:
         double nextExecutionTime = this->time + p.getStayDuration(ctx.room(targetRoom).m_roomType, p.rng);
 
         if (p.lunchPending && p.lunchTime < nextExecutionTime && p.lunchTime < p.departureTime) {
-            const auto kitchenIt = std::find_if(p.roomLabels.begin(), p.roomLabels.end(),
-                [](const std::string& r) { return r.find("Kitchen") != std::string::npos; });
+            const auto kitchenIt = std::ranges::find_if(p.roomLabels,
+                [&ctx](const std::string& r) { return ctx.room(r).m_roomType == RoomType::KITCHEN; });
             if (kitchenIt != p.roomLabels.end()) {
                 p.lunchPending = false;
                 ctx.pushEvent(std::make_shared<PersonLunchEvent>(
@@ -143,9 +143,10 @@ public:
         }
 
         if (p.departureTime < nextExecutionTime) {
-            const auto elevatorIt = std::ranges::find_if(p.roomLabels, [](const std::string& r) { return r.find("Elevator") != std::string::npos; });
-            if (elevatorIt != p.roomLabels.end()) {
-                moveTo(ctx, *elevatorIt);
+            const auto accessIt = std::ranges::find_if(p.roomLabels,
+                [&ctx](const std::string& r) { return ctx.room(r).m_roomType == RoomType::ACCESS; });
+            if (accessIt != p.roomLabels.end()) {
+                moveTo(ctx, *accessIt);
             }
             const int departAt = std::max(p.departureTime, this->time);
             ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));

@@ -3,7 +3,6 @@
 #include <map>
 #include <optional>
 #include <ostream>
-#include <regex>
 #include <string>
 #include <vector>
 
@@ -12,17 +11,19 @@
 namespace des {
 
 enum class RoomType {
-    WORKPLACE,
+    OFFICE,
     CLASSROOM,
     MEETING,
-    TOILET,
     KITCHEN,
-    OTHER
+    TOILET,
+    ACCESS,
+    SPACE,
+    MISC
 };
 
-inline RoomType roomTypeFromString(const std::string& type) {
-    if (type == "WORKPLACE") {
-        return RoomType::WORKPLACE;
+inline std::optional<RoomType> roomTypeFromString(const std::string& type) {
+    if (type == "OFFICE") {
+        return RoomType::OFFICE;
     }
     if (type == "CLASSROOM") {
         return RoomType::CLASSROOM;
@@ -30,33 +31,36 @@ inline RoomType roomTypeFromString(const std::string& type) {
     if (type == "MEETING") {
         return RoomType::MEETING;
     }
-    if (type == "TOILET") {
-        return RoomType::TOILET;
-    }
     if (type == "KITCHEN") {
         return RoomType::KITCHEN;
     }
-    return RoomType::OTHER;
+    if (type == "TOILET") {
+        return RoomType::TOILET;
+    }
+    if (type == "ACCESS") {
+        return RoomType::ACCESS;
+    }
+    if (type == "SPACE") {
+        return RoomType::SPACE;
+    }
+    if (type == "MISC") {
+        return RoomType::MISC;
+    }
+    return std::nullopt;
 }
 
 inline std::string roomTypeToString(const RoomType type) {
     switch (type) {
-        case RoomType::WORKPLACE: return "WORKPLACE";
+        case RoomType::OFFICE:    return "OFFICE";
         case RoomType::CLASSROOM: return "CLASSROOM";
         case RoomType::MEETING:   return "MEETING";
-        case RoomType::TOILET:    return "TOILET";
         case RoomType::KITCHEN:   return "KITCHEN";
-        case RoomType::OTHER:     return "OTHER";
+        case RoomType::TOILET:    return "TOILET";
+        case RoomType::ACCESS:    return "ACCESS";
+        case RoomType::SPACE:     return "SPACE";
+        case RoomType::MISC:      return "MISC";
     }
-    return "OTHER";
-}
-
-inline RoomType parseRoomName(const std::string& roomName) {
-    if (roomName.find("Toilet") != std::string::npos) return RoomType::TOILET;
-    if (roomName.find("Kitchen") != std::string::npos) return RoomType::KITCHEN;
-    static const std::regex workplacePattern(R"(5\.2[A-Z]\d+)");
-    if (std::regex_match(roomName, workplacePattern)) return RoomType::WORKPLACE;
-    return RoomType::OTHER;
+    return "MISC";
 }
 
 struct RoomTour {
@@ -82,7 +86,7 @@ struct Room {
     Point m_waypoint;
     std::optional<double> m_area;
     std::vector<Point> m_footprint;
-    RoomType m_roomType = RoomType::OTHER;
+    RoomType m_roomType = RoomType::MISC;
     RoomTour m_tour;
 
     explicit Room(const std::string& name, const Point& waypoint, const std::optional<double> area = std::nullopt)

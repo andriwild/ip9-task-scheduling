@@ -2,14 +2,19 @@
 
 #include <algorithm>
 #include <string>
-#include <vector>
+
+#include "engine/contracts/i_sim_context.h"
+#include "model/room.h"
 
 namespace des {
 
-inline bool isSearchExcluded(const std::vector<std::string>& excluded, const std::string& room) {
-    return std::any_of(excluded.begin(), excluded.end(), [&](const std::string& pattern) {
-        return room.find(pattern) != std::string::npos;
-    });
+inline bool isSearchExcluded(const ISimContext& ctx, const std::string& room) {
+    const auto config = ctx.getConfig();
+    if (room == config->dockLocation) {
+        return true;
+    }
+    const RoomType type = ctx.room(room).m_roomType;
+    return std::ranges::find(config->searchExcludedRoomTypes, type) != config->searchExcludedRoomTypes.end();
 }
 
 }  // namespace des

@@ -114,7 +114,7 @@ public:
         QSqlQuery query;
         if (!query.exec(
                 "SELECT p.name, ST_X(p.coordinate), ST_Y(p.coordinate), COALESCE(p.yaw, 0), "
-                "COALESCE(sz.type, 'OTHER'), ST_Area(sz.polygon), ST_X(d.geom), ST_Y(d.geom) "
+                "COALESCE(sz.type, 'MISC'), ST_Area(sz.polygon), ST_X(d.geom), ST_Y(d.geom) "
                 "FROM points_of_interest p "
                 "LEFT JOIN search_zones sz ON sz.poi_id = p.id "
                 "LEFT JOIN LATERAL ST_DumpPoints(ST_ExteriorRing(sz.polygon)) d ON true "
@@ -129,7 +129,12 @@ public:
             const Point p     = {query.value(1).toDouble(), query.value(2).toDouble(), query.value(3).toDouble()};
             const auto [it, inserted] = rooms.try_emplace(name, name, p);
             if (inserted) {
-                it->second.m_roomType = roomTypeFromString(query.value(4).toString().toStdString());
+                const std::string typeName = query.value(4).toString().toStdString();
+                const auto roomType = roomTypeFromString(typeName);
+                if (!roomType.has_value()) {
+                    DES_LOG_WARN("des.db", "Room '%s' has unknown type '%s', falling back to MISC", name.c_str(), typeName.c_str());
+                }
+                it->second.m_roomType = roomType.value_or(RoomType::MISC);
                 if (!query.value(5).isNull()) {
                     it->second.m_area = query.value(5).toDouble();
                 }

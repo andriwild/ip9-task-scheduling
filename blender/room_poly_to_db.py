@@ -1,16 +1,20 @@
 import bpy
 import bmesh
-import re
 from sqlalchemy import create_engine, text
 
 # --- CONFIGURATION ---
-POLYGON_COLLECTION = "RoomPolygons"
 WAYPOINT_COLLECTION = "Waypoints"
 DATABASE_URL = "postgresql://wsr_user:wsr_password@localhost:5432/wsr"
 MATCH_TOLERANCE = 0.15
 TYPE_COLLECTIONS = {
+    "Office": "OFFICE",
     "Classrooms": "CLASSROOM",
     "Meeting": "MEETING",
+    "Kitchen": "KITCHEN",
+    "Toilets": "TOILET",
+    "Access": "ACCESS",
+    "Spaces": "SPACE",
+    "Misc": "MISC",
 }
 # ---------------------
 
@@ -71,11 +75,10 @@ def type_from_collection(obj):
 
 
 def collect_polygon_objects():
-    """All room polygons, from POLYGON_COLLECTION and from every type collection.
-    Works regardless of whether the type collections are nested under POLYGON_COLLECTION
-    or sit next to it, since 'Move to Collection' unlinks the object from the old one."""
+    """All room polygons, one type collection at a time. Every room carries its type
+    through the collection it sits in, nesting of the collections does not matter."""
     found = {}
-    for coll_name in [POLYGON_COLLECTION] + list(TYPE_COLLECTIONS):
+    for coll_name in TYPE_COLLECTIONS:
         coll = bpy.data.collections.get(coll_name)
         if coll is None:
             print(f"  WARNING: collection '{coll_name}' not found, skipped")
@@ -83,17 +86,6 @@ def collect_polygon_objects():
         for obj in coll.all_objects:
             found[obj.name] = obj
     return sorted(found.values(), key=lambda o: o.name)
-
-
-def classify_room(name):
-    """Fallback classification by name for objects not in a type collection."""
-    if "Toilet" in name:
-        return "TOILET"
-    if "Kitchen" in name:
-        return "KITCHEN"
-    if re.match(r"5\.2[A-Z]\d+", name):
-        return "WORKPLACE"
-    return "OTHER"
 
 
 def _signed_area_2d(pts):
@@ -173,8 +165,9 @@ def verts_to_wkt(verts):
 waypoints = get_waypoints()
 print(f"Found: {len(waypoints)} waypoints")
 
-if POLYGON_COLLECTION not in bpy.data.collections:
-    print(f"ERROR: Collection '{POLYGON_COLLECTION}' not found!")
+missing = [name for name in TYPE_COLLECTIONS if name not in bpy.data.collections]
+if len(missing) == len(TYPE_COLLECTIONS):
+    print(f"ERROR: none of the type collections exist: {', '.join(TYPE_COLLECTIONS)}")
 else:
     engine = create_engine(DATABASE_URL)
 
@@ -238,7 +231,10 @@ else:
                     print(f"  WARNING: {matched_name} not in points_of_interest table!")
                     continue
 
-                room_type = type_from_collection(obj) or classify_room(matched_name)
+                room_type = type_from_collection(obj)
+                if room_type is None:
+                    print(f"  WARNING: {matched_name} is in no type collection, exported as MISC")
+                    room_type = "MISC"
                 wkt = verts_to_wkt(verts)
                 poi_id = poi_ids[matched_name]
 

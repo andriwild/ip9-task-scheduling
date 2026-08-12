@@ -22,7 +22,7 @@ namespace des {
 
 struct SearchRoom {
     std::string name;
-    RoomType type = RoomType::OTHER;
+    RoomType type = RoomType::MISC;
 };
 
 constexpr float kUnseenRoomReward = 1e-3f;
