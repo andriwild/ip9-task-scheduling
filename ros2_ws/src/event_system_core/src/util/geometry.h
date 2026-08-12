@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <optional>
 #include <random>
 #include <vector>
@@ -34,6 +35,21 @@ inline bool isVisible(const des::Point& p, const des::Polygon& visibility) {
         return true;
     }
     return bg::covered_by(BgPoint(p.m_x, p.m_y), toPolygon(visibility));
+}
+
+// point on the line from target towards from, at the given distance from target
+inline des::Point approachPoint(const des::Point& target, const des::Point& from, const double distance) {
+    const double dx = from.m_x - target.m_x;
+    const double dy = from.m_y - target.m_y;
+    const double gap = std::hypot(dx, dy);
+    if (distance <= 0.0 || gap <= 0.0) {
+        return target;
+    }
+    if (gap <= distance) {
+        return from;
+    }
+    const double t = distance / gap;
+    return des::Point{ target.m_x + dx * t, target.m_y + dy * t, from.m_yaw };
 }
 
 // generate a randomly distributed point in a given polygon

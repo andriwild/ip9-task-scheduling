@@ -53,6 +53,7 @@
     "lunch_std": 1800.0,
     "metrics_csv_export": true,
     "people_spawn_location": "5.2B_Elevator",
+    "person_approach_distance": 1.0,
     "person_gives_directions_probability": 0.0,
     "person_identification_range": 2.5,
     "person_recognition_range": 2.5,

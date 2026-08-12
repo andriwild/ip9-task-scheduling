@@ -6,6 +6,7 @@
 #include "model/robot.h"
 #include "plugins/accompany/accompany_order.h"
 #include "util/constants.h"
+#include "util/geometry.h"
 #include "util/log.h"
 #include "util/rnd.h"
 
@@ -54,9 +55,10 @@ public:
         }
         const auto robot = ctx.getRobot();
         const ScanStop here{ robot->getPosition(), robot->getVisibility(), true };
+        const Point stop = geom::approachPoint(*target, here.point, ctx.getConfig()->personApproachDistance);
         order.detoured.insert(recognizedPerson);
         order.scanQueue.push_front(here);
-        order.scanQueue.push_front(ScanStop{ *target, robot->getVisibility(), true });
+        order.scanQueue.push_front(ScanStop{ stop, robot->getVisibility(), true });
         DES_LOG_DEBUG("des.plugin.accompany.search", "Detour to %s in %s, %zu stops queued", recognizedPerson.c_str(), robot->getLocation().c_str(), order.scanQueue.size());
     }
 

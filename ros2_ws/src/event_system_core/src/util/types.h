@@ -148,6 +148,7 @@ struct SimConfig {
     std::string peopleSpawnLocation;
     double personIdentificationRange = 5.0;
     double personRecognitionRange = 5.0;
+    double personApproachDistance = 1.0;
     double personSpeedMale = 1.41;
     double personSpeedFemale = 1.27;
     int simStartTime = 25200;  // 07:00
@@ -220,6 +221,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "peopleSpawnLocation" << ": " << config.peopleSpawnLocation << std::endl;
         os << std::left << std::setw(W) << "personIdentificationRange" << ": " << config.personIdentificationRange << std::endl;
         os << std::left << std::setw(W) << "personRecognitionRange" << ": " << config.personRecognitionRange << std::endl;
+        os << std::left << std::setw(W) << "personApproachDistance" << ": " << config.personApproachDistance << std::endl;
         os << std::left << std::setw(W) << "personDirectionsProbability" << ": " << config.personDirectionsProbability << std::endl;
         os << std::left << std::setw(W) << "personSpeedMale" << ": " << config.personSpeedMale << std::endl;
         os << std::left << std::setw(W) << "personSpeedFemale" << ": " << config.personSpeedFemale << std::endl;
