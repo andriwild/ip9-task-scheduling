@@ -1,6 +1,6 @@
 {
     "accompany": {
-        "accompany_speed": 0.2,
+        "accompany_speed": 1.0,
         "appointment_duration": 1800.0,
         "conversation_duration_mean": 28.0,
         "conversation_duration_std": 14.0,
@@ -52,16 +52,14 @@
     "metrics_csv_export": false,
     "people_spawn_location": "Room_D1",
     "person_detection_range": 2.5,
-    "person_speed_male": 1.0,
     "person_speed_female": 1.0,
+    "person_speed_male": 1.0,
     "replan_background_on_interrupt": true,
     "robot_speed": 1.0,
     "round_mode": "replication",
-    "search_excluded_rooms": [
-        "Elevator",
-        "Stairwell",
-        "Dock",
-        "Toilet"
+    "search_excluded_room_types": [
+        "ACCESS",
+        "TOILET"
     ],
     "search_reward_strategy": "beta_smoothed",
     "search_role_prior": true,

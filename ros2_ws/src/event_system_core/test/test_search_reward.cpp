@@ -5,7 +5,7 @@
 namespace {
 
 const std::vector<des::SearchRoom> kRooms = {
-    { "office", des::RoomType::WORKPLACE },
+    { "office", des::RoomType::OFFICE },
     { "kitchen", des::RoomType::KITCHEN },
 };
 
@@ -53,7 +53,7 @@ TEST(RoomProbability, MoreHitsNeverLowerIt) {
 }
 
 TEST(OccupancyPrior, TheWorkplaceAlwaysWins) {
-    EXPECT_FLOAT_EQ(des::occupancyPrior(true, des::RoomType::OTHER, {}, false, kWorkplacePrior), 0.6f);
+    EXPECT_FLOAT_EQ(des::occupancyPrior(true, des::RoomType::MISC, {}, false, kWorkplacePrior), 0.6f);
     EXPECT_FLOAT_EQ(des::occupancyPrior(true, des::RoomType::KITCHEN, {"Chef"}, true, kWorkplacePrior), 0.6f);
 }
 
@@ -109,8 +109,8 @@ TEST(RandomReward, EveryRoomGetsAScoreAndTheDrawIsSeedDeterministic) {
 
 TEST(SectorReward, TheWorkplaceSectorAlwaysOutranksTheRest) {
     const std::vector<des::SearchRoom> rooms = {
-        { "5.2A01", des::RoomType::WORKPLACE },
-        { "5.2B10", des::RoomType::WORKPLACE },
+        { "5.2A01", des::RoomType::OFFICE },
+        { "5.2B10", des::RoomType::OFFICE },
         { "5.2B22", des::RoomType::KITCHEN },
     };
     std::mt19937 rng(7);

@@ -6,7 +6,7 @@
             "x": 1.0,
             "y": 2.0,
             "yaw": 0.5,
-            "type": "OTHER",
+            "type": "MISC",
             "area": 12.0,
             "footprint": [
                 [
@@ -32,14 +32,14 @@
             "x": 4.0,
             "y": 2.0,
             "yaw": 0.0,
-            "type": "OTHER"
+            "type": "MISC"
         },
         {
             "name": "Corridor",
             "x": 2.5,
             "y": 5.0,
             "yaw": 1.5,
-            "type": "OTHER",
+            "type": "SPACE",
             "area": 30.0,
             "footprint": [
                 [

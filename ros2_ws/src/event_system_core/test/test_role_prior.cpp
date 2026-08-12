@@ -13,10 +13,10 @@ const des::RolePrior& chef() {
 
 TEST(PriorFor, MapsEveryRoomTypeToItsOwnColumn) {
     EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::KITCHEN), 0.30f);
-    EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::WORKPLACE), 0.03f);
+    EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::OFFICE), 0.03f);
     EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::CLASSROOM), 0.01f);
     EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::MEETING), 0.01f);
-    EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::OTHER), 0.06f);
+    EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::MISC), 0.06f);
     EXPECT_FLOAT_EQ(des::priorFor(chef(), des::RoomType::TOILET), 0.02f);
 }
 

@@ -56,13 +56,13 @@
         400.0
     ],
     "types": [
-        "OTHER",
-        "OTHER",
-        "OTHER",
-        "OTHER",
-        "OTHER",
-        "OTHER",
-        "OTHER"
+        "MISC",
+        "MISC",
+        "MISC",
+        "MISC",
+        "MISC",
+        "MISC",
+        "MISC"
     ],
     "footprints": [
         [],

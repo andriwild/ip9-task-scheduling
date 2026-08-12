@@ -35,7 +35,7 @@ def generate_launch_description():
                               description="Override level for des.io.* (default: log_level)"),
         DeclareLaunchArgument("queue_log_level",  default_value=queue_log_level,
                               description="Override level for des.event_queue (default: log_level). Set to DEBUG to see push/pop traffic."),
-        DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless or build"),
+        DeclareLaunchArgument("mode", default_value=mode, description="Start mode: full, headless, build or build_rooms"),
         DeclareLaunchArgument("config", default_value=config, description="Optional override config merged onto sim_config.json (path relative to config/ or absolute)"),
         DeclareLaunchArgument("base_config", default_value=base_config, description="Replaces sim_config.json as the merge base (path relative to config/ or absolute)"),
         DeclareLaunchArgument("out_dir", default_value=out_dir, description="Directory for metrics.csv, metrics_daily.csv and mission_trace.json (default: results/ with a timestamp)"),

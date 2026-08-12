@@ -43,8 +43,9 @@ inspection and control.
 - **Blender** — The building geometry and waypoints are modelled in a Blender
   file (`fhnw.blend`) and exported to the PostGIS database `wsr` by Python
   scripts under `blender/`:
-  - `room_poly_to_db.py` — exports the `RoomPolygons` collection as room
-    polygons.
+  - `room_poly_to_db.py` — exports the room polygons from the type collections
+    (Office, Classrooms, Meeting, Kitchen, Toilets, Access, Spaces, Misc). The
+    collection an object sits in decides its room type.
   - `waypoints_to_db.py` — exports the `Waypoints` collection as points of
     interest (position + yaw).
   - `install_deps.py` — installs `sqlalchemy` / `geoalchemy2` into Blender's
@@ -129,7 +130,7 @@ editor (once, to populate the `wsr` database):
 
 ```text
 blender/install_deps.py      # installs sqlalchemy / geoalchemy2 in Blender
-blender/room_poly_to_db.py   # exports RoomPolygons collection
+blender/room_poly_to_db.py   # exports room polygons, type per collection
 blender/waypoints_to_db.py   # exports Waypoints collection
 ```
 

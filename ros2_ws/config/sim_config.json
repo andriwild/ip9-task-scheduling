@@ -63,11 +63,9 @@
     "robot_speed": 1.0,
     "round_mode": "replication",
     "rounds": 1,
-    "search_excluded_rooms": [
-        "Elevator",
-        "Stairwell",
-        "Dock",
-        "Toilet"
+    "search_excluded_room_types": [
+        "ACCESS",
+        "TOILET"
     ],
     "search_prior_weight": 4.0,
     "search_reward_strategy": "beta_smoothed",

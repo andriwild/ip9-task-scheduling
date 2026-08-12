@@ -81,7 +81,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
 
     const auto allNames = ctx.roomNames();
     auto searchable = allNames
-        | std::views::filter([&](const std::string& name) { return !isSearchExcluded(cfg->searchExcludedRooms, name); })
+        | std::views::filter([&](const std::string& name) { return !isSearchExcluded(ctx, name); })
         | std::views::transform([&](const std::string& name) { return SearchRoom{ name, ctx.room(name).m_roomType }; })
         | std::views::common;
     const std::vector<SearchRoom> searchableRooms(searchable.begin(), searchable.end());
@@ -280,40 +280,56 @@ std::string AccompanyOrderPlugin::outcomeDetail(const IOrder& order) const {
     }
 }
 
-double AccompanyOrderPlugin::estimateMissionEnergy(const IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto& a     = static_cast<const AccompanyOrder&>(order);
+namespace {
+
+struct MissionLegs {
+    double searchSec    = 0.0;
+    double searchWh     = 0.0;
+    double accompanySec = 0.0;
+    double talkSec      = 0.0;
+    double driveBackSec = 0.0;
+};
+
+MissionLegs missionLegs(const AccompanyOrder& a, const ISimContext& context, const std::string& startLocation) {
     const auto& cfg   = *context.getConfig();
+    const auto& acfg  = accompanyConfig();
     const auto& sched = context.getScheduler();
+    const auto person = context.getPersonByName(a.personName);
 
-    double searchWh;
-    if (auto plan = planPersonSearch(context, a, startLocation)) {
-        searchWh = plan->energyWh;
+    MissionLegs legs;
+    if (const auto plan = planPersonSearch(context, a, startLocation)) {
+        legs.searchSec = plan->durationSec;
+        legs.searchWh  = plan->energyWh;
     } else {
-        const auto person  = context.getPersonByName(a.personName);
-        const auto meeting = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName);
-        searchWh           = (meeting.driveTime * cfg.energyConsumptionDrive + meeting.talkTime * cfg.energyConsumptionBase) / 3600.0;
+        legs.searchSec = sched.robotDriveTime(startLocation, person->workplace)
+                       + sched.getScanTime(person->workplace);
+        legs.searchWh  = legs.searchSec * cfg.energyConsumptionDrive / 3600.0;
     }
+    // Where the person is actually found is unknown while estimating, so the
+    // accompany leg is measured from the workplace.
+    legs.accompanySec = sched.getDriveTime(person->workplace, a.roomName, acfg.accompanySpeed);
+    legs.talkSec      = 2.0 * acfg.conversationDurationMean;
+    legs.driveBackSec = sched.robotDriveTime(a.roomName, cfg.dockLocation);
+    return legs;
+}
 
-    const double appointmentWh = accompanyConfig().appointmentDuration * cfg.energyConsumptionBase / 3600.0;
-    const double driveBackWh   = sched.robotDriveTime(a.roomName, cfg.dockLocation) * cfg.energyConsumptionDrive / 3600.0;
-    return searchWh + appointmentWh + driveBackWh;
+}  // namespace
+
+double AccompanyOrderPlugin::estimateMissionEnergy(const IOrder& order, const ISimContext& context, const std::string& startLocation) const {
+    const auto& a    = static_cast<const AccompanyOrder&>(order);
+    const auto& cfg  = *context.getConfig();
+    const auto legs  = missionLegs(a, context, startLocation);
+
+    const double accompanyWh = legs.accompanySec * cfg.energyConsumptionDrive / 3600.0;
+    const double talkWh      = legs.talkSec * cfg.energyConsumptionBase / 3600.0;
+    const double driveBackWh = legs.driveBackSec * cfg.energyConsumptionDrive / 3600.0;
+    return legs.searchWh + accompanyWh + talkWh + driveBackWh;
 }
 
 double AccompanyOrderPlugin::estimateMissionDuration(const IOrder& order, const ISimContext& context, const std::string& startLocation) const {
-    const auto& a     = static_cast<const AccompanyOrder&>(order);
-    const auto& cfg   = *context.getConfig();
-    const auto& sched = context.getScheduler();
-
-    double searchSec;
-    if (auto plan = planPersonSearch(context, a, startLocation)) {
-        searchSec = plan->durationSec;
-    } else {
-        const auto person = context.getPersonByName(a.personName);
-        searchSec         = meetingViaWorkplace(sched, person->workplace, startLocation, a.roomName).total();
-    }
-
-    const double driveBackSec = sched.robotDriveTime(a.roomName, cfg.dockLocation);
-    return searchSec + accompanyConfig().appointmentDuration + driveBackSec;
+    const auto& a   = static_cast<const AccompanyOrder&>(order);
+    const auto legs = missionLegs(a, context, startLocation);
+    return legs.searchSec + legs.accompanySec + legs.talkSec + legs.driveBackSec;
 }
 
 void AccompanyOrderPlugin::publishTimeline(const IOrder& order, int startTime, ITimelineSink& sink) const {

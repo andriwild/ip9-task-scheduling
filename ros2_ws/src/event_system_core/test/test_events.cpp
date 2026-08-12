@@ -909,6 +909,9 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
         {1.0, 0.0, 0.0},
     };
     ctx.personLocations["Max"] = "5.2B03";
+    des::Room elevator{"5.2B_Elevator", des::Point{}, 0.0};
+    elevator.m_roomType = des::RoomType::ACCESS;
+    ctx.rooms.emplace("5.2B_Elevator", elevator);
 
     des::PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
@@ -936,6 +939,9 @@ TEST(EventExecute, PersonTransitionRetriesWhileBusyInsteadOfEndingChain) {
     person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
+    des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
+    kitchen.m_roomType = des::RoomType::KITCHEN;
+    ctx.rooms.emplace("IMVS_Kitchen", kitchen);
 
     des::PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
@@ -973,6 +979,9 @@ TEST(EventExecute, PersonGoesToLunchWhenDueAndResumesAfterwards) {
     person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
+    des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
+    kitchen.m_roomType = des::RoomType::KITCHEN;
+    ctx.rooms.emplace("IMVS_Kitchen", kitchen);
 
     des::PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);
@@ -1049,6 +1058,9 @@ TEST(EventExecute, PersonWithoutSampledLunchDoesNotGoToLunch) {
     person->roomLabels = {"5.2B03", "IMVS_Kitchen"};
     person->transitionMatrix = {{0.0, 1.0}, {1.0, 0.0}};
     ctx.personLocations["Max"] = "5.2B03";
+    des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
+    kitchen.m_roomType = des::RoomType::KITCHEN;
+    ctx.rooms.emplace("IMVS_Kitchen", kitchen);
 
     des::PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);

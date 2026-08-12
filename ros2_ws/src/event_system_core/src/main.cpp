@@ -17,6 +17,11 @@ int main(const int argc, char* argv[]) {
         return des::SnapshotBuilder::build(argc, argv);
     }
 
+    if (mode == "build_rooms") {
+        DES_LOG_DEBUG("des.main", "\n----- Building Snapshot Generation (rooms only) -----");
+        return des::SnapshotBuilder::buildRooms(argc, argv);
+    }
+
     const bool headless = (mode == "headless");
     const auto app = headless ? des::HeadlessRunner::create(argc, argv)
                               : des::SimRunner::create(argc, argv);

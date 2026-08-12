@@ -35,6 +35,14 @@ public:
         return rc;
     }
 
+    static int buildRooms(const int argc, char* argv[]) {
+        rclcpp::init(argc, argv);
+        SnapshotBuilder builder;
+        const int rc = builder.runRooms();
+        rclcpp::shutdown();
+        return rc;
+    }
+
     int run() {
         const auto rooms = m_db.rooms();
         if (!rooms.has_value()) {
@@ -67,6 +75,42 @@ public:
 
         const bool ok = DistMat::rebuild(locations, m_planner);
         shutdown();
+        return ok ? 0 : 1;
+    }
+
+    int runRooms() {
+        const auto rooms = m_db.rooms();
+        if (!rooms.has_value()) {
+            throw std::runtime_error("Could not load rooms from DB");
+        }
+        DES_LOG_INFO("des.snapshot", "Loaded %zu rooms from DB", rooms->size());
+
+        const auto existing = ConfigLoader::loadDistanceMatrix(BUILDING_FILE);
+        if (!existing.has_value()) {
+            DES_LOG_ERROR("des.snapshot", "No matrix to keep in %s, run the full rebuild", BUILDING_FILE.c_str());
+            return 1;
+        }
+        const auto& [names, mat] = existing.value();
+
+        std::vector<Room> locations;
+        locations.reserve(rooms->size());
+        for (const auto& [_, loc] : rooms.value()) {
+            locations.push_back(loc);
+        }
+
+        if (names.size() != locations.size()) {
+            DES_LOG_ERROR("des.snapshot", "DB has %zu rooms, the matrix covers %zu, run the full rebuild", locations.size(), names.size());
+            return 1;
+        }
+        for (std::size_t i = 0; i < names.size(); ++i) {
+            if (names[i] != locations[i].m_name) {
+                DES_LOG_ERROR("des.snapshot", "Room order differs at index %zu ('%s' in the matrix, '%s' in the DB), run the full rebuild", i, names[i].c_str(), locations[i].m_name.c_str());
+                return 1;
+            }
+        }
+
+        const bool ok = DistMat::saveMat(mat, locations);
+        DES_LOG_INFO("des.snapshot", "Rooms updated, matrix of %zu x %zu kept: %s", names.size(), names.size(), ok ? "written" : "FAILED");
         return ok ? 0 : 1;
     }
 

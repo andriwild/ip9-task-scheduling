@@ -32,7 +32,7 @@ public:
                 accompany->abortReason = SearchAbortReason::OUTSIDE;
                 DES_LOG_DEBUG("des.plugin.accompany.search", "Abort Search for %s: person is OUTSIDE the building", personName.c_str());
             } else {
-                const bool unreachable = isSearchExcluded(ctx.getConfig()->searchExcludedRooms, loc);
+                const bool unreachable = isSearchExcluded(ctx, loc);
                 accompany->abortReason = unreachable ? SearchAbortReason::IN_BUILDING_UNREACHABLE
                                                      : SearchAbortReason::IN_BUILDING_FINDABLE;
                 const auto& plan    = accompany->plannedSearch;

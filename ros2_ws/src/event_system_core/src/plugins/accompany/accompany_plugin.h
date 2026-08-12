@@ -14,7 +14,7 @@ namespace des {
 class Scheduler;
 class ISimContext;
 struct AccompanyConfig {
-    double accompanySpeed             = 0.20;
+    double accompanySpeed             = 1.00;
     double conversationProbability    = 0.8;
     double conversationDurationMean   = 30.0;
     double conversationDurationStd    = 5.0;
@@ -74,8 +74,6 @@ inline const AccompanyConfig& accompanyConfig() {
         OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName)).config();
 }
 
-// Draw a single conversation duration. Floors at 1s so the simulation can't
-// schedule a zero-length conversation event when the std puts us in the tail.
 inline double rndAccompanyConversationTime(std::mt19937& rng) {
     const auto& cfg = accompanyConfig();
     const double t = rnd::normal(rng, cfg.conversationDurationMean, cfg.conversationDurationStd);
