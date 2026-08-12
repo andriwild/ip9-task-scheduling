@@ -166,14 +166,13 @@ inline TSP::RoomTour twoOpt(TSP::RoomTour tour) {
 }
 
 
-
-
 /*
  * @brief A closed tour over location indices: order[0] is the start, the loop returns to order[0]
  *
  */
 inline RoomTour nearestNeighbor(
-    const RoomTour& tour
+    const RoomTour& tour,
+    TSP::Room& room
 ) {
     if (tour.m_path.size() < 4) {
         return tour;

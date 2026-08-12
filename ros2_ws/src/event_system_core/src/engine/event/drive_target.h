@@ -69,7 +69,7 @@ public:
         observeSightings(ctx);
     }
 
-    std::string label() const override { return m_room; }
+    [[nodiscard]] std::string label() const override { return m_room; }
 };
 
 class PointTarget final : public DriveTarget {
@@ -95,7 +95,7 @@ public:
         observeSightings(ctx);
     }
 
-    std::string label() const override {
+    [[nodiscard]] std::string label() const override {
         return "(" + std::to_string(m_point.m_x) + ", " + std::to_string(m_point.m_y) + ")";
     }
 };

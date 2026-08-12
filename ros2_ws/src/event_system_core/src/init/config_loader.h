@@ -261,7 +261,8 @@ public:
             config.personRecognitionRange = std::max(config.personIdentificationRange, j.value("person_recognition_range", config.personIdentificationRange));
             config.personDirectionsProbability = j.value("person_gives_directions_probability", 0.0);
             config.debugExport = j.value("debug_export", j.value("move_trace_export", false));
-            config.personSpeed = j.value("person_speed", 1.4);
+            config.personSpeedMale   = j.value("person_speed_male", 1.41);
+            config.personSpeedFemale = j.value("person_speed_female", 1.27);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
@@ -348,7 +349,8 @@ public:
         j["person_recognition_range"]       = roundValue(config.personRecognitionRange);
         j["person_gives_directions_probability"] = roundValue(config.personDirectionsProbability);
         j["debug_export"]                   = config.debugExport;
-        j["person_speed"]                   = roundValue(config.personSpeed);
+        j["person_speed_male"]              = roundValue(config.personSpeedMale);
+        j["person_speed_female"]            = roundValue(config.personSpeedFemale);
         j["sim_start_time"]                 = config.simStartTime;
         j["sim_duration"]                   = config.simDuration;
         j["use_distance_matrix"]            = config.useDistanceMatrix;

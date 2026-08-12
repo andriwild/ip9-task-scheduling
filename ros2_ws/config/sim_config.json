@@ -1,6 +1,6 @@
 {
     "accompany": {
-        "accompany_speed": 0.2,
+        "accompany_speed": 1.0,
         "appointment_duration": 1800.0,
         "conversation_duration_mean": 28.0,
         "conversation_duration_std": 14.0,
@@ -27,6 +27,7 @@
         "data_acquisition_interval": 86400.0,
         "reward_weight": 0.12
     },
+    "debug_export": false,
     "departure_distribution": "normal",
     "departure_mean": 61200.0,
     "departure_std": 1800.0,
@@ -51,11 +52,15 @@
     "lunch_std": 1800.0,
     "metrics_csv_export": true,
     "people_spawn_location": "5.2B_Elevator",
-    "person_detection_range": 2.5,
-    "person_speed": 1.4,
+    "person_gives_directions_probability": 0.0,
+    "person_identification_range": 2.5,
+    "person_recognition_range": 2.5,
+    "person_speed_female": 1.27,
+    "person_speed_male": 1.41,
     "replan_background_on_interrupt": true,
-    "robot_speed": 0.3,
+    "robot_speed": 1.0,
     "round_mode": "replication",
+    "rounds": 1,
     "search_excluded_rooms": [
         "Elevator",
         "Stairwell",
@@ -65,6 +70,7 @@
     "search_prior_weight": 4.0,
     "search_reward_strategy": "beta_smoothed",
     "search_role_prior": true,
+    "search_route_strategy": "cost_aware",
     "search_workplace_prior": 0.6,
     "seed": 42,
     "sim_duration": 35640,

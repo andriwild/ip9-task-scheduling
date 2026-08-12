@@ -11,7 +11,7 @@ class ChargePhaseTransitionEvent final : public IEvent {
 public:
     explicit ChargePhaseTransitionEvent(const int time) : IEvent(time) {}
 
-    std::shared_ptr<IEvent> withTime(int newTime) const override {
+    [[nodiscard]] std::shared_ptr<IEvent> withTime(const int newTime) const override {
         auto copy = std::make_shared<ChargePhaseTransitionEvent>(*this);
         copy->time = newTime;
         copy->cancelled = false;
@@ -23,9 +23,9 @@ public:
         ctx.notifyEvent(*this);
     }
 
-    std::string getName() const override { return "Charge Phase Transition"; }
-    EventType getType() const override { return EventType::CHARGE_PHASE_TRANSITION; }
-    std::string getColor() const override { return "#f0a000"; }
+    [[nodiscard]] std::string getName() const override { return "Charge Phase Transition"; }
+    [[nodiscard]] EventType getType() const override { return EventType::CHARGE_PHASE_TRANSITION; }
+    [[nodiscard]] std::string getColor() const override { return "#f0a000"; }
 };
 
 }  // namespace des

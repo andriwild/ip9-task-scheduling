@@ -18,7 +18,7 @@ public:
         , orderPtr(order)
     {}
 
-    std::shared_ptr<IEvent> withTime(int newTime) const override {
+    [[nodiscard]] std::shared_ptr<IEvent> withTime(int newTime) const override {
         auto copy = std::make_shared<MissionStartEvent>(*this);
         copy->time = newTime;
         copy->cancelled = false;
@@ -26,18 +26,17 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        //auto orderPtr = ctx.getOrderPtr();
         auto& plugin = OrderRegistry::instance().get(orderPtr->type);
         plugin.onMissionStart(ctx, *orderPtr);
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }
 
-    std::string getName() const override {
+    [[nodiscard]] std::string getName() const override {
         return std::format("Mission {} Start", orderPtr->id);
     }
-    EventType getType() const override { return EventType::MISSION_START; }
-    int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
+    [[nodiscard]] EventType getType() const override { return EventType::MISSION_START; }
+    [[nodiscard]] int getMissionId() const override { return orderPtr ? orderPtr->id : -1; }
 };
 
 }  // namespace des

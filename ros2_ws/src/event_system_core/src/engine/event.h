@@ -12,5 +12,6 @@
 #include "engine/event/battery_full_event.h"
 #include "engine/event/charge_phase_transition_event.h"
 #include "engine/event/person_transition.h"
+#include "engine/event/person_lunch.h"
 #include "engine/event/order_arrival_event.h"
 #include "engine/event/background_release_event.h"
