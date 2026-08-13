@@ -233,7 +233,7 @@ protected:
         // be perceivable from the route, identification then needs a detour.
         std::ostringstream radius;
         radius << m_config->personRecognitionRange;
-        const std::string path = CONFIG_DIR + "tours_r" + radius.str() + ".json";
+        const std::string path = CONFIG_DIR + "tours/tours_r" + radius.str() + ".json";
 
         // add tours through to existing rooms
         const auto merged = ConfigLoader::mergeRoomTours(path, m_rooms);

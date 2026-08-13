@@ -957,9 +957,63 @@ TEST(EventExecute, PersonTransitionSchedulesDepartureWhenTimeExceeded) {
 
     arrival->execute(ctx);
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    auto leave = ctx.pushedEvents[0];
+    EXPECT_EQ(leave->getType(), des::EventType::PERSON_TRANSITION);
+    EXPECT_GE(leave->time, arrival->time);
+    EXPECT_EQ(ctx.personLocations["Max"], "IMVS_Kitchen");
+    ctx.pushedEvents.clear();
+
+    leave->execute(ctx);
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    auto atExit = ctx.pushedEvents[0];
+    EXPECT_EQ(atExit->getType(), des::EventType::PERSON_ROOM_ARRIVED);
+    EXPECT_EQ(ctx.personLocations["Max"], IN_TRANSIT);
+    ctx.pushedEvents.clear();
+
+    atExit->execute(ctx);
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->getType(), des::EventType::PERSON_DEPARTURE);
     EXPECT_GE(ctx.pushedEvents[0]->time, person->departureTime);
     EXPECT_EQ(ctx.personLocations["Max"], "5.2B_Elevator");
+}
+
+TEST(EventExecute, PersonWaitsAtTheExitOnlyForTheAccessStay) {
+    MockSimContext ctx;
+
+    auto person = std::make_shared<des::Person>();
+    person->firstName = "Max";
+    person->workplace = "5.2B03";
+    person->departureTime = 61200;
+    person->roomLabels = {"5.2B03", "5.2B_Elevator"};
+    person->transitionMatrix = {
+        {0.0, 1.0},
+        {1.0, 0.0},
+    };
+    ctx.personLocations["Max"] = "5.2B03";
+    des::Room elevator{"5.2B_Elevator", des::Point{}, 0.0};
+    elevator.m_roomType = des::RoomType::ACCESS;
+    ctx.rooms.emplace("5.2B_Elevator", elevator);
+    des::Room office{"5.2B03", des::Point{}, 0.0};
+    office.m_roomType = des::RoomType::OFFICE;
+    ctx.rooms.emplace("5.2B03", office);
+
+    des::PersonRoomArrivedEvent arrival(60000, person.get(), "5.2B03");
+    arrival.execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    auto leave = ctx.pushedEvents[0];
+    ctx.pushedEvents.clear();
+    leave->execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    auto atExit = ctx.pushedEvents[0];
+    ctx.pushedEvents.clear();
+    atExit->execute(ctx);
+
+    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
+    const int waited = ctx.pushedEvents[0]->time - atExit->time;
+    EXPECT_GE(waited, 60);
+    EXPECT_LE(waited, 120);
 }
 
 TEST(EventExecute, PersonTransitionRetriesWhileBusyInsteadOfEndingChain) {

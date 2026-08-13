@@ -89,6 +89,7 @@ QColor stateColor(quint8 category, const QString& name) {
     if (name == "clean")      return QColor(240, 150, 200);
     if (name == "acquire")    return QColor(220, 180, 100);
     if (name == "returning")  return QColor(120, 200, 160);
+    if (name == "information") return QColor(14, 143, 158);
     switch (category) {
         case SC::IDLE:      return QColor(200, 200, 200);
         case SC::CHARGING:  return QColor(255, 210, 50);

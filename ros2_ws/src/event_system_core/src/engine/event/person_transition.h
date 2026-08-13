@@ -101,6 +101,77 @@ public:
     [[nodiscard]] EventType getType() const override { return EventType::PERSON_DEPARTURE; }
 };
 
+class PersonAtExitEvent final : public PersonEvent {
+public:
+    explicit PersonAtExitEvent(const int time, Person* p, std::string room) :
+        PersonEvent(time, p)
+    {
+        targetRoom = std::move(room);
+    }
+
+    [[nodiscard]] std::shared_ptr<IEvent> withTime(const int newTime) const override {
+        auto copy = std::make_shared<PersonAtExitEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
+    void execute(ISimContext& ctx) override {
+        auto& p = *this->person;
+
+        // accompany guard
+        if (p.busy) {
+            retryLater(ctx);
+            return;
+        }
+
+        moveTo(ctx, targetRoom);
+        ctx.notifyEvent(*this);
+
+        const int departAt = std::max(p.departureTime, this->time);
+        ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
+    }
+
+    [[nodiscard]] std::string getName() const override {
+        return std::format("{} waiting at {}", person->firstName, targetRoom);
+    }
+    [[nodiscard]] EventType getType() const override { return EventType::PERSON_ROOM_ARRIVED; }
+};
+
+class PersonLeaveEvent final : public PersonEvent {
+    int m_walkTime;
+
+public:
+    explicit PersonLeaveEvent(const int time, Person* p, std::string room, const int walkTime) :
+        PersonEvent(time, p),
+        m_walkTime(walkTime)
+    {
+        targetRoom = std::move(room);
+    }
+
+    [[nodiscard]] std::shared_ptr<IEvent> withTime(const int newTime) const override {
+        auto copy = std::make_shared<PersonLeaveEvent>(*this);
+        copy->time = newTime;
+        copy->cancelled = false;
+        return copy;
+    }
+
+    void execute(ISimContext& ctx) override {
+        // accompany guard
+        if (this->person->busy) {
+            retryLater(ctx);
+            return;
+        }
+
+        ctx.notifyEvent(*this);
+        moveTo(ctx, IN_TRANSIT);
+        ctx.pushEvent(std::make_shared<PersonAtExitEvent>(
+            this->time + m_walkTime, this->person, targetRoom));
+    }
+
+    [[nodiscard]] EventType getType() const override { return EventType::PERSON_TRANSITION; }
+};
+
 class PersonRoomArrivedEvent final : public PersonEvent {
 public:
     explicit PersonRoomArrivedEvent(const int time, Person* p, std::string room) :
@@ -145,11 +216,16 @@ public:
         if (p.departureTime < nextExecutionTime) {
             const auto accessIt = std::ranges::find_if(p.roomLabels,
                 [&ctx](const std::string& r) { return ctx.room(r).m_roomType == RoomType::ACCESS; });
-            if (accessIt != p.roomLabels.end()) {
-                moveTo(ctx, *accessIt);
+            if (accessIt == p.roomLabels.end()) {
+                ctx.pushEvent(std::make_shared<PersonDepartureEvent>(
+                    std::max(p.departureTime, this->time), this->person));
+                return;
             }
-            const int departAt = std::max(p.departureTime, this->time);
-            ctx.pushEvent(std::make_shared<PersonDepartureEvent>(departAt, this->person));
+            const double walkTime = personWalkTime(ctx, p, targetRoom, *accessIt);
+            const double accessStay = p.getStayDuration(RoomType::ACCESS, p.rng);
+            const int leaveAt = std::max(this->time, static_cast<int>(p.departureTime - walkTime - accessStay));
+            ctx.pushEvent(std::make_shared<PersonLeaveEvent>(
+                leaveAt, this->person, *accessIt, static_cast<int>(walkTime)));
         } else {
             scheduleTransition(ctx, static_cast<int>(nextExecutionTime));
         }

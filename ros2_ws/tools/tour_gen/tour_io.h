@@ -17,7 +17,7 @@ const std::string kBuildingFile = kConfigDir + "/building.json";
 
 inline std::string toursPath(const double radius) {
     std::ostringstream oss;
-    oss << kConfigDir << "/tours_r" << radius << ".json";
+    oss << kConfigDir << "/tours/tours_r" << radius << ".json";
     return oss.str();
 }
 

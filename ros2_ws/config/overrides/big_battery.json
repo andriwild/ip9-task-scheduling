@@ -1,6 +1,0 @@
-{
-    "appointments_path": "scenarios/only_background.json",
-    "battery_capacity": 100000.0,
-    "initial_battery_capacity": 100000.0,
-    "sim_duration": 86400
-}

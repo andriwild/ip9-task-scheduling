@@ -37,9 +37,9 @@ inline std::string configRoot() {
 }
 
 const std::string CONFIG_DIR            = configRoot();
-const std::string DEFAULT_ORDER_FILE    = CONFIG_DIR + "appointments.json";
-const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "employee_roles.json";
-const std::string SIM_CONFIG_FILE       = CONFIG_DIR + "sim_config.json";
+const std::string DEFAULT_ORDER_FILE    = CONFIG_DIR + "default/appointments.json";
+const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "default/employee.json";
+const std::string SIM_CONFIG_FILE       = CONFIG_DIR + "default/sim_config.json";
 const std::string BUILDING_FILE         = CONFIG_DIR + "building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
@@ -66,8 +66,7 @@ public:
     static inline std::string s_baseConfigPath = "";
 
     static std::string configDir() {
-        const auto slash = SIM_CONFIG_FILE.rfind('/');
-        return slash == std::string::npos ? "" : SIM_CONFIG_FILE.substr(0, slash + 1);
+        return CONFIG_DIR;
     }
 
     static std::string resolvePath(const std::string& path) {
@@ -261,6 +260,7 @@ public:
             config.personRecognitionRange = std::max(config.personIdentificationRange, j.value("person_recognition_range", config.personIdentificationRange));
             config.personApproachDistance = j.value("person_approach_distance", 1.0);
             config.personDirectionsProbability = j.value("person_gives_directions_probability", 0.0);
+            config.personDirectionsWrongProbability = j.value("person_gives_wrong_directions_probability", 0.0);
             config.debugExport = j.value("debug_export", j.value("move_trace_export", false));
             config.personSpeedMale   = j.value("person_speed_male", 1.41);
             config.personSpeedFemale = j.value("person_speed_female", 1.27);
@@ -354,6 +354,7 @@ public:
         j["person_recognition_range"]       = roundValue(config.personRecognitionRange);
         j["person_approach_distance"]       = roundValue(config.personApproachDistance);
         j["person_gives_directions_probability"] = roundValue(config.personDirectionsProbability);
+        j["person_gives_wrong_directions_probability"] = roundValue(config.personDirectionsWrongProbability);
         j["debug_export"]                   = config.debugExport;
         j["person_speed_male"]              = roundValue(config.personSpeedMale);
         j["person_speed_female"]            = roundValue(config.personSpeedFemale);

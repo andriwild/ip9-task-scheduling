@@ -175,6 +175,7 @@ struct SimConfig {
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
     double personDirectionsProbability = 0.0;
+    double personDirectionsWrongProbability = 0.0;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
     unsigned int seed = 42;
@@ -223,6 +224,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "personRecognitionRange" << ": " << config.personRecognitionRange << std::endl;
         os << std::left << std::setw(W) << "personApproachDistance" << ": " << config.personApproachDistance << std::endl;
         os << std::left << std::setw(W) << "personDirectionsProbability" << ": " << config.personDirectionsProbability << std::endl;
+        os << std::left << std::setw(W) << "personDirectionsWrongProbability" << ": " << config.personDirectionsWrongProbability << std::endl;
         os << std::left << std::setw(W) << "personSpeedMale" << ": " << config.personSpeedMale << std::endl;
         os << std::left << std::setw(W) << "personSpeedFemale" << ": " << config.personSpeedFemale << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
