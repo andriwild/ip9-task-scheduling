@@ -32,6 +32,8 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<HasNextLocation>("HasNextLocation");
     factory.registerNodeType<MoveToNextLocation>("MoveToNextLocation");
     factory.registerNodeType<StartAccompanyConversation>("StartAccompanyConversation");
+    factory.registerNodeType<HasPendingAsk>("HasPendingAsk");
+    factory.registerNodeType<StartAskConversation>("StartAskConversation");
     factory.registerNodeType<ReportSearchAbort>("ReportSearchAbort");
 
     // accompany
@@ -44,8 +46,9 @@ void AccompanyOrderPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<IsConversating>("IsConversating");
     factory.registerNodeType<ConversationFinished>("ConversationFinished");
     factory.registerNodeType<WasConversationSuccessful>("WasConversationSuccessful");
-    factory.registerNodeType<IsFoundPersonConversation>("IsFoundPersonConversation");
-    factory.registerNodeType<IsDropOffConversation>("IsDropOffConversation");
+    factory.registerNodeType<IsConversationKind>("IsConversationKind");
+    factory.registerNodeType<ApplyDirections>("ApplyDirections");
+    factory.registerNodeType<ResumeSearchAfterAsk>("ResumeSearchAfterAsk");
     factory.registerNodeType<StartAccompanyAction>("StartAccompanyAction");
 }
 
@@ -164,6 +167,7 @@ void AccompanyOrderPlugin::onMissionStart(ISimContext& ctx, IOrder& order) {
     accompanyOrder.remainingSearch = locations;
     accompanyOrder.scanRoom.clear();
     accompanyOrder.scanQueue.clear();
+    accompanyOrder.pendingAsk.clear();
     accompanyOrder.phase = AccompanyPhase::SEARCH;
     ctx.changeRobotState(std::make_unique<SearchState>());
 }
@@ -180,14 +184,36 @@ void AccompanyOrderPlugin::onMissionResume(ISimContext& ctx, IOrder& order) {
             break;
         }
         case AccompanyPhase::CONVERSATE_FOUND: {
-            ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::FOUND_PERSON));
+            ctx.changeRobotState(std::make_unique<ConversationState>(ConversationKind::FOUND_PERSON));
             break;
         }
         case AccompanyPhase::CONVERSATE_DROPOFF: {
-            ctx.changeRobotState(std::make_unique<ConversateState>(ConversateState::Type::DROP_OFF));
+            ctx.changeRobotState(std::make_unique<ConversationState>(ConversationKind::DROP_OFF));
+            break;
+        }
+        case AccompanyPhase::CONVERSATE_ASK: {
+            ctx.changeRobotState(std::make_unique<ConversationState>(ConversationKind::ASK_DIRECTIONS));
             break;
         }
         case AccompanyPhase::NONE: {
+            break;
+        }
+    }
+}
+
+void AccompanyOrderPlugin::onConversationStart(ISimContext& /*ctx*/, IOrder& order, const ConversationKind kind) {
+    auto& accompanyOrder = static_cast<AccompanyOrder&>(order);
+    switch (kind) {
+        case ConversationKind::FOUND_PERSON: {
+            accompanyOrder.phase = AccompanyPhase::CONVERSATE_FOUND;
+            break;
+        }
+        case ConversationKind::DROP_OFF: {
+            accompanyOrder.phase = AccompanyPhase::CONVERSATE_DROPOFF;
+            break;
+        }
+        case ConversationKind::ASK_DIRECTIONS: {
+            accompanyOrder.phase = AccompanyPhase::CONVERSATE_ASK;
             break;
         }
     }

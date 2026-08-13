@@ -113,10 +113,8 @@ bool isMissionEvent(quint8 t) {
         || t == TE::STOP_DRIVE
         || t == TE::START_ACCOMPANY
         || t == TE::ARRIVED_ACCOMPANY
-        || t == TE::START_DROP_OFF_CONV
-        || t == TE::START_FOUND_PERSON_CONV
-        || t == TE::DROP_OFF_CONV_COMPLETE
-        || t == TE::FOUND_PERSON_CONV_COMPLETE
+        || t == TE::CONVERSATION_START
+        || t == TE::CONVERSATION_END
         || t == TE::ABORT_SEARCH;
 }
 
@@ -160,15 +158,13 @@ GlyphSpec glyphFor(quint8 type) {
         // "Start" events → right triangle
         case TE::START_DRIVE:
         case TE::START_ACCOMPANY:
-        case TE::START_DROP_OFF_CONV:
-        case TE::START_FOUND_PERSON_CONV:
+        case TE::CONVERSATION_START:
             return {Glyph::TriangleRight, 12};
 
         // "End / arrival" events → left triangle
         case TE::STOP_DRIVE:
         case TE::ARRIVED_ACCOMPANY:
-        case TE::DROP_OFF_CONV_COMPLETE:
-        case TE::FOUND_PERSON_CONV_COMPLETE:
+        case TE::CONVERSATION_END:
             return {Glyph::TriangleLeft, 12};
 
         // Mission lifecycle → diamonds
@@ -260,8 +256,7 @@ double subBandFor(quint8 type) {
         // Start / departure events → upper third
         case TE::START_DRIVE:
         case TE::START_ACCOMPANY:
-        case TE::START_DROP_OFF_CONV:
-        case TE::START_FOUND_PERSON_CONV:
+        case TE::CONVERSATION_START:
         case TE::MISSION_DISPATCH:
         case TE::MISSION_START:
         case TE::PERSON_TRANSITION:
@@ -271,8 +266,7 @@ double subBandFor(quint8 type) {
         // End / arrival → lower third
         case TE::STOP_DRIVE:
         case TE::ARRIVED_ACCOMPANY:
-        case TE::DROP_OFF_CONV_COMPLETE:
-        case TE::FOUND_PERSON_CONV_COMPLETE:
+        case TE::CONVERSATION_END:
         case TE::MISSION_COMPLETE:
         case TE::PERSON_ARRIVED:
         case TE::PERSON_ROOM_ARRIVED:
@@ -743,10 +737,8 @@ QString DesSwimlanePanel::eventTypeName(quint8 type) {
         case TE::MISSION_COMPLETE: return "Mission Complete";
         case TE::START_ACCOMPANY:  return "Start Accompany";
         case TE::ARRIVED_ACCOMPANY: return "Arrived Accompany";
-        case TE::START_DROP_OFF_CONV: return "Start Drop-Off Conv.";
-        case TE::START_FOUND_PERSON_CONV: return "Start Found-Person Conv.";
-        case TE::DROP_OFF_CONV_COMPLETE: return "Drop-Off Conv. Complete";
-        case TE::FOUND_PERSON_CONV_COMPLETE: return "Found-Person Conv. Complete";
+        case TE::CONVERSATION_START: return "Conversation Start";
+        case TE::CONVERSATION_END: return "Conversation End";
         case TE::ABORT_SEARCH:     return "Abort Search";
         case TE::BATTERY_FULL:     return "Battery Full";
         case TE::CHARGE_PHASE_TRANSITION: return "Charge Phase Transition";
@@ -1197,10 +1189,8 @@ void DesSwimlanePanel::redraw() {
                         base = QColor(220, 0, 0); break;
                     case TE::ABORT_SEARCH:
                         base = QColor(255, 165, 0); break;
-                    case TE::START_DROP_OFF_CONV:
-                    case TE::START_FOUND_PERSON_CONV:
-                    case TE::DROP_OFF_CONV_COMPLETE:
-                    case TE::FOUND_PERSON_CONV_COMPLETE:
+                    case TE::CONVERSATION_START:
+                    case TE::CONVERSATION_END:
                         base = QColor(130, 0, 200); break;
                     case TE::START_ACCOMPANY:
                     case TE::ARRIVED_ACCOMPANY:

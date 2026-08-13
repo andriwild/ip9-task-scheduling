@@ -36,6 +36,18 @@ public:
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<IdleState>(*this); }
 };
 
+class ConversationState final : public RobotState {
+public:
+    const ConversationKind kind;
+    explicit ConversationState(const ConversationKind kind) : kind(kind) {}
+
+    void enter(Robot& robot) override;
+    RobotStateType getType() const override { return RobotStateType::MISSION; }
+    std::string getName() const override { return "conversate"; }
+    double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const override;
+    std::unique_ptr<RobotState> clone() const override { return std::make_unique<ConversationState>(*this); }
+};
+
 class ChargeState final : public RobotState {
 public:
     void enter(Robot& robot) override;

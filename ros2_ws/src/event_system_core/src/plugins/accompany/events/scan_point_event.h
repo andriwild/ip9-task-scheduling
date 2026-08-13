@@ -5,12 +5,8 @@
 #include "model/person.h"
 #include "model/robot.h"
 #include "plugins/accompany/accompany_order.h"
-#include "util/constants.h"
 #include "util/geometry.h"
 #include "util/log.h"
-#include "util/rnd.h"
-
-#include <algorithm>
 
 namespace des {
 
@@ -62,29 +58,19 @@ public:
         DES_LOG_DEBUG("des.plugin.accompany.search", "Detour to %s in %s, %zu stops queued", recognizedPerson.c_str(), robot->getLocation().c_str(), order.scanQueue.size());
     }
 
-    // The person the robot just identified may know where the wanted one is
-    static void askForDirections(ISimContext& ctx, AccompanyOrder& order, const std::string& informant) {
-        const double chance = ctx.getConfig()->personDirectionsProbability;
-        if (chance <= 0.0 || rnd::uni(ctx.robotRng()) >= chance) {
-            return;
-        }
-        const std::string room = ctx.getPersonLocation(order.personName);
-        if (room.empty() || room == IN_TRANSIT || room == OUTDOOR || room == ctx.getRobot()->getLocation()) {
-            return;
-        }
-        std::erase(order.remainingSearch, room);
-        order.remainingSearch.insert(order.remainingSearch.begin(), room);
-        DES_LOG_DEBUG("des.plugin.accompany.search", "%s points to %s for %s", informant.c_str(), room.c_str(), order.personName.c_str());
-    }
-
     void execute(ISimContext& ctx) override {
         auto& accompany = static_cast<AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
         const bool seen = ctx.robotSeesPerson(personName);
+        const bool asks = !seen && ctx.getConfig()->personDirectionsProbability > 0.0;
 
         for (const auto& [name, room] : ctx.getAllPersonLocations()) {
-            if (name != personName && ctx.robotSeesPerson(name) && accompany.identified.insert(name).second) {
-                askForDirections(ctx, accompany, name);
+            if (name == personName || !ctx.robotSeesPerson(name) || !accompany.identified.insert(name).second) {
+                continue;
+            }
+            if (asks) {
+                accompany.pendingAsk.push_back(name);
+                DES_LOG_DEBUG("des.plugin.accompany.search", "Queued %s to be asked about %s", name.c_str(), personName.c_str());
             }
         }
 

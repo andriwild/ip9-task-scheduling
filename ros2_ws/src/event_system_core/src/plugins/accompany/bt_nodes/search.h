@@ -10,12 +10,13 @@
 
 #include "../../../util/log.h"
 #include "engine/contracts/i_sim_context.h"
+#include "engine/event/conversation_event.h"
 #include "engine/event/start_drive_event.h"
 #include "model/robot.h"
 #include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/accompany_plugin.h"
 #include "plugins/accompany/events/abort_search_event.h"
 #include "plugins/accompany/events/scan_point_event.h"
-#include "plugins/accompany/events/start_found_person_conversation_event.h"
 #include "plugins/accompany/search_exclusion.h"
 #include "plugins/accompany/states.h"
 
@@ -70,8 +71,53 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        ctx->pushEvent(std::make_shared<StartFoundPersonConversationEvent>(ctx->getTime()));
+        const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
+        const auto& cfg = accompanyConfig();
+        ctx->pushEvent(std::make_shared<StartConversationEvent>(ctx->getTime(), ConversationSpec{
+            ConversationKind::FOUND_PERSON,
+            order.personName,
+            cfg.conversationDurationMean,
+            cfg.conversationDurationStd,
+            cfg.conversationProbability,
+        }));
         DES_LOG_DEBUG("des.plugin.accompany.search", "Start Accompany Conversation");
+        return BT::NodeStatus::SUCCESS;
+    }
+};
+
+class HasPendingAsk final : public BT::ConditionNode {
+public:
+    HasPendingAsk(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
+        const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
+        DES_LOG_DEBUG("des.plugin.accompany.search", "HasPendingAsk: %zu waiting", order.pendingAsk.size());
+        return order.pendingAsk.empty() ? BT::NodeStatus::FAILURE : BT::NodeStatus::SUCCESS;
+    }
+};
+
+class StartAskConversation final : public BT::SyncActionNode {
+public:
+    StartAskConversation(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
+        const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
+        const auto& cfg = accompanyConfig();
+        const std::string& informant = order.pendingAsk.front();
+        ctx->pushEvent(std::make_shared<StartConversationEvent>(ctx->getTime(), ConversationSpec{
+            ConversationKind::ASK_DIRECTIONS,
+            informant,
+            cfg.askDurationMean,
+            cfg.askDurationStd,
+            ctx->getConfig()->personDirectionsProbability,
+        }));
+        DES_LOG_DEBUG("des.plugin.accompany.search", "Ask %s about %s", informant.c_str(), order.personName.c_str());
         return BT::NodeStatus::SUCCESS;
     }
 };

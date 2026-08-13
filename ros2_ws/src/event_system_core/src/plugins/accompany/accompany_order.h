@@ -13,7 +13,7 @@ namespace des {
 
 enum class SearchAbortReason { NONE, OUTSIDE, IN_BUILDING_FINDABLE, IN_BUILDING_UNREACHABLE };
 
-enum class AccompanyPhase { NONE, SEARCH, ACCOMPANY, CONVERSATE_FOUND, CONVERSATE_DROPOFF };
+enum class AccompanyPhase { NONE, SEARCH, ACCOMPANY, CONVERSATE_FOUND, CONVERSATE_DROPOFF, CONVERSATE_ASK };
 
 // One stop of the search route. Owned by the order, not by the room, so a
 // mission may extend its own route without touching the shared room tour.
@@ -32,6 +32,7 @@ struct AccompanyOrder : IOrder {
     std::deque<ScanStop> scanQueue;
     std::set<std::string> identified;
     std::set<std::string> detoured;
+    std::deque<std::string> pendingAsk;
     AccompanyPhase phase = AccompanyPhase::NONE;
     SearchAbortReason abortReason = SearchAbortReason::NONE;
 };

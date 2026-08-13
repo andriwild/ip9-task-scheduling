@@ -8,10 +8,11 @@
 
 #include "../../../util/log.h"
 #include "engine/contracts/i_sim_context.h"
+#include "engine/event/conversation_event.h"
 #include "model/robot.h"
 #include "model/robot_state.h"
 #include "plugins/accompany/accompany_order.h"
-#include "plugins/accompany/events/start_drop_off_conversation_event.h"
+#include "plugins/accompany/accompany_plugin.h"
 #include "plugins/accompany/states.h"
 
 namespace des {
@@ -68,7 +69,15 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        ctx->pushEvent(std::make_shared<StartDropOffConversationEvent>(ctx->getTime()));
+        const auto& order = static_cast<const AccompanyOrder&>(*ctx->getOrderPtr());
+        const auto& cfg = accompanyConfig();
+        ctx->pushEvent(std::make_shared<StartConversationEvent>(ctx->getTime(), ConversationSpec{
+            ConversationKind::DROP_OFF,
+            order.personName,
+            cfg.conversationDurationMean,
+            cfg.conversationDurationStd,
+            cfg.conversationProbability,
+        }));
         DES_LOG_DEBUG("des.plugin.accompany.accompany", "Start Drop-off Conversation");
         return BT::NodeStatus::SUCCESS;
     }

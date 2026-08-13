@@ -3,8 +3,8 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
     <ReactiveSequence>
       <IsActiveOrderType type="accompany"/>
       <Fallback>
-        <SubTree ID="AccompanySearch"     _autoremap="true"/>
         <SubTree ID="AccompanyConversate" _autoremap="true"/>
+        <SubTree ID="AccompanySearch"     _autoremap="true"/>
         <SubTree ID="AccompanyAccompany"  _autoremap="true"/>
       </Fallback>
     </ReactiveSequence>
@@ -17,6 +17,10 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
         <Sequence name="Seq_FoundTarget">
           <FoundPerson />
           <StartAccompanyConversation />
+        </Sequence>
+        <Sequence name="Seq_AskBystander">
+          <HasPendingAsk />
+          <StartAskConversation />
         </Sequence>
         <Sequence name="Seq_ScanRoom">
           <HasScanPoint />
@@ -39,8 +43,20 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
       <IsConversating/>
       <ConversationFinished/>
       <Fallback name="Fallback_ConverseType">
+        <Sequence name="Seq_AskType">
+          <IsConversationKind kind="ask_directions"/>
+          <Fallback name="Fallback_AskResult">
+            <Sequence name="Seq_AskSuccess">
+              <WasConversationSuccessful/>
+              <ApplyDirections/>
+            </Sequence>
+            <AlwaysSuccess/>
+          </Fallback>
+          <ResumeSearchAfterAsk/>
+          <AlwaysFailure/>
+        </Sequence>
         <Sequence name="Seq_FoundPersonType">
-          <IsFoundPersonConversation/>
+          <IsConversationKind kind="found_person"/>
           <Fallback name="Fallback_FoundPersonResult">
             <Sequence name="Seq_FoundPersonSuccess">
               <WasConversationSuccessful/>
@@ -53,7 +69,7 @@ inline constexpr const char* ACCOMPANY_SUBTREE_XML = R"(
           </Fallback>
         </Sequence>
         <Sequence name="Seq_DropOffType">
-          <IsDropOffConversation/>
+          <IsConversationKind kind="drop_off"/>
           <Fallback name="Fallback_DropOffResult">
             <Sequence name="Seq_DropOffSuccess">
               <WasConversationSuccessful/>

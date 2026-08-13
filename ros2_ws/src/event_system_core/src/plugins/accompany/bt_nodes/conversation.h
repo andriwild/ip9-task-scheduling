@@ -7,10 +7,16 @@
 #include <behaviortree_cpp/action_node.h>
 #include <memory>
 
+#include <algorithm>
+#include <string>
+
 #include "engine/contracts/i_sim_context.h"
+#include "model/robot.h"
 #include "model/robot_state.h"
+#include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
+#include "util/constants.h"
 
 namespace des {
 
@@ -22,7 +28,7 @@ public:
     
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool isConversating = dynamic_cast<ConversateState*>(ctx->getRobot()->getState()) != nullptr;
+        const bool isConversating = dynamic_cast<ConversationState*>(ctx->getRobot()->getState()) != nullptr;
         DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsConversating: %d", isConversating);
         if (isConversating) {
             return BT::NodeStatus::SUCCESS;
@@ -67,6 +73,51 @@ public:
     }
 };
 
+class ApplyDirections final : public BT::SyncActionNode {
+public:
+    ApplyDirections(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
+        auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
+        if (order.pendingAsk.empty()) {
+            return BT::NodeStatus::FAILURE;
+        }
+
+        const std::string room = ctx->getPersonLocation(order.personName);
+        if (room.empty() || room == IN_TRANSIT || room == OUTDOOR || room == ctx->getRobot()->getLocation()) {
+            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: '%s' is not a usable hint", room.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+        std::erase(order.remainingSearch, room);
+        order.remainingSearch.insert(order.remainingSearch.begin(), room);
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s points to %s for %s", order.pendingAsk.front().c_str(), room.c_str(), order.personName.c_str());
+        return BT::NodeStatus::SUCCESS;
+    }
+};
+
+class ResumeSearchAfterAsk final : public BT::SyncActionNode {
+public:
+    ResumeSearchAfterAsk(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
+
+    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
+
+    BT::NodeStatus tick() override {
+        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
+        auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
+
+        if (!order.pendingAsk.empty()) {
+            order.pendingAsk.pop_front();
+        }
+        order.phase = AccompanyPhase::SEARCH;
+        ctx->changeRobotState(std::make_unique<SearchState>());
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "ResumeSearchAfterAsk: %zu still waiting", order.pendingAsk.size());
+        return BT::NodeStatus::SUCCESS;
+    }
+};
+
 class StartAccompanyAction final : public BT::SyncActionNode {
 public:
     StartAccompanyAction(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
@@ -81,40 +132,26 @@ public:
     }
 };
 
-class IsFoundPersonConversation final : public BT::ConditionNode {
+class IsConversationKind final : public BT::ConditionNode {
 public:
-    IsFoundPersonConversation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
+    IsConversationKind(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
 
-    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
-    
-    BT::NodeStatus tick() override {
-        const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        const auto currentState = ctx->getRobot()->getState();
-        const auto convState = dynamic_cast<ConversateState*>(currentState);
-        
-        const bool isFoundPerson = convState && convState->conversationType == ConversateState::Type::FOUND_PERSON;
-        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsFoundPersonConversation: %d", isFoundPerson);
-        if (isFoundPerson) {
-            return BT::NodeStatus::SUCCESS;
-        }
-        return BT::NodeStatus::FAILURE;
+    static BT::PortsList providedPorts() {
+        return { BT::InputPort<std::string>("kind"), BT::InputPort<int>("ctx") };
     }
-};
 
-class IsDropOffConversation final : public BT::ConditionNode {
-public:
-    IsDropOffConversation(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config) {}
-
-    static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
-    
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        const auto currentState = ctx->getRobot()->getState();
-        const auto convState = dynamic_cast<ConversateState*>(currentState);
+        const auto inputKind = getInput<std::string>("kind");
+        if (!inputKind.has_value()) {
+            return BT::NodeStatus::FAILURE;
+        }
+        const auto expected = conversationKindFromString(inputKind.value());
+        const auto convState = dynamic_cast<ConversationState*>(ctx->getRobot()->getState());
 
-        const bool isDropOff = convState && convState->conversationType == ConversateState::Type::DROP_OFF;
-        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsDropOffConversation: %d", isDropOff);
-        if (isDropOff) {
+        const bool matches = expected.has_value() && convState != nullptr && convState->kind == expected.value();
+        DES_LOG_DEBUG("des.plugin.accompany.conversation", "IsConversationKind %s: %d", inputKind->c_str(), matches);
+        if (matches) {
             return BT::NodeStatus::SUCCESS;
         }
         return BT::NodeStatus::FAILURE;

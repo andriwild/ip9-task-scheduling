@@ -259,6 +259,25 @@ enum class Result {
     SUCCESS
 };
 
+enum class ConversationKind {
+    FOUND_PERSON,
+    DROP_OFF,
+    ASK_DIRECTIONS
+};
+
+inline std::optional<ConversationKind> conversationKindFromString(const std::string& value) {
+    if (value == "found_person") {
+        return ConversationKind::FOUND_PERSON;
+    }
+    if (value == "drop_off") {
+        return ConversationKind::DROP_OFF;
+    }
+    if (value == "ask_directions") {
+        return ConversationKind::ASK_DIRECTIONS;
+    }
+    return std::nullopt;
+}
+
 enum class EventType : int {
     SIMULATION_START           = 0, 
     SIMULATION_END             = 1, 
@@ -294,7 +313,9 @@ enum class EventType : int {
     CHARGE_PHASE_TRANSITION    = 33,
     PERSON_ROOM_ARRIVED        = 34,
     BACKGROUND_RELEASE         = 35,
-    SCAN                       = 36
+    SCAN                       = 36,
+    CONVERSATION_START         = 37,
+    CONVERSATION_END           = 38
 };
 
 enum OrderState {

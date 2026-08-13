@@ -37,6 +37,16 @@ double IdleState::getEnergyConsumption(const Robot& robot, const SimConfig& cfg)
     return cfg.energyConsumptionBase;
 }
 
+void ConversationState::enter(Robot& robot) {
+    RobotState::enter(robot);
+    DES_LOG_DEBUG("des.robot.state", "Enter Conversation");
+    robot.setSpeed(robot.getDriveSpeed());
+}
+
+double ConversationState::getEnergyConsumption(const Robot& /*robot*/, const SimConfig& cfg) const {
+    return cfg.energyConsumptionBase;
+}
+
 void ChargeState::enter(Robot& robot) {
     RobotState::enter(robot);
     DES_LOG_DEBUG("des.robot.state", "Enter Charge");

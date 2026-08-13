@@ -2,6 +2,8 @@
     "accompany": {
         "accompany_speed": 1.0,
         "appointment_duration": 1800.0,
+        "ask_duration_mean": 15.0,
+        "ask_duration_std": 5.0,
         "conversation_duration_mean": 28.0,
         "conversation_duration_std": 14.0,
         "conversation_probability": 1.0

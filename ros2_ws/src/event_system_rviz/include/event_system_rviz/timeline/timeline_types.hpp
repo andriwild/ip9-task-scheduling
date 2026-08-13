@@ -50,10 +50,8 @@ inline QColor getEventColor(des::EventType type) {
         case des::EventType::ABORT_SEARCH:
             return QColor(255, 165, 0);
 
-        case des::EventType::START_DROP_OFF_CONV:
-        case des::EventType::DROP_OFF_CONV_COMPLETE:
-        case des::EventType::START_FOUND_PERSON_CONV:
-        case des::EventType::FOUND_PERSON_CONV_COMPLETE:
+        case des::EventType::CONVERSATION_START:
+        case des::EventType::CONVERSATION_END:
             return QColor(130, 0, 200);
 
         case des::EventType::START_ACCOMPANY:

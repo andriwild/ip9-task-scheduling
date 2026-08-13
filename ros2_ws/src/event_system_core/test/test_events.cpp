@@ -15,10 +15,7 @@
 #include "../src/plugins/order_registry.h"
 #include "../src/plugins/accompany/events/abort_search_event.h"
 #include "../src/plugins/accompany/events/start_accompany_event.h"
-#include "../src/plugins/accompany/events/start_found_person_conversation_event.h"
-#include "../src/plugins/accompany/events/start_drop_off_conversation_event.h"
-#include "../src/plugins/accompany/events/found_person_conversation_complete.h"
-#include "../src/plugins/accompany/events/drop_off_conversation_complete.h"
+#include "../src/engine/event/conversation_event.h"
 #include "../src/plugins/accompany/events/appointment_end_event.h"
 #include "../src/plugins/accompany/events/scan_point_event.h"
 #include "util/constants.h"
@@ -253,23 +250,6 @@ static bool pluginsRegistered = [] {
     return true;
 }();
 
-// Set the (singleton) des::AccompanyOrderPlugin's config — conversation params and
-// related accompany-specific values live on the plugin now, not on des::SimConfig.
-// Tests call this directly to set up the scenario they need; deterministic
-// std=0 lets us assert on exact event times.
-static void setAccompanyConfig(double conversationProbability,
-                               double conversationDurationMean = 30.0,
-                               double conversationDurationStd  = 0.0) {
-    nlohmann::json j = {
-        {"accompany_speed",            0.5},
-        {"conversation_probability",   conversationProbability},
-        {"conversation_duration_mean", conversationDurationMean},
-        {"conversation_duration_std",  conversationDurationStd},
-        {"appointment_duration",       1800.0},
-    };
-    des::OrderRegistry::instance().get(des::AccompanyOrderPlugin::kTypeName).loadConfig(j);
-}
-
 static std::shared_ptr<des::AccompanyOrder> makeAccompanyOrder(
         int id,
         const std::string& person,
@@ -359,6 +339,83 @@ TEST(EventExecute, ScanPointWithoutSightingLeavesTheRobotSearching) {
     EXPECT_FALSE(ctx.robot->isPersonVisible());
     EXPECT_FALSE(person->busy);
     EXPECT_EQ(ctx.tickCount, 1);
+}
+
+TEST(EventExecute, ScanPointQueuesBystandersForQuestioning) {
+    MockSimContext ctx;
+    ctx.simConfig->personDirectionsProbability = 0.5;
+
+    auto target = std::make_shared<des::Person>();
+    target->firstName = "Max";
+    ctx.employees["Max"] = target.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Kitchen";
+    ctx.personLocations["Nina"] = "Office";
+    ctx.personLocations["Tom"] = "Office";
+
+    auto order = makeAccompanyOrder(1, "Max", "Office");
+    des::ScanPointEvent event(1000, order);
+    event.execute(ctx);
+
+    ASSERT_EQ(order->pendingAsk.size(), 2u);
+    EXPECT_EQ(order->identified.size(), 2u);
+}
+
+TEST(EventExecute, ScanPointQueuesEachBystanderOnlyOnce) {
+    MockSimContext ctx;
+    ctx.simConfig->personDirectionsProbability = 0.5;
+
+    auto target = std::make_shared<des::Person>();
+    target->firstName = "Max";
+    ctx.employees["Max"] = target.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Kitchen";
+    ctx.personLocations["Nina"] = "Office";
+
+    auto order = makeAccompanyOrder(1, "Max", "Office");
+    des::ScanPointEvent(1000, order).execute(ctx);
+    des::ScanPointEvent(1100, order).execute(ctx);
+
+    EXPECT_EQ(order->pendingAsk.size(), 1u);
+}
+
+TEST(EventExecute, ScanPointAsksNobodyWhenTheTargetIsInSight) {
+    MockSimContext ctx;
+    ctx.simConfig->personDirectionsProbability = 0.5;
+
+    auto target = std::make_shared<des::Person>();
+    target->firstName = "Max";
+    ctx.employees["Max"] = target.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Office";
+    ctx.personLocations["Nina"] = "Office";
+
+    auto order = makeAccompanyOrder(1, "Max", "Office");
+    des::ScanPointEvent event(1000, order);
+    event.execute(ctx);
+
+    EXPECT_TRUE(ctx.robot->isPersonVisible());
+    EXPECT_TRUE(order->pendingAsk.empty());
+    EXPECT_EQ(order->identified.size(), 1u);
+}
+
+TEST(EventExecute, ScanPointAsksNobodyWhenDirectionsAreDisabled) {
+    MockSimContext ctx;
+    ctx.simConfig->personDirectionsProbability = 0.0;
+
+    auto target = std::make_shared<des::Person>();
+    target->firstName = "Max";
+    ctx.employees["Max"] = target.get();
+    ctx.robot->setLocation("Office");
+    ctx.personLocations["Max"] = "Kitchen";
+    ctx.personLocations["Nina"] = "Office";
+
+    auto order = makeAccompanyOrder(1, "Max", "Office");
+    des::ScanPointEvent event(1000, order);
+    event.execute(ctx);
+
+    EXPECT_TRUE(order->pendingAsk.empty());
+    EXPECT_EQ(order->identified.size(), 1u);
 }
 
 TEST(EventExecute, ArrivingInARoomAdoptsItsFirstTourPointVisibility) {
@@ -544,116 +601,93 @@ TEST(EventExecute, StartAccompanyDrivesToTheRoomViaItsWaypoint) {
     EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Departing: MeetingRoom");
 }
 
-// --- des::StartFoundPersonConversationEvent ---
+// --- des::StartConversationEvent ---
 
-TEST(EventExecute, StartFoundPersonConvPushesSuccessWithHighProbability) {
+static des::ConversationSpec makeConversationSpec(const des::ConversationKind kind,
+                                                  const double durationMean = 30.0,
+                                                  const double durationStd = 0.0,
+                                                  const double successProbability = 1.0) {
+    return des::ConversationSpec{ kind, "Max", durationMean, durationStd, successProbability };
+}
+
+TEST(EventExecute, StartConversationPushesSuccessWithHighProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    setAccompanyConfig(/*conversationProbability=*/1.0);
 
-    des::StartFoundPersonConversationEvent event(35000);
+    des::StartConversationEvent event(35000, makeConversationSpec(des::ConversationKind::FOUND_PERSON));
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getState()->getName(), "conversate");
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    // Verify it's the Success variant by checking des::getName()
     EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
 }
 
-TEST(EventExecute, StartFoundPersonConvPushesFailedWithZeroProbability) {
+TEST(EventExecute, StartConversationPushesFailedWithZeroProbability) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    setAccompanyConfig(/*conversationProbability=*/0.0);
 
-    des::StartFoundPersonConversationEvent event(35000);
+    des::StartConversationEvent event(35000, makeConversationSpec(
+        des::ConversationKind::FOUND_PERSON, 30.0, 0.0, /*successProbability=*/0.0));
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    // With probability=0, rnd::uni >= 0 always, so Failed variant must be pushed
     EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Failed ");
 }
 
-TEST(EventExecute, StartFoundPersonConvEventTimeIncludesConversationDuration) {
+TEST(EventExecute, StartConversationEventTimeIncludesDuration) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    setAccompanyConfig(/*conversationProbability=*/1.0,
-                       /*conversationDurationMean=*/45.0,
-                       /*conversationDurationStd=*/0.0);
 
-    des::StartFoundPersonConversationEvent event(35000);
+    des::StartConversationEvent event(35000, makeConversationSpec(
+        des::ConversationKind::FOUND_PERSON, /*durationMean=*/45.0, /*durationStd=*/0.0));
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
     EXPECT_EQ(ctx.pushedEvents[0]->time, 35000 + 45);
 }
 
-// --- des::StartDropOffConversationEvent ---
-
-TEST(EventExecute, StartDropOffConvPushesSuccessWithHighProbability) {
+TEST(EventExecute, StartConversationClampsDurationToOneSecond) {
     MockSimContext ctx;
     ctx.robot->setDriving(false);
-    setAccompanyConfig(/*conversationProbability=*/1.0);
 
-    des::StartDropOffConversationEvent event(35000);
-    event.execute(ctx);
-
-    EXPECT_EQ(ctx.robot->getState()->getName(), "conversate");
-    ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Successful");
-}
-
-TEST(EventExecute, StartDropOffConvPushesFailedWithZeroProbability) {
-    MockSimContext ctx;
-    ctx.robot->setDriving(false);
-    setAccompanyConfig(/*conversationProbability=*/0.0);
-
-    des::StartDropOffConversationEvent event(35000);
+    des::StartConversationEvent event(35000, makeConversationSpec(
+        des::ConversationKind::DROP_OFF, /*durationMean=*/-10.0, /*durationStd=*/0.0));
     event.execute(ctx);
 
     ASSERT_EQ(ctx.pushedEvents.size(), 1u);
-    EXPECT_EQ(ctx.pushedEvents[0]->getName(), "Conversation Failed ");
+    EXPECT_EQ(ctx.pushedEvents[0]->time, 35000 + 1);
 }
 
-// --- Conversation complete events ---
-
-TEST(EventExecute, SuccessFoundPersonConvSetsResultAndTicks) {
+TEST(EventExecute, StartConversationPutsKindOnRobotState) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<des::ConversateState>(des::ConversateState::Type::FOUND_PERSON), ctx.currentTime);
+    ctx.robot->setDriving(false);
 
-    des::SuccessFoundPersonConversationCompleteEvent event(35030);
+    des::StartConversationEvent event(35000, makeConversationSpec(des::ConversationKind::DROP_OFF));
+    event.execute(ctx);
+
+    const auto state = dynamic_cast<des::ConversationState*>(ctx.robot->getState());
+    ASSERT_NE(state, nullptr);
+    EXPECT_EQ(state->kind, des::ConversationKind::DROP_OFF);
+}
+
+// --- des::EndConversationEvent ---
+
+TEST(EventExecute, EndConversationSetsSuccessAndTicks) {
+    MockSimContext ctx;
+    ctx.robot->changeState(std::make_unique<des::ConversationState>(des::ConversationKind::FOUND_PERSON), ctx.currentTime);
+
+    des::EndConversationEvent event(35030, makeConversationSpec(des::ConversationKind::FOUND_PERSON), true);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::SUCCESS);
     EXPECT_EQ(ctx.tickCount, 1);
 }
 
-TEST(EventExecute, FailedFoundPersonConvSetsFailureAndTicks) {
+TEST(EventExecute, EndConversationSetsFailureAndTicks) {
     MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<des::ConversateState>(des::ConversateState::Type::FOUND_PERSON), ctx.currentTime);
+    ctx.robot->changeState(std::make_unique<des::ConversationState>(des::ConversationKind::DROP_OFF), ctx.currentTime);
 
-    des::FailedFoundPersonConversationCompleteEvent event(35030);
-    event.execute(ctx);
-
-    EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::FAILURE);
-    EXPECT_EQ(ctx.tickCount, 1);
-}
-
-TEST(EventExecute, SuccessDropOffConvSetsResultAndTicks) {
-    MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<des::ConversateState>(des::ConversateState::Type::DROP_OFF), ctx.currentTime);
-
-    des::SuccessDropOffConversationCompleteEvent event(35030);
-    event.execute(ctx);
-
-    EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::SUCCESS);
-    EXPECT_EQ(ctx.tickCount, 1);
-}
-
-TEST(EventExecute, FailedDropOffConvSetsFailureAndTicks) {
-    MockSimContext ctx;
-    ctx.robot->changeState(std::make_unique<des::ConversateState>(des::ConversateState::Type::DROP_OFF), ctx.currentTime);
-
-    des::FailedDropOffConversationCompleteEvent event(35030);
+    des::EndConversationEvent event(35030, makeConversationSpec(des::ConversationKind::DROP_OFF), false);
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getState()->getResult(), des::Result::FAILURE);
@@ -1130,8 +1164,8 @@ TEST(EventMetadata, EventTypesAreCorrect) {
     EXPECT_EQ(des::AbortSearchEvent(0, nullptr).getType(), des::EventType::ABORT_SEARCH);
     EXPECT_EQ(des::BatteryFullEvent(0).getType(), des::EventType::BATTERY_FULL);
     EXPECT_EQ(des::StartAccompanyEvent(0, nullptr).getType(), des::EventType::START_ACCOMPANY);
-    EXPECT_EQ(des::StartDropOffConversationEvent(0).getType(), des::EventType::START_DROP_OFF_CONV);
-    EXPECT_EQ(des::StartFoundPersonConversationEvent(0).getType(), des::EventType::START_FOUND_PERSON_CONV);
+    EXPECT_EQ(des::StartConversationEvent(0, makeConversationSpec(des::ConversationKind::DROP_OFF)).getType(), des::EventType::CONVERSATION_START);
+    EXPECT_EQ(des::EndConversationEvent(0, makeConversationSpec(des::ConversationKind::DROP_OFF), true).getType(), des::EventType::CONVERSATION_END);
     EXPECT_EQ(des::StopDriveEvent(0, std::make_shared<des::RoomTarget>("x"), 0).getType(), des::EventType::STOP_DRIVE);
     EXPECT_EQ(des::StartDriveEvent(0, std::make_shared<des::RoomTarget>("x")).getType(), des::EventType::START_DRIVE);
 }

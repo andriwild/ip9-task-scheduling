@@ -5,6 +5,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 #include <memory>
 
+#include "../model/robot.h"
 #include "../model/robot_state.h"
 #include "../util/log.h"
 #include "engine/contracts/i_sim_context.h"
@@ -15,6 +16,7 @@ namespace des {
 inline void finishMission(ISimContext& ctx, const OrderState state) {
     DES_LOG_DEBUG("des.bt.mission_outcome", "Finish mission as %s", orderStateStr(state).c_str());
     ctx.updateOrderState(state);
+    ctx.getRobot()->setIsPersonVisible(false);
     ctx.changeRobotState(std::make_unique<IdleState>());
     ctx.pushEvent(std::make_shared<MissionCompleteEvent>(ctx.getTime(), ctx.getOrderPtr()));
 }

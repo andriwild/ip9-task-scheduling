@@ -501,13 +501,13 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     // Step 8: StartFoundPersonConversation
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::START_FOUND_PERSON_CONV);
+    EXPECT_EQ(e->getType(), des::EventType::CONVERSATION_START);
     EXPECT_EQ(ctx->getRobot()->getState()->getName(), "conversate");
 
     // Step 9: FoundPersonConversationComplete
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::FOUND_PERSON_CONV_COMPLETE);
+    EXPECT_EQ(e->getType(), des::EventType::CONVERSATION_END);
     EXPECT_EQ(ctx->getRobot()->getState()->getResult(), des::Result::SUCCESS);
 
     // Step 10: StartAccompany
@@ -560,7 +560,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
             e = step(*ctx);
             ASSERT_NE(e, nullptr);
             if (e->getType() == des::EventType::PERSON_ACCOMPANY_ARRIVED) seenArrived = true;
-            if (e->getType() == des::EventType::START_DROP_OFF_CONV) seenStartDropOff = true;
+            if (e->getType() == des::EventType::CONVERSATION_START) seenStartDropOff = true;
         }
         EXPECT_TRUE(seenArrived) << "Expected PersonAccompanyArrived (accompany arrival)";
         EXPECT_TRUE(seenStartDropOff) << "Expected StartDropOffConversation";
@@ -570,7 +570,7 @@ TEST_F(IntegrationTest, StepByStepSingleMission) {
     // Step 18: DropOffConversationComplete (Success)
     e = step(*ctx);
     ASSERT_NE(e, nullptr);
-    EXPECT_EQ(e->getType(), des::EventType::DROP_OFF_CONV_COMPLETE);
+    EXPECT_EQ(e->getType(), des::EventType::CONVERSATION_END);
     EXPECT_EQ(order->state, des::OrderState::COMPLETED);
     EXPECT_EQ(ctx->getRobot()->getStateType(), des::RobotStateType::IDLE);
 

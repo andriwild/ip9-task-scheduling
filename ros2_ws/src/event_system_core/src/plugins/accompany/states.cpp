@@ -20,13 +20,4 @@ void AccompanyState::enter(Robot& robot) {
     robot.setSpeed(accompanyConfig().accompanySpeed);
 }
 
-void ConversateState::enter(Robot& robot) {
-    RobotState::enter(robot);
-    DES_LOG_DEBUG("des.plugin.accompany.state", "Enter Conversate");
-    robot.setSpeed(robot.getDriveSpeed());
-}
-double ConversateState::getEnergyConsumption(const Robot& /*robot*/, const SimConfig& cfg) const {
-    return cfg.energyConsumptionBase;
-}
-
 }  // namespace des

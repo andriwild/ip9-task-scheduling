@@ -35,6 +35,8 @@ public:
     virtual void onStartDriveEvent(ISimContext& ctx, IOrder& order) = 0;
     virtual void onStopDriveEvent(ISimContext& ctx, IOrder& order)  = 0;
 
+    virtual void onConversationStart(ISimContext& /*ctx*/, IOrder& /*order*/, ConversationKind /*kind*/) {}
+
     virtual void registeredNodes(BT::BehaviorTreeFactory& factory) = 0;
     virtual std::string subtreeXml() const = 0;
     virtual OrderPtr fromJson(const nlohmann::json& j) const = 0;
