@@ -942,6 +942,9 @@ TEST(EventExecute, PersonTransitionRetriesWhileBusyInsteadOfEndingChain) {
     des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
     kitchen.m_roomType = des::RoomType::KITCHEN;
     ctx.rooms.emplace("IMVS_Kitchen", kitchen);
+    des::Room office{"5.2B03", des::Point{}, 0.0};
+    office.m_roomType = des::RoomType::OFFICE;
+    ctx.rooms.emplace("5.2B03", office);
 
     des::PersonTransitionEvent event(30000, person.get());
     event.execute(ctx);
@@ -982,6 +985,9 @@ TEST(EventExecute, PersonGoesToLunchWhenDueAndResumesAfterwards) {
     des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
     kitchen.m_roomType = des::RoomType::KITCHEN;
     ctx.rooms.emplace("IMVS_Kitchen", kitchen);
+    des::Room office{"5.2B03", des::Point{}, 0.0};
+    office.m_roomType = des::RoomType::OFFICE;
+    ctx.rooms.emplace("5.2B03", office);
 
     des::PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);
@@ -1061,6 +1067,9 @@ TEST(EventExecute, PersonWithoutSampledLunchDoesNotGoToLunch) {
     des::Room kitchen{"IMVS_Kitchen", des::Point{}, 0.0};
     kitchen.m_roomType = des::RoomType::KITCHEN;
     ctx.rooms.emplace("IMVS_Kitchen", kitchen);
+    des::Room office{"5.2B03", des::Point{}, 0.0};
+    office.m_roomType = des::RoomType::OFFICE;
+    ctx.rooms.emplace("5.2B03", office);
 
     des::PersonRoomArrivedEvent arrival(30000, person.get(), "5.2B03");
     arrival.execute(ctx);

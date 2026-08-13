@@ -172,6 +172,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_db test/test_db.cpp)
   target_link_libraries(test_db Qt5::Core Qt5::Sql)
   ament_target_dependencies(test_db rclcpp)
+  target_include_directories(test_db PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 endif()
 

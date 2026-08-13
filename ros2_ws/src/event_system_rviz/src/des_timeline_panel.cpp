@@ -9,8 +9,6 @@
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 
 
-constexpr int ONE_HOUR = 3600;
-
 namespace des_timeline_panel {
 using TimelineEvent = event_system_msgs::msg::TimelineEvent;
 

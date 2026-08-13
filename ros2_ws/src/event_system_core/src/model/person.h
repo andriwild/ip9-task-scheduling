@@ -16,7 +16,7 @@
 
 #include "../util/rnd.h"
 #include "room.h"
-#include "util/constants.h"
+#include "../util/constants.h"
 
 namespace des {
 
