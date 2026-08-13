@@ -9,14 +9,18 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 #include "model/robot_state.h"
+#include "model/person.h"
 #include "plugins/accompany/accompany_order.h"
+#include "plugins/accompany/search_exclusion.h"
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
 #include "util/constants.h"
+#include "util/rnd.h"
 
 namespace des {
 
@@ -87,13 +91,44 @@ public:
         }
 
         const std::string room = ctx->getPersonLocation(order.personName);
+        const Person* person = ctx->getPersonByName(order.personName);
+        const Person* informant = ctx->getPersonByName(order.pendingAsk.front());
         if (room.empty() || room == IN_TRANSIT || room == OUTDOOR || room == ctx->getRobot()->getLocation()) {
             DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: '%s' is not a usable hint", room.c_str());
             return BT::NodeStatus::FAILURE;
         }
-        std::erase(order.remainingSearch, room);
-        order.remainingSearch.insert(order.remainingSearch.begin(), room);
-        DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s points to %s for %s", order.pendingAsk.front().c_str(), room.c_str(), order.personName.c_str());
+        if (person->workplace != informant->workplace) {
+            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s shares no office with %s", informant->firstName.c_str(), order.personName.c_str());
+            return BT::NodeStatus::FAILURE;
+        }
+
+        std::string hint = room;
+        bool wrong = false;
+        const double wrongProbability = ctx->getConfig()->personDirectionsWrongProbability;
+        if (wrongProbability > 0.0 && rnd::uni(ctx->robotRng()) < wrongProbability) {
+            std::vector<std::string> candidates;
+            for (const auto& label : person->roomLabels) {
+                if (label == room || label == ctx->getRobot()->getLocation() || isSearchExcluded(*ctx, label)) {
+                    continue;
+                }
+                candidates.push_back(label);
+            }
+            if (candidates.empty()) {
+                DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: no wrong room available for %s", order.personName.c_str());
+                return BT::NodeStatus::FAILURE;
+            }
+            const auto draw = static_cast<size_t>(rnd::uni(ctx->robotRng(), 0.0, static_cast<double>(candidates.size())));
+            hint = candidates[std::min(draw, candidates.size() - 1)];
+            wrong = true;
+        }
+
+        std::erase(order.remainingSearch, hint);
+        order.remainingSearch.insert(order.remainingSearch.begin(), hint);
+        if (wrong) {
+            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s points wrongly to %s for %s", order.pendingAsk.front().c_str(), hint.c_str(), order.personName.c_str());
+        } else {
+            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s points to %s for %s", order.pendingAsk.front().c_str(), hint.c_str(), order.personName.c_str());
+        }
         return BT::NodeStatus::SUCCESS;
     }
 };
