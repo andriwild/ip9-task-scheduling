@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <random>
 #include <vector>
 
@@ -22,6 +23,13 @@ namespace rnd {
     inline double logNormal(std::mt19937& rng, const double mu, const double sigma) {
         std::lognormal_distribution<double> dist(mu, sigma);
         return dist(rng);
+    }
+
+    inline double driveTime(std::mt19937& rng, const double freeFlowSeconds, const double delayMedian, const double delaySigma) {
+        if (freeFlowSeconds <= 0.0 || delayMedian <= 0.0) {
+            return freeFlowSeconds;
+        }
+        return freeFlowSeconds + logNormal(rng, std::log(delayMedian * freeFlowSeconds), delaySigma);
     }
 
     inline int discrete_dist(std::mt19937& rng, const std::vector<double>& list) {

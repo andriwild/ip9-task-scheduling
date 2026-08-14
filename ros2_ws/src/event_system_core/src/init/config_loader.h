@@ -188,7 +188,6 @@ public:
                 p.firstName        = item.at("firstName").get<std::string>();
                 p.lastName         = item.at("lastName").get<std::string>();
                 p.sex              = item.at("sex").get<std::string>();
-                p.roles            = item.value("roles", std::vector<std::string>{});
                 p.workplace        = item.at("workplace").get<std::string>();
                 p.color            = item.value("color", "");
                 p.roomLabels       = item.at("roomLabels").get<std::vector<std::string>>();
@@ -229,7 +228,8 @@ public:
                 DES_LOG_DEBUG("des.io.config", "Applied config override: %s", resolved.c_str());
             }
             SimConfig config;
-            config.driveTimeStd             = j.at("drive_time_std").get<double>();
+            config.driveDelayMedian         = j.at("drive_delay_median").get<double>();
+            config.driveDelaySigma          = j.at("drive_delay_sigma").get<double>();
             config.robotSpeed               = j.at("robot_speed").get<double>();
             config.timeBuffer               = j.at("timeBuffer").get<double>();
             config.energyConsumptionDrive   = j.at("energy_consumption_drive").get<double>();
@@ -280,7 +280,6 @@ public:
             }
             config.searchRewardStrategy = searchRewardStrategyFromString(j.value("search_reward_strategy", "beta_smoothed"));
             config.searchRouteStrategy = searchRouteStrategyFromString(j.value("search_route_strategy", "cost_aware"));
-            config.searchRolePrior = j.value("search_role_prior", false);
             config.searchPriorWeight = j.value("search_prior_weight", 4.0);
             config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
             config.energyReserveStrategy = energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
@@ -323,7 +322,8 @@ public:
     }
 
     static nlohmann::json configToJson(const SimConfig& config, nlohmann::json j = nlohmann::json::object()) {
-        j["drive_time_std"]                 = roundValue(config.driveTimeStd);
+        j["drive_delay_median"]             = roundValue(config.driveDelayMedian);
+        j["drive_delay_sigma"]              = roundValue(config.driveDelaySigma);
         j["robot_speed"]                    = roundValue(config.robotSpeed);
         j["timeBuffer"]                     = roundValue(config.timeBuffer);
         j["energy_consumption_drive"]       = roundValue(config.energyConsumptionDrive);
@@ -373,7 +373,6 @@ public:
         j["search_excluded_room_types"]     = excludedTypes;
         j["search_reward_strategy"]         = searchRewardStrategyToString(config.searchRewardStrategy);
         j["search_route_strategy"]          = searchRouteStrategyToString(config.searchRouteStrategy);
-        j["search_role_prior"]              = config.searchRolePrior;
         j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
         j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);
         j["energy_reserve_strategy"]        = energyReserveStrategyToString(config.energyReserveStrategy);

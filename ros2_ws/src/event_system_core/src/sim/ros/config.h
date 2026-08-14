@@ -64,7 +64,8 @@ private:
             auto config = *m_currentConfig;
 
             config.robotSpeed             = request->robot_speed;
-            config.driveTimeStd           = request->drive_time_std;
+            config.driveDelayMedian       = request->drive_delay_median;
+            config.driveDelaySigma        = request->drive_delay_sigma;
             config.timeBuffer             = request->time_buffer;
             config.energyConsumptionDrive = request->energy_consumption_drive;
             config.energyConsumptionBase  = request->energy_consumption_base;
@@ -106,7 +107,8 @@ private:
         auto msg = event_system_msgs::msg::SystemConfig();
         {
             std::lock_guard lock(m_configMutex);
-            msg.drive_time_std             = m_currentConfig->driveTimeStd;
+            msg.drive_delay_median         = m_currentConfig->driveDelayMedian;
+            msg.drive_delay_sigma          = m_currentConfig->driveDelaySigma;
             msg.robot_speed                = m_currentConfig->robotSpeed;
             msg.time_buffer                = m_currentConfig->timeBuffer;
             msg.energy_consumption_drive   = m_currentConfig->energyConsumptionDrive;

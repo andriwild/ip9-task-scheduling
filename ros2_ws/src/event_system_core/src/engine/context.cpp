@@ -53,10 +53,7 @@ Journey SimulationContext::scheduleArrival(const std::string& target) const {
     assert(distance.has_value());
 
     const double travelTime = distance.value() / this->m_robot->getCurrentSpeed();
-    double travelTimeRnd = rnd::normal(m_robotRng, travelTime, getDriveTimeStd());
-    if (travelTimeRnd < 0) {
-        travelTimeRnd = travelTime;
-    }
+    const double travelTimeRnd = rnd::driveTime(m_robotRng, travelTime, m_simConfig->driveDelayMedian, m_simConfig->driveDelaySigma);
     return { travelTimeRnd, distance.value() };
 }
 
@@ -386,10 +383,6 @@ void SimulationContext::robotMoved(const std::string& location, const double dis
 void SimulationContext::robotMovedTo(const Point& position, const double distance) const {
     m_robot->setPosition(position);
     m_robot->addDistance(distance);
-}
-
-double SimulationContext::getDriveTimeStd() const {
-    return m_simConfig->driveTimeStd;
 }
 
 }  // namespace des
