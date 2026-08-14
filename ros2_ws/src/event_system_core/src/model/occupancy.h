@@ -1,3 +1,7 @@
+/*
+ *
+ *
+ */
 #pragma once
 
 #include <algorithm>
@@ -9,7 +13,7 @@
 
 namespace des {
 
-inline double sampleOccupancyTime(std::mt19937& rng, DistributionType type, double mean, double std) {
+inline double sampleOccupancyTime(std::mt19937& rng, const DistributionType type, const double mean, const double std) {
     switch (type) {
         case DistributionType::UNIFORM:     return rnd::uni(rng, mean - std, mean + std);
         case DistributionType::EXPONENTIAL: return rnd::exponential(rng, mean);
@@ -18,7 +22,7 @@ inline double sampleOccupancyTime(std::mt19937& rng, DistributionType type, doub
     }
 }
 
-inline void sampleOccupancy(const SimConfig& config, std::mt19937& rng, int dayBase, Person& p) {
+inline void sampleOccupancy(const SimConfig& config, std::mt19937& rng, const int dayBase, Person& p) {
     p.arrivalTime   = dayBase + static_cast<int>(sampleOccupancyTime(rng, config.arrivalDistribution, config.arrivalMean, config.arrivalStd));
     p.departureTime = dayBase + static_cast<int>(sampleOccupancyTime(rng, config.departureDistribution, config.departureMean, config.departureStd));
     p.lunchTime     = dayBase + static_cast<int>(sampleOccupancyTime(rng, config.lunchDistribution, config.lunchMean, config.lunchStd));

@@ -74,6 +74,13 @@ inline std::vector<OpNode> occupancyProbability(
     return { scored.begin(), scored.end() };
 }
 
+inline std::vector<OpNode> uniformReward(const std::vector<SearchRoom>& allRooms) {
+    auto scored = allRooms | std::views::transform([](const SearchRoom& room) {
+        return OpNode{ room.name, 1.0f };
+    });
+    return { scored.begin(), scored.end() };
+}
+
 // no knowledge at all, every room gets an arbitrary score
 inline std::vector<OpNode> randomReward(std::mt19937& rng, const std::vector<SearchRoom>& allRooms) {
     std::uniform_real_distribution<float> uniform(0.0f, 1.0f);

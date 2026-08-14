@@ -10,6 +10,8 @@
 
 namespace des {
 
+constexpr double kIdentificationMargin = 0.99;
+
 class ScanPointEvent final : public IEvent {
     OrderPtr m_order;
 
@@ -51,7 +53,7 @@ public:
         }
         const auto robot = ctx.getRobot();
         const ScanStop here{ robot->getPosition(), robot->getVisibility(), true };
-        const Point stop = geom::approachPoint(*target, here.point, ctx.getConfig()->personApproachDistance);
+        const Point stop = geom::approachPoint(*target, here.point, kIdentificationMargin * ctx.getConfig()->personIdentificationRange);
         order.detoured.insert(recognizedPerson);
         order.scanQueue.push_front(here);
         order.scanQueue.push_front(ScanStop{ stop, robot->getVisibility(), true });

@@ -77,6 +77,8 @@ public:
     }
 };
 
+// if the robot searches for a person a meets another, the robot asks for information
+// only a person from the same office can get information, and it can be wrong by a given probability
 class ApplyDirections final : public BT::SyncActionNode {
 public:
     ApplyDirections(const std::string& name, const BT::NodeConfig& config) : SyncActionNode(name, config) {}
@@ -92,15 +94,15 @@ public:
 
         const std::string room = ctx->getPersonLocation(order.personName);
         const Person* person = ctx->getPersonByName(order.personName);
-        const Person* informant = ctx->getPersonByName(order.pendingAsk.front());
         if (room.empty() || room == IN_TRANSIT || room == OUTDOOR || room == ctx->getRobot()->getLocation()) {
             DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: '%s' is not a usable hint", room.c_str());
             return BT::NodeStatus::FAILURE;
         }
-        if (person->workplace != informant->workplace) {
-            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s shares no office with %s", informant->firstName.c_str(), order.personName.c_str());
-            return BT::NodeStatus::FAILURE;
-        }
+        // const Person* informant = ctx->getPersonByName(order.pendingAsk.front());
+        // if (person->workplace != informant->workplace) {
+        //     DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s shares no office with %s", informant->firstName.c_str(), order.personName.c_str());
+        //     return BT::NodeStatus::FAILURE;
+        // }
 
         std::string hint = room;
         bool wrong = false;

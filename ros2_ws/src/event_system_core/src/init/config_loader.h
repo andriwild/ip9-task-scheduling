@@ -258,7 +258,6 @@ public:
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personIdentificationRange = j.value("person_identification_range", j.value("person_detection_range", 5.0));
             config.personRecognitionRange = std::max(config.personIdentificationRange, j.value("person_recognition_range", config.personIdentificationRange));
-            config.personApproachDistance = j.value("person_approach_distance", 1.0);
             config.personDirectionsProbability = j.value("person_gives_directions_probability", 0.0);
             config.personDirectionsWrongProbability = j.value("person_gives_wrong_directions_probability", 0.0);
             config.debugExport = j.value("debug_export", j.value("move_trace_export", false));
@@ -352,7 +351,6 @@ public:
         j["people_spawn_location"]          = config.peopleSpawnLocation;
         j["person_identification_range"]    = roundValue(config.personIdentificationRange);
         j["person_recognition_range"]       = roundValue(config.personRecognitionRange);
-        j["person_approach_distance"]       = roundValue(config.personApproachDistance);
         j["person_gives_directions_probability"] = roundValue(config.personDirectionsProbability);
         j["person_gives_wrong_directions_probability"] = roundValue(config.personDirectionsWrongProbability);
         j["debug_export"]                   = config.debugExport;

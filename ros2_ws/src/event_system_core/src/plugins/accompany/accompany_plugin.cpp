@@ -97,6 +97,9 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
             case SearchRewardStrategy::RANDOM_SECTOR: {
                 return sectorReward(ctx.robotRng(), searchableRooms, person->workplace);
             }
+            case SearchRewardStrategy::UNIFORM: {
+                return uniformReward(searchableRooms);
+            }
             case SearchRewardStrategy::FREQUENCY: {
                 return frequencyReward(robot->getSightings(), a.personName, searchableRooms);
             }
