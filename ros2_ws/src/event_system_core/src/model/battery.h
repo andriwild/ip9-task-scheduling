@@ -31,42 +31,50 @@ class Battery {
     bool m_forceFull       = false; // runtime override: top up to full even if m_chargeToFull is false
     bool m_depleted        = false;
 
-    bool chargesToFull() const;
-    double capacityToTime(const double capacityDiff, const double powerWatts) const;
-    double targetCapacity() const;
+    [[nodiscard]] bool chargesToFull() const;
+    [[nodiscard]] double capacityToTime(double capacityDiff, double powerWatts) const;
+    [[nodiscard]] double targetCapacity() const;
 
 public:
     explicit Battery(
-        const double capacity,
-        const double initialCapacity,
-        const double lowBatteryThreshold,
-        const double fullBatteryThreshold,
-        const double voltage = 12.0,
-        const double cvThreshold = 0.8,
-        const double taperFraction = 0.5,
-        const bool chargeToFull = true
+        double capacity,
+        double initialCapacity,
+        double lowBatteryThreshold,
+        double fullBatteryThreshold,
+        double voltage = 12.0,
+        double cvThreshold = 0.8,
+        double taperFraction = 0.5,
+        bool chargeToFull = true
     );
 
-    void updateConfig(const double designCapacity, const double initialCapacity, const double lowThreshold, const double fullThreshold,
-                      const double voltage, const double cvThreshold, const double taperFraction, const bool chargeToFull);
+    void updateConfig(
+        double designCapacity,
+        double initialCapacity,
+        double lowThreshold,
+        double fullThreshold,
+        double voltage,
+        double cvThreshold,
+        double taperFraction,
+        bool chargeToFull
+        );
 
     // incrementally update battery capacity
-    void updateBalance(const int time, const double energyConsumption);
-    double getDischargedAh() const;
+    void updateBalance(int time, double energyConsumption);
+    [[nodiscard]] double getDischargedAh() const;
     void completeCharge();
 
     // Runtime override of the charge target, independent of the configured charge_to_full baseline.
-    void setForceFull(const bool forceFull);
-    bool isDepleted() const;
-    void reset(const int startTime);
-    BatteryProps getStats() const;
-    double getVoltage() const;
-    bool isBatteryLow() const;
-    bool isBatteryFull() const;
-    bool isFullyCharged() const;
-    double timeToFull(const double phaseOnePowerWatts) const;
-    double timeToPhaseTransition(const double phaseOnePowerWatts) const;
-    double chargingConsumption(const double chargingRate, const double baseConsumption) const;
+    void setForceFull(bool forceFull);
+    [[nodiscard]] bool isDepleted() const;
+    void reset(int startTime);
+    [[nodiscard]] BatteryProps getStats() const;
+    [[nodiscard]] double getVoltage() const;
+    [[nodiscard]] bool isBatteryLow() const;
+    [[nodiscard]] bool isBatteryFull() const;
+    [[nodiscard]] bool isFullyCharged() const;
+    [[nodiscard]] double timeToFull(double phaseOnePowerWatts) const;
+    [[nodiscard]] double timeToPhaseTransition(double phaseOnePowerWatts) const;
+    [[nodiscard]] double chargingConsumption(double chargingRate, double baseConsumption) const;
 
 private:
     template<typename T>

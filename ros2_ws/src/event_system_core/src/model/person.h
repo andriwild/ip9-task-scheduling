@@ -29,10 +29,10 @@ struct StayDurationConfig {
     double meetingMin = 60 * 30;
     double meetingMax = 60 * 90;
     double kitchenMin = 30;
-    double kitchenMax = ONE_HOUR / 2;
+    double kitchenMax = ONE_HOUR / 2.0;
     double toiletMu = 4.8;
     double toiletSigma = 0.7;
-    double spaceMin = ONE_HOUR / 2;
+    double spaceMin = ONE_HOUR / 2.0;
     double spaceMax = ONE_HOUR * 4;
     double miscMin = 60;
     double miscMax = 60 * 5;
