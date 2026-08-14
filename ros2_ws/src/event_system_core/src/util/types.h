@@ -130,7 +130,8 @@ enum class ExecutionMode {
 
 struct SimConfig {
     double robotSpeed;
-    double driveTimeStd;
+    double driveDelayMedian = 0.05;
+    double driveDelaySigma = 0.4;
     double timeBuffer;
     double energyConsumptionDrive;
     double energyConsumptionBase;
@@ -173,7 +174,6 @@ struct SimConfig {
     std::string employeesPath = "";
     SearchRewardStrategy searchRewardStrategy = SearchRewardStrategy::BETA_SMOOTHED;
     SearchRouteStrategy searchRouteStrategy = SearchRouteStrategy::COST_AWARE;
-    bool searchRolePrior = false;
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
     double personDirectionsProbability = 0.0;
@@ -189,7 +189,8 @@ struct SimConfig {
         os << "\n"
            << "\033[1m" << "--- Configuration Loaded ---" << "\033[0m" << std::endl;
         os << std::left << std::setw(W) << "robotSpeed" << ": " << config.robotSpeed << std::endl;
-        os << std::left << std::setw(W) << "driveTimeStd" << ": " << config.driveTimeStd << std::endl;
+        os << std::left << std::setw(W) << "driveDelayMedian" << ": " << config.driveDelayMedian << std::endl;
+        os << std::left << std::setw(W) << "driveDelaySigma" << ": " << config.driveDelaySigma << std::endl;
         os << std::left << std::setw(W) << "timeBuffer" << ": " << config.timeBuffer << std::endl;
         os << std::left << std::setw(W) << "energyConsumptionDrive" << ": " << config.energyConsumptionDrive << std::endl;
         os << std::left << std::setw(W) << "energyConsumptionBase" << ": " << config.energyConsumptionBase << std::endl;
@@ -215,7 +216,6 @@ struct SimConfig {
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
         os << std::left << std::setw(W) << "searchRouteStrategy" << ": " << searchRouteStrategyToString(config.searchRouteStrategy) << std::endl;
-        os << std::left << std::setw(W) << "searchRolePrior" << ": " << config.searchRolePrior << std::endl;
         os << std::left << std::setw(W) << "energyReserveStrategy" << ": " << energyReserveStrategyToString(config.energyReserveStrategy) << std::endl;
         os << std::left << std::setw(W) << "energyReserveHorizon" << ": " << config.energyReserveHorizon << std::endl;
         os << std::left << std::setw(W) << "seed" << ": " << config.seed << std::endl;

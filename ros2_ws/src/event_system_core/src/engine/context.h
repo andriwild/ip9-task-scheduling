@@ -145,8 +145,6 @@ public:
     void robotMoved(const std::string& location, double distance = 0) const override;
     void robotMovedTo(const Point& position, double distance = 0.0) const override;
 
-    double getDriveTimeStd() const;
-
     bool pushInterrupt(const OrderPtr& order) override;
     void popInterrupt(const OrderPtr& completedOrder) override;
     bool hasActiveInterrupt() const override;

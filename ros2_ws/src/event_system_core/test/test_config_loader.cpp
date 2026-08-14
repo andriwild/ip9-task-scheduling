@@ -217,7 +217,8 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_DOUBLE_EQ(original->fullBatteryThreshold, reloaded->fullBatteryThreshold);
     EXPECT_DOUBLE_EQ(original->energyConsumptionDrive, reloaded->energyConsumptionDrive);
     EXPECT_DOUBLE_EQ(original->energyConsumptionBase, reloaded->energyConsumptionBase);
-    EXPECT_DOUBLE_EQ(original->driveTimeStd, reloaded->driveTimeStd);
+    EXPECT_DOUBLE_EQ(original->driveDelayMedian, reloaded->driveDelayMedian);
+    EXPECT_DOUBLE_EQ(original->driveDelaySigma, reloaded->driveDelaySigma);
     EXPECT_EQ(original->dockLocation, reloaded->dockLocation);
     EXPECT_EQ(original->cacheEnabled, reloaded->cacheEnabled);
     EXPECT_EQ(original->appointmentsPath, reloaded->appointmentsPath);

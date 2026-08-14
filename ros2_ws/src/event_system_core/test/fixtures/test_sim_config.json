@@ -1,5 +1,6 @@
 {
-    "drive_time_std": 5.0,
+    "drive_delay_median": 0.05,
+    "drive_delay_sigma": 0.4,
     "robot_speed": 0.5,
     "timeBuffer": 60.0,
     "energy_consumption_drive": 0.1,

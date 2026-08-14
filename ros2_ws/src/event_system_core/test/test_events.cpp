@@ -51,7 +51,7 @@ public:
         simConfig->initialBatteryCapacity = 80.0;
         simConfig->lowBatteryThreshold = 20.0;
         simConfig->fullBatteryThreshold = 95.0;
-        simConfig->driveTimeStd = 0.0;
+        simConfig->driveDelayMedian = 0.0;
         simConfig->timeBuffer = 60.0;
         simConfig->energyConsumptionDrive = 0.1;
         simConfig->energyConsumptionBase = 0.01;

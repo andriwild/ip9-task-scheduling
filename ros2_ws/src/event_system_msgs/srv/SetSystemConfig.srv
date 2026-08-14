@@ -1,4 +1,5 @@
-float32 drive_time_std
+float32 drive_delay_median
+float32 drive_delay_sigma
 float32 robot_speed
 float32 time_buffer
 float32 energy_consumption_drive

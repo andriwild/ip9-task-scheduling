@@ -35,8 +35,13 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
     m_robotSpeed->setSuffix(" m/s");
     addConfigItem(moveGroup, "Robot Speed", m_robotSpeed);
 
-    m_driveTimeStd = new QDoubleSpinBox(); m_driveTimeStd->setRange(0.0, 10.0);
-    addConfigItem(moveGroup, "Drive Time Std", m_driveTimeStd);
+    m_driveDelayMedian = new QDoubleSpinBox(); m_driveDelayMedian->setRange(0.0, 2.0), m_driveDelayMedian->setSingleStep(0.01);
+    m_driveDelayMedian->setDecimals(3);
+    addConfigItem(moveGroup, "Drive Delay Median", m_driveDelayMedian);
+
+    m_driveDelaySigma = new QDoubleSpinBox(); m_driveDelaySigma->setRange(0.0, 3.0), m_driveDelaySigma->setSingleStep(0.05);
+    m_driveDelaySigma->setDecimals(3);
+    addConfigItem(moveGroup, "Drive Delay Sigma", m_driveDelaySigma);
 
     // Energy & Docking
     QTreeWidgetItem* energyGroup = new QTreeWidgetItem(m_treeWidget);
@@ -199,7 +204,8 @@ void DesSystemConfig::onInitialize() {
 void DesSystemConfig::onSetConfig() {
     auto request = std::make_shared<event_system_msgs::srv::SetSystemConfig::Request>();
 
-    request->drive_time_std = m_driveTimeStd->value();
+    request->drive_delay_median = m_driveDelayMedian->value();
+    request->drive_delay_sigma = m_driveDelaySigma->value();
     request->robot_speed = m_robotSpeed->value();
     request->time_buffer = m_timeBuffer->value();
     request->energy_consumption_drive = m_energyConsumptionDrive->value();
@@ -250,7 +256,8 @@ void DesSystemConfig::onServiceResponse(ServiceResponseFuture future) {
 }
 
 void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig::SharedPtr msg) {
-    m_driveTimeStd->setValue(msg->drive_time_std);
+    m_driveDelayMedian->setValue(msg->drive_delay_median);
+    m_driveDelaySigma->setValue(msg->drive_delay_sigma);
     m_robotSpeed->setValue(msg->robot_speed);
     m_timeBuffer->setValue(msg->time_buffer);
     m_energyConsumptionDrive->setValue(msg->energy_consumption_drive);

@@ -52,7 +52,6 @@ public:
     std::string firstName;
     std::string lastName;
     std::string sex;
-    std::vector<std::string> roles;
     std::string workplace;
     std::string color;
     bool busy = false;
@@ -69,10 +68,6 @@ public:
 
     void reseed(const unsigned int seed) {
         rng.seed(seed + static_cast<unsigned int>(id));
-    }
-
-    bool hasRole(const std::string& role) const {
-        return std::find(roles.begin(), roles.end(), role) != roles.end();
     }
 
     double getStayDuration(const RoomType roomType, std::mt19937& rng) const {

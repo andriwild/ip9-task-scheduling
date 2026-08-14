@@ -1,5 +1,6 @@
 # Movement
-float32 drive_time_std
+float32 drive_delay_median
+float32 drive_delay_sigma
 float32 robot_speed
 
 # General timing

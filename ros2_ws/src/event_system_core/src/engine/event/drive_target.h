@@ -16,6 +16,7 @@
 #include "model/person.h"
 #include "model/robot.h"
 #include "plugins/order_registry.h"
+#include "util/rnd.h"
 #include "util/types.h"
 
 namespace des {
@@ -85,7 +86,9 @@ public:
         const Point from = ctx.getRobot()->getPosition();
         const double dist = std::hypot(m_point.m_x - from.m_x, m_point.m_y - from.m_y);
         const double speed = m_speed > 0.0 ? m_speed : ctx.getRobot()->getCurrentSpeed();
-        const int duration = std::max(1, static_cast<int>(std::lround(dist / speed)));
+        const auto& cfg = *ctx.getConfig();
+        const double travelTime = rnd::driveTime(ctx.robotRng(), dist / speed, cfg.driveDelayMedian, cfg.driveDelaySigma);
+        const int duration = std::max(1, static_cast<int>(std::lround(travelTime)));
         return { duration, dist };
     }
 

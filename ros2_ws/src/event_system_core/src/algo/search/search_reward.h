@@ -1,6 +1,6 @@
 /*
  * Gives each room a score for the search route.
- * The score starts at the role prior and moves towards what the robot has really seen.
+ * The score starts at the prior and moves towards what the robot has really seen.
  * Many hits raise the score, many misses lower it.
  * Rooms the robot never visited keep the prior.
  *
@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "algo/op_types.h"
-#include "algo/search/role_prior.h"
 #include "model/room.h"
 #include "model/sighting.h"
 
@@ -26,6 +25,7 @@ struct SearchRoom {
 };
 
 constexpr float kUnseenRoomReward = 1e-3f;
+constexpr float kOtherRoomPrior = 0.05f;
 constexpr std::size_t kSectorPrefixLength = 4;
 
 // rooms are named <building>.<floor><sector><number>, e.g. 5.2B10 sits in sector 5.2B
@@ -44,15 +44,11 @@ inline float roomProbability(int hits, int misses, float p0, double k) {
 
 // get the prior for a room
 // the workplace of a person has always the highest prior
-// useRolePrior: if true the prior for rooms is depending on the person role
-inline float occupancyPrior(bool isWorkplace, RoomType type, const std::vector<std::string>& roles, bool useRolePrior, float workplacePrior) {
+inline float occupancyPrior(bool isWorkplace, float workplacePrior) {
     if (isWorkplace) {
         return workplacePrior;
     }
-    if (!useRolePrior) {
-        return 0.05f; // TODO: magic number
-    }
-    return rolePrior(roles, type, 0.05f);
+    return kOtherRoomPrior;
 }
 
 // calculate the probability for each room according to its sightings
@@ -61,14 +57,12 @@ inline std::vector<OpNode> occupancyProbability(
     const std::string& person,
     const std::string& office,
     const std::vector<SearchRoom>& allRooms,
-    const std::vector<std::string>& roles,
-    bool useRolePrior,
     double priorWeight,
     float workplacePrior)
 {
     auto scored = allRooms | std::views::transform([&](const SearchRoom& room) {
         const SightingCounts c = sightings.counts(person, room.name);
-        const float prior = occupancyPrior(office == room.name, room.type, roles, useRolePrior, workplacePrior);
+        const float prior = occupancyPrior(office == room.name, workplacePrior);
         return OpNode{ room.name, roomProbability(c.hits, c.misses, prior, priorWeight) };
     });
     return { scored.begin(), scored.end() };

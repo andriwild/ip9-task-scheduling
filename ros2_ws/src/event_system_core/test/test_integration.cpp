@@ -101,7 +101,7 @@ protected:
         config->robotSpeed = 1.0;
         config->timeBuffer = 60.0;
         config->cacheEnabled = false;
-        config->driveTimeStd = 0.0;
+        config->driveDelayMedian = 0.0;
 
         // Accompany-specific params live on the plugin now. Deterministic
         // (std=0, probability=1.0) so the integration scenario is reproducible.

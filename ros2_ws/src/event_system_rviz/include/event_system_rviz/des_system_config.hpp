@@ -41,7 +41,8 @@ protected:
     rclcpp::Subscription<event_system_msgs::msg::SystemConfig>::SharedPtr m_subscriber;
 
     QTreeWidget* m_treeWidget;
-    QDoubleSpinBox* m_driveTimeStd;
+    QDoubleSpinBox* m_driveDelayMedian;
+    QDoubleSpinBox* m_driveDelaySigma;
     QDoubleSpinBox* m_robotSpeed;
     QDoubleSpinBox* m_timeBuffer;
     QDoubleSpinBox* m_energyConsumptionDrive;
