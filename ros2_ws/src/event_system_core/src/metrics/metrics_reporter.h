@@ -13,6 +13,7 @@
 #include "engine/contracts/i_event.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
+#include "plugins/accompany/events/scan_point_event.h"
 #include "plugins/order_registry.h"
 #include "util/constants.h"
 #include "metrics/debug_trace.h"
@@ -87,6 +88,29 @@ public:
             });
         };
 
+        // A room visit is a run of scans in the same room within the same mission.
+        // Detour stops stay inside the room, a room entered again later counts again.
+        auto roomsOn = [&protocol](const int day) {
+            int rooms = 0;
+            int lastMission = -1;
+            std::string lastRoom;
+            for (const auto& event : protocol) {
+                if (event->getType() != EventType::SCAN || event->time / SECONDS_PER_DAY != day) {
+                    continue;
+                }
+                const auto* scan = dynamic_cast<const ScanPointEvent*>(event.get());
+                if (scan == nullptr) {
+                    continue;
+                }
+                if (scan->getMissionId() != lastMission || scan->m_room != lastRoom) {
+                    ++rooms;
+                    lastMission = scan->getMissionId();
+                    lastRoom    = scan->m_room;
+                }
+            }
+            return rooms;
+        };
+
         auto searchOn = [&states](const int day) {
             auto intervals = states | filter([day](const StateInterval& s) {
                 return s.name == "search" && s.time / SECONDS_PER_DAY == day;
@@ -117,16 +141,16 @@ public:
         for (auto day : scheduled | chunk_by(sameDay)) {
             const int dayIndex = day.front()->time / SECONDS_PER_DAY;
             const auto [searchSeconds, searchMetres] = searchOn(dayIndex);
-            daily += std::format("{},{},{},{},{},{},{},{},{},{:g}\n",
+            daily += std::format("{},{},{},{},{},{},{},{},{},{},{:g}\n",
                 m_roundSeed, m_scenario,
                 dayIndex,
                 std::ranges::count_if(day, inState(OrderState::COMPLETED)),
                 std::ranges::count_if(day, inState(OrderState::FAILED)),
                 std::ranges::count_if(day, withDetail("missed in building")),
                 std::ranges::count_if(day, inState(OrderState::REJECTED)),
-                scansOn(dayIndex), searchSeconds, searchMetres);
+                scansOn(dayIndex), roomsOn(dayIndex), searchSeconds, searchMetres);
         }
-        write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,search_s,search_m\n", daily);
+        write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
 
         const std::string run = std::format(
             "{},{},{},{},{},{},{},{:g},{}\n",

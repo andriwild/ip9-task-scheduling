@@ -16,6 +16,9 @@ class ScanPointEvent final : public IEvent {
     OrderPtr m_order;
 
 public:
+    // Filled on execution, read by the room count of the metrics reporter.
+    std::string m_room;
+
     explicit ScanPointEvent(const int time, const OrderPtr& order)
         : IEvent(time), m_order(order) {}
 
@@ -63,6 +66,7 @@ public:
     void execute(ISimContext& ctx) override {
         auto& accompany = static_cast<AccompanyOrder&>(*m_order);
         const auto& personName = accompany.personName;
+        m_room = ctx.getRobot()->getLocation();
         const bool seen = ctx.robotSeesPerson(personName);
         const bool asks = !seen && ctx.getConfig()->personDirectionsProbability > 0.0;
 
