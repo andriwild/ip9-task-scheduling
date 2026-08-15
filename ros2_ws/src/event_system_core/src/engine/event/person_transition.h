@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <format>
 #include <utility>
+#include <vector>
 
 #include "engine/event/person_event.h"
 #include "engine/event/person_lunch.h"
@@ -18,6 +19,19 @@
 #include "util/constants.h"
 
 namespace des {
+
+inline std::string accessRoomFor(const ISimContext& ctx, const Person& p) {
+    const auto isAccess = [&ctx](const std::string& r) {
+        return ctx.room(r).m_roomType == RoomType::ACCESS;
+    };
+    const auto own = std::ranges::find_if(p.roomLabels, isAccess);
+    if (own != p.roomLabels.end()) {
+        return *own;
+    }
+    const std::vector<std::string> names = ctx.roomNames();
+    const auto any = std::ranges::find_if(names, isAccess);
+    return any == names.end() ? std::string{} : *any;
+}
 
 class PersonArrivedEvent final : public PersonEvent {
 public:
@@ -214,18 +228,17 @@ public:
         }
 
         if (p.departureTime < nextExecutionTime) {
-            const auto accessIt = std::ranges::find_if(p.roomLabels,
-                [&ctx](const std::string& r) { return ctx.room(r).m_roomType == RoomType::ACCESS; });
-            if (accessIt == p.roomLabels.end()) {
+            const std::string accessRoom = accessRoomFor(ctx, p);
+            if (accessRoom.empty()) {
                 ctx.pushEvent(std::make_shared<PersonDepartureEvent>(
                     std::max(p.departureTime, this->time), this->person));
                 return;
             }
-            const double walkTime = personWalkTime(ctx, p, targetRoom, *accessIt);
+            const double walkTime = personWalkTime(ctx, p, targetRoom, accessRoom);
             const double accessStay = p.getStayDuration(RoomType::ACCESS, p.rng);
             const int leaveAt = std::max(this->time, static_cast<int>(p.departureTime - walkTime - accessStay));
             ctx.pushEvent(std::make_shared<PersonLeaveEvent>(
-                leaveAt, this->person, *accessIt, static_cast<int>(walkTime)));
+                leaveAt, this->person, accessRoom, static_cast<int>(walkTime)));
         } else {
             scheduleTransition(ctx, static_cast<int>(nextExecutionTime));
         }
