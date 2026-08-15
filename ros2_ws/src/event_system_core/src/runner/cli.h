@@ -64,6 +64,9 @@ inline std::string applyArgs(const int argc, char* argv[]) {
         if (flag == "--run-id") {
             IAppRunner::s_runId = valueOf(i);
         }
+        if (flag == "--rounds" && !valueOf(i).empty()) {
+            ConfigLoader::s_rounds = std::stoi(valueOf(i));
+        }
     }
     return mode;
 }

@@ -64,6 +64,7 @@ class ConfigLoader {
 public:
     static inline std::string s_overridePath = "";
     static inline std::string s_baseConfigPath = "";
+    static inline int s_rounds = 0;
 
     static std::string configDir() {
         return CONFIG_DIR;
@@ -227,6 +228,11 @@ public:
                 j.merge_patch(overrideJson.value());
                 DES_LOG_DEBUG("des.io.config", "Applied config override: %s", resolved.c_str());
             }
+
+            if (s_rounds > 0) {
+                j["rounds"] = s_rounds;
+            }
+
             SimConfig config;
             config.driveDelayMedian         = j.at("drive_delay_median").get<double>();
             config.driveDelaySigma          = j.at("drive_delay_sigma").get<double>();
