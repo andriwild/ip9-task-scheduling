@@ -103,6 +103,11 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
             case SearchRewardStrategy::FREQUENCY: {
                 return frequencyReward(robot->getSightings(), a.personName, searchableRooms);
             }
+            case SearchRewardStrategy::TRUE_DISTRIBUTION: {
+                return trueDistributionReward(person->workplace, person->roomLabels,
+                                              cfg->searchTrueWorkplaceShare, cfg->searchTrueDistribution,
+                                              searchableRooms);
+            }
             default: {
                 return occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
             }

@@ -44,16 +44,18 @@ enum class SearchRewardStrategy {
     FREQUENCY,
     RANDOM,
     RANDOM_SECTOR,
+    TRUE_DISTRIBUTION,
     UNIFORM
 };
 
 inline std::string searchRewardStrategyToString(const SearchRewardStrategy strategy) {
     switch (strategy) {
-        case SearchRewardStrategy::FREQUENCY:     return "frequency";
-        case SearchRewardStrategy::RANDOM:        return "random";
-        case SearchRewardStrategy::RANDOM_SECTOR: return "random_sector";
-        case SearchRewardStrategy::UNIFORM:       return "uniform";
-        default:                                  return "beta_smoothed";
+        case SearchRewardStrategy::FREQUENCY:         return "frequency";
+        case SearchRewardStrategy::RANDOM:            return "random";
+        case SearchRewardStrategy::RANDOM_SECTOR:     return "random_sector";
+        case SearchRewardStrategy::TRUE_DISTRIBUTION: return "true_distribution";
+        case SearchRewardStrategy::UNIFORM:           return "uniform";
+        default:                                      return "beta_smoothed";
     }
 }
 
@@ -61,6 +63,7 @@ inline SearchRewardStrategy searchRewardStrategyFromString(const std::string& st
     if (str == "frequency") return SearchRewardStrategy::FREQUENCY;
     if (str == "random") return SearchRewardStrategy::RANDOM;
     if (str == "random_sector") return SearchRewardStrategy::RANDOM_SECTOR;
+    if (str == "true_distribution") return SearchRewardStrategy::TRUE_DISTRIBUTION;
     if (str == "uniform") return SearchRewardStrategy::UNIFORM;
     return SearchRewardStrategy::BETA_SMOOTHED;
 }
@@ -176,6 +179,14 @@ struct SimConfig {
     SearchRouteStrategy searchRouteStrategy = SearchRouteStrategy::COST_AWARE;
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
+    double searchTrueWorkplaceShare = 0.65;
+    std::map<RoomType, double> searchTrueDistribution = {
+        { RoomType::OFFICE,  0.14 },
+        { RoomType::MEETING, 0.10 },
+        { RoomType::KITCHEN, 0.04 },
+        { RoomType::SPACE,   0.04 },
+        { RoomType::TOILET,  0.03 },
+    };
     double personDirectionsProbability = 0.0;
     double personDirectionsWrongProbability = 0.0;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;

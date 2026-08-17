@@ -288,6 +288,21 @@ public:
             config.searchRouteStrategy = searchRouteStrategyFromString(j.value("search_route_strategy", "cost_aware"));
             config.searchPriorWeight = j.value("search_prior_weight", 4.0);
             config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
+            if (j.contains("search_true_distribution")) {
+                const auto& shares = j.at("search_true_distribution");
+                config.searchTrueDistribution.clear();
+                for (const auto& [name, value] : shares.items()) {
+                    if (name == "workplace") {
+                        config.searchTrueWorkplaceShare = value.get<double>();
+                        continue;
+                    }
+                    const auto type = roomTypeFromString(name);
+                    if (!type.has_value()) {
+                        throw std::runtime_error("search_true_distribution: unknown room type '" + name + "'");
+                    }
+                    config.searchTrueDistribution[type.value()] = value.get<double>();
+                }
+            }
             config.energyReserveStrategy = energyReserveStrategyFromString(j.value("energy_reserve_strategy", "horizon"));
             config.energyReserveHorizon = j.value("energy_reserve_horizon", 4 * 3600);
             config.seed = j.value("seed", 42u);
@@ -381,6 +396,12 @@ public:
         j["search_route_strategy"]          = searchRouteStrategyToString(config.searchRouteStrategy);
         j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
         j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);
+        nlohmann::json trueShares;
+        trueShares["workplace"] = roundValue(config.searchTrueWorkplaceShare);
+        for (const auto& [type, share] : config.searchTrueDistribution) {
+            trueShares[roomTypeToString(type)] = roundValue(share);
+        }
+        j["search_true_distribution"]       = trueShares;
         j["energy_reserve_strategy"]        = energyReserveStrategyToString(config.energyReserveStrategy);
         j["energy_reserve_horizon"]         = config.energyReserveHorizon;
         j["seed"]                           = config.seed;
