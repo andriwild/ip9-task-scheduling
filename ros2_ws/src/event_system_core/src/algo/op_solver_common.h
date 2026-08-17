@@ -14,11 +14,8 @@
 
 #include "op.h"
 
-namespace des {
 
-// TODO: clean up namespaces
-
-namespace op_solver {
+namespace des::op_solver {
 
 inline float greedyValue(const OpInstance& op, const int curId, const int candIdx) {
     const auto& p    = op.params();
@@ -29,8 +26,6 @@ inline float greedyValue(const OpInstance& op, const int curId, const int candId
     const float maxLoad = std::max({ load_e, load_t, 1e-12f });
     return p.costAware ? node.reward / maxLoad : node.reward;
 }
-
-namespace detail {
 
 inline std::vector<int> taskCandidates(const OpInstance& op) {
     const auto& p = op.params();
@@ -45,8 +40,4 @@ inline std::vector<int> taskCandidates(const OpInstance& op) {
     return candidates;
 }
 
-}  // namespace detail
-
-}  // namespace op_solver
-
-}  // namespace des
+} // namespace des::op_solver

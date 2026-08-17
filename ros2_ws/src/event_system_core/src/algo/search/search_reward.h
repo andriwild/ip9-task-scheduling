@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <map>
 #include <random>
 #include <ranges>
 #include <string>
@@ -34,7 +36,7 @@ inline std::string roomSector(const std::string& name) {
 }
 
 // calculate the probability of a room using beta-binomial model
-inline float roomProbability(int hits, int misses, float p0, double k) {
+inline float roomProbability(const int hits, const int misses, const float p0, const double k) {
     const double alpha = k * p0;
     const double beta  = k * (1.0 - p0);
     const double y     = hits;
@@ -57,13 +59,13 @@ inline std::vector<OpNode> occupancyProbability(
     const std::string& person,
     const std::string& office,
     const std::vector<SearchRoom>& allRooms,
-    double priorWeight,
-    float workplacePrior)
-{
+    const double priorWeight,
+    const float workplacePrior
+    ) {
     auto scored = allRooms | std::views::transform([&](const SearchRoom& room) {
-        const SightingCounts c = sightings.counts(person, room.name);
+        const auto [hits, misses] = sightings.counts(person, room.name);
         const float prior = occupancyPrior(office == room.name, workplacePrior);
-        return OpNode{ room.name, roomProbability(c.hits, c.misses, prior, priorWeight) };
+        return OpNode{ room.name, roomProbability(hits, misses, prior, priorWeight) };
     });
     return { scored.begin(), scored.end() };
 }
@@ -97,6 +99,39 @@ inline std::vector<OpNode> sectorReward(std::mt19937& rng, const std::vector<Sea
         nodes.push_back({ room.name, uniform(rng) + sameSector });
     }
     return nodes;
+}
+
+// the robot knows how the person really splits their day over the rooms
+// used to compare with other strategies
+inline std::vector<OpNode> trueDistributionReward(
+    const std::string& workplace,
+    const std::vector<std::string>& personRooms,
+    double workplaceShare,
+    const std::map<RoomType, double>& shareByType,
+    const std::vector<SearchRoom>& allRooms)
+{
+    std::map<RoomType, int> roomsOfType;
+    for (const SearchRoom& room : allRooms) {
+        if (room.name != workplace && std::ranges::find(personRooms, room.name) != personRooms.end()) {
+            ++roomsOfType[room.type];
+        }
+    }
+
+    auto scored = allRooms | std::views::transform([&](const SearchRoom& room) {
+        if (room.name == workplace) {
+            return OpNode{ room.name, static_cast<float>(workplaceShare) };
+        }
+        if (std::ranges::find(personRooms, room.name) == personRooms.end()) {
+            return OpNode{ room.name, 0.0f };
+        }
+        const auto share = shareByType.find(room.type);
+        const auto count = roomsOfType.find(room.type);
+        if (share == shareByType.end() || count == roomsOfType.end() || count->second == 0) {
+            return OpNode{ room.name, 0.0f };
+        }
+        return OpNode{ room.name, static_cast<float>(share->second / count->second) };
+    });
+    return { scored.begin(), scored.end() };
 }
 
 // naive approach - if a person was seeing in a room, its probability is increased

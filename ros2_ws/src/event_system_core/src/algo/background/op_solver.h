@@ -131,7 +131,7 @@ inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
 inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const float alpha, const int seed) {
     std::mt19937 gen(seed);
     std::vector<int> route;
-    std::vector<int> candidates = detail::taskCandidates(op);
+    std::vector<int> candidates = taskCandidates(op);
     int curId = op.params().startNodeId;
 
     while (!candidates.empty()) {

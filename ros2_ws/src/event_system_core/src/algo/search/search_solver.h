@@ -13,13 +13,11 @@
 #include "../op.h"
 #include "../op_solver_common.h"
 
-namespace des {
-
-namespace op_solver {
+namespace des::op_solver {
 
 inline std::vector<int> greedySearchOrder(const OpInstance& op) {
     std::vector<int> route;
-    std::vector<int> candidates = detail::taskCandidates(op);
+    std::vector<int> candidates = taskCandidates(op);
     int cur = op.params().startNodeId;
     while (true) {
         int bestPos = -1;
@@ -49,6 +47,4 @@ inline std::vector<int> greedySearchOrder(const OpInstance& op) {
     return route;
 }
 
-}  // namespace op_solver
-
-}  // namespace des
+}
