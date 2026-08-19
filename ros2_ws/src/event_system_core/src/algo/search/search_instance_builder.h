@@ -36,8 +36,12 @@ inline std::optional<OpInstance> buildSearchInstance(
     constexpr int startNodeId = 0;
     std::vector planned = { op_build::anchorNode(startLoc) };
 
+    // With a drop-off at the find location the route has no fixed end.
+    // The appointment room is then an ordinary candidate like every other room.
+    const bool openEnd = cfg.searchDropOffAtFind;
+
     int endNodeId = startNodeId;
-    if (endLoc != startLoc) {
+    if (!openEnd && endLoc != startLoc) {
         endNodeId = static_cast<int>(planned.size());
         planned.push_back(op_build::anchorNode(endLoc));
     }
@@ -45,7 +49,7 @@ inline std::optional<OpInstance> buildSearchInstance(
 
     // precalculate time and energy usage of all candidates using sightseeing tour
     for (const auto& room : roomNodes) {
-        if (room.name == startLoc || room.name == endLoc) {
+        if (room.name == startLoc || (!openEnd && room.name == endLoc)) {
             continue;
         }
         const RoomTour& tour = world.room(room.name).m_tour;
@@ -93,6 +97,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         .driveSpeed      = static_cast<float>(cfg.robotSpeed),
         .driveEnergy     = driveEnergyPerMeter,
         .costAware       = cfg.searchRouteStrategy == SearchRouteStrategy::COST_AWARE,
+        .openEnd         = openEnd,
     };
 
     return OpInstance(std::move(nodes), std::move(*mat), {}, params);

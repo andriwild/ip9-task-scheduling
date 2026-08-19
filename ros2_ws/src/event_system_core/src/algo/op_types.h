@@ -38,6 +38,7 @@ struct OpParams {
     float driveSpeed      = 1.0f;
     float driveEnergy     = 0.0f;
     bool costAware        = true;
+    bool openEnd          = false;
 };
 
 }  // namespace des

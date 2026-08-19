@@ -57,7 +57,9 @@ public:
         for (size_t i = 0; i + 1 < route.size(); ++i) {
             d += m_mat[route[i]][route[i + 1]];
         }
-        d += m_mat[route.back()][m_p.endNodeId];
+        if (!m_p.openEnd) {
+            d += m_mat[route.back()][m_p.endNodeId];
+        }
         return d;
     }
 
@@ -105,7 +107,7 @@ public:
             prev = idx;
         }
 
-        if (toEnd) {
+        if (toEnd && !m_p.openEnd) {
             const float d = m_mat[prev][m_p.endNodeId];
             soc  -= d * m_p.driveEnergy;
             time += d / m_p.driveSpeed;
