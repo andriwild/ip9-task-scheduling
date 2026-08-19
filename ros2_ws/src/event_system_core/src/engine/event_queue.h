@@ -36,7 +36,6 @@ class EventQueue {
 public:
     explicit EventQueue() = default;
 
-    void extend(SortedEventQueue queue);
     void extend(std::vector<std::shared_ptr<IEvent>> events);
 
     bool empty() const;

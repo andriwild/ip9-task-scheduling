@@ -5,13 +5,6 @@
 
 namespace des {
 
-void EventQueue::extend(SortedEventQueue queue) {
-    while (!queue.empty()) {
-        m_events.insert(queue.top());
-        queue.pop();
-    }
-}
-
 void EventQueue::extend(std::vector<std::shared_ptr<IEvent>> events) {
     for (const auto& event : events) {
         m_events.insert(event);

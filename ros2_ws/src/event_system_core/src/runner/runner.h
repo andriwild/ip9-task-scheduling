@@ -47,21 +47,21 @@ public:
         return m_reporter;
     }
 
-    static SortedEventQueue createMissionQueue(
+    static EventList createMissionQueue(
         OrderList& orders,
         Scheduler& scheduler,
         std::string idleLocation
     ) {
         DES_LOG_DEBUG("des.runner", "Start filling event queue");
-        SortedEventQueue queue;
-
         const auto missions = scheduler.createMissionDispatchEvents(orders, idleLocation);
 
+        EventList events;
+        events.reserve(missions.size());
         for (const auto& mission : missions) {
-            queue.push(mission);
+            events.push_back(mission);
         }
-        DES_LOG_INFO("des.runner", "Event queue: (%zu) events inserted (incl. Start and End)", queue.size());
-        return queue;
+        DES_LOG_INFO("des.runner", "Event queue: (%zu) events inserted (incl. Start and End)", events.size());
+        return events;
     }
 
     static std::vector<std::shared_ptr<IEvent>> personArrivalGenerator(

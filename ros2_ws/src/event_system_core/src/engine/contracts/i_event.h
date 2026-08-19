@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -57,26 +56,6 @@ public:
     }
 };
 
-struct EventComparator {
-    bool operator()(const std::shared_ptr<IEvent>& a, const std::shared_ptr<IEvent>& b) const {
-        if (!a || !b) {
-            return false;
-        }
-        if (a->time != b->time) {
-            return a->time > b->time;
-        }
-        if (a->priority() != b->priority()) {
-            return a->priority() < b->priority();
-        }
-        return a->seq > b->seq;
-    }
-};
-
 using EventList = std::vector<std::shared_ptr<IEvent>>;
-
-using SortedEventQueue = std::priority_queue<
-    std::shared_ptr<IEvent>,
-    EventList,
-    EventComparator>;
 
 }  // namespace des
