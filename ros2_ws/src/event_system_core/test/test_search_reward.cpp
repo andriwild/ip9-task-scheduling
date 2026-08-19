@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/algo/search/search_reward.h"
+#include "../src/model/room.h"
 
 namespace {
 

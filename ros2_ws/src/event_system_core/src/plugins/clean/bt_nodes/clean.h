@@ -13,6 +13,7 @@
 #include "plugins/clean/clean_plugin.h"
 #include "plugins/clean/events/start_clean_event.h"
 #include "plugins/clean/events/end_clean_event.h"
+#include "model/room.h"
 
 namespace des {
 

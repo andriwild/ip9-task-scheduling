@@ -17,6 +17,8 @@
 #include "engine/event/person_lunch.h"
 #include "model/occupancy.h"
 #include "util/constants.h"
+#include "model/person.h"
+#include "model/room.h"
 
 namespace des {
 

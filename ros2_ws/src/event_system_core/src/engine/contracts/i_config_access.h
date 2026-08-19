@@ -6,6 +6,8 @@
 
 namespace des {
 
+struct SimConfig;
+
 class IConfigAccess {
 public:
     virtual ~IConfigAccess() = default;

@@ -7,6 +7,7 @@
 #include "plugins/accompany/accompany_order.h"
 #include "util/geometry.h"
 #include "util/log.h"
+#include "util/point.h"
 
 namespace des {
 

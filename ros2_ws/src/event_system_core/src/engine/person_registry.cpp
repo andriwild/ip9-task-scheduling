@@ -3,6 +3,9 @@
 #include <utility>
 
 #include "util/geometry.h"
+#include "model/person.h"
+#include "model/room.h"
+#include "util/point.h"
 
 namespace des {
 

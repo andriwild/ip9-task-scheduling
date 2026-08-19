@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "engine/event/person_event.h"
+#include "model/person.h"
 
 namespace des {
 

@@ -10,6 +10,8 @@
 #include "../src/plugins/data_acquisition/data_acquisition_plugin.h"
 #include "../src/plugins/information/information_plugin.h"
 #include "../src/plugins/order_registry.h"
+#include "../src/model/sim_config.h"
+#include "../src/model/room.h"
 
 namespace {
 

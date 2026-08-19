@@ -27,9 +27,14 @@
 #include "util/log.h"
 #include "util/types.h"
 #include "engine/event_queue.h"
+#include "model/person.h"
+#include "model/room.h"
+#include "util/point.h"
 
 
 namespace des {
+
+struct SimConfig;
 
 class SimulationContext : public ISimContext {
     int m_currentTime {};

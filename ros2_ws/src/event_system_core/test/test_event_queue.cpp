@@ -74,13 +74,14 @@ TEST_F(EventQueueTest, GetFirstEventTime) {
     EXPECT_EQ(queue.getFirstEventTime(), 200);
 }
 
-TEST_F(EventQueueTest, ExtendFromSortedEventQueue) {
-    des::SortedEventQueue sorted;
-    sorted.push(makeEvent(50));
-    sorted.push(makeEvent(150));
+TEST_F(EventQueueTest, ExtendOntoNonEmptyQueue) {
+    des::EventList events = {
+        makeEvent(50),
+        makeEvent(150),
+    };
 
     queue.push(makeEvent(100));
-    queue.extend(std::move(sorted));
+    queue.extend(events);
 
     EXPECT_EQ(queue.size(), 3u);
     EXPECT_EQ(queue.getFirstEventTime(), 50);
@@ -189,19 +190,14 @@ TEST_F(EventQueueTest, TimeTakesPrecedenceOverSeq) {
     EXPECT_EQ(queue.top()->time, 300);
 }
 
-TEST_F(EventQueueTest, ExtendFromSortedEventQueuePreservesSeqOrderForSameTime) {
-    // The des::SortedEventQueue is a binary heap: not stable for equal times.
-    // The seq tie-break must still yield creation order after extend().
+TEST_F(EventQueueTest, ExtendPreservesSeqOrderForSameTime) {
     auto e0 = makeEvent(100, des::EventType::MISSION_DISPATCH);
     auto e1 = makeEvent(100, des::EventType::SIMULATION_END);
     auto e2 = makeEvent(100, des::EventType::SIMULATION_START);
 
-    des::SortedEventQueue sorted;
-    sorted.push(e2); // scrambled push order
-    sorted.push(e0);
-    sorted.push(e1);
+    des::EventList scrambled = {e2, e0, e1};
 
-    queue.extend(std::move(sorted));
+    queue.extend(scrambled);
 
     EXPECT_EQ(queue.top(), e0); queue.pop();
     EXPECT_EQ(queue.top(), e1); queue.pop();

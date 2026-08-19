@@ -3,6 +3,7 @@
 
 #include "../util/log.h"
 #include "robot.h"
+#include "model/sim_config.h"
 
 namespace des {
 

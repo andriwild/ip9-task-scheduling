@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <QCoreApplication>
 
-#include "../src/util/db.h"
+#include "../src/io/db.h"
 
 static int argc = 1;
 static char arg0[] = "test_db";

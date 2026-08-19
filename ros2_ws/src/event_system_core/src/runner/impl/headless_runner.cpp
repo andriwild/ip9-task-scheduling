@@ -9,6 +9,7 @@
 #include <vector>
 #include "../../behaviour/bt_setup.h"
 #include "engine/event_queue.h"
+#include "model/sim_config.h"
 
 namespace des {
 

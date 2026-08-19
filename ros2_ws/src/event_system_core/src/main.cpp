@@ -5,7 +5,7 @@
 #include "runner/cli.h"
 #include "runner/impl/headless_runner.h"
 #include "runner/impl/sim_runner.h"
-#include "runner/impl/snapshot_builder.h"
+#include "io/snapshot_builder.h"
 #include "util/log.h"
 
 int main(const int argc, char* argv[]) {

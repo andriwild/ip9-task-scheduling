@@ -7,6 +7,7 @@
 #include "model/robot_state.h"
 #include "plugins/accompany/accompany_order.h"
 #include "plugins/accompany/states.h"
+#include "model/room.h"
 
 namespace des {
 

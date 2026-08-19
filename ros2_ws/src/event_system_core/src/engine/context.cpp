@@ -5,6 +5,10 @@
 #include "util/geometry.h"
 #include "util/rnd.h"
 #include "sim/scheduler.h"
+#include "model/sim_config.h"
+#include "model/person.h"
+#include "model/room.h"
+#include "util/point.h"
 
 namespace des {
 

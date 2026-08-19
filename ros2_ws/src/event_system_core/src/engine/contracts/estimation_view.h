@@ -6,6 +6,8 @@
 
 namespace des {
 
+struct SimConfig;
+
 // Read-only slice of the simulation
 struct EstimationView {
     const IWorldModel& world;

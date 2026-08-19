@@ -20,6 +20,8 @@
 #include "engine/contracts/i_world_model.h"
 #include "../../util/log.h"
 #include "../../util/types.h"
+#include "model/sim_config.h"
+#include "model/room.h"
 
 
 namespace des {

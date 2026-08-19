@@ -8,6 +8,8 @@
 
 namespace des {
 
+struct SimConfig;
+
 class Robot;
 
 class RobotState {

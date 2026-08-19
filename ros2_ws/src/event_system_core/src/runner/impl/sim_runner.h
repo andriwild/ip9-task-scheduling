@@ -13,6 +13,7 @@
 #include "../../sim/ros/path_node.h"
 #include "../runner.h"
 #include "ros_runner.h"
+#include "model/sim_config.h"
 
 namespace des {
 

@@ -17,6 +17,7 @@
 #include "engine/event/stop_drive_event.h"
 #include "model/robot.h"
 #include "plugins/accompany/events/person_accompany_event.h"
+#include "util/point.h"
 
 namespace des::metrics {
 

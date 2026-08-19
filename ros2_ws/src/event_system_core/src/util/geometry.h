@@ -12,6 +12,7 @@
 
 #include "types.h"
 #include "rnd.h"
+#include "util/point.h"
 
 namespace geom {
 

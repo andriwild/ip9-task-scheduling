@@ -17,6 +17,10 @@
 #include "util/constants.h"
 #include "../plugins/order_registry.h"
 #include "../plugins/accompany/accompany_order.h"
+#include "model/sim_config.h"
+#include "model/person.h"
+#include "model/room.h"
+#include "util/point.h"
 
 
 

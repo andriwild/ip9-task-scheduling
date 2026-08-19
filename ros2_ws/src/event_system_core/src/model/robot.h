@@ -13,8 +13,11 @@
 #include "battery.h"
 #include "sighting.h"
 #include "state_log.h"
+#include "util/point.h"
 
 namespace des {
+
+struct SimConfig;
 
 class IEvent;
 

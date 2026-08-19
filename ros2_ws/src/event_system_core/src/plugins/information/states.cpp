@@ -4,6 +4,7 @@
 #include "../../util/log.h"
 #include "engine/contracts/i_sim_context.h"
 #include "../../model/robot.h"
+#include "model/sim_config.h"
 
 namespace des {
 

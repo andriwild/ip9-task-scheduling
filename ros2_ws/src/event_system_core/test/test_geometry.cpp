@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/util/geometry.h"
+#include "../src/util/point.h"
 
 namespace {
 

@@ -16,6 +16,7 @@
 
 #include "../../util/types.h"
 #include "../i_path_planner.h"
+#include "model/room.h"
 
 namespace des {
 

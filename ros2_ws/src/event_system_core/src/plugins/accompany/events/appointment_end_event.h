@@ -6,6 +6,7 @@
 #include "engine/contracts/i_event.h"
 #include "engine/event/person_transition.h"
 #include "engine/contracts/i_sim_context.h"
+#include "model/person.h"
 
 namespace des {
 

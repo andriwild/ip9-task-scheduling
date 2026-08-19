@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "util/types.h"
+#include "model/room.h"
 
 namespace des {
 

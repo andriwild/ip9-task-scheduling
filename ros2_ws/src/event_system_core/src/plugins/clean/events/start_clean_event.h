@@ -11,6 +11,7 @@
 #include "plugins/clean/clean_order.h"
 #include "plugins/clean/clean_plugin.h"
 #include "end_clean_event.h"
+#include "model/room.h"
 
 namespace des {
 

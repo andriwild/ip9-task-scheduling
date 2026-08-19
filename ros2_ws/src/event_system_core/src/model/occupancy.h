@@ -10,6 +10,7 @@
 #include "person.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
+#include "model/sim_config.h"
 
 namespace des {
 

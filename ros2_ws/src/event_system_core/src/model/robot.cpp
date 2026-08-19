@@ -2,6 +2,8 @@
 #include "../util/log.h"
 #include "robot_state.h"
 #include "engine/contracts/i_event.h"
+#include "model/sim_config.h"
+#include "util/point.h"
 
 namespace des {
 

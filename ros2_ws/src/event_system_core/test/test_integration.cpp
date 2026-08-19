@@ -16,6 +16,10 @@
 #include "../src/plugins/accompany/states.h"
 #include "../src/plugins/order_registry.h"
 #include "util/constants.h"
+#include "../src/model/sim_config.h"
+#include "../src/model/person.h"
+#include "../src/model/room.h"
+#include "../src/util/point.h"
 
 class MockPathPlanner : public des::IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;

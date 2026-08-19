@@ -5,6 +5,7 @@
 
 #include "../../model/robot_state.h"
 #include "../../util/types.h"
+#include "model/sim_config.h"
 
 namespace des {
 

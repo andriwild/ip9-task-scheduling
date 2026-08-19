@@ -7,6 +7,7 @@
 #include "engine/event/drive_target.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
+#include "util/point.h"
 
 namespace des {
 

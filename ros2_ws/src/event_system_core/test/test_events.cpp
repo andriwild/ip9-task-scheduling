@@ -19,6 +19,10 @@
 #include "../src/plugins/accompany/events/appointment_end_event.h"
 #include "../src/plugins/accompany/events/scan_point_event.h"
 #include "util/constants.h"
+#include "../src/model/sim_config.h"
+#include "../src/model/person.h"
+#include "../src/model/room.h"
+#include "../src/util/point.h"
 
 class MockSimContext : public des::ISimContext {
 public:

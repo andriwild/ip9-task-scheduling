@@ -11,6 +11,7 @@
 #include "../../util/types.h"
 #include "event_system_msgs/msg/system_config.hpp"
 #include "event_system_msgs/srv/set_system_config.hpp"
+#include "model/sim_config.h"
 
 
 namespace des {

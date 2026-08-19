@@ -14,6 +14,9 @@
 #include <string>
 
 #include "util/types.h"
+#include "model/person.h"
+#include "model/room.h"
+#include "util/point.h"
 
 
 namespace des {

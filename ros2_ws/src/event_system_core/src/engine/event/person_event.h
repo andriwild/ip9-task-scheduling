@@ -10,6 +10,9 @@
 #include "engine/contracts/i_sim_context.h"
 #include "util/rnd.h"
 #include "util/constants.h"
+#include "model/person.h"
+#include "util/point.h"
+#include "model/sim_config.h"
 
 namespace des {
 

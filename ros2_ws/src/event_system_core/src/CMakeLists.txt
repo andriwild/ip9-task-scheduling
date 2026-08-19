@@ -63,7 +63,7 @@ list(REMOVE_ITEM DES_HEADERS
   "${DES_SRC}/sim/ros/path_node.h"
   "${DES_SRC}/runner/impl/ros_runner.h"
   "${DES_SRC}/runner/impl/sim_runner.h"
-  "${DES_SRC}/runner/impl/snapshot_builder.h"
+  "${DES_SRC}/io/snapshot_builder.h"
 )
 
 add_library(des_core STATIC ${DES_SOURCES} ${DES_HEADERS})

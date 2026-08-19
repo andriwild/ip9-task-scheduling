@@ -19,6 +19,8 @@
 #include "plugins/accompany/events/scan_point_event.h"
 #include "plugins/accompany/search_exclusion.h"
 #include "plugins/accompany/states.h"
+#include "model/room.h"
+#include "util/point.h"
 
 namespace des {
 

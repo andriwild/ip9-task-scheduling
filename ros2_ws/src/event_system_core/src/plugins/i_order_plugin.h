@@ -9,6 +9,7 @@
 #include "engine/contracts/estimation_view.h"
 #include "engine/contracts/i_sim_context.h"
 #include "engine/contracts/i_timeline_sink.h"
+#include "model/sim_config.h"
 
 namespace BT { class BehaviorTreeFactory; }
 

@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
@@ -100,5 +102,8 @@ public:
         return os;
     }
 };
+
+using PersonList  = std::vector<std::unique_ptr<Person>>;
+using PersonMap   = std::map<std::string, Person*>;
 
 }  // namespace des

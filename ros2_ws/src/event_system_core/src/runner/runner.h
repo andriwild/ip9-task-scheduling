@@ -9,7 +9,7 @@
 #include "../sim/matrix_planner.h"
 #include "../init/config_loader.h"
 #include "engine/event_queue.h"
-#include "runner/run_state.h"
+#include "util/run_state.h"
 #include "engine/contracts/i_event.h"
 #include "../util/rnd.h"
 #include "../util/types.h"
@@ -18,6 +18,9 @@
 #include "util/constants.h"
 
 #include "metrics/metrics_reporter.h"
+#include "model/sim_config.h"
+#include "model/person.h"
+#include "model/room.h"
 namespace des {
 
 const std::string CONFIG_PATH = CONFIG_DIR;

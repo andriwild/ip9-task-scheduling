@@ -11,8 +11,11 @@
 #include "engine/event.h"
 #include "../sim/i_path_planner.h"
 #include "../plugins/order_registry.h"
+#include "model/room.h"
 
 namespace des {
+
+struct SimConfig;
 
 class Scheduler {
     std::shared_ptr<SimConfig> m_simConfig;

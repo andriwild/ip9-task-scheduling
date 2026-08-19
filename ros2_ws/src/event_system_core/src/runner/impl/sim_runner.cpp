@@ -11,6 +11,7 @@
 #include "../../behaviour/bt_setup.h"
 #include "../../observer/ros.h"
 #include "event_system_msgs/srv/set_system_state.hpp"
+#include "model/sim_config.h"
 
 
 namespace des {

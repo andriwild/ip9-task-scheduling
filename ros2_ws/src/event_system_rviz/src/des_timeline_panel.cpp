@@ -8,6 +8,7 @@
 #include "event_system_msgs/msg/timeline_reset.hpp"
 #include "event_system_msgs/msg/timeline_state_change.hpp"
 
+#include "../../event_system_core/src/util/constants.h"
 
 namespace des_timeline_panel {
 using TimelineEvent = event_system_msgs::msg::TimelineEvent;

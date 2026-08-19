@@ -47,9 +47,9 @@ TEST(GreedyValue, IdenticalNodesAtIdenticalDistanceTie) {
 }
 
 TEST(TaskCandidates, AnchorsAndStationsAreExcluded) {
-    EXPECT_EQ(des::op_solver::detail::taskCandidates(instanceWithStation()), (std::vector<int>{2}));
+    EXPECT_EQ(des::op_solver::taskCandidates(instanceWithStation()), (std::vector<int>{2}));
 }
 
 TEST(TaskCandidates, EveryTaskNodeIsListed) {
-    EXPECT_EQ(des::op_solver::detail::taskCandidates(op_fixtures::lineInstance(90.0f)), (std::vector<int>{2, 3, 4}));
+    EXPECT_EQ(des::op_solver::taskCandidates(op_fixtures::lineInstance(90.0f)), (std::vector<int>{2, 3, 4}));
 }

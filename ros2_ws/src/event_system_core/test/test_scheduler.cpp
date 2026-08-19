@@ -7,6 +7,9 @@
 #include "../src/plugins/order_registry.h"
 #include "../src/plugins/accompany/accompany_plugin.h"
 #include "../src/plugins/accompany/accompany_order.h"
+#include "../src/model/sim_config.h"
+#include "../src/model/person.h"
+#include "../src/model/room.h"
 
 class MockPathPlanner : public des::IPathPlanner {
     std::map<std::pair<std::string, std::string>, double> m_distances;

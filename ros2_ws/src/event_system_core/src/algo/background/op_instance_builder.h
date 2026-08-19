@@ -12,6 +12,7 @@
 #include "model/order.h"
 #include "../../plugins/order_registry.h"
 #include "../../util/log.h"
+#include "model/sim_config.h"
 
 namespace des {
 
