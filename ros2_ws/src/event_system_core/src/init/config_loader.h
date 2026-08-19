@@ -288,6 +288,7 @@ public:
             config.searchRouteStrategy = searchRouteStrategyFromString(j.value("search_route_strategy", "cost_aware"));
             config.searchPriorWeight = j.value("search_prior_weight", 4.0);
             config.searchWorkplacePrior = j.value("search_workplace_prior", 0.6);
+            config.searchDropOffAtFind = j.value("search_drop_off_at_find", false);
             if (j.contains("search_true_distribution")) {
                 const auto& shares = j.at("search_true_distribution");
                 config.searchTrueDistribution.clear();
@@ -396,6 +397,7 @@ public:
         j["search_route_strategy"]          = searchRouteStrategyToString(config.searchRouteStrategy);
         j["search_prior_weight"]            = roundValue(config.searchPriorWeight);
         j["search_workplace_prior"]         = roundValue(config.searchWorkplacePrior);
+        j["search_drop_off_at_find"]        = config.searchDropOffAtFind;
         nlohmann::json trueShares;
         trueShares["workplace"] = roundValue(config.searchTrueWorkplaceShare);
         for (const auto& [type, share] : config.searchTrueDistribution) {

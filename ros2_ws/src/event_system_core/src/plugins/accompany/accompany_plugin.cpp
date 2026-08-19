@@ -266,11 +266,11 @@ struct MeetingEstimate {
     }
 };
 
-MeetingEstimate meetingViaWorkplace(const Scheduler& sched, const std::string& workplace, const std::string& startPos, const std::string& goalPos) {
+MeetingEstimate meetingViaWorkplace(const Scheduler& sched, const std::string& workplace, const std::string& startPos, const std::string& goalPos, const bool dropOffAtFind) {
     const auto& cfg            = accompanyConfig();
     const double searchTime    = sched.robotDriveTime(startPos, workplace);
     const double scanTime      = sched.getScanTime(workplace);
-    const double accompanyTime = sched.getDriveTime(workplace, goalPos, cfg.accompanySpeed);
+    const double accompanyTime = dropOffAtFind ? 0.0 : sched.getDriveTime(workplace, goalPos, cfg.accompanySpeed);
     return { searchTime + scanTime + accompanyTime, 2.0 * cfg.conversationDurationMean };
 }
 }
@@ -285,7 +285,8 @@ bool AccompanyOrderPlugin::isFeasible(const IOrder& order, const ISimContext& co
 
     const auto robotLocation     = context.getRobot()->getLocation();
     const auto person            = context.getPersonByName(a.personName);
-    const double missionDuration = meetingViaWorkplace(context.getScheduler(), person->workplace, robotLocation, a.roomName).total();
+    const double missionDuration = meetingViaWorkplace(context.getScheduler(), person->workplace, robotLocation, a.roomName,
+                                                       context.getConfig()->searchDropOffAtFind).total();
 
     const int slack = static_cast<int>(std::floor(order.deadline.value() - missionDuration - context.getTime()));
 
@@ -340,10 +341,12 @@ MissionLegs missionLegs(const AccompanyOrder& a, const ISimContext& context, con
         legs.searchWh  = legs.searchSec * cfg.energyConsumptionDrive / 3600.0;
     }
     // Where the person is actually found is unknown while estimating, so the
-    // accompany leg is measured from the workplace.
-    legs.accompanySec = sched.getDriveTime(person->workplace, a.roomName, acfg.accompanySpeed);
+    // accompany leg is measured from the workplace. With a drop-off at the find
+    // location there is no accompany leg and the robot returns from the workplace.
+    const bool dropOffAtFind = cfg.searchDropOffAtFind;
+    legs.accompanySec = dropOffAtFind ? 0.0 : sched.getDriveTime(person->workplace, a.roomName, acfg.accompanySpeed);
     legs.talkSec      = 2.0 * acfg.conversationDurationMean;
-    legs.driveBackSec = sched.robotDriveTime(a.roomName, cfg.dockLocation);
+    legs.driveBackSec = sched.robotDriveTime(dropOffAtFind ? person->workplace : a.roomName, cfg.dockLocation);
     return legs;
 }
 

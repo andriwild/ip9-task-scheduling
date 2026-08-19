@@ -179,6 +179,8 @@ struct SimConfig {
     SearchRouteStrategy searchRouteStrategy = SearchRouteStrategy::COST_AWARE;
     double searchPriorWeight = 4.0;
     double searchWorkplacePrior = 0.6;
+    // for the paper: accompany ends with the find of the person
+    bool searchDropOffAtFind = false;
     double searchTrueWorkplaceShare = 0.65;
     std::map<RoomType, double> searchTrueDistribution = {
         { RoomType::OFFICE,  0.14 },

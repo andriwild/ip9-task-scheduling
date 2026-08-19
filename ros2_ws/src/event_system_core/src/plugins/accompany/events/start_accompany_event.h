@@ -24,7 +24,11 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        const auto& accompany = static_cast<const AccompanyOrder&>(*m_order);
+        auto& accompany = static_cast<AccompanyOrder&>(*m_order);
+        // For the paper: The robot hands the person over on the spot instead of walking them  to the appointment room.
+        if (ctx.getConfig()->searchDropOffAtFind) {
+            accompany.roomName = ctx.getRobot()->getLocation();
+        }
         const auto& personName = accompany.personName;
         if (ctx.hasEmployee(personName)) {
             auto person = ctx.getPersonByName(personName);

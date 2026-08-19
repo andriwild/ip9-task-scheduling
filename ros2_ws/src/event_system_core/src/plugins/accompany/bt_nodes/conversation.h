@@ -19,6 +19,7 @@
 #include "plugins/accompany/search_exclusion.h"
 #include "plugins/accompany/states.h"
 #include "plugins/accompany/events/start_accompany_event.h"
+#include "sim/scheduler.h"
 #include "util/constants.h"
 #include "util/rnd.h"
 
@@ -122,6 +123,18 @@ public:
             const auto draw = static_cast<size_t>(rnd::uni(ctx->robotRng(), 0.0, static_cast<double>(candidates.size())));
             hint = candidates[std::min(draw, candidates.size() - 1)];
             wrong = true;
+        }
+
+        const auto& sched = ctx->getScheduler();
+        const double toAppointment = ctx->getConfig()->searchDropOffAtFind
+                                   ? 0.0
+                                   : sched.robotDriveTime(hint, order.roomName);
+        const double reach = sched.robotDriveTime(ctx->getRobot()->getLocation(), hint)
+                           + sched.getScanTime(hint)
+                           + toAppointment;
+        if (order.deadline.has_value() && ctx->getTime() + reach > *order.deadline) {
+            DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s does not fit the remaining budget for %s", hint.c_str(), order.personName.c_str());
+            return BT::NodeStatus::FAILURE;
         }
 
         std::erase(order.remainingSearch, hint);
