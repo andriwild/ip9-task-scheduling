@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <iomanip>
 #include <optional>
 #include <sstream>
@@ -163,6 +164,7 @@ inline std::string chargeTriggerToString(const ChargeTrigger trigger) {
 struct ChargeSession {
     int time;
     ChargeTrigger trigger;
+    double soc;
 };
 
 // TODO: remove optional and add assert

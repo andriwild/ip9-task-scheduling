@@ -136,6 +136,37 @@ public:
 
         auto fullCycles = ctx.getRobot()->getDischargedAh() / ctx.getRobot()->batteryStats().capacity;
 
+        const auto& sessions = ctx.getRobot()->getChargeSessions();
+        const int chargeStarts = static_cast<int>(sessions.size());
+        const double minSoc = std::ranges::fold_left(
+            sessions | transform([](const ChargeSession& s) { return s.soc; }),
+            ctx.getRobot()->batteryStats().soc,
+            [](const double a, const double b) { return std::min(a, b); });
+
+        auto chargesWith = [&sessions](const ChargeTrigger trigger) {
+            return std::ranges::count_if(sessions, [trigger](const ChargeSession& s) {
+                return s.trigger == trigger;
+            });
+        };
+
+        int onTime = 0;
+        int late = 0;
+        long lateSum = 0;
+        for (const auto& e : scheduled) {
+            const auto& order = e->getOrder();
+            if (order->state != OrderState::COMPLETED || !order->deadline.has_value()) {
+                continue;
+            }
+            const int delta = e->time - *order->deadline;
+            if (delta > 0) {
+                ++late;
+                lateSum += delta;
+            } else {
+                ++onTime;
+            }
+        }
+        const double lateMean = late > 0 ? static_cast<double>(lateSum) / late : 0.0;
+
         std::string daily;
         for (auto day : scheduled | chunk_by(sameDay)) {
             const int dayIndex = day.front()->time / SECONDS_PER_DAY;
@@ -152,15 +183,22 @@ public:
         write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
 
         const std::string run = std::format(
-            "{},{},{},{},{},{},{},{:g},{},{}\n",
+            "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g}\n",
             m_roundSeed, m_scenario,
             secondsIn("idle"), secondsIn("search"), secondsIn("accompany"),
             secondsIn("charging"), secondsIn("conversate"),
             ctx.getRobot()->getOdometer(),
             std::ranges::distance(scheduled),
-            fullCycles
-            );
-        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles\n", run);
+            fullCycles,
+            chargeStarts,
+            minSoc,
+            chargesWith(ChargeTrigger::PLANNED),
+            chargesWith(ChargeTrigger::REACTIVE),
+            chargesWith(ChargeTrigger::OPPORTUNISTIC),
+            onTime,
+            late,
+            lateMean);
+        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles,charge_starts,min_soc,charge_planned,charge_reactive,charge_opportunistic,on_time,late,late_mean_s\n", run);
 
         if (!m_debugDir.empty()) {
             const std::string dir = m_debugDir.back() == '/' ? m_debugDir : m_debugDir + "/";

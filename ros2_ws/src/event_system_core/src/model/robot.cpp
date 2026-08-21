@@ -65,7 +65,7 @@ double Robot::getOdometer() const {
 }
 
 void Robot::beginChargeSession(const int time, const ChargeTrigger trigger) {
-    m_chargeSessions.push_back({time, trigger});
+    m_chargeSessions.push_back({time, trigger, m_bat->getStats().soc});
 }
 
 const std::vector<ChargeSession>& Robot::getChargeSessions() const {
