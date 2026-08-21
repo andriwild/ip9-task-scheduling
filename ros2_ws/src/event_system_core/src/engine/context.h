@@ -146,7 +146,7 @@ public:
     void notifyRobotStateChanged() const;
     void notifyBatteryChanged() const override;
     void notifyEvent(const IEvent& event) const override;
-    void notifyChargeStarted() const override;
+    void notifyChargeStarted(ChargeTrigger trigger) const override;
     void robotMoved(const std::string& location, double distance = 0) const override;
     void robotMovedTo(const Point& position, double distance = 0.0) const override;
 

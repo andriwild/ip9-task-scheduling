@@ -31,7 +31,7 @@ class Robot {
 
     SightingLog m_sightings;
     StateLog m_stateLog;
-    std::vector<int> m_chargeSessions;
+    std::vector<ChargeSession> m_chargeSessions;
     int m_now = 0;
     double m_odometer = 0.0;
 
@@ -81,8 +81,8 @@ public:
     void addDistance(double distance);
     double getOdometer() const;
 
-    void beginChargeSession(int time);
-    const std::vector<int>& getChargeSessions() const;
+    void beginChargeSession(int time, ChargeTrigger trigger);
+    const std::vector<ChargeSession>& getChargeSessions() const;
     double getDischargedAh() const;
 
     bool isDriving() const;

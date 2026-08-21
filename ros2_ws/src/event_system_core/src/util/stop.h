@@ -1,7 +1,6 @@
 /*
  * Ctrl-C handling for the simulation loop.
- * Replaces rclcpp::ok() as the loop condition so the loop
- * does not depend on ROS being initialized.
+ * Replaces rclcpp::ok() as the loop condition so the loop does not depend on ROS being initialized.
  *
  */
 

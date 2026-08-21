@@ -145,6 +145,27 @@ enum class ConversationKind {
     ASK_DIRECTIONS
 };
 
+enum class ChargeTrigger {
+    OPPORTUNISTIC,
+    PLANNED,
+    REACTIVE
+};
+
+inline std::string chargeTriggerToString(const ChargeTrigger trigger) {
+    switch (trigger) {
+        case ChargeTrigger::OPPORTUNISTIC:  return "Opportunistic";
+        case ChargeTrigger::PLANNED:        return "Planned";
+        case ChargeTrigger::REACTIVE:       return "Reactive";
+    }
+    assert(false);
+}
+
+struct ChargeSession {
+    int time;
+    ChargeTrigger trigger;
+};
+
+// TODO: remove optional and add assert
 inline std::optional<ConversationKind> conversationKindFromString(const std::string& value) {
     if (value == "found_person") {
         return ConversationKind::FOUND_PERSON;

@@ -169,6 +169,7 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
 
+        // TODO: check for refactoring
         ctx->getRobot()->m_opportunisticCharge = !ctx->getRobot()->isBatteryLow();
 
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
@@ -183,7 +184,8 @@ public:
         }
 
         ctx->getRobot()->m_batteryFullEventScheduled = true;
-        ctx->notifyChargeStarted();
+        auto trigger = ctx->getRobot()->isBatteryLow() ? ChargeTrigger::REACTIVE : ChargeTrigger::OPPORTUNISTIC;
+        ctx->notifyChargeStarted(trigger);
         DES_LOG_DEBUG("des.bt.charge", "Start Charging, time to full: %.1fs (opportunistic: %d)", timeToFull, ctx->getRobot()->m_opportunisticCharge);
         return BT::NodeStatus::SUCCESS;
     }

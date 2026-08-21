@@ -5,7 +5,6 @@
 
 namespace des {
 
-// TODO: move to types and delete file
 struct Point {
     double m_x, m_y, m_yaw;
     Point() = default;

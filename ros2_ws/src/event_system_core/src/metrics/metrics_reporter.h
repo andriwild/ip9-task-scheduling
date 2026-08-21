@@ -53,9 +53,6 @@ public:
         using std::views::chunk_by;
 
         const auto& states = ctx.getRobot()->getStateLog().entries();
-        // TODO: roboter knowledge vs. makov
-        ctx.getRobot()->getSightings();
-
         auto secondsIn = [&states](const std::string& stateName) {
             return std::ranges::fold_left(
                 states | filter([&](const StateInterval& s) { return s.name == stateName; })
@@ -137,6 +134,8 @@ public:
             std::cout << rows;
         };
 
+        auto fullCycles = ctx.getRobot()->getDischargedAh() / ctx.getRobot()->batteryStats().capacity;
+
         std::string daily;
         for (auto day : scheduled | chunk_by(sameDay)) {
             const int dayIndex = day.front()->time / SECONDS_PER_DAY;
@@ -153,13 +152,15 @@ public:
         write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
 
         const std::string run = std::format(
-            "{},{},{},{},{},{},{},{:g},{}\n",
+            "{},{},{},{},{},{},{},{:g},{},{}\n",
             m_roundSeed, m_scenario,
             secondsIn("idle"), secondsIn("search"), secondsIn("accompany"),
             secondsIn("charging"), secondsIn("conversate"),
             ctx.getRobot()->getOdometer(),
-            std::ranges::distance(scheduled));
-        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions\n", run);
+            std::ranges::distance(scheduled),
+            fullCycles
+            );
+        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles\n", run);
 
         if (!m_debugDir.empty()) {
             const std::string dir = m_debugDir.back() == '/' ? m_debugDir : m_debugDir + "/";

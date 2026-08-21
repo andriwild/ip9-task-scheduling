@@ -64,11 +64,11 @@ double Robot::getOdometer() const {
     return m_odometer;
 }
 
-void Robot::beginChargeSession(const int time) {
-    m_chargeSessions.push_back(time);
+void Robot::beginChargeSession(const int time, const ChargeTrigger trigger) {
+    m_chargeSessions.push_back({time, trigger});
 }
 
-const std::vector<int>& Robot::getChargeSessions() const {
+const std::vector<ChargeSession>& Robot::getChargeSessions() const {
     return m_chargeSessions;
 }
 

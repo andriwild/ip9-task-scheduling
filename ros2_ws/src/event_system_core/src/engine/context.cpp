@@ -362,6 +362,7 @@ void SimulationContext::notifyRobotStateChanged() const {
     m_eventBus.notifyStateChanged(m_currentTime, state->getType(), state->getName(), m_robot->batteryStats());
 }
 
+// TODO: obsolet forwarding
 void SimulationContext::notifyBatteryChanged() const {
     notifyRobotStateChanged();
 }
@@ -370,8 +371,8 @@ void SimulationContext::notifyEvent(const IEvent& event) const {
     m_eventBus.notifyEvent(event.time, event.getType(), event.getName(), m_robot->isDriving(), m_robot->isCharging(), event.getColor(), event.getMissionId());
 }
 
-void SimulationContext::notifyChargeStarted() const {
-    m_robot->beginChargeSession(m_currentTime);
+void SimulationContext::notifyChargeStarted(const ChargeTrigger trigger) const {
+    m_robot->beginChargeSession(m_currentTime, trigger);
     m_eventBus.notifyEvent(m_currentTime, EventType::CHARGE_MISSION_START, "Start Charging", m_robot->isDriving(), m_robot->isCharging(), "", -1);
 }
 
