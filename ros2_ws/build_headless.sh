@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+#
 # Builds the ROS-free simulator into build-headless/.
 #
 #   ./build_headless.sh          incremental

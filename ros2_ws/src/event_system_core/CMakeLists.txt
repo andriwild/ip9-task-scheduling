@@ -1,3 +1,6 @@
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+
 cmake_minimum_required(VERSION 3.8)
 project(event_system_core)
 set(CMAKE_CXX_STANDARD 23)

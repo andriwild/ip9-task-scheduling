@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+#
 set -euo pipefail
 
 RADIUS="${1:?usage: ./build_tours.sh <radius>}"

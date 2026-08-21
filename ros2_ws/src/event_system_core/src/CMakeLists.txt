@@ -1,3 +1,6 @@
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+#
 # The simulation itself, free of ROS. Buildable on its own:
 #
 #   cmake -S src/event_system_core/src -B build-headless

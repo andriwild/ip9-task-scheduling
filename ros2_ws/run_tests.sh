@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+
 set -eo pipefail
 
 source /opt/ros/jazzy/setup.bash

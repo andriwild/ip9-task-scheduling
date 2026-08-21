@@ -59,7 +59,7 @@
     "person_gives_directions_probability": 0.0,
     "person_gives_wrong_directions_probability": 0.0,
     "person_identification_range": 2.0,
-    "person_recognition_range": 2.0,
+    "person_recognition_range": 6,
     "person_speed_female": 1.27,
     "person_speed_male": 1.41,
     "replan_background_on_interrupt": true,
@@ -85,6 +85,6 @@
     "sim_duration": 35640,
     "sim_start_time": 18000,
     "taper_fraction": 0.6,
-    "timeBuffer": 1000.0,
+    "timeBuffer": 480.0,
     "use_distance_matrix": true
 }

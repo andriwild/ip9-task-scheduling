@@ -1,5 +1,8 @@
 #!/bin/zsh
 #
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+#
 #   ./build_snapshot.sh          full rebuild, recomputes every distance with Nav2 (planner.sh must run)
 #   ./build_snapshot.sh rooms    rooms, types and footprints from the DB, distance matrix kept
 #

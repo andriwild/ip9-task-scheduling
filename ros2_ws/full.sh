@@ -1,4 +1,8 @@
 #!/bin/zsh
+
+# BEGIN AI-assisted: generated with Claude Code (Anthropic),
+# reviewed and adapted by the author.
+
 source /opt/ros/jazzy/setup.zsh
 WS_DIR=${0:A:h}
 source $WS_DIR/install/setup.zsh

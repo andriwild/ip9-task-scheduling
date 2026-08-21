@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+
 """Plot simulation metrics from the CSV produced by the headless CsvObserver.
+Generated with Claude Code (Anthropic), then reviewed and adapted by the author. See the index of auxiliary tools.
 
 Each CSV row is one simulation (config parameters + outcome metrics). This
 script aggregates rows by scenario and the `always_charge_at_dock` flag (mean

@@ -1,3 +1,5 @@
+// Generated with Claude Code (Anthropic), then reviewed and adapted by the author. See the index of auxiliary tools.
+
 #include <event_system_rviz/des_swimlane_panel.hpp>
 
 #include <QBrush>
