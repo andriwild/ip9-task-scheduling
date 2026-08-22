@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -21,6 +22,7 @@ struct SvgStyle {
     std::string goal    = "#EDE8F6";
     std::string goalEdge= "#8E79BC";
     std::string tour    = "#3C6E9C";
+    std::string line    = "#8A8A8A";
     std::string text    = "#2A2A2A";
     std::string muted   = "#7A7F86";
 };
@@ -30,20 +32,22 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
                      const std::vector<int>& route,
                      const des::OpParams& params,
                      const std::vector<int>& stations,
-                     const std::string& file) {
+                     const std::string& file,
+                     const std::vector<char>& seiten = {}) {
     const SvgStyle st;
     float minX = pos[0].x, maxX = pos[0].x, minY = pos[0].y, maxY = pos[0].y;
     for (const auto& p : pos) {
         minX = std::min(minX, p.x); maxX = std::max(maxX, p.x);
         minY = std::min(minY, p.y); maxY = std::max(maxY, p.y);
     }
-    const float scale  = 26.0f;
-    const float pad    = 96.0f;
+    const float scale  = 11.0f;
+    const float pad    = 150.0f;   // linker und oberer Rand
+    const float padR   = 270.0f;   // rechts, fuer die Beschriftungen
     const float legendH = 56.0f;
     auto sx = [&](float x) { return pad + (x - minX) * scale; };
-    auto sy = [&](float y) { return pad + (y - minY) * scale; };
-    const float width  = 2 * pad + (maxX - minX) * scale;
-    const float height = 2 * pad + (maxY - minY) * scale + legendH;
+    auto sy = [&](float y) { return pad + (maxY - y) * scale; };
+    const float width  = pad + padR + (maxX - minX) * scale;
+    const float height = pad + 60.0f + (maxY - minY) * scale + legendH;   // unten knapper als oben
 
     const float cx = (minX + maxX) / 2.0f;
 
@@ -59,7 +63,7 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
         if (idx == params.startNodeId || idx == params.endNodeId || isStation(idx)) {
             return 11.0f;
         }
-        return 7.0f + nodes[i].reward * 1.9f;
+        return 9.0f + nodes[i].reward * 110.0f;
     };
 
     std::ofstream f(file);
@@ -71,7 +75,7 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
         const auto& a = pos[tour[i]];
         const auto& b = pos[tour[i + 1]];
         f << "<line x1='" << sx(a.x) << "' y1='" << sy(a.y) << "' x2='" << sx(b.x) << "' y2='" << sy(b.y)
-          << "' stroke='" << st.tour << "' stroke-width='2.6' stroke-linecap='round'/>\n";
+          << "' stroke='" << st.line << "' stroke-width='2.6' stroke-linecap='round'/>\n";
     }
 
     for (std::size_t i = 0; i < nodes.size(); ++i) {
@@ -90,12 +94,19 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
               << "' fill='" << fill << "' stroke='" << edge << "' stroke-width='1.8'/>\n";
         }
 
-        const bool left = pos[i].x > cx;
-        const float tx  = left ? sx(pos[i].x) - r - 7 : sx(pos[i].x) + r + 7;
-        f << "<text x='" << tx << "' y='" << sy(pos[i].y) + 4 << "' font-size='13' fill='" << st.text
-          << "' text-anchor='" << (left ? "end" : "start") << "'>" << nodes[i].name;
+        const char seite = i < seiten.size() ? seiten[i] : (pos[i].x > cx ? 'l' : 'r');
+        float tx = sx(pos[i].x) + r + 9, ty = sy(pos[i].y) + 5;
+        std::string anchor = "start";
+        if (seite == 'l') { tx = sx(pos[i].x) - r - 9; anchor = "end"; }
+        else if (seite == 'd') { tx = sx(pos[i].x); ty = sy(pos[i].y) + r + 22; anchor = "middle"; }
+        f << "<text x='" << tx << "' y='" << ty << "' font-size='21' fill='" << st.text
+          << "' text-anchor='" << anchor << "'>" << nodes[i].name;
         if (nodes[i].reward > 0.0f) {
-            f << " <tspan fill='" << st.muted << "'>r=" << nodes[i].reward << "</tspan>";
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%.2f", nodes[i].reward);
+            f << "<tspan fill='" << st.muted << "'>&#160;&#160;<tspan font-style='italic'>r</tspan>"
+              << "<tspan font-size='16' dy='4'>i</tspan><tspan dy='-4'>&#160;=&#160;" << buf
+              << "</tspan></tspan>";
         }
         f << "</text>\n";
     }
@@ -103,8 +114,8 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
     for (std::size_t step = 0; step < tour.size(); ++step) {
         const auto& p = pos[tour[step]];
         const float r = radius(tour[step]);
-        f << "<circle cx='" << sx(p.x) << "' cy='" << sy(p.y) - r - 11 << "' r='9' fill='" << st.tour << "'/>\n";
-        f << "<text x='" << sx(p.x) << "' y='" << sy(p.y) - r - 7 << "' font-size='11' fill='#FFFFFF'"
+        f << "<circle cx='" << sx(p.x) << "' cy='" << sy(p.y) - r - 11 << "' r='12' fill='" << st.tour << "'/>\n";
+        f << "<text x='" << sx(p.x) << "' y='" << sy(p.y) - r - 6 << "' font-size='18' fill='#FFFFFF'"
           << " text-anchor='middle'>" << step << "</text>\n";
     }
 
@@ -125,9 +136,9 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
             f << "<circle cx='" << lx + 8 << "' cy='" << ly - 4 << "' r='8' fill='" << it.fill
               << "' stroke='" << it.edge << "' stroke-width='1.8'/>\n";
         }
-        f << "<text x='" << lx + 22 << "' y='" << ly << "' font-size='13' fill='" << st.text << "'>"
+        f << "<text x='" << lx + 22 << "' y='" << ly << "' font-size='21' fill='" << st.text << "'>"
           << it.label << "</text>\n";
-        lx += 22.0f + it.label.size() * 7.1f + 26.0f;
+        lx += 22.0f + it.label.size() * 10.0f + 26.0f;
     }
 
     f << "</svg>\n";

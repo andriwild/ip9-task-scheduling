@@ -118,7 +118,7 @@ public:
     }
 
     void notifyBatteryChanged() const override {}
-    void notifyChargeStarted() const override {}
+    void notifyChargeStarted(des::ChargeTrigger /*trigger*/) const override {}
 
     bool pushInterrupt(const des::OrderPtr& /*order*/) override { return true; }
     void popInterrupt(const des::OrderPtr& /*completedOrder*/) override {}
@@ -198,6 +198,9 @@ public:
     std::shared_ptr<des::SimConfig> getConfig() const override { return simConfig; }
     std::mt19937& worldRng() const override { return m_rng; }
     std::mt19937& robotRng() const override { return m_robotRng; }
+    unsigned int activeSeed() const override {
+        return simConfig->seed;
+    }
 
     std::string getPersonLocation(const std::string& name) const override {
         return personLocations.at(name);
