@@ -19,6 +19,10 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
+        if (ctx.getRobot()->getStateType() != RobotStateType::CHARGING) {
+            ctx.getRobot()->m_batteryFullEventScheduled = false;
+            return;
+        }
         ctx.getRobot()->completeCharge();
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.getRobot()->m_batteryFullEventScheduled = false;
