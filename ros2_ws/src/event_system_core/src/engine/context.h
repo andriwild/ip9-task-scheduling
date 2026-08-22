@@ -88,7 +88,7 @@ public:
     std::mt19937& robotRng() const override;
     void reseed(unsigned int seed);
     void reseedPersons();
-    unsigned int activeSeed() const;
+    unsigned int activeSeed() const override;
 
     void addMissionId(IEvent& event) const;
     bool personInSight(const std::string& name, double range) const;
