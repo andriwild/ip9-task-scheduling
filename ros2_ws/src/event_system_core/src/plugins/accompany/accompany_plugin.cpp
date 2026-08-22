@@ -124,7 +124,7 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const int deadline      = a.deadline.value_or(now);
 
     const OpBudgets budgets {
-        .timeBudget      = static_cast<float>(std::max(0, deadline - now)),
+        .timeBudget      = static_cast<float>(std::min(std::max(0, deadline - now), static_cast<int>(cfg->timeBuffer))),
         .energyBudget    = static_cast<float>(std::max(spendableWh, kMinEnergyBudgetWh)),
         .initialSoc      = static_cast<float>(currentWh),
         .endSocMin       = static_cast<float>(reserveWh),
