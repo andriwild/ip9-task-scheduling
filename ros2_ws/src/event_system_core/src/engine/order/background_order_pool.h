@@ -81,7 +81,7 @@ inline MissionReserve computeMissionReserve(
             const double gapSec = orders[i + 1]->dispatchTime - endTime[i];
             creditWh = std::max(0.0, gapSec) * netChargeW / 3600.0;
         }
-        requiredWh = std::max(socThreshold, requiredWh + energyWh[i] - creditWh);
+        requiredWh = std::max(socThreshold + energyWh[i], requiredWh + energyWh[i] - creditWh);
     }
 
     return { std::min(capacityWh, requiredWh), endLoc, orders.size() };
@@ -199,7 +199,7 @@ public:
         }
 
         // index based route (tour)
-        const int graspSeed = static_cast<int>(ctx.getConfig()->seed + GRASP_SEED_OFFSET);
+        const int graspSeed = static_cast<int>(ctx.activeSeed() + GRASP_SEED_OFFSET);
         const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
 
         DES_LOG_DEBUG("des.mission.background", "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
