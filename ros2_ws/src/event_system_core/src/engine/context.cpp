@@ -94,12 +94,11 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
     const bool sameState = current
         && current->getType() == newType
         && current->getName() == newState->getName();
-    const bool leavingOpportunisticCharge = current
+    const bool leavingCharge = current
         && current->getType() == RobotStateType::CHARGING
-        && newType != RobotStateType::CHARGING
-        && m_robot->m_opportunisticCharge;
+        && newType != RobotStateType::CHARGING;
     m_robot->changeState(std::move(newState), m_currentTime);
-    if (leavingOpportunisticCharge) {
+    if (leavingCharge) {
         m_queue.cancelByType(EventType::BATTERY_FULL);
         m_queue.cancelByType(EventType::CHARGE_PHASE_TRANSITION);
         m_robot->m_batteryFullEventScheduled = false;
