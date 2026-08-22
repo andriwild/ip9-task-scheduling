@@ -73,6 +73,9 @@ struct SimConfig {
     double personDirectionsWrongProbability = 0.0;
     EnergyReserveStrategy energyReserveStrategy = EnergyReserveStrategy::HORIZON;
     int energyReserveHorizon = 4 * 3600;
+    bool backgroundCostAware = true;
+    int graspIterations = 200;
+    double graspAlpha = 0.3;
     unsigned int seed = 42;
     int rounds = 1;
     RoundMode roundMode = RoundMode::REPLICATION;

@@ -200,7 +200,8 @@ public:
 
         // index based route (tour)
         const int graspSeed = static_cast<int>(ctx.activeSeed() + GRASP_SEED_OFFSET);
-        const auto route = op_solver::grasp(problem->instance, kGraspIterations, kGraspAlpha, graspSeed);
+        const auto route = op_solver::grasp(problem->instance, cfg->graspIterations,
+                                            static_cast<float>(cfg->graspAlpha), graspSeed);
 
         DES_LOG_DEBUG("des.mission.background", "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 
