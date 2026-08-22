@@ -120,6 +120,7 @@ inline std::optional<OpProblem> buildMissionInstance(
         .cvEnergy        = budgets.cvEnergy,
         .driveSpeed      = static_cast<float>(cfg.robotSpeed),
         .driveEnergy     = driveEnergyPerMeter,
+        .costAware       = cfg.backgroundCostAware,
     };
 
     return OpProblem{

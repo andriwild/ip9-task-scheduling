@@ -76,6 +76,17 @@ public:
             });
         };
 
+        auto countType = [&protocol](const std::string& type) {
+            return std::ranges::count_if(protocol, [&type](const auto& e) {
+                const auto& order = e->getOrder();
+                return e->getType() == EventType::MISSION_COMPLETE
+                    && order
+                    && order->execution == ExecutionMode::BACKGROUND
+                    && order->state == OrderState::COMPLETED
+                    && order->type == type;
+            });
+        };
+
         auto inState = [](const OrderState state) {
             return [state](const auto& e) { return e->getOrder()->state == state; };
         };
@@ -195,7 +206,7 @@ public:
         write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
 
         const std::string run = std::format(
-            "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g},{},{},{},{}\n",
+            "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g},{},{},{},{},{},{}\n",
             m_roundSeed, m_scenario,
             secondsIn("idle"), secondsIn("search"), secondsIn("accompany"),
             secondsIn("charging"), secondsIn("conversate"),
@@ -213,8 +224,10 @@ public:
             countIn(ExecutionMode::SCHEDULED, OrderState::COMPLETED),
             countIn(ExecutionMode::BACKGROUND, OrderState::COMPLETED),
             countIn(ExecutionMode::INTERRUPT, OrderState::COMPLETED),
-            countIn(ExecutionMode::INTERRUPT, OrderState::REJECTED));
-        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles,charge_starts,min_soc,charge_planned,charge_reactive,charge_opportunistic,on_time,late,late_mean_s,done_scheduled,done_background,done_interrupt,rejected_interrupt\n", run);
+            countIn(ExecutionMode::INTERRUPT, OrderState::REJECTED),
+            countType("clean"),
+            countType("data_acquisition"));
+        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles,charge_starts,min_soc,charge_planned,charge_reactive,charge_opportunistic,on_time,late,late_mean_s,done_scheduled,done_background,done_interrupt,rejected_interrupt,done_clean,done_acquire\n", run);
 
         if (!m_debugDir.empty()) {
             const std::string dir = m_debugDir.back() == '/' ? m_debugDir : m_debugDir + "/";
