@@ -172,41 +172,58 @@ public:
             });
         };
 
-        int onTime = 0;
-        int late = 0;
-        long lateSum = 0;
-        long earlySum = 0;
-        for (const auto& e : scheduled) {
-            const auto& order = e->getOrder();
-            if (order->state != OrderState::COMPLETED || !order->deadline.has_value()) {
-                continue;
+        struct Punctuality {
+            int onTime = 0;
+            int late = 0;
+            double earlyMean = 0.0;
+            double lateMean = 0.0;
+        };
+        auto punctuality = [](auto&& events) {
+            Punctuality p;
+            long earlySum = 0;
+            long lateSum = 0;
+            for (const auto& e : events) {
+                const auto& order = e->getOrder();
+                if (order->state != OrderState::COMPLETED || !order->deadline.has_value()) {
+                    continue;
+                }
+                const int delta = e->time - *order->deadline;
+                if (delta > 0) {
+                    ++p.late;
+                    lateSum += delta;
+                } else {
+                    ++p.onTime;
+                    earlySum -= delta;
+                }
             }
-            const int delta = e->time - *order->deadline;
-            if (delta > 0) {
-                ++late;
-                lateSum += delta;
-            } else {
-                ++onTime;
-                earlySum -= delta;
-            }
-        }
-        const double lateMean = late > 0 ? static_cast<double>(lateSum) / late : 0.0;
-        const double earlyMean = onTime > 0 ? static_cast<double>(earlySum) / onTime : 0.0;
+            p.lateMean = p.late > 0 ? static_cast<double>(lateSum) / p.late : 0.0;
+            p.earlyMean = p.onTime > 0 ? static_cast<double>(earlySum) / p.onTime : 0.0;
+            return p;
+        };
+
+        const auto runPunctuality = punctuality(scheduled);
+        const int onTime = runPunctuality.onTime;
+        const int late = runPunctuality.late;
+        const double lateMean = runPunctuality.lateMean;
+        const double earlyMean = runPunctuality.earlyMean;
 
         std::string daily;
         for (auto day : scheduled | chunk_by(sameDay)) {
             const int dayIndex = day.front()->time / SECONDS_PER_DAY;
             const auto [searchSeconds, searchMetres] = searchOn(dayIndex);
-            daily += std::format("{},{},{},{},{},{},{},{},{},{},{:g}\n",
+            const auto dayPunctuality = punctuality(day);
+            daily += std::format("{},{},{},{},{},{},{},{},{},{},{:g},{},{},{:g},{:g}\n",
                 m_roundSeed, m_scenario,
                 dayIndex,
                 std::ranges::count_if(day, inState(OrderState::COMPLETED)),
                 std::ranges::count_if(day, inState(OrderState::FAILED)),
                 std::ranges::count_if(day, withDetail("missed in building")),
                 std::ranges::count_if(day, inState(OrderState::REJECTED)),
-                scansOn(dayIndex), roomsOn(dayIndex), searchSeconds, searchMetres);
+                scansOn(dayIndex), roomsOn(dayIndex), searchSeconds, searchMetres,
+                dayPunctuality.onTime, dayPunctuality.late,
+                dayPunctuality.earlyMean, dayPunctuality.lateMean);
         }
-        write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
+        write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m,on_time,late,early_mean_s,late_mean_s\n", daily);
 
         const std::string run = std::format(
             "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g},{:g},{},{},{},{},{},{}\n",
