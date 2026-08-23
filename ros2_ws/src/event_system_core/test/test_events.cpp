@@ -12,6 +12,7 @@
 #include "../src/plugins/accompany/accompany_order.h"
 #include "../src/plugins/accompany/accompany_plugin.h"
 #include "../src/plugins/accompany/states.h"
+#include "../src/plugins/information/states.h"
 #include "../src/plugins/order_registry.h"
 #include "../src/plugins/accompany/events/abort_search_event.h"
 #include "../src/plugins/accompany/events/start_accompany_event.h"
@@ -708,12 +709,41 @@ TEST(EventExecute, BatteryFullSetsIdleAndResetsBatteryFlag) {
     ctx.robot->changeState(std::make_unique<des::ChargeState>(), ctx.currentTime);
     ctx.robot->m_batteryFullEventScheduled = true;
 
-    des::BatteryFullEvent event(37000);
+    des::BatteryFullEvent event(37000, ctx.robot->chargeEpoch());
     event.execute(ctx);
 
     EXPECT_EQ(ctx.robot->getStateType(), des::RobotStateType::IDLE);
     EXPECT_FALSE(ctx.robot->m_batteryFullEventScheduled);
     EXPECT_EQ(ctx.tickCount, 1);
+}
+
+TEST(EventExecute, BatteryFullIsStaleOnceChargePhaseEnded) {
+    MockSimContext ctx;
+    ctx.robot->changeState(std::make_unique<des::ChargeState>(), ctx.currentTime);
+
+    const des::BatteryFullEvent event(37000, ctx.robot->chargeEpoch());
+    EXPECT_FALSE(event.isStale(ctx));
+
+    ctx.robot->endChargePhase();
+    EXPECT_TRUE(event.isStale(ctx));
+}
+
+TEST(EventExecute, ChargePhaseSurvivesStatesThatChargeAtTheDock) {
+    EXPECT_TRUE(des::ChargeState().chargesAtDock());
+    EXPECT_TRUE(des::InformationState().chargesAtDock());
+    EXPECT_FALSE(des::IdleState().chargesAtDock());
+    EXPECT_FALSE(des::AccompanyState().chargesAtDock());
+}
+
+TEST(EventExecute, LeavingTheDockEndsTheChargePhase) {
+    MockSimContext ctx;
+    ctx.robot->setCharging(true);
+    const int epoch = ctx.robot->chargeEpoch();
+
+    ctx.robot->setCharging(false);
+    EXPECT_NE(ctx.robot->chargeEpoch(), epoch);
+    EXPECT_FALSE(ctx.robot->m_batteryFullEventScheduled);
+    EXPECT_FALSE(ctx.robot->m_opportunisticCharge);
 }
 
 // --- des::MissionCompleteEvent ---
@@ -1223,7 +1253,7 @@ TEST(EventMetadata, EventTypesAreCorrect) {
     EXPECT_EQ(des::SimulationStartEvent(0).getType(), des::EventType::SIMULATION_START);
     EXPECT_EQ(des::SimulationEndEvent(0).getType(), des::EventType::SIMULATION_END);
     EXPECT_EQ(des::AbortSearchEvent(0, nullptr).getType(), des::EventType::ABORT_SEARCH);
-    EXPECT_EQ(des::BatteryFullEvent(0).getType(), des::EventType::BATTERY_FULL);
+    EXPECT_EQ(des::BatteryFullEvent(0, 0).getType(), des::EventType::BATTERY_FULL);
     EXPECT_EQ(des::StartAccompanyEvent(0, nullptr).getType(), des::EventType::START_ACCOMPANY);
     EXPECT_EQ(des::StartConversationEvent(0, makeConversationSpec(des::ConversationKind::DROP_OFF)).getType(), des::EventType::CONVERSATION_START);
     EXPECT_EQ(des::EndConversationEvent(0, makeConversationSpec(des::ConversationKind::DROP_OFF), true).getType(), des::EventType::CONVERSATION_END);
@@ -1235,7 +1265,7 @@ TEST(EventMetadata, EventNamesAreNonEmpty) {
     EXPECT_FALSE(des::SimulationStartEvent(0).getName().empty());
     EXPECT_FALSE(des::SimulationEndEvent(0).getName().empty());
     EXPECT_FALSE(des::AbortSearchEvent(0, nullptr).getName().empty());
-    EXPECT_FALSE(des::BatteryFullEvent(0).getName().empty());
+    EXPECT_FALSE(des::BatteryFullEvent(0, 0).getName().empty());
     EXPECT_FALSE(des::StopDriveEvent(0, std::make_shared<des::RoomTarget>("X"), 0).getName().empty());
     EXPECT_FALSE(des::StartDriveEvent(0, std::make_shared<des::RoomTarget>("X")).getName().empty());
 }

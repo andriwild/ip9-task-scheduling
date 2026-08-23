@@ -94,15 +94,12 @@ void SimulationContext::changeRobotState(std::unique_ptr<RobotState> newState) c
     const bool sameState = current
         && current->getType() == newType
         && current->getName() == newState->getName();
-    const bool leavingCharge = current
+    const bool chargePhaseEnds = current
         && current->getType() == RobotStateType::CHARGING
-        && newType != RobotStateType::CHARGING;
+        && !newState->chargesAtDock();
     m_robot->changeState(std::move(newState), m_currentTime);
-    if (leavingCharge) {
-        m_queue.cancelByType(EventType::BATTERY_FULL);
-        m_queue.cancelByType(EventType::CHARGE_PHASE_TRANSITION);
-        m_robot->m_batteryFullEventScheduled = false;
-        m_robot->m_opportunisticCharge = false;
+    if (chargePhaseEnds) {
+        m_robot->endChargePhase();
     }
     if (!sameState) {
         notifyRobotStateChanged();
@@ -185,6 +182,10 @@ void SimulationContext::executeEvent(const std::shared_ptr<IEvent>& event) {
     if (m_robot->inFlight().lock() == event) {
         m_robot->clearInFlight();
     }
+}
+
+void SimulationContext::setScheduledDispatchPlan(const OrderList& orders) {
+    m_missions.setDispatchPlan(orders);
 }
 
 void SimulationContext::setBehaviorTree(std::shared_ptr<BT::Tree> tree) {
@@ -329,7 +330,7 @@ std::optional<int> SimulationContext::getNextScheduledDispatchTime() const {
 }
 
 std::optional<int> SimulationContext::getSimulationEndTime() const {
-    return m_queue.nextEventTime(EventType::SIMULATION_END);
+    return m_simConfig->simStartTime + m_simConfig->simDuration;
 }
 
 void SimulationContext::publishMission(const OrderPtr& order, const int time) {

@@ -175,11 +175,12 @@ public:
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;
         const double timeToFull = ctx->getRobot()->batteryTimeToFull(netChargingPower);
 
-        ctx->pushEvent(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull)));
+        const int epoch = ctx->getRobot()->chargeEpoch();
+        ctx->pushEvent(std::make_shared<BatteryFullEvent>(static_cast<int>(ctx->getTime() + timeToFull), epoch));
 
         const double timeToTransition = ctx->getRobot()->batteryTimeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
-            ctx->pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(ctx->getTime() + timeToTransition)));
+            ctx->pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(ctx->getTime() + timeToTransition), epoch));
             DES_LOG_DEBUG("des.bt.charge", "Phase transition in: %.1fs", timeToTransition);
         }
 

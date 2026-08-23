@@ -41,6 +41,7 @@ class Robot {
     // TODO: enum instead of single bools
     bool m_isDriving        = false;
     bool m_isCharging       = false;
+    int m_chargeEpoch       = 0;
     bool m_chargingRequired = false;
     bool m_isPersonVisible  = false;
     bool m_servicing        = false;
@@ -93,6 +94,9 @@ public:
 
     bool isCharging() const;
     void setCharging(const bool isCharging);
+
+    int chargeEpoch() const;
+    void endChargePhase();
 
     bool updateAndGetChargingRequired();
     void setChargingRequired(const bool isChargingRequired);

@@ -158,7 +158,20 @@ bool Robot::isCharging() const {
     return m_isCharging;
 }
 
+int Robot::chargeEpoch() const {
+    return m_chargeEpoch;
+}
+
+void Robot::endChargePhase() {
+    ++m_chargeEpoch;
+    m_batteryFullEventScheduled = false;
+    m_opportunisticCharge = false;
+}
+
 void Robot::setCharging(const bool isCharging) {
+    if (!isCharging && m_isCharging) {
+        endChargePhase();
+    }
     m_isCharging = isCharging;
 }
 

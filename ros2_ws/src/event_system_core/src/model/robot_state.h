@@ -22,6 +22,7 @@ public:
     virtual RobotStateType getType() const = 0;
     virtual std::string getName() const = 0;
     virtual double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const;
+    virtual bool chargesAtDock() const { return false; }
     virtual std::unique_ptr<RobotState> clone() const = 0;
 
     Result getResult() const { return m_result; };
@@ -56,6 +57,7 @@ public:
     RobotStateType getType() const override { return RobotStateType::CHARGING; }
     std::string getName() const override { return "charging"; }
     double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const override;
+    bool chargesAtDock() const override { return true; }
     std::unique_ptr<RobotState> clone() const override { return std::make_unique<ChargeState>(*this); }
 };
 

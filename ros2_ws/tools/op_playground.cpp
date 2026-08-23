@@ -31,6 +31,12 @@ const std::vector<char> SEITEN = {
     'l', 'l', 'l', 'r', 'r', 'r',           // B53 B51 Küche B31 B13 B17
 };
 
+const std::vector<double> STUNDEN_SEIT_REINIGUNG = {
+    20.0, 23.0,  4.0, 21.0, 14.0, 22.0,   // A01 A07 A12 A71 A15 A17
+    10.0, 18.0,  6.0, 16.0, 12.0, 19.0,   // D02 D11 C59 C08 C54 C91
+     8.0, 15.0, 17.0,  2.0, 13.0,  9.0,   // B53 B51 Kueche B31 B13 B17
+};
+
 const std::string START_RAUM = "5.2A05";        // Standort des Roboters
 const std::string DOCK_RAUM  = "IMVS_Dock";     // sim_config.dock_location
 const std::string END_RAUM   = "IMVS_Printer";  // Ort der Termine aus appointments.json
@@ -97,6 +103,7 @@ int main() {
     const double rewardWeight   = cfg.at("clean").at("reward_weight").get<double>();
     const double cleaningArea   = cfg.at("clean").at("cleaning_area").get<double>();
     const double cleaningPower  = cfg.at("clean").at("cleaning_power").get<double>();
+    const double cleaningInterval = cfg.at("clean").at("cleaning_interval").get<double>();
     const double robotSpeed     = cfg.at("robot_speed").get<double>();
     const double driveW         = cfg.at("energy_consumption_drive").get<double>();
     const double baseW          = cfg.at("energy_consumption_base").get<double>();
@@ -124,7 +131,11 @@ int main() {
             continue;
         }
         const double flaeche = raum.value("area", 0.0);
-        const double reward  = rewardWeight * std::min(1.0, flaeche / 100.0);
+        const auto it = std::find(KANDIDATEN.begin(), KANDIDATEN.end(), name);
+        const double stunden = STUNDEN_SEIT_REINIGUNG.at(
+            static_cast<std::size_t>(std::distance(KANDIDATEN.begin(), it)));
+        const double reward  = rewardWeight
+                             * std::min(1.0, stunden * 3600.0 / cleaningInterval);
         const double dauer   = (flaeche / cleaningArea + 1.0)
                              * (2.0 * std::sqrt(cleaningArea) / robotSpeed);
         nodes.push_back({ anzeige(name),

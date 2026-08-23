@@ -175,6 +175,7 @@ public:
         int onTime = 0;
         int late = 0;
         long lateSum = 0;
+        long earlySum = 0;
         for (const auto& e : scheduled) {
             const auto& order = e->getOrder();
             if (order->state != OrderState::COMPLETED || !order->deadline.has_value()) {
@@ -186,9 +187,11 @@ public:
                 lateSum += delta;
             } else {
                 ++onTime;
+                earlySum -= delta;
             }
         }
         const double lateMean = late > 0 ? static_cast<double>(lateSum) / late : 0.0;
+        const double earlyMean = onTime > 0 ? static_cast<double>(earlySum) / onTime : 0.0;
 
         std::string daily;
         for (auto day : scheduled | chunk_by(sameDay)) {
@@ -206,7 +209,7 @@ public:
         write(m_dailyCsvPath, "seed,scenario,day,completed,failed,findable_miss,rejected,scans,rooms,search_s,search_m\n", daily);
 
         const std::string run = std::format(
-            "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g},{},{},{},{},{},{}\n",
+            "{},{},{},{},{},{},{},{:g},{},{:g},{},{:g},{},{},{},{},{},{:g},{:g},{},{},{},{},{},{}\n",
             m_roundSeed, m_scenario,
             secondsIn("idle"), secondsIn("search"), secondsIn("accompany"),
             secondsIn("charging"), secondsIn("conversate"),
@@ -221,13 +224,14 @@ public:
             onTime,
             late,
             lateMean,
+            earlyMean,
             countIn(ExecutionMode::SCHEDULED, OrderState::COMPLETED),
             countIn(ExecutionMode::BACKGROUND, OrderState::COMPLETED),
             countIn(ExecutionMode::INTERRUPT, OrderState::COMPLETED),
             countIn(ExecutionMode::INTERRUPT, OrderState::REJECTED),
             countType("clean"),
             countType("data_acquisition"));
-        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles,charge_starts,min_soc,charge_planned,charge_reactive,charge_opportunistic,on_time,late,late_mean_s,done_scheduled,done_background,done_interrupt,rejected_interrupt,done_clean,done_acquire\n", run);
+        write(m_csvPath, "seed,scenario,idle_s,search_s,accompany_s,charging_s,talk_s,distance_m,missions,full_cycles,charge_starts,min_soc,charge_planned,charge_reactive,charge_opportunistic,on_time,late,late_mean_s,early_mean_s,done_scheduled,done_background,done_interrupt,rejected_interrupt,done_clean,done_acquire\n", run);
 
         if (!m_debugDir.empty()) {
             const std::string dir = m_debugDir.back() == '/' ? m_debugDir : m_debugDir + "/";

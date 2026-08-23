@@ -142,6 +142,7 @@ if(BUILD_TESTING)
     src/model/battery.cpp
     src/plugins/accompany/accompany_plugin.cpp
     src/plugins/accompany/states.cpp
+    src/plugins/information/states.cpp
   )
   ament_target_dependencies(test_events rclcpp behaviortree_cpp event_system_msgs)
   target_compile_definitions(test_events PRIVATE

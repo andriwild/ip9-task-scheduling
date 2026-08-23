@@ -79,7 +79,6 @@ bool HeadlessRunner::loadNextRound() {
     DES_LOG_INFO("des.runner", "Successful loaded %zu background templates", m_backgroundTemplates.size());
 
     populateEventQueue();
-    m_eventQueue.print();
     m_currentRound++;
     return true;
 }

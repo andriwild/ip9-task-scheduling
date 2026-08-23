@@ -63,7 +63,8 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
         if (idx == params.startNodeId || idx == params.endNodeId || isStation(idx)) {
             return 11.0f;
         }
-        return 9.0f + nodes[i].reward * 110.0f;
+        // Kreisflaeche proportional zum Nutzen, Skala bis zum Gewicht 1.0
+        return 8.0f + 24.0f * std::sqrt(nodes[i].reward);
     };
 
     std::ofstream f(file);

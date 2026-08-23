@@ -1,8 +1,6 @@
 /*
  * Owns the current mission and the three mission channels:
  * scheduled, background and interrupt.
- * Scheduled orders live in the event queue as dispatch events,
- * so this class reads them back from there rather than storing them twice.
  *
  */
 #pragma once
@@ -25,6 +23,7 @@ class OrderBoard {
     ScheduledOrderQueue m_scheduled;
     BackgroundOrderPool m_background;
     InterruptOrderSlot m_interrupt;
+    OrderList m_dispatchPlan;
     EventQueue& m_queue;
     EventBus& m_bus;
 
@@ -37,13 +36,12 @@ public:
     void updateState(const OrderState& newState);
     void complete(ISimContext& ctx, const OrderPtr& order);
 
+    void setDispatchPlan(const OrderList& orders);
     void addScheduled(const OrderPtr& orderPtr);
     bool hasScheduled() const;
     OrderPtr nextScheduled();
     OrderPtr popScheduled();
     std::optional<int> nextScheduledDispatchTime() const;
-
-    // reading directly from the event queue
     OrderPtr peekNextScheduledOrder() const;
     std::vector<OrderPtr> peekScheduledOrdersUntil(int untilTime) const;
 

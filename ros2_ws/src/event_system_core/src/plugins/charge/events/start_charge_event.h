@@ -35,7 +35,7 @@ public:
 
         const double timeToTransition = ctx.getRobot()->batteryTimeToPhaseTransition(netChargingPower);
         if (timeToTransition >= 0.0) {
-            ctx.pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(this->time + timeToTransition)));
+            ctx.pushEvent(std::make_shared<ChargePhaseTransitionEvent>(static_cast<int>(this->time + timeToTransition), ctx.getRobot()->chargeEpoch()));
         }
 
         ctx.startActivity(std::make_shared<EndChargeEvent>(static_cast<int>(this->time + timeToFull), m_order));

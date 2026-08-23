@@ -25,7 +25,7 @@ inline bool executeNextEvent(IAppRunner& app) {
 
     const auto event = app.m_eventQueue.top();
     app.m_eventQueue.pop();
-    if (event->cancelled) {
+    if (event->cancelled || event->isStale(*app.m_ctx)) {
         return true;
     }
 

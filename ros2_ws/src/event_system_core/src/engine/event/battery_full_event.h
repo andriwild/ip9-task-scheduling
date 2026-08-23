@@ -8,8 +8,9 @@
 namespace des {
 
 class BatteryFullEvent final : public IEvent {
+    int m_epoch;
 public:
-    explicit BatteryFullEvent(const int time) : IEvent(time) {}
+    explicit BatteryFullEvent(const int time, const int epoch) : IEvent(time), m_epoch(epoch) {}
 
     std::shared_ptr<IEvent> withTime(int newTime) const override {
         auto copy = std::make_shared<BatteryFullEvent>(*this);
@@ -18,14 +19,14 @@ public:
         return copy;
     }
 
+    bool isStale(const ISimContext& ctx) const override {
+        return ctx.getRobot()->chargeEpoch() != m_epoch;
+    }
+
     void execute(ISimContext& ctx) override {
-        if (ctx.getRobot()->getStateType() != RobotStateType::CHARGING) {
-            ctx.getRobot()->m_batteryFullEventScheduled = false;
-            return;
-        }
         ctx.getRobot()->completeCharge();
+        ctx.getRobot()->endChargePhase();
         ctx.changeRobotState(std::make_unique<IdleState>());
-        ctx.getRobot()->m_batteryFullEventScheduled = false;
         ctx.notifyEvent(*this);
         ctx.tickBT();
     }

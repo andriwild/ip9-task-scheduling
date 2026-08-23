@@ -149,6 +149,7 @@ protected:
         addBackgroundReleaseEvents(simStartTime, simEndTime);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());
+        m_ctx->setScheduledDispatchPlan(m_orders);
 
         for (const auto& p : people) {
             m_ctx->setPersonLocation(p->firstName, "OUTDOOR");

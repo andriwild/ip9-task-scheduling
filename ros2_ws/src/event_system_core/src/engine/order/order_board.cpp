@@ -1,5 +1,6 @@
 #include "engine/order/order_board.h"
 
+#include <algorithm>
 #include <format>
 #include <string>
 #include <utility>
@@ -75,7 +76,15 @@ void OrderBoard::complete(ISimContext& ctx, const OrderPtr& order) {
     }
 }
 
+void OrderBoard::setDispatchPlan(const OrderList& orders) {
+    m_dispatchPlan.assign(orders.begin(), orders.end());
+    std::ranges::stable_sort(m_dispatchPlan, {}, [](const OrderPtr& order) {
+        return order->dispatchTime;
+    });
+}
+
 void OrderBoard::addScheduled(const OrderPtr& orderPtr) {
+    std::erase(m_dispatchPlan, orderPtr);
     m_scheduled.add(orderPtr);
 }
 
@@ -92,25 +101,26 @@ OrderPtr OrderBoard::popScheduled() {
 }
 
 std::optional<int> OrderBoard::nextScheduledDispatchTime() const {
-    return m_queue.nextDispatchTime();
+    if (m_dispatchPlan.empty()) {
+        return std::nullopt;
+    }
+    return m_dispatchPlan.front()->dispatchTime;
 }
 
 OrderPtr OrderBoard::peekNextScheduledOrder() const {
-    auto event = m_queue.nextDispatchEvent();
-    if (!event) {
+    if (m_dispatchPlan.empty()) {
         return nullptr;
     }
-    auto dispatch = std::dynamic_pointer_cast<MissionDispatchEvent>(event);
-    return dispatch ? dispatch->orderPtr : nullptr;
+    return m_dispatchPlan.front();
 }
 
 std::vector<OrderPtr> OrderBoard::peekScheduledOrdersUntil(const int untilTime) const {
     std::vector<OrderPtr> orders;
-    for (const auto& event : m_queue.dispatchEventsUntil(untilTime)) {
-        auto dispatch = std::dynamic_pointer_cast<MissionDispatchEvent>(event);
-        if (dispatch && dispatch->orderPtr) {
-            orders.push_back(dispatch->orderPtr);
+    for (const auto& order : m_dispatchPlan) {
+        if (order->dispatchTime > untilTime) {
+            break;
         }
+        orders.push_back(order);
     }
     return orders;
 }
@@ -204,6 +214,7 @@ void OrderBoard::reset() {
     m_scheduled.clear();
     m_background.clear();
     m_interrupt.clear();
+    m_dispatchPlan.clear();
 }
 
 }  // namespace des

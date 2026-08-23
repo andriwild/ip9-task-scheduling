@@ -26,6 +26,7 @@ public:
     virtual ~IEvent() = default;
 
     virtual void execute(ISimContext& ctx) = 0;
+    virtual bool isStale(const ISimContext&) const { return false; }
     virtual std::string getName() const = 0;
     virtual EventType getType() const = 0;
     virtual std::shared_ptr<IEvent> withTime(int newTime) const = 0;

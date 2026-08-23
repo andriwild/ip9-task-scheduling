@@ -8,14 +8,19 @@
 namespace des {
 
 class ChargePhaseTransitionEvent final : public IEvent {
+    int m_epoch;
 public:
-    explicit ChargePhaseTransitionEvent(const int time) : IEvent(time) {}
+    explicit ChargePhaseTransitionEvent(const int time, const int epoch) : IEvent(time), m_epoch(epoch) {}
 
     [[nodiscard]] std::shared_ptr<IEvent> withTime(const int newTime) const override {
         auto copy = std::make_shared<ChargePhaseTransitionEvent>(*this);
         copy->time = newTime;
         copy->cancelled = false;
         return copy;
+    }
+
+    [[nodiscard]] bool isStale(const ISimContext& ctx) const override {
+        return ctx.getRobot()->chargeEpoch() != m_epoch;
     }
 
     void execute(ISimContext& ctx) override {
