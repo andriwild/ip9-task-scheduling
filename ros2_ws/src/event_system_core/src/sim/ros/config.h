@@ -98,7 +98,7 @@ private:
             m_dirtyConfig = true;
         }
 
-        ConfigLoader::saveSimConfig(SIM_CONFIG_FILE, m_currentConfig);
+        ConfigLoader::saveSimConfig(ConfigLoader::baseConfigPath(), m_currentConfig);
         publishConfig();
         response->success = true;
         response->message = "successful";

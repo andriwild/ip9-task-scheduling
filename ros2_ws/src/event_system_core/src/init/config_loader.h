@@ -44,6 +44,7 @@ const std::string CONFIG_DIR            = configRoot();
 const std::string DEFAULT_ORDER_FILE    = CONFIG_DIR + "default/appointments.json";
 const std::string DEFAULT_EMPLOYEE_FILE = CONFIG_DIR + "default/employee.json";
 const std::string SIM_CONFIG_FILE       = CONFIG_DIR + "default/sim_config.json";
+const std::string GUI_CONFIG_FILE       = CONFIG_DIR + "default/sim_config_gui.json";
 const std::string BUILDING_FILE         = CONFIG_DIR + "building.json";
 
 constexpr int SIM_START_TIME = 25200;  // 07:00
