@@ -14,6 +14,8 @@
 
 namespace des {
 
+constexpr double kReferenceArea = 100.0;
+
 void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<CleanIsAtTargetLocation>("CleanIsAtTargetLocation");
     factory.registerNodeType<CleanGoToLocation>("CleanGoToLocation");
@@ -34,6 +36,7 @@ void CleanPlugin::onMissionEnd(ISimContext& ctx, IOrder& order) {
 
 double CleanPlugin::estimateReward(const IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
+    const double areaUtility = std::min(1.0, view.world.room(o.roomName).m_area.value_or(1.0) / kReferenceArea);
     const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
 
     double urgency = 1.0;
@@ -41,7 +44,7 @@ double CleanPlugin::estimateReward(const IOrder& order, const EstimationView& vi
     if (last.has_value() && interval > 0.0) {
         urgency = std::clamp((view.clock.getTime() - last.value()) / interval, 0.0, 1.0);
     }
-    return m_config.rewardWeight * urgency;
+    return m_config.rewardWeight * areaUtility * urgency;
 }
 
 void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
