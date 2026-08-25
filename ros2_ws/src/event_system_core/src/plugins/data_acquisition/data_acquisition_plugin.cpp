@@ -34,12 +34,12 @@ double DataAcquisition::estimateReward(const IOrder& order, const EstimationView
     const auto& o = static_cast<const DataAcquisitionOrder&>(order);
     const double interval = o.acquisitionInterval.value_or(m_config.acquisitionInterval);
 
-    double urgency = 1.0;
+    double due = 1.0;
     const auto last = view.world.lastServiced(o.roomName, kTypeName);
     if (last.has_value() && interval > 0.0) {
-        urgency = std::clamp((view.clock.getTime() - last.value()) / interval, 0.0, 1.0);
+        due = std::max(0.0, (view.clock.getTime() - last.value()) / interval);
     }
-    return m_config.rewardWeight * urgency;
+    return m_config.missionValue * due;
 }
 
 void DataAcquisition::onStartDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}

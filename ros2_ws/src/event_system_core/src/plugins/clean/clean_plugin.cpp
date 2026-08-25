@@ -14,8 +14,6 @@
 
 namespace des {
 
-constexpr double kReferenceArea = 100.0;
-
 void CleanPlugin::registeredNodes(BT::BehaviorTreeFactory& factory) {
     factory.registerNodeType<CleanIsAtTargetLocation>("CleanIsAtTargetLocation");
     factory.registerNodeType<CleanGoToLocation>("CleanGoToLocation");
@@ -36,15 +34,15 @@ void CleanPlugin::onMissionEnd(ISimContext& ctx, IOrder& order) {
 
 double CleanPlugin::estimateReward(const IOrder& order, const EstimationView& view) const {
     const auto& o = static_cast<const CleanOrder&>(order);
-    const double areaUtility = std::min(1.0, view.world.room(o.roomName).m_area.value_or(1.0) / kReferenceArea);
+    const double value = m_config.valuePerSqm * view.world.room(o.roomName).m_area.value_or(0.0);
     const double interval = o.cleaningInterval.value_or(m_config.cleaningInterval);
 
-    double urgency = 1.0;
+    double due = 1.0;
     const auto last = view.world.lastServiced(o.roomName, kTypeName);
     if (last.has_value() && interval > 0.0) {
-        urgency = std::clamp((view.clock.getTime() - last.value()) / interval, 0.0, 1.0);
+        due = std::max(0.0, (view.clock.getTime() - last.value()) / interval);
     }
-    return m_config.rewardWeight * areaUtility * urgency;
+    return value * due;
 }
 
 void CleanPlugin::onStartDriveEvent(ISimContext& /*ctx*/, IOrder& /*order*/) {}
@@ -95,7 +93,6 @@ std::optional<std::string> CleanPlugin::targetLocation(const IOrder& order) cons
     return static_cast<const CleanOrder&>(order).roomName;
 }
 
-// Cleaning is modelled as a lawnmower pass over the room area.
 double cleanDurationSeconds(const double roomArea, const double robotSpeed) {
     const double cleaningArea = cleanConfig().cleaningArea;
     const double cleaningSide = std::sqrt(cleaningArea);

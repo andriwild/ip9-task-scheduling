@@ -15,7 +15,7 @@ class Scheduler;
 class ISimContext;
 struct CleanConfig {
     double cleaningArea = 0.09;
-    double rewardWeight = 0.23;
+    double valuePerSqm = 0.3;
     double cleaningInterval = SECONDS_PER_DAY;
     double cleaningPower = 120.0;
 };
@@ -53,14 +53,14 @@ public:
 
     void loadConfig(const nlohmann::json& j) override {
         m_config.cleaningArea     = j.value("cleaning_area", m_config.cleaningArea);
-        m_config.rewardWeight     = j.value("reward_weight", m_config.rewardWeight);
+        m_config.valuePerSqm      = j.value("value_per_sqm", m_config.valuePerSqm);
         m_config.cleaningInterval = j.value("cleaning_interval", m_config.cleaningInterval);
         m_config.cleaningPower    = j.value("cleaning_power", m_config.cleaningPower);
     }
     nlohmann::json saveConfig() const override {
         return {
             {"cleaning_area", m_config.cleaningArea},
-            {"reward_weight", m_config.rewardWeight},
+            {"value_per_sqm", m_config.valuePerSqm},
             {"cleaning_interval", m_config.cleaningInterval},
             {"cleaning_power", m_config.cleaningPower},
         };

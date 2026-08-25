@@ -15,7 +15,7 @@ class Scheduler;
 class ISimContext;
 struct DataAcquisitionConfig {
     double dataAcquisitionDuration = 120.0;
-    double rewardWeight = 0.12;
+    double missionValue = 3.0;
     double acquisitionInterval = SECONDS_PER_DAY;
 };
 
@@ -49,13 +49,13 @@ public:
 
     void loadConfig(const nlohmann::json& j) override {
         m_config.dataAcquisitionDuration = j.value("data_acquisition_duration", m_config.dataAcquisitionDuration);
-        m_config.rewardWeight            = j.value("reward_weight", m_config.rewardWeight);
+        m_config.missionValue            = j.value("mission_value", m_config.missionValue);
         m_config.acquisitionInterval     = j.value("data_acquisition_interval", m_config.acquisitionInterval);
     }
     nlohmann::json saveConfig() const override {
         return {
             {"data_acquisition_duration", m_config.dataAcquisitionDuration},
-            {"reward_weight", m_config.rewardWeight},
+            {"mission_value", m_config.missionValue},
             {"data_acquisition_interval", m_config.acquisitionInterval},
         };
     }
