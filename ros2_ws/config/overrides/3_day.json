@@ -1,6 +1,6 @@
 {
-    "appointments_path": "scenarios/realistic_3day.json",
     "cacheEnabled": true,
+    "scenario_path": "scenarios/realistic_3day.json",
     "sim_duration": 259200,
     "use_distance_matrix": true
 }

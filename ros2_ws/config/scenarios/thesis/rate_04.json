@@ -1,0 +1,1648 @@
+{
+  "orders": [
+    {
+      "id": 0,
+      "type": "accompany",
+      "personName": "Claudio",
+      "roomName": "5.2A34",
+      "appointmentTime": 36000,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 1,
+      "type": "accompany",
+      "personName": "Jorin",
+      "roomName": "5.2A02",
+      "appointmentTime": 37200,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 2,
+      "type": "accompany",
+      "personName": "Max",
+      "roomName": "IMVS_Kitchen",
+      "appointmentTime": 38400,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 3,
+      "type": "accompany",
+      "personName": "Yves",
+      "roomName": "5.2C30",
+      "appointmentTime": 39600,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 4,
+      "type": "accompany",
+      "personName": "Ines",
+      "roomName": "5.2B15",
+      "appointmentTime": 50400,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 5,
+      "type": "accompany",
+      "personName": "Lenny",
+      "roomName": "5.2C_Reserve_Mat",
+      "appointmentTime": 51600,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 6,
+      "type": "accompany",
+      "personName": "Felix",
+      "roomName": "5.2A12",
+      "appointmentTime": 52800,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 7,
+      "type": "accompany",
+      "personName": "Anna",
+      "roomName": "5.2C59",
+      "appointmentTime": 54000,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 8,
+      "type": "accompany",
+      "personName": "Stefan",
+      "roomName": "5.2B18",
+      "appointmentTime": 55200,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 9,
+      "type": "accompany",
+      "personName": "Theo",
+      "roomName": "5.2B04",
+      "appointmentTime": 56400,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 10,
+      "type": "accompany",
+      "personName": "Lian",
+      "roomName": "5.2B05",
+      "appointmentTime": 57600,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 11,
+      "type": "accompany",
+      "personName": "Patrick",
+      "roomName": "5.2C56",
+      "appointmentTime": 58800,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 12,
+      "type": "accompany",
+      "personName": "Ilona",
+      "roomName": "5.2A34",
+      "appointmentTime": 122400,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 13,
+      "type": "accompany",
+      "personName": "Gianna",
+      "roomName": "5.2A13",
+      "appointmentTime": 123600,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 14,
+      "type": "accompany",
+      "personName": "Zoe",
+      "roomName": "5.2B51",
+      "appointmentTime": 124800,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 15,
+      "type": "accompany",
+      "personName": "Enzo",
+      "roomName": "5.2A34",
+      "appointmentTime": 126000,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 16,
+      "type": "accompany",
+      "personName": "Beat",
+      "roomName": "IMVS_Printer",
+      "appointmentTime": 136800,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 17,
+      "type": "accompany",
+      "personName": "Gina",
+      "roomName": "5.2B10",
+      "appointmentTime": 138000,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 18,
+      "type": "accompany",
+      "personName": "Remo",
+      "roomName": "5.2B34",
+      "appointmentTime": 139200,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 19,
+      "type": "accompany",
+      "personName": "Ronja",
+      "roomName": "5.2B18",
+      "appointmentTime": 140400,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 20,
+      "type": "accompany",
+      "personName": "Yannick",
+      "roomName": "IMVS_Kitchen",
+      "appointmentTime": 141600,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 21,
+      "type": "accompany",
+      "personName": "Matteo",
+      "roomName": "5.2A05",
+      "appointmentTime": 142800,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 22,
+      "type": "accompany",
+      "personName": "Valentin",
+      "roomName": "5.2C07",
+      "appointmentTime": 144000,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 23,
+      "type": "accompany",
+      "personName": "Marlen",
+      "roomName": "5.2C_Trash",
+      "appointmentTime": 145200,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 24,
+      "type": "accompany",
+      "personName": "Ursina",
+      "roomName": "5.2A13",
+      "appointmentTime": 208800,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 25,
+      "type": "accompany",
+      "personName": "Erika",
+      "roomName": "5.2B03",
+      "appointmentTime": 210000,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 26,
+      "type": "accompany",
+      "personName": "Silvan",
+      "roomName": "5.2A12",
+      "appointmentTime": 211200,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 27,
+      "type": "accompany",
+      "personName": "Lars",
+      "roomName": "5.2C54",
+      "appointmentTime": 212400,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 28,
+      "type": "accompany",
+      "personName": "Renato",
+      "roomName": "5.2A13",
+      "appointmentTime": 223200,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 29,
+      "type": "accompany",
+      "personName": "Mara",
+      "roomName": "5.2A34",
+      "appointmentTime": 224400,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 30,
+      "type": "accompany",
+      "personName": "Tom",
+      "roomName": "5.2A34",
+      "appointmentTime": 225600,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 31,
+      "type": "accompany",
+      "personName": "Cedric",
+      "roomName": "5.2B10",
+      "appointmentTime": 226800,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 32,
+      "type": "accompany",
+      "personName": "Tamara",
+      "roomName": "5.2A17",
+      "appointmentTime": 228000,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 33,
+      "type": "accompany",
+      "personName": "Kim",
+      "roomName": "5.2C_Trash",
+      "appointmentTime": 229200,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 34,
+      "type": "accompany",
+      "personName": "Elin",
+      "roomName": "5.2A15",
+      "appointmentTime": 230400,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 35,
+      "type": "accompany",
+      "personName": "Jana",
+      "roomName": "5.2B53",
+      "appointmentTime": 231600,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 36,
+      "type": "accompany",
+      "personName": "Amir",
+      "roomName": "5.2A05",
+      "appointmentTime": 295200,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 37,
+      "type": "accompany",
+      "personName": "Levin",
+      "roomName": "5.2B_Storage",
+      "appointmentTime": 296400,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 38,
+      "type": "accompany",
+      "personName": "Jens",
+      "roomName": "5.2C52",
+      "appointmentTime": 297600,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 39,
+      "type": "accompany",
+      "personName": "Mirco",
+      "roomName": "IMVS_Kitchen",
+      "appointmentTime": 298800,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 40,
+      "type": "accompany",
+      "personName": "Sven",
+      "roomName": "5.2C01",
+      "appointmentTime": 309600,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 41,
+      "type": "accompany",
+      "personName": "Kerstin",
+      "roomName": "5.2B03",
+      "appointmentTime": 310800,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 42,
+      "type": "accompany",
+      "personName": "Fred",
+      "roomName": "5.2B15",
+      "appointmentTime": 312000,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 43,
+      "type": "accompany",
+      "personName": "Fabienne",
+      "roomName": "5.2C52",
+      "appointmentTime": 313200,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 44,
+      "type": "accompany",
+      "personName": "Judith",
+      "roomName": "5.2B_Storage",
+      "appointmentTime": 314400,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 45,
+      "type": "accompany",
+      "personName": "Moritz",
+      "roomName": "5.2C54",
+      "appointmentTime": 315600,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 46,
+      "type": "accompany",
+      "personName": "Gian",
+      "roomName": "5.2C19",
+      "appointmentTime": 316800,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 47,
+      "type": "accompany",
+      "personName": "Laura",
+      "roomName": "5.2A04",
+      "appointmentTime": 318000,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 48,
+      "type": "accompany",
+      "personName": "Kai",
+      "roomName": "5.2A13",
+      "appointmentTime": 381600,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 49,
+      "type": "accompany",
+      "personName": "Janick",
+      "roomName": "5.2B_Storage",
+      "appointmentTime": 382800,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 50,
+      "type": "accompany",
+      "personName": "Lucas",
+      "roomName": "5.2A14",
+      "appointmentTime": 384000,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 51,
+      "type": "accompany",
+      "personName": "Kilian",
+      "roomName": "IMVS_Printer",
+      "appointmentTime": 385200,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 52,
+      "type": "accompany",
+      "personName": "Gerda",
+      "roomName": "5.2C_Working_Space",
+      "appointmentTime": 396000,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 53,
+      "type": "accompany",
+      "personName": "Zeno",
+      "roomName": "5.2C30",
+      "appointmentTime": 397200,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 54,
+      "type": "accompany",
+      "personName": "Kevin",
+      "roomName": "5.2C_Reserve_Mat",
+      "appointmentTime": 398400,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 55,
+      "type": "accompany",
+      "personName": "Katja",
+      "roomName": "5.2B_Storage",
+      "appointmentTime": 399600,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 56,
+      "type": "accompany",
+      "personName": "Hannes",
+      "roomName": "5.2D_Open_Zone",
+      "appointmentTime": 400800,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 57,
+      "type": "accompany",
+      "personName": "Selina",
+      "roomName": "5.2A02",
+      "appointmentTime": 402000,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 58,
+      "type": "accompany",
+      "personName": "Franziska",
+      "roomName": "5.2B01",
+      "appointmentTime": 403200,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 59,
+      "type": "accompany",
+      "personName": "Bruno",
+      "roomName": "5.2B_Storage",
+      "appointmentTime": 404400,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 60,
+      "type": "accompany",
+      "personName": "Ruben",
+      "roomName": "5.2D11",
+      "appointmentTime": 468000,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 61,
+      "type": "accompany",
+      "personName": "Jonas",
+      "roomName": "IMVS_Kitchen",
+      "appointmentTime": 469200,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 62,
+      "type": "accompany",
+      "personName": "Pia",
+      "roomName": "5.2B53",
+      "appointmentTime": 470400,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 63,
+      "type": "accompany",
+      "personName": "Damian",
+      "roomName": "5.2B13",
+      "appointmentTime": 471600,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 64,
+      "type": "accompany",
+      "personName": "Carla",
+      "roomName": "5.2A_Open_Zone",
+      "appointmentTime": 482400,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 65,
+      "type": "accompany",
+      "personName": "Igor",
+      "roomName": "5.2A01",
+      "appointmentTime": 483600,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 66,
+      "type": "accompany",
+      "personName": "Meret",
+      "roomName": "5.2A12",
+      "appointmentTime": 484800,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 67,
+      "type": "accompany",
+      "personName": "Quentin",
+      "roomName": "5.2B17",
+      "appointmentTime": 486000,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 68,
+      "type": "accompany",
+      "personName": "Paula",
+      "roomName": "5.2C19",
+      "appointmentTime": 487200,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 69,
+      "type": "accompany",
+      "personName": "Yara",
+      "roomName": "5.2B04",
+      "appointmentTime": 488400,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 70,
+      "type": "accompany",
+      "personName": "Nina",
+      "roomName": "5.2B34",
+      "appointmentTime": 489600,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 71,
+      "type": "accompany",
+      "personName": "Julia",
+      "roomName": "5.2A32",
+      "appointmentTime": 490800,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 72,
+      "type": "accompany",
+      "personName": "Severin",
+      "roomName": "5.2A04",
+      "appointmentTime": 554400,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 73,
+      "type": "accompany",
+      "personName": "Tobias",
+      "roomName": "5.2A14",
+      "appointmentTime": 555600,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 74,
+      "type": "accompany",
+      "personName": "Rebekka",
+      "roomName": "5.2A13",
+      "appointmentTime": 556800,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 75,
+      "type": "accompany",
+      "personName": "Dominik",
+      "roomName": "5.2C08",
+      "appointmentTime": 558000,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 76,
+      "type": "accompany",
+      "personName": "Lina",
+      "roomName": "5.2C52",
+      "appointmentTime": 568800,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 77,
+      "type": "accompany",
+      "personName": "Nadja",
+      "roomName": "5.2A05",
+      "appointmentTime": 570000,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    },
+    {
+      "id": 78,
+      "type": "accompany",
+      "personName": "Sara",
+      "roomName": "5.2C52",
+      "appointmentTime": 571200,
+      "every_n_days": 7,
+      "description": "Begleitung"
+    },
+    {
+      "id": 79,
+      "type": "accompany",
+      "personName": "Vinzenz",
+      "roomName": "5.2A38",
+      "appointmentTime": 572400,
+      "every_n_days": 7,
+      "description": "Dokumente bringen"
+    },
+    {
+      "id": 80,
+      "type": "accompany",
+      "personName": "Rosa",
+      "roomName": "IMVS_Kitchen",
+      "appointmentTime": 573600,
+      "every_n_days": 7,
+      "description": "Gast begleiten"
+    },
+    {
+      "id": 81,
+      "type": "accompany",
+      "personName": "Anja",
+      "roomName": "5.2A34",
+      "appointmentTime": 574800,
+      "every_n_days": 7,
+      "description": "Materialtransport"
+    },
+    {
+      "id": 82,
+      "type": "accompany",
+      "personName": "Delia",
+      "roomName": "5.2B05",
+      "appointmentTime": 576000,
+      "every_n_days": 7,
+      "description": "Post abholen"
+    },
+    {
+      "id": 83,
+      "type": "accompany",
+      "personName": "Leo",
+      "roomName": "5.2C_Reserve_Mat",
+      "appointmentTime": 577200,
+      "every_n_days": 7,
+      "description": "Besprechung begleiten"
+    }
+  ],
+  "background": [
+    {
+      "id": 100,
+      "type": "clean",
+      "roomName": "5.2A01",
+      "description": "Reinigung 5.2A01",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 101,
+      "type": "clean",
+      "roomName": "5.2A02",
+      "description": "Reinigung 5.2A02",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 102,
+      "type": "clean",
+      "roomName": "5.2A04",
+      "description": "Reinigung 5.2A04",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 103,
+      "type": "clean",
+      "roomName": "5.2A05",
+      "description": "Reinigung 5.2A05",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 104,
+      "type": "clean",
+      "roomName": "5.2A07",
+      "description": "Reinigung 5.2A07",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 105,
+      "type": "clean",
+      "roomName": "5.2A10",
+      "description": "Reinigung 5.2A10",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 106,
+      "type": "clean",
+      "roomName": "5.2A12",
+      "description": "Reinigung 5.2A12",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 107,
+      "type": "clean",
+      "roomName": "5.2A13",
+      "description": "Reinigung 5.2A13",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 108,
+      "type": "clean",
+      "roomName": "5.2A14",
+      "description": "Reinigung 5.2A14",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 109,
+      "type": "clean",
+      "roomName": "5.2A15",
+      "description": "Reinigung 5.2A15",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 110,
+      "type": "clean",
+      "roomName": "5.2A17",
+      "description": "Reinigung 5.2A17",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 111,
+      "type": "clean",
+      "roomName": "5.2A32",
+      "description": "Reinigung 5.2A32",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 112,
+      "type": "clean",
+      "roomName": "5.2A34",
+      "description": "Reinigung 5.2A34",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 113,
+      "type": "clean",
+      "roomName": "5.2A38",
+      "description": "Reinigung 5.2A38",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 114,
+      "type": "clean",
+      "roomName": "5.2A71",
+      "description": "Reinigung 5.2A71",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 115,
+      "type": "clean",
+      "roomName": "5.2A_Elevator",
+      "description": "Reinigung 5.2A_Elevator",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 116,
+      "type": "clean",
+      "roomName": "5.2A_Open_Zone",
+      "description": "Reinigung 5.2A_Open_Zone",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 117,
+      "type": "clean",
+      "roomName": "5.2A_Stairwell",
+      "description": "Reinigung 5.2A_Stairwell",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 118,
+      "type": "clean",
+      "roomName": "5.2A_Toilet_M",
+      "description": "Reinigung 5.2A_Toilet_M",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 119,
+      "type": "clean",
+      "roomName": "5.2A_Toilet_W",
+      "description": "Reinigung 5.2A_Toilet_W",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 120,
+      "type": "clean",
+      "roomName": "5.2B01",
+      "description": "Reinigung 5.2B01",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 121,
+      "type": "clean",
+      "roomName": "5.2B03",
+      "description": "Reinigung 5.2B03",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 122,
+      "type": "clean",
+      "roomName": "5.2B04",
+      "description": "Reinigung 5.2B04",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 123,
+      "type": "clean",
+      "roomName": "5.2B05",
+      "description": "Reinigung 5.2B05",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 124,
+      "type": "clean",
+      "roomName": "5.2B06",
+      "description": "Reinigung 5.2B06",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 125,
+      "type": "clean",
+      "roomName": "5.2B10",
+      "description": "Reinigung 5.2B10",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 126,
+      "type": "clean",
+      "roomName": "5.2B13",
+      "description": "Reinigung 5.2B13",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 127,
+      "type": "clean",
+      "roomName": "5.2B15",
+      "description": "Reinigung 5.2B15",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 128,
+      "type": "clean",
+      "roomName": "5.2B17",
+      "description": "Reinigung 5.2B17",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 129,
+      "type": "clean",
+      "roomName": "5.2B18",
+      "description": "Reinigung 5.2B18",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 130,
+      "type": "clean",
+      "roomName": "5.2B31",
+      "description": "Reinigung 5.2B31",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 131,
+      "type": "clean",
+      "roomName": "5.2B33",
+      "description": "Reinigung 5.2B33",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 132,
+      "type": "clean",
+      "roomName": "5.2B34",
+      "description": "Reinigung 5.2B34",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 133,
+      "type": "clean",
+      "roomName": "5.2B51",
+      "description": "Reinigung 5.2B51",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 134,
+      "type": "clean",
+      "roomName": "5.2B53",
+      "description": "Reinigung 5.2B53",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 135,
+      "type": "clean",
+      "roomName": "5.2B_Elevator",
+      "description": "Reinigung 5.2B_Elevator",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 136,
+      "type": "clean",
+      "roomName": "5.2B_Storage",
+      "description": "Reinigung 5.2B_Storage",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 137,
+      "type": "clean",
+      "roomName": "5.2B_Toilet_M",
+      "description": "Reinigung 5.2B_Toilet_M",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 138,
+      "type": "clean",
+      "roomName": "5.2B_Toilet_W",
+      "description": "Reinigung 5.2B_Toilet_W",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 139,
+      "type": "clean",
+      "roomName": "5.2C01",
+      "description": "Reinigung 5.2C01",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 140,
+      "type": "clean",
+      "roomName": "5.2C03",
+      "description": "Reinigung 5.2C03",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 141,
+      "type": "clean",
+      "roomName": "5.2C05",
+      "description": "Reinigung 5.2C05",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 142,
+      "type": "clean",
+      "roomName": "5.2C07",
+      "description": "Reinigung 5.2C07",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 143,
+      "type": "clean",
+      "roomName": "5.2C08",
+      "description": "Reinigung 5.2C08",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 144,
+      "type": "clean",
+      "roomName": "5.2C19",
+      "description": "Reinigung 5.2C19",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 145,
+      "type": "clean",
+      "roomName": "5.2C30",
+      "description": "Reinigung 5.2C30",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 146,
+      "type": "clean",
+      "roomName": "5.2C52",
+      "description": "Reinigung 5.2C52",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 147,
+      "type": "clean",
+      "roomName": "5.2C54",
+      "description": "Reinigung 5.2C54",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 148,
+      "type": "clean",
+      "roomName": "5.2C56",
+      "description": "Reinigung 5.2C56",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 149,
+      "type": "clean",
+      "roomName": "5.2C59",
+      "description": "Reinigung 5.2C59",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 150,
+      "type": "clean",
+      "roomName": "5.2C91",
+      "description": "Reinigung 5.2C91",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 151,
+      "type": "clean",
+      "roomName": "5.2C_Elevator",
+      "description": "Reinigung 5.2C_Elevator",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 152,
+      "type": "clean",
+      "roomName": "5.2C_Elevator_Goods",
+      "description": "Reinigung 5.2C_Elevator_Goods",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 153,
+      "type": "clean",
+      "roomName": "5.2C_Reserve_Mat",
+      "description": "Reinigung 5.2C_Reserve_Mat",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 154,
+      "type": "clean",
+      "roomName": "5.2C_Stairwell",
+      "description": "Reinigung 5.2C_Stairwell",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 155,
+      "type": "clean",
+      "roomName": "5.2C_Toilet_Accessible",
+      "description": "Reinigung 5.2C_Toilet_Accessible",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 156,
+      "type": "clean",
+      "roomName": "5.2C_Trash",
+      "description": "Reinigung 5.2C_Trash",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 157,
+      "type": "clean",
+      "roomName": "5.2C_Working_Space",
+      "description": "Reinigung 5.2C_Working_Space",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 158,
+      "type": "clean",
+      "roomName": "5.2D02",
+      "description": "Reinigung 5.2D02",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 159,
+      "type": "clean",
+      "roomName": "5.2D11",
+      "description": "Reinigung 5.2D11",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 160,
+      "type": "clean",
+      "roomName": "5.2D_Elevator",
+      "description": "Reinigung 5.2D_Elevator",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 161,
+      "type": "clean",
+      "roomName": "5.2D_Open_Zone",
+      "description": "Reinigung 5.2D_Open_Zone",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 162,
+      "type": "clean",
+      "roomName": "5.2D_Stairwell",
+      "description": "Reinigung 5.2D_Stairwell",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 163,
+      "type": "clean",
+      "roomName": "5.2D_Toilet_M",
+      "description": "Reinigung 5.2D_Toilet_M",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 164,
+      "type": "clean",
+      "roomName": "5.2D_Toilet_W",
+      "description": "Reinigung 5.2D_Toilet_W",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 165,
+      "type": "clean",
+      "roomName": "5.2_Corridor_Geb6",
+      "description": "Reinigung 5.2_Corridor_Geb6",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 166,
+      "type": "clean",
+      "roomName": "5.2_Stair_Down",
+      "description": "Reinigung 5.2_Stair_Down",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 167,
+      "type": "clean",
+      "roomName": "5.2_Stair_Down_Geb6",
+      "description": "Reinigung 5.2_Stair_Down_Geb6",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 168,
+      "type": "clean",
+      "roomName": "5.2_Stair_Up",
+      "description": "Reinigung 5.2_Stair_Up",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 169,
+      "type": "clean",
+      "roomName": "IMVS_Kitchen",
+      "description": "Reinigung IMVS_Kitchen",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 170,
+      "type": "clean",
+      "roomName": "IMVS_Printer",
+      "description": "Reinigung IMVS_Printer",
+      "every_n_days": 1,
+      "cleaning_interval": 86400
+    },
+    {
+      "id": 300,
+      "type": "data_acquisition",
+      "roomName": "5.2A01",
+      "description": "Datenakquise 5.2A01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 301,
+      "type": "data_acquisition",
+      "roomName": "5.2A02",
+      "description": "Datenakquise 5.2A02",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 302,
+      "type": "data_acquisition",
+      "roomName": "5.2A04",
+      "description": "Datenakquise 5.2A04",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 303,
+      "type": "data_acquisition",
+      "roomName": "5.2A05",
+      "description": "Datenakquise 5.2A05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 304,
+      "type": "data_acquisition",
+      "roomName": "5.2A07",
+      "description": "Datenakquise 5.2A07",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 305,
+      "type": "data_acquisition",
+      "roomName": "5.2A10",
+      "description": "Datenakquise 5.2A10",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 306,
+      "type": "data_acquisition",
+      "roomName": "5.2A12",
+      "description": "Datenakquise 5.2A12",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 307,
+      "type": "data_acquisition",
+      "roomName": "5.2A13",
+      "description": "Datenakquise 5.2A13",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 308,
+      "type": "data_acquisition",
+      "roomName": "5.2A14",
+      "description": "Datenakquise 5.2A14",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 309,
+      "type": "data_acquisition",
+      "roomName": "5.2A15",
+      "description": "Datenakquise 5.2A15",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 310,
+      "type": "data_acquisition",
+      "roomName": "5.2A17",
+      "description": "Datenakquise 5.2A17",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 311,
+      "type": "data_acquisition",
+      "roomName": "5.2A38",
+      "description": "Datenakquise 5.2A38",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 312,
+      "type": "data_acquisition",
+      "roomName": "5.2A71",
+      "description": "Datenakquise 5.2A71",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 313,
+      "type": "data_acquisition",
+      "roomName": "5.2B01",
+      "description": "Datenakquise 5.2B01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 314,
+      "type": "data_acquisition",
+      "roomName": "5.2B03",
+      "description": "Datenakquise 5.2B03",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 315,
+      "type": "data_acquisition",
+      "roomName": "5.2B04",
+      "description": "Datenakquise 5.2B04",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 316,
+      "type": "data_acquisition",
+      "roomName": "5.2B05",
+      "description": "Datenakquise 5.2B05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 317,
+      "type": "data_acquisition",
+      "roomName": "5.2B06",
+      "description": "Datenakquise 5.2B06",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 318,
+      "type": "data_acquisition",
+      "roomName": "5.2B10",
+      "description": "Datenakquise 5.2B10",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 319,
+      "type": "data_acquisition",
+      "roomName": "5.2B13",
+      "description": "Datenakquise 5.2B13",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 320,
+      "type": "data_acquisition",
+      "roomName": "5.2B15",
+      "description": "Datenakquise 5.2B15",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 321,
+      "type": "data_acquisition",
+      "roomName": "5.2B17",
+      "description": "Datenakquise 5.2B17",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 322,
+      "type": "data_acquisition",
+      "roomName": "5.2B18",
+      "description": "Datenakquise 5.2B18",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 323,
+      "type": "data_acquisition",
+      "roomName": "5.2B51",
+      "description": "Datenakquise 5.2B51",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 324,
+      "type": "data_acquisition",
+      "roomName": "5.2B53",
+      "description": "Datenakquise 5.2B53",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 325,
+      "type": "data_acquisition",
+      "roomName": "5.2C01",
+      "description": "Datenakquise 5.2C01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 326,
+      "type": "data_acquisition",
+      "roomName": "5.2C03",
+      "description": "Datenakquise 5.2C03",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 327,
+      "type": "data_acquisition",
+      "roomName": "5.2C05",
+      "description": "Datenakquise 5.2C05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 328,
+      "type": "data_acquisition",
+      "roomName": "5.2C07",
+      "description": "Datenakquise 5.2C07",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 329,
+      "type": "data_acquisition",
+      "roomName": "5.2C08",
+      "description": "Datenakquise 5.2C08",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 330,
+      "type": "data_acquisition",
+      "roomName": "5.2C19",
+      "description": "Datenakquise 5.2C19",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 331,
+      "type": "data_acquisition",
+      "roomName": "5.2C52",
+      "description": "Datenakquise 5.2C52",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 332,
+      "type": "data_acquisition",
+      "roomName": "5.2C54",
+      "description": "Datenakquise 5.2C54",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 333,
+      "type": "data_acquisition",
+      "roomName": "5.2C56",
+      "description": "Datenakquise 5.2C56",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 334,
+      "type": "data_acquisition",
+      "roomName": "5.2C59",
+      "description": "Datenakquise 5.2C59",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 335,
+      "type": "data_acquisition",
+      "roomName": "5.2C91",
+      "description": "Datenakquise 5.2C91",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 336,
+      "type": "data_acquisition",
+      "roomName": "5.2D02",
+      "description": "Datenakquise 5.2D02",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 337,
+      "type": "data_acquisition",
+      "roomName": "5.2D11",
+      "description": "Datenakquise 5.2D11",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    }
+  ],
+  "ad_hoc_generators": [
+    {
+      "type": "information",
+      "distribution": "exponential",
+      "rate_per_hour": 4,
+      "active_window": {
+        "from": 28800,
+        "to": 64800
+      },
+      "params": {
+        "description": "Info-Anfrage Mitarbeiter"
+      }
+    }
+  ]
+}

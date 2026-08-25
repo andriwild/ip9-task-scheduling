@@ -18,8 +18,8 @@ void HeadlessRunner::setupApplication() {
 
     m_config = std::make_shared<SimConfig>(ConfigLoader::loadSimConfig().value());
 
-    if (!std::filesystem::is_regular_file(m_config->appointmentsPath)) {
-        throw std::runtime_error("Appointments file does not exist: " + m_config->appointmentsPath);
+    if (!std::filesystem::is_regular_file(m_config->scenarioPath)) {
+        throw std::runtime_error("Scenario file does not exist: " + m_config->scenarioPath);
     }
     auto allPeople = ConfigLoader::loadEmployees(m_config->employeesPath);
     if (!allPeople.has_value() || allPeople.value().empty()) {
@@ -64,7 +64,7 @@ bool HeadlessRunner::loadNextRound() {
         m_ctx->reseed(roundSeed(m_currentRound));
     }
 
-    const std::string& path = m_config->appointmentsPath;
+    const std::string& path = m_config->scenarioPath;
     DES_LOG_INFO("des.runner", "Starting round %d/%d: %s", m_currentRound + 1, m_config->rounds, path.c_str());
     m_reporter.setRunInfo(std::filesystem::path(path).stem().string(), m_ctx->activeSeed());
 

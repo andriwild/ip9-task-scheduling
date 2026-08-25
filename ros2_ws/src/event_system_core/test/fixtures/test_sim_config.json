@@ -18,7 +18,7 @@
     "departure_distribution": "normal",
     "dock_location": "IMVS_Dock",
     "cacheEnabled": false,
-    "appointments_path": "test.json",
+    "scenario_path": "test.json",
     "accompany": {
         "accompany_speed": 0.3,
         "conversation_probability": 0.5,

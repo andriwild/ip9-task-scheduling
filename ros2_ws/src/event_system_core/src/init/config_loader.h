@@ -213,6 +213,17 @@ public:
         return employees;
     }
 
+    static void renameLegacyKeys(nlohmann::json& j, const std::string& source) {
+        if (!j.contains("appointments_path")) {
+            return;
+        }
+        DES_LOG_WARN("des.io.config", "%s uses 'appointments_path', rename it to 'scenario_path'", source.c_str());
+        if (!j.contains("scenario_path")) {
+            j["scenario_path"] = j["appointments_path"];
+        }
+        j.erase("appointments_path");
+    }
+
     static std::optional<SimConfig> loadSimConfig(const std::string& filePath = baseConfigPath(), const std::string& overridePath = s_overridePath) {
         const auto json = getJson(filePath);
         if (!json.has_value()) {
@@ -222,14 +233,16 @@ public:
 
         try {
             auto j = json.value();
+            renameLegacyKeys(j, filePath);
 
             if (!overridePath.empty()) {
                 const std::string resolved = resolvePath(overridePath);
-                const auto overrideJson = getJson(resolved);
+                auto overrideJson = getJson(resolved);
                 if (!overrideJson.has_value()) {
                     DES_LOG_ERROR("des.io.config", "Could not read override config: %s", resolved.c_str());
                     return std::nullopt;
                 }
+                renameLegacyKeys(overrideJson.value(), resolved);
                 j.merge_patch(overrideJson.value());
                 DES_LOG_DEBUG("des.io.config", "Applied config override: %s", resolved.c_str());
             }
@@ -264,7 +277,7 @@ public:
             config.dockLocation             = j.at("dock_location").get<std::string>();
             config.cacheEnabled             = j.at("cacheEnabled").get<bool>();
 
-            config.appointmentsPath = resolvePath(j.value("appointments_path", std::string("appointments.json")));
+            config.scenarioPath     = resolvePath(j.value("scenario_path", std::string("appointments.json")));
             config.employeesPath    = resolvePath(j.value("employees_path", DEFAULT_EMPLOYEE_FILE));
             config.peopleSpawnLocation = j.value("people_spawn_location", std::string("IMVS_Entrance"));
             config.personIdentificationRange = j.value("person_identification_range", j.value("person_detection_range", 5.0));
@@ -377,7 +390,7 @@ public:
         j["lunch_duration_std"]             = roundValue(config.lunchDurationStd);
         j["dock_location"]                  = config.dockLocation;
         j["cacheEnabled"]                   = config.cacheEnabled;
-        j["appointments_path"]              = config.appointmentsPath;
+        j["scenario_path"]                  = config.scenarioPath;
         j["employees_path"]                 = config.employeesPath;
         j["people_spawn_location"]          = config.peopleSpawnLocation;
         j["person_identification_range"]    = roundValue(config.personIdentificationRange);

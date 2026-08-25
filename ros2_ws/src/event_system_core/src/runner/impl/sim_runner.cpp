@@ -17,8 +17,8 @@
 namespace des {
 
 void SimRunner::reloadSimulationData() {
-    m_orders = loadOrders(m_config->appointmentsPath, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
-    m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(m_config->appointmentsPath);
+    m_orders = loadOrders(m_config->scenarioPath, m_config->simStartTime, m_config->simStartTime + m_config->simDuration);
+    m_backgroundTemplates = ConfigLoader::loadBackgroundTemplates(m_config->scenarioPath);
     DES_LOG_INFO("des.runner", "Successful loaded %zu background templates", m_backgroundTemplates.size());
 }
 

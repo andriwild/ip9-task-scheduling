@@ -9,7 +9,6 @@
         "conversation_probability": 1.0
     },
     "always_charge_at_dock": true,
-    "appointments_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
     "arrival_distribution": "normal",
     "arrival_mean": 32400.0,
     "arrival_std": 1800.0,
@@ -69,6 +68,7 @@
     "robot_speed": 1.0,
     "round_mode": "replication",
     "rounds": 1,
+    "scenario_path": "/home/andri/repos/ip9-task-scheduling/ros2_ws/config/scenarios/realistic_3day.json",
     "search_drop_off_at_find": false,
     "search_excluded_room_types": [
         "TOILET"

@@ -69,7 +69,7 @@ protected:
     QLineEdit* m_peopleSpawnLocation;
     QDoubleSpinBox* m_personDetectionRange;
     QCheckBox* m_cacheEnabled;
-    QLabel* m_appointmentsPath;
+    QLabel* m_scenarioPath;
     QPushButton* m_btnSetConfig;
     QLabel* m_statusLabel;
     QPushButton* m_btnFileDialog;

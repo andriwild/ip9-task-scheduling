@@ -129,8 +129,8 @@ TEST(ConfigLoaderSimConfig, LoadsValidConfig) {
     EXPECT_DOUBLE_EQ(result->fullBatteryThreshold, 95.0);
     EXPECT_EQ(result->dockLocation, "IMVS_Dock");
     EXPECT_FALSE(result->cacheEnabled);
-    EXPECT_TRUE(std::filesystem::path(result->appointmentsPath).is_absolute());
-    EXPECT_EQ(std::filesystem::path(result->appointmentsPath).filename(), "test.json");
+    EXPECT_TRUE(std::filesystem::path(result->scenarioPath).is_absolute());
+    EXPECT_EQ(std::filesystem::path(result->scenarioPath).filename(), "test.json");
 
     // Plugin-owned parameters live under their typeName() sub-object now.
     EXPECT_DOUBLE_EQ(des::accompanyConfig().accompanySpeed, 0.3);
@@ -223,7 +223,7 @@ TEST(ConfigLoaderSimConfig, SaveAndReloadProducesSameConfig) {
     EXPECT_DOUBLE_EQ(original->driveDelaySigma, reloaded->driveDelaySigma);
     EXPECT_EQ(original->dockLocation, reloaded->dockLocation);
     EXPECT_EQ(original->cacheEnabled, reloaded->cacheEnabled);
-    EXPECT_EQ(original->appointmentsPath, reloaded->appointmentsPath);
+    EXPECT_EQ(original->scenarioPath, reloaded->scenarioPath);
     EXPECT_EQ(original->arrivalDistribution, reloaded->arrivalDistribution);
     EXPECT_EQ(original->departureDistribution, reloaded->departureDistribution);
 

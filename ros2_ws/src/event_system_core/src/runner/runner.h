@@ -145,7 +145,7 @@ protected:
             m_eventQueue.push(std::make_shared<PersonTransitionEvent>(simEndTime, p.get()));
         }
 
-        addEventsFromInterruptGenerators(m_config->appointmentsPath);
+        addEventsFromInterruptGenerators(m_config->scenarioPath);
         addBackgroundReleaseEvents(simStartTime, simEndTime);
 
         m_ctx->resetContext(m_eventQueue.getFirstEventTime());

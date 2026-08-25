@@ -31,7 +31,7 @@ struct SimConfig {
     DistributionType departureDistribution;
     std::string dockLocation;
     bool cacheEnabled;
-    std::string appointmentsPath;
+    std::string scenarioPath;
     std::string peopleSpawnLocation;
     double personIdentificationRange = 5.0;
     double personRecognitionRange = 5.0;
@@ -109,7 +109,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "lunchDurationStd" << ": " << config.lunchDurationStd << std::endl;
         os << std::left << std::setw(W) << "dockPose" << ": " << config.dockLocation<< std::endl;
         os << std::left << std::setw(W) << "cache enabled" << ": " << config.cacheEnabled << std::endl;
-        os << std::left << std::setw(W) << "appointmentsPath" << ": " << config.appointmentsPath << std::endl;
+        os << std::left << std::setw(W) << "scenarioPath" << ": " << config.scenarioPath << std::endl;
         os << std::left << std::setw(W) << "employeesPath" << ": " << config.employeesPath << std::endl;
         os << std::left << std::setw(W) << "searchRewardStrategy" << ": " << searchRewardStrategyToString(config.searchRewardStrategy) << std::endl;
         os << std::left << std::setw(W) << "searchRouteStrategy" << ": " << searchRouteStrategyToString(config.searchRouteStrategy) << std::endl;

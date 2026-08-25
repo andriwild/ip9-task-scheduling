@@ -1,5 +1,5 @@
 {
-    "appointments_path": "scenarios/single_accompany.json",
     "cacheEnabled": true,
+    "scenario_path": "scenarios/single_accompany.json",
     "use_distance_matrix": true
 }

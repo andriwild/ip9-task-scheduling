@@ -167,8 +167,8 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
 
     m_btnFileDialog     = new QPushButton("Edit");
     m_btnFileDialog->setFixedWidth(50);
-    m_appointmentsPath  = new QLabel("appointments.json");
-    hLayout->addWidget(m_appointmentsPath);
+    m_scenarioPath  = new QLabel("appointments.json");
+    hLayout->addWidget(m_scenarioPath);
     hLayout->addWidget(m_btnFileDialog);
     addConfigItem(generalGroup, "Appointments Config", container);
 
@@ -184,7 +184,7 @@ DesSystemConfig::DesSystemConfig(QWidget* parent) : Panel(parent) {
         const auto path = QFileDialog::getOpenFileName(this, "Datei öffnen", DEFAULT_CONFIG_FILE_LOCATION, "*.json");
         if (!path.isEmpty()) {
             const QFileInfo info(path);
-            m_appointmentsPath->setText(info.fileName());
+            m_scenarioPath->setText(info.fileName());
             m_configFile = path;
         }
     });
@@ -228,7 +228,7 @@ void DesSystemConfig::onSetConfig() {
     request->departure_distribution = m_departureDistribution->currentText().toStdString();
     request->dock_location = m_dockLocation->text().toStdString();
     request->cache_enabled = m_cacheEnabled->isChecked();
-    request->appointments_path = m_configFile.toStdString();
+    request->scenario_path = m_configFile.toStdString();
     request->people_spawn_location = m_peopleSpawnLocation->text().toStdString();
     request->person_detection_range = m_personDetectionRange->value();
     request->sim_start_time = QTime(0, 0).secsTo(m_simStartTime->time());
@@ -285,9 +285,9 @@ void DesSystemConfig::onSystemConfig(const event_system_msgs::msg::SystemConfig:
     m_simStartTime->setTime(QTime(0, 0).addSecs(msg->sim_start_time));
     m_simDuration->setValue(msg->sim_duration / 3600.0);
 
-    const auto appointmentConfigPath = QString::fromStdString(msg->appointments_path);
+    const auto appointmentConfigPath = QString::fromStdString(msg->scenario_path);
     const QFileInfo info(appointmentConfigPath);
-    m_appointmentsPath->setText(info.fileName());
+    m_scenarioPath->setText(info.fileName());
     m_configFile = appointmentConfigPath;
 }
 

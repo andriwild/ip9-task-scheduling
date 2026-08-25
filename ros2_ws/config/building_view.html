@@ -1,0 +1,1350 @@
+<!--
+  Generated with Claude Code (Anthropic), then reviewed and adapted
+  by the author. See the index of auxiliary tools.
+-->
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Building</title>
+<style>
+  body { margin: 0; font: 13px sans-serif; background: #fafafa; }
+  svg { width: 100vw; height: 100vh; display: block; touch-action: none; }
+  svg.panning { cursor: grabbing; }
+  polygon.room { stroke: #333; stroke-width: 0.06; }
+  polygon.room:hover { stroke-width: 0.2; }
+  polygon.vis { fill: #2255cc; fill-opacity: 0.12; stroke: #2255cc; stroke-width: 0.04; stroke-opacity: 0.5; }
+  polygon.vis.dim { fill-opacity: 0.05; stroke-opacity: 0.2; }
+  polyline.tour { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  text { font-size: 0.6px; fill: #222; pointer-events: none; text-anchor: middle; }
+  text.step { font-size: 0.45px; fill: #fff; }
+  #panel { position: fixed; top: 8px; left: 8px; width: 318px; background: #fff; border: 1px solid #ccc; padding: 8px 10px; }
+  #panel .sect { margin-top: 8px; padding-top: 8px; border-top: 1px solid #ececea; }
+  #panel .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  #panel .row:first-child { margin-top: 0; }
+  #panel label { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  #panel input[type=file] { width: 178px; font-size: 12px; }
+  #panel .note { color: #6f6e6a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #panel .btns { justify-content: flex-start; gap: 4px; }
+  #panel .btns .note { margin-left: auto; }
+  #panel button { min-width: 32px; }
+  #info { color: #333; font-weight: 600; }
+  #tourbox.hidden { display: none; }
+  #movebox.hidden { display: none; }
+  #missionrow.hidden { display: none; }
+  #timeSlider { width: 100%; margin-top: 6px; }
+  text.actor { font-size: 0.4px; fill: #111; }
+  select { max-width: 118px; }
+  #missionSelect { max-width: 232px; }
+  #eventbox { position: fixed; top: 8px; right: 8px; width: 372px; background: #fff; border: 1px solid #ccc; padding: 6px 0 4px; }
+  #eventbox.hidden { display: none; }
+  #eventhead { color: #6f6e6a; padding: 0 10px 5px; border-bottom: 1px solid #ececea; }
+  #eventlist { list-style: none; margin: 0; padding: 0; }
+  #eventlist li { display: flex; gap: 8px; padding: 2px 10px; border-left: 3px solid transparent; cursor: pointer; }
+  #eventlist li:hover { background: #f4f4f2; }
+  #eventlist li.now { background: #fdf3d8; border-left-color: #c79000; font-weight: 600; }
+  #eventlist li .t { color: #6f6e6a; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  #eventlist li.now .t { color: #4a3800; }
+  #eventlist li .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #eventlist li .dot { width: 8px; flex: 0 0 8px; align-self: center; height: 8px; border-radius: 50%; }
+  #drop { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; background: #fafafa; font-size: 16px; color: #555; }
+  #drop.over { background: #e8f0fe; }
+  #drop.hidden { display: none; }
+  #debugbox.hidden { display: none; }
+  #timeline { position: fixed; left: 0; right: 0; bottom: 0; height: 124px; background: #fcfcfb; border-top: 1px solid #dcdbd6; }
+  #timeline.hidden { display: none; }
+  #tl { width: 100%; height: 124px; display: block; cursor: crosshair; }
+  #tl text { font-size: 10px; fill: #52514e; text-anchor: start; }
+  #tltip { position: fixed; bottom: 132px; background: #fcfcfb; border: 1px solid #dcdbd6; padding: 6px 9px; pointer-events: none; max-width: 420px; white-space: pre-line; }
+  #tltip.hidden { display: none; }
+  #legend { position: fixed; right: 8px; bottom: 132px; background: #fcfcfb; border: 1px solid #dcdbd6; padding: 6px 9px; }
+  #legend.hidden { display: none; }
+  #legend span { display: inline-block; margin-right: 10px; color: #0b0b0b; }
+  #legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <div class="row"><span id="info">building.json</span></div>
+  <div class="sect">
+    <div class="row"><label>Touren <input type="file" id="tourPicker" accept=".json,application/json"></label></div>
+    <div class="row"><label>Moves <input type="file" id="movePicker" accept=".csv,text/csv"></label></div>
+    <div class="row"><label>Debug <input type="file" id="debugPicker" accept=".csv,text/csv" multiple></label></div>
+    <div class="row">
+      <label><input type="checkbox" id="feedToggle" checked> Ereignisliste</label>
+      <label><input type="checkbox" id="tlToggle" checked> Zeitleiste</label>
+    </div>
+  </div>
+  <div id="tourbox" class="hidden sect">
+    <div class="row">
+      <label>Raum <select id="roomSelect"></select></label>
+      <label><input type="checkbox" id="visToggle"> Sichtfelder</label>
+    </div>
+    <div class="row"><span id="tourinfo" class="note"></span></div>
+  </div>
+  <div id="movebox" class="hidden sect">
+    <div id="missionrow" class="row"><label>Auftrag <select id="missionSelect"></select></label></div>
+    <input type="range" id="timeSlider" min="0" max="0" value="0">
+    <div class="row">
+      <label><input type="checkbox" id="routeToggle" checked> Nav2-Pfade</label>
+      <label>Spur <select id="trailSelect">
+        <option value="0">aus</option>
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="-1">alle</option>
+      </select></label>
+      <label>Tempo <select id="speedSelect">
+        <option value="60">1 min/s</option>
+        <option value="300">5 min/s</option>
+        <option value="1800" selected>30 min/s</option>
+        <option value="3600">1 h/s</option>
+        <option value="14400">4 h/s</option>
+      </select></label>
+    </div>
+    <div class="row btns">
+      <button id="stepBack" title="ein Ereignis zurueck (Pfeil links)">&#9664;</button>
+      <button id="playBtn">Play</button>
+      <button id="stepFwd" title="ein Ereignis vor (Pfeil rechts)">&#9654;</button>
+      <span id="moveinfo" class="note"></span>
+    </div>
+  </div>
+  <div id="debugbox" class="hidden sect">
+    <div class="row">
+      <label><input type="checkbox" id="tlEvents" checked> Ereignisse</label>
+      <label><input type="checkbox" id="tlSightings" checked> Sichtungen</label>
+    </div>
+    <div class="row"><span id="debuginfo" class="note"></span></div>
+  </div>
+</div>
+<div id="eventbox" class="hidden">
+  <div id="eventhead"></div>
+  <ul id="eventlist"></ul>
+</div>
+<svg id="map"></svg>
+<div id="legend" class="hidden"></div>
+<div id="timeline" class="hidden"><svg id="tl"></svg></div>
+<div id="tltip" class="hidden"></div>
+<div id="drop">
+  <div>
+    <p>Drop here (building.json)</p>
+    <p><input type="file" id="picker" accept=".json,application/json"></p>
+  </div>
+</div>
+<script>
+const COLORS = { OFFICE: "#cfe2f3", CLASSROOM: "#d9d2e9", MEETING: "#f4cccc", KITCHEN: "#fce5cd", TOILET: "#d9ead3", ACCESS: "#e0e0d8", SPACE: "#fff2cc", MISC: "#eeeeee" };
+const NS = "http://www.w3.org/2000/svg";
+const ROBOT_COLOR = "#c79000";
+const TOUR_COLOR = "#d40000";
+const WAYPOINT_COLOR = "#8a8984";
+
+const svg = document.getElementById("map");
+const info = document.getElementById("info");
+const drop = document.getElementById("drop");
+const picker = document.getElementById("picker");
+const tourPicker = document.getElementById("tourPicker");
+const tourbox = document.getElementById("tourbox");
+const roomSelect = document.getElementById("roomSelect");
+const visToggle = document.getElementById("visToggle");
+const tourinfo = document.getElementById("tourinfo");
+const movePicker = document.getElementById("movePicker");
+const routeToggle = document.getElementById("routeToggle");
+const movebox = document.getElementById("movebox");
+const missionrow = document.getElementById("missionrow");
+const missionSelect = document.getElementById("missionSelect");
+const timeSlider = document.getElementById("timeSlider");
+const trailSelect = document.getElementById("trailSelect");
+const speedSelect = document.getElementById("speedSelect");
+const playBtn = document.getElementById("playBtn");
+const stepBack = document.getElementById("stepBack");
+const stepFwd = document.getElementById("stepFwd");
+const moveinfo = document.getElementById("moveinfo");
+const eventbox = document.getElementById("eventbox");
+const eventhead = document.getElementById("eventhead");
+const eventlist = document.getElementById("eventlist");
+
+const debugPicker = document.getElementById("debugPicker");
+const debugbox = document.getElementById("debugbox");
+const debuginfo = document.getElementById("debuginfo");
+const tlEvents = document.getElementById("tlEvents");
+const tlSightings = document.getElementById("tlSightings");
+const feedToggle = document.getElementById("feedToggle");
+const tlToggle = document.getElementById("tlToggle");
+const timeline = document.getElementById("timeline");
+const tl = document.getElementById("tl");
+const tltip = document.getElementById("tltip");
+const legend = document.getElementById("legend");
+
+// Same palette as the RViz swimlane (des_swimlane_panel.cpp): colour by the
+// plugin supplied name first, fall back to the structural category.
+const STATE_COLORS = {
+    search: "#ff6464",
+    conversate: "#b482dc",
+    accompany: "#64b4ff",
+    clean: "#f096c8",
+    acquire: "#dcb464",
+    returning: "#78c8a0",
+    information: "#0e8f9e",
+};
+const CATEGORY_COLORS = { 0: "#c8c8c8", 1: "#aaaadc", 2: "#ffd232" };
+
+function stateColor(category, name) {
+    return STATE_COLORS[name] || CATEGORY_COLORS[category] || "#808080";
+}
+const SIGHTING_COLORS = { PRESENT: "#0ca30c", ABSENT: "#d03b3b" };
+const BAND = { states: 26, events: 22, sightings: 18, axis: 16 };
+let cursorLine = null;
+
+const TL_MIN_SPAN = 5;
+const FEED_ROWS = 10;
+
+const state = { building: null, tours: null, paths: null, showRoutes: true, selected: "", showVis: false, view: null, home: null, moves: null, active: null, mission: "", time: 0, trail: 10, speed: 1800, events: null, states: null, sightings: null, tlView: null, steps: null, feed: null };
+
+function toRooms(data) {
+    if (Array.isArray(data.rooms)) {
+        return data.rooms.map((r) => ({
+            name: r.name,
+            type: r.type || "MISC",
+            area: r.area,
+            fp: r.footprint,
+            loc: { x: r.x, y: r.y },
+        }));
+    }
+    return (data.names || []).map((name, i) => ({
+        name: name,
+        type: (data.types || [])[i] || "MISC",
+        area: (data.areas || [])[i],
+        fp: (data.footprints || [])[i],
+        loc: (data.locations || [])[i],
+    }));
+}
+
+function isPathData(data) {
+    return data && data.paths && !Array.isArray(data.paths) && !data.rooms;
+}
+
+function pathBetween(from, to) {
+    if (!state.paths || !from || !to || from === to) {
+        return null;
+    }
+    const entry = state.paths[from < to ? `${from}|${to}` : `${to}|${from}`];
+    if (!entry || !entry.pts || entry.pts.length < 2) {
+        return null;
+    }
+    return from < to ? entry.pts : [...entry.pts].reverse();
+}
+
+function isTourData(data) {
+    return data && data.rooms && !Array.isArray(data.rooms) && Object.values(data.rooms).some((t) => Array.isArray(t.path));
+}
+
+function tourColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    }
+    return `hsl(${hash % 360}, 70%, 40%)`;
+}
+
+function group(id) {
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("id", id);
+    svg.appendChild(g);
+    return g;
+}
+
+function polyline(path, color, width, opacity) {
+    const line = document.createElementNS(NS, "polyline");
+    line.setAttribute("class", "tour");
+    line.setAttribute("points", path.map(([x, y]) => `${x},${-y}`).join(" "));
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", width);
+    line.setAttribute("stroke-opacity", opacity);
+    return line;
+}
+
+function fitView(rooms) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const room of rooms) {
+        for (const [x, y] of room.fp || []) {
+            if (x < minX) { minX = x; }
+            if (x > maxX) { maxX = x; }
+            if (y < minY) { minY = y; }
+            if (y > maxY) { maxY = y; }
+        }
+    }
+    if (!Number.isFinite(minX)) {
+        return { x: -10, y: -10, w: 20, h: 20 };
+    }
+    const pad = 1;
+    return { x: minX - pad, y: -maxY - pad, w: maxX - minX + 2 * pad, h: maxY - minY + 2 * pad };
+}
+
+function applyView() {
+    const v = state.view;
+    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+}
+
+function pixelsPerUnit() {
+    const rect = svg.getBoundingClientRect();
+    const v = state.view;
+    return Math.min(rect.width / v.w, rect.height / v.h);
+}
+
+function toUser(clientX, clientY) {
+    const rect = svg.getBoundingClientRect();
+    const v = state.view;
+    const s = pixelsPerUnit();
+    return {
+        x: v.x + (clientX - rect.left - (rect.width - v.w * s) / 2) / s,
+        y: v.y + (clientY - rect.top - (rect.height - v.h * s) / 2) / s,
+    };
+}
+
+function renderRooms(gRooms, gLabels) {
+    const rooms = toRooms(state.building);
+
+    rooms.forEach((room) => {
+        const name = room.name;
+        const fp = room.fp;
+        const type = room.type;
+        const rawArea = room.area;
+        const area = rawArea === undefined || rawArea === null ? "-" : rawArea.toFixed(1) + " m2";
+
+        if (fp) {
+            const poly = document.createElementNS(NS, "polygon");
+            poly.setAttribute("class", "room");
+            poly.setAttribute("points", fp.map(([x, y]) => `${x},${-y}`).join(" "));
+            poly.setAttribute("fill", COLORS[type] || COLORS.MISC);
+            poly.addEventListener("mouseenter", () => {
+                info.textContent = `${name} | ${type} | ${area}`;
+            });
+            poly.addEventListener("click", () => {
+                if (state.tours && state.tours.rooms[name]) {
+                    state.selected = name;
+                    roomSelect.value = name;
+                    render();
+                }
+            });
+            gRooms.appendChild(poly);
+        }
+
+        const loc = room.loc;
+        if (!loc) {
+            return;
+        }
+        const marker = document.createElementNS(NS, "polygon");
+        const s = 0.26;
+        marker.setAttribute("points", `${loc.x},${-loc.y - s} ${loc.x - s},${-loc.y + s * 0.7} ${loc.x + s},${-loc.y + s * 0.7}`);
+        marker.setAttribute("fill", WAYPOINT_COLOR);
+        gRooms.appendChild(marker);
+
+        const label = document.createElementNS(NS, "text");
+        label.setAttribute("x", loc.x);
+        label.setAttribute("y", -loc.y - 0.5);
+        label.textContent = name;
+        gLabels.appendChild(label);
+    });
+
+    return rooms.length;
+}
+
+function renderTours(gVis, gTours, gLabels) {
+    const tours = state.tours.rooms;
+    const selected = state.selected;
+
+    Object.entries(tours).forEach(([name, tour]) => {
+        if (selected && name !== selected) {
+            return;
+        }
+        const focused = Boolean(selected);
+        gTours.appendChild(polyline(tour.path, TOUR_COLOR, focused ? 0.22 : 0.09, focused ? 0.95 : 0.45));
+
+        if (state.showVis) {
+            (tour.vis || []).forEach((poly) => {
+                const shape = document.createElementNS(NS, "polygon");
+                shape.setAttribute("class", focused ? "vis" : "vis dim");
+                shape.setAttribute("points", poly.map(([x, y]) => `${x},${-y}`).join(" "));
+                gVis.appendChild(shape);
+            });
+        }
+    });
+
+    if (!selected) {
+        return;
+    }
+
+    const tour = tours[selected];
+    if (!tour) {
+        return;
+    }
+
+    const closed = tour.path.length > 1 && tour.path[0][0] === tour.path[tour.path.length - 1][0] && tour.path[0][1] === tour.path[tour.path.length - 1][1];
+    const stops = closed ? tour.path.slice(0, -1) : tour.path;
+    stops.forEach(([x, y], i) => {
+        const dot = document.createElementNS(NS, "circle");
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", -y);
+        dot.setAttribute("r", 0.32);
+        dot.setAttribute("fill", i === 0 ? "#000" : TOUR_COLOR);
+        gTours.appendChild(dot);
+
+        const num = document.createElementNS(NS, "text");
+        num.setAttribute("class", "step");
+        num.setAttribute("x", x);
+        num.setAttribute("y", -y + 0.16);
+        num.textContent = String(i + 1);
+        gLabels.appendChild(num);
+    });
+
+    const dist = tour.distance === undefined ? "-" : tour.distance.toFixed(1) + " m";
+    tourinfo.textContent = `${selected} | ${tour.steps} Stopps | ${dist}`;
+}
+
+function isMoveData(text) {
+    return text.slice(0, 200).trimStart().startsWith("t,mission,actor,room,x,y");
+}
+
+function parseMoves(text) {
+    const rows = [];
+    text.trim().split(/\r?\n/).slice(1).forEach((line) => {
+        const [t, mission, actor, room, x, y] = line.split(",");
+        if (room === undefined) {
+            return;
+        }
+        const placed = x !== undefined && x !== "" && y !== undefined && y !== "";
+        rows.push({
+            t: Number(t),
+            mission: Number(mission),
+            actor: actor,
+            room: room,
+            placed: placed,
+            x: placed ? Number(x) : 0,
+            y: placed ? Number(y) : 0,
+        });
+    });
+    rows.sort((a, b) => a.t - b.t);
+    const missions = new Map();
+    rows.forEach((row) => {
+        if (!missions.has(row.mission)) {
+            missions.set(row.mission, []);
+        }
+        missions.get(row.mission).push(row);
+    });
+    return { rows: rows, missions: missions };
+}
+
+function splitCsv(line) {
+    const cells = [];
+    let cell = "";
+    let quoted = false;
+    for (const ch of line) {
+        if (ch === '"') {
+            quoted = !quoted;
+        } else if (ch === "," && !quoted) {
+            cells.push(cell);
+            cell = "";
+        } else {
+            cell += ch;
+        }
+    }
+    cells.push(cell);
+    return cells;
+}
+
+function parseCsv(text, build) {
+    const rows = [];
+    text.trim().split(/\r?\n/).slice(1).forEach((line) => {
+        const cells = splitCsv(line);
+        if (cells.length > 1) {
+            rows.push(build(cells));
+        }
+    });
+    return rows;
+}
+
+function parseEvents(text) {
+    return parseCsv(text, (c) => ({ t: Number(c[0]), mission: Number(c[1]), type: Number(c[2]), name: c[3], order: c[4] }));
+}
+
+function parseStates(text) {
+    return parseCsv(text, (c) => ({ t: Number(c[0]), end: Number(c[1]), category: Number(c[2]), name: c[3], socFrom: Number(c[4]), socTo: Number(c[5]) }));
+}
+
+function parseSightings(text) {
+    return parseCsv(text, (c) => ({ t: Number(c[0]), person: c[1], room: c[2], kind: c[3] }));
+}
+
+function missionType(id) {
+    if (id < 0) {
+        return "ohne Auftrag";
+    }
+    if (id >= 300000) {
+        return "Hintergrund";
+    }
+    if (id >= 200000) {
+        return "Serie";
+    }
+    if (id >= 100000) {
+        return "ad hoc";
+    }
+    return "geplant";
+}
+
+function missionLabel(id, rows) {
+    const from = formatTime(rows[0].t);
+    const to = formatTime(rows[rows.length - 1].t);
+    return `${id} | ${missionType(id)} | ${from} - ${to} | ${rows.length} Moves`;
+}
+
+function selectMission() {
+    const rows = state.mission === "" ? state.moves.rows : state.moves.missions.get(Number(state.mission));
+    state.active = { rows: rows, times: [...new Set(rows.map((r) => r.t))] };
+    state.tlView = null;
+    state.steps = null;
+    state.feed = null;
+    const times = state.active.times;
+    timeSlider.min = String(times[0]);
+    timeSlider.max = String(times[times.length - 1]);
+    state.time = times[0];
+    timeSlider.value = String(state.time);
+}
+
+function fillMissionSelect() {
+    missionSelect.replaceChildren();
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = `alle | ${state.moves.rows.length} Moves`;
+    missionSelect.appendChild(all);
+    [...state.moves.missions.keys()].sort((a, b) => a - b).forEach((id) => {
+        const opt = document.createElement("option");
+        opt.value = String(id);
+        opt.textContent = missionLabel(id, state.moves.missions.get(id));
+        missionSelect.appendChild(opt);
+    });
+    missionSelect.value = state.mission;
+}
+
+function formatTime(raw) {
+    const t = Math.floor(raw);
+    const day = Math.floor(t / 86400);
+    const sec = t % 86400;
+    const hh = String(Math.floor(sec / 3600)).padStart(2, "0");
+    const mm = String(Math.floor(sec / 60) % 60).padStart(2, "0");
+    const ss = String(sec % 60).padStart(2, "0");
+    return `Tag ${day} ${hh}:${mm}:${ss}`;
+}
+
+function historyAt(t) {
+    const at = new Map();
+    const only = state.mission === "" ? null : Number(state.mission);
+    for (const row of state.moves.rows) {
+        if (row.t > t) {
+            break;
+        }
+        if (only !== null && row.actor === "robot" && row.mission !== only) {
+            continue;
+        }
+        if (!at.has(row.actor)) {
+            at.set(row.actor, []);
+        }
+        at.get(row.actor).push(row);
+    }
+    return at;
+}
+
+function routeTrail(rows) {
+    const pts = [[rows[0].x, rows[0].y]];
+    for (let i = 1; i < rows.length; i++) {
+        const route = state.showRoutes ? pathBetween(rows[i - 1].room, rows[i].room) : null;
+        if (route) {
+            for (const [x, y] of route) {
+                pts.push([x, y]);
+            }
+        }
+        pts.push([rows[i].x, rows[i].y]);
+    }
+    return pts;
+}
+
+function trail(rows) {
+    const n = state.trail;
+    return n < 0 ? rows : rows.slice(-(n + 1));
+}
+
+function renderActors() {
+    const gActors = document.getElementById("actors");
+    if (!gActors) {
+        return;
+    }
+    gActors.replaceChildren();
+    const t = state.time;
+    const at = historyAt(t);
+
+    if (state.trail !== 0 && at.has("robot")) {
+        const rows = trail(at.get("robot")).filter((r) => r.placed);
+        if (rows.length > 1) {
+            gActors.appendChild(polyline(routeTrail(rows), ROBOT_COLOR, 0.12, 0.8));
+        }
+    }
+
+    at.forEach((rows, actor) => {
+        const row = rows[rows.length - 1];
+        if (!row.placed) {
+            return;
+        }
+        if (actor === "robot") {
+            const rect = document.createElementNS(NS, "rect");
+            rect.setAttribute("x", row.x - 0.4);
+            rect.setAttribute("y", -row.y - 0.4);
+            rect.setAttribute("width", 0.8);
+            rect.setAttribute("height", 0.8);
+            rect.setAttribute("fill", ROBOT_COLOR);
+            rect.setAttribute("stroke", "#4a3800");
+            rect.setAttribute("stroke-width", 0.06);
+            gActors.appendChild(rect);
+        } else {
+            const dot = document.createElementNS(NS, "circle");
+            dot.setAttribute("cx", row.x);
+            dot.setAttribute("cy", -row.y);
+            dot.setAttribute("r", 0.35);
+            dot.setAttribute("fill", tourColor(actor));
+            dot.setAttribute("stroke", "#fff");
+            dot.setAttribute("stroke-width", 0.06);
+            gActors.appendChild(dot);
+        }
+
+        const label = document.createElementNS(NS, "text");
+        label.setAttribute("class", "actor");
+        label.setAttribute("x", row.x);
+        label.setAttribute("y", -row.y - 0.55);
+        label.textContent = actor;
+        gActors.appendChild(label);
+    });
+
+    const times = state.active.times;
+    const done = times.filter((x) => x <= t).length;
+    const inside = [...at.values()].filter((rows) => rows[rows.length - 1].placed && rows[rows.length - 1].actor !== "robot").length;
+    moveinfo.textContent = `${done}/${times.length} | ${inside} im Haus`;
+}
+
+function fullWindow() {
+    const times = state.active ? state.active.times : null;
+    if (times && times.length) {
+        return [times[0], times[times.length - 1]];
+    }
+    return [0, 1];
+}
+
+function timeWindow() {
+    return state.tlView || fullWindow();
+}
+
+function setWindow(from, to) {
+    const [f0, t0] = fullWindow();
+    const full = Math.max(t0 - f0, 1);
+    const span = Math.min(full, Math.max(TL_MIN_SPAN, to - from));
+    if (span >= full) {
+        state.tlView = null;
+        return;
+    }
+    const start = Math.max(f0, Math.min(from, t0 - span));
+    state.tlView = [start, start + span];
+}
+
+function followCursor() {
+    if (!state.tlView) {
+        return false;
+    }
+    const [from, to] = state.tlView;
+    if (state.time >= from && state.time <= to) {
+        return false;
+    }
+    const span = to - from;
+    setWindow(state.time - span / 2, state.time + span / 2);
+    return true;
+}
+
+function stepTimes() {
+    if (state.steps) {
+        return state.steps;
+    }
+    const set = new Set();
+    if (state.moves) {
+        const rows = state.mission === "" ? state.moves.rows : state.moves.missions.get(Number(state.mission)) || [];
+        rows.forEach((r) => set.add(r.t));
+    }
+    if (state.events) {
+        ofMission(state.events).forEach((e) => set.add(e.t));
+    }
+    if (state.sightings) {
+        state.sightings.forEach((s) => set.add(s.t));
+    }
+    if (state.states) {
+        state.states.forEach((s) => set.add(s.t));
+    }
+    state.steps = [...set].sort((a, b) => a - b);
+    return state.steps;
+}
+
+function eventFeed() {
+    if (state.feed) {
+        return state.feed;
+    }
+    const list = [];
+    if (state.events && tlEvents.checked) {
+        ofMission(state.events).forEach((e) => list.push({ t: e.t, text: e.name, color: e.order ? "#2a78d6" : "#8a8984" }));
+    }
+    if (state.sightings && tlSightings.checked) {
+        state.sightings.forEach((s) => list.push({ t: s.t, text: `${s.person} ${s.kind === "PRESENT" ? "gesehen in" : "nicht in"} ${s.room}`, color: SIGHTING_COLORS[s.kind] }));
+    }
+    if (!list.length && state.moves) {
+        const only = state.mission === "" ? null : Number(state.mission);
+        state.moves.rows.filter((r) => only === null || r.actor !== "robot" || r.mission === only)
+            .forEach((r) => list.push({ t: r.t, text: `${r.actor} nach ${r.room}`, color: r.actor === "robot" ? ROBOT_COLOR : tourColor(r.actor) }));
+    }
+    list.sort((a, b) => a.t - b.t);
+    state.feed = list;
+    return list;
+}
+
+function renderFeed() {
+    const feed = eventFeed();
+    if (!feed.length || !feedToggle.checked) {
+        eventbox.classList.add("hidden");
+        return;
+    }
+    eventbox.classList.remove("hidden");
+    let index = feed.findIndex((e) => e.t >= state.time);
+    if (index < 0) {
+        index = feed.length - 1;
+    }
+    const now = feed[index].t;
+    const start = Math.max(0, Math.min(index - Math.floor(FEED_ROWS / 2), feed.length - FEED_ROWS));
+    eventhead.textContent = `${formatTime(state.time)} | Ereignis ${index + 1} von ${feed.length}`;
+    eventlist.replaceChildren();
+    feed.slice(start, start + FEED_ROWS).forEach((e) => {
+        const row = document.createElement("li");
+        if (e.t === now) {
+            row.className = "now";
+        }
+        const dot = document.createElement("i");
+        dot.className = "dot";
+        dot.style.background = e.color;
+        const time = document.createElement("span");
+        time.className = "t";
+        time.textContent = formatTime(e.t);
+        const text = document.createElement("span");
+        text.className = "txt";
+        text.textContent = e.text;
+        row.append(dot, time, text);
+        row.addEventListener("click", () => seek(e.t));
+        eventlist.appendChild(row);
+    });
+}
+
+function seek(t) {
+    state.time = t;
+    timeSlider.value = String(t);
+    if (state.moves) {
+        renderActors();
+    }
+    if (followCursor()) {
+        renderTimeline();
+    } else {
+        moveCursor();
+    }
+    renderFeed();
+}
+
+function stepBy(dir) {
+    const steps = stepTimes();
+    if (!steps.length) {
+        return;
+    }
+    if (timer) {
+        stopPlay();
+    }
+    let next;
+    if (dir > 0) {
+        next = steps.find((s) => s > state.time + 1e-6);
+    } else {
+        for (const s of steps) {
+            if (s < state.time - 1e-6) {
+                next = s;
+            }
+        }
+    }
+    if (next === undefined) {
+        return;
+    }
+    seek(next);
+}
+
+function tlRect(x, y, w, h, fill, title) {
+    const rect = document.createElementNS(NS, "rect");
+    rect.setAttribute("x", x);
+    rect.setAttribute("y", y);
+    rect.setAttribute("width", Math.max(w, 0.7));
+    rect.setAttribute("height", h);
+    rect.setAttribute("fill", fill);
+    if (title) {
+        rect.setAttribute("data-title", title);
+    }
+    tl.appendChild(rect);
+}
+
+function tlLabel(x, y, text) {
+    const label = document.createElementNS(NS, "text");
+    label.setAttribute("x", x);
+    label.setAttribute("y", y);
+    label.textContent = text;
+    tl.appendChild(label);
+}
+
+// Only rows of the selected mission, so a single search reads as its own story.
+function ofMission(rows) {
+    if (state.mission === "") {
+        return rows;
+    }
+    const only = Number(state.mission);
+    return rows.filter((r) => r.mission === only);
+}
+
+function renderTimeline() {
+    if ((!state.states && !state.events && !state.sightings) || !tlToggle.checked) {
+        timeline.classList.add("hidden");
+        legend.classList.add("hidden");
+        tltip.classList.add("hidden");
+        return;
+    }
+    timeline.classList.remove("hidden");
+    tl.replaceChildren();
+
+    const width = tl.clientWidth || 1200;
+    const [from, to] = timeWindow();
+    const span = Math.max(to - from, 1);
+    const at = (t) => (t - from) / span * width;
+    let y = 4;
+
+    if (state.states) {
+        state.states.filter((s) => s.end >= from && s.t <= to).forEach((s) => {
+            tlRect(at(s.t), y, at(s.end) - at(s.t), BAND.states,
+                   stateColor(s.category, s.name),
+                   `${s.name}  ${formatTime(s.t)} - ${formatTime(s.end)}  SoC ${(s.socFrom * 100).toFixed(0)} -> ${(s.socTo * 100).toFixed(0)} %`);
+        });
+        tlLabel(4, y + BAND.states - 8, "Zustand");
+        y += BAND.states + 4;
+    }
+
+    if (state.events && tlEvents.checked) {
+        ofMission(state.events).filter((e) => e.t >= from && e.t <= to).forEach((e) => {
+            tlRect(at(e.t), y, 1, BAND.events, e.order ? "#2a78d6" : "#8a8984", `${formatTime(e.t)}  ${e.name}`);
+        });
+        tlLabel(4, y + BAND.events - 6, "Ereignisse");
+        y += BAND.events + 4;
+    }
+
+    if (state.sightings && tlSightings.checked) {
+        state.sightings.filter((s) => s.t >= from && s.t <= to).forEach((s) => {
+            tlRect(at(s.t), y, 1, BAND.sightings, SIGHTING_COLORS[s.kind],
+                   `${formatTime(s.t)}  ${s.person} ${s.kind === "PRESENT" ? "gesehen in" : "nicht in"} ${s.room}`);
+        });
+        tlLabel(4, y + BAND.sightings - 5, "Sichtungen");
+        y += BAND.sightings + 4;
+    }
+
+    cursorLine = document.createElementNS(NS, "line");
+    cursorLine.setAttribute("y1", 0);
+    cursorLine.setAttribute("y2", y);
+    cursorLine.setAttribute("stroke", "#0b0b0b");
+    cursorLine.setAttribute("stroke-width", 1.5);
+    tl.appendChild(cursorLine);
+    moveCursor();
+    tlLabel(4, y + 12, `${formatTime(from)}  bis  ${formatTime(to)}`);
+
+    renderLegend();
+}
+
+// Called on every animation tick, so it only repositions the existing line.
+function moveCursor() {
+    if (!cursorLine) {
+        return;
+    }
+    const [from, to] = timeWindow();
+    const x = (state.time - from) / Math.max(to - from, 1) * (tl.clientWidth || 1);
+    cursorLine.setAttribute("x1", x);
+    cursorLine.setAttribute("x2", x);
+}
+
+function renderLegend() {
+    if (!state.states) {
+        legend.classList.add("hidden");
+        return;
+    }
+    const used = new Map();
+    state.states.forEach((s) => used.set(s.name, s.category));
+    legend.replaceChildren();
+    used.forEach((category, name) => {
+        const item = document.createElement("span");
+        const swatch = document.createElement("i");
+        swatch.style.background = stateColor(category, name);
+        item.appendChild(swatch);
+        item.appendChild(document.createTextNode(name));
+        legend.appendChild(item);
+    });
+    legend.classList.remove("hidden");
+}
+
+function render() {
+    if (!state.view) {
+        state.home = fitView(toRooms(state.building));
+        state.view = { ...state.home };
+    }
+    applyView();
+
+    svg.replaceChildren();
+    const gRooms = group("rooms");
+    const gVis = group("vis");
+    const gTours = group("tours");
+    group("actors");
+    const gLabels = group("labels");
+
+    const count = renderRooms(gRooms, gLabels);
+
+    if (state.tours) {
+        renderTours(gVis, gTours, gLabels);
+        if (!state.selected) {
+            tourinfo.textContent = `${Object.keys(state.tours.rooms).length} Touren | r = ${state.tours.radius}`;
+        }
+    }
+
+    if (state.moves) {
+        renderActors();
+    }
+    renderTimeline();
+    renderFeed();
+
+    drop.classList.add("hidden");
+    info.textContent = `${count} Raeume | ${state.building.generated_at || "?"}`;
+}
+
+function fillRoomSelect() {
+    roomSelect.replaceChildren();
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = "alle";
+    roomSelect.appendChild(all);
+    Object.keys(state.tours.rooms).sort().forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        roomSelect.appendChild(opt);
+    });
+    roomSelect.value = state.selected;
+}
+
+function loadTours(data) {
+    state.tours = data;
+    state.selected = "";
+    fillRoomSelect();
+    tourbox.classList.remove("hidden");
+    if (state.building) {
+        render();
+    }
+}
+
+function loadPaths(data) {
+    state.paths = data.paths;
+    routeToggle.disabled = false;
+    if (state.building) {
+        render();
+    }
+}
+
+function loadMoves(text) {
+    const moves = parseMoves(text);
+    if (!moves.rows.length) {
+        info.textContent = "Fehler: moves.csv ist leer";
+        return;
+    }
+    state.moves = moves;
+    state.mission = "";
+    fillMissionSelect();
+    selectMission();
+    missionrow.classList.remove("hidden");
+    movebox.classList.remove("hidden");
+    if (state.building) {
+        render();
+    }
+}
+
+function loadDebug(text) {
+    const head = text.slice(0, 120).trimStart();
+    if (head.startsWith("t,mission,type,name")) {
+        state.events = parseEvents(text);
+    } else if (head.startsWith("t,end,category,name")) {
+        state.states = parseStates(text);
+    } else if (head.startsWith("t,person,room,kind")) {
+        state.sightings = parseSightings(text);
+    } else {
+        return false;
+    }
+    state.steps = null;
+    state.tlView = null;
+    state.feed = null;
+    const times = stepTimes();
+    if (!state.moves && times.length) {
+        state.active = { rows: [], times: times };
+        timeSlider.min = String(times[0]);
+        timeSlider.max = String(times[times.length - 1]);
+        state.time = times[0];
+        timeSlider.value = String(state.time);
+        missionrow.classList.add("hidden");
+        movebox.classList.remove("hidden");
+    }
+    debugbox.classList.remove("hidden");
+    debuginfo.textContent = [
+        state.events ? `${state.events.length} Ereignisse` : null,
+        state.states ? `${state.states.length} Zustaende` : null,
+        state.sightings ? `${state.sightings.length} Sichtungen` : null,
+    ].filter(Boolean).join(" | ");
+    if (state.building) {
+        render();
+    }
+    return true;
+}
+
+function load(text) {
+    if (isMoveData(text)) {
+        loadMoves(text);
+        return;
+    }
+    if (loadDebug(text)) {
+        return;
+    }
+    try {
+        const data = JSON.parse(text);
+        if (isPathData(data)) {
+            loadPaths(data);
+            return;
+        }
+        if (isTourData(data)) {
+            loadTours(data);
+            return;
+        }
+        state.building = data;
+        state.view = null;
+        render();
+    } catch (err) {
+        if (!state.building) {
+            drop.classList.remove("hidden");
+        }
+        info.textContent = "Fehler: " + err.message;
+    }
+}
+
+svg.addEventListener("wheel", (e) => {
+    if (!state.view) {
+        return;
+    }
+    e.preventDefault();
+    const factor = Math.exp(e.deltaY * 0.0015);
+    const v = state.view;
+    const minW = state.home.w / 200;
+    const maxW = state.home.w * 4;
+    const w = Math.min(maxW, Math.max(minW, v.w * factor));
+    const k = w / v.w;
+    const p = toUser(e.clientX, e.clientY);
+    state.view = { x: p.x - (p.x - v.x) * k, y: p.y - (p.y - v.y) * k, w: w, h: v.h * k };
+    applyView();
+}, { passive: false });
+
+let pan = null;
+let suppressClick = false;
+
+svg.addEventListener("pointerdown", (e) => {
+    if (!state.view || e.button !== 0) {
+        return;
+    }
+    pan = { x: e.clientX, y: e.clientY, view: { ...state.view }, moved: false };
+    svg.setPointerCapture(e.pointerId);
+});
+
+svg.addEventListener("pointermove", (e) => {
+    if (!pan) {
+        return;
+    }
+    const dx = e.clientX - pan.x;
+    const dy = e.clientY - pan.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        pan.moved = true;
+        svg.classList.add("panning");
+    }
+    const s = pixelsPerUnit();
+    state.view = { ...pan.view, x: pan.view.x - dx / s, y: pan.view.y - dy / s };
+    applyView();
+});
+
+svg.addEventListener("pointerup", () => {
+    suppressClick = Boolean(pan && pan.moved);
+    pan = null;
+    svg.classList.remove("panning");
+});
+
+svg.addEventListener("click", (e) => {
+    if (suppressClick) {
+        suppressClick = false;
+        e.stopPropagation();
+    }
+}, true);
+
+svg.addEventListener("dblclick", () => {
+    if (state.home) {
+        state.view = { ...state.home };
+        applyView();
+    }
+});
+
+picker.addEventListener("change", () => {
+    const file = picker.files[0];
+    if (file) {
+        file.text().then(load);
+    }
+});
+
+tourPicker.addEventListener("change", () => {
+    const file = tourPicker.files[0];
+    if (file) {
+        file.text().then(load);
+    }
+});
+
+roomSelect.addEventListener("change", () => {
+    state.selected = roomSelect.value;
+    render();
+});
+
+movePicker.addEventListener("change", () => {
+    const file = movePicker.files[0];
+    if (file) {
+        file.text().then(load);
+    }
+});
+
+missionSelect.addEventListener("change", () => {
+    if (timer) {
+        stopPlay();
+    }
+    state.mission = missionSelect.value;
+    selectMission();
+    renderActors();
+    renderTimeline();
+    renderFeed();
+});
+
+trailSelect.addEventListener("change", () => {
+    state.trail = Number(trailSelect.value);
+    if (state.moves) {
+        renderActors();
+    }
+});
+
+debugPicker.addEventListener("change", () => {
+    [...debugPicker.files].forEach((file) => file.text().then(load));
+});
+
+function toggleBand() {
+    state.feed = null;
+    renderTimeline();
+    renderFeed();
+}
+
+tlEvents.addEventListener("change", toggleBand);
+tlSightings.addEventListener("change", toggleBand);
+feedToggle.addEventListener("change", renderFeed);
+tlToggle.addEventListener("change", renderTimeline);
+
+tl.addEventListener("mousemove", (e) => {
+    const title = e.target.getAttribute && e.target.getAttribute("data-title");
+    if (!title) {
+        tltip.classList.add("hidden");
+        return;
+    }
+    tltip.textContent = title;
+    tltip.style.left = Math.min(e.clientX + 12, window.innerWidth - 440) + "px";
+    tltip.classList.remove("hidden");
+});
+
+tl.addEventListener("mouseleave", () => tltip.classList.add("hidden"));
+
+tl.addEventListener("click", (e) => {
+    if (!state.active || panMoved) {
+        panMoved = false;
+        return;
+    }
+    const [from, to] = timeWindow();
+    const x = e.clientX - tl.getBoundingClientRect().left;
+    const wanted = from + (x / (tl.clientWidth || 1)) * (to - from);
+    const steps = stepTimes();
+    const pool = steps.length ? steps : state.active.times;
+    seek(pool.reduce((best, t) => (Math.abs(t - wanted) < Math.abs(best - wanted) ? t : best), pool[0]));
+});
+
+tl.addEventListener("wheel", (e) => {
+    if (!state.active) {
+        return;
+    }
+    e.preventDefault();
+    const [from, to] = timeWindow();
+    const x = (e.clientX - tl.getBoundingClientRect().left) / (tl.clientWidth || 1);
+    const focus = from + x * (to - from);
+    const span = (to - from) * Math.exp(e.deltaY * 0.0015);
+    setWindow(focus - x * span, focus + (1 - x) * span);
+    renderTimeline();
+}, { passive: false });
+
+let panFrom = null;
+let panMoved = false;
+
+tl.addEventListener("mousedown", (e) => {
+    if (!state.tlView) {
+        return;
+    }
+    panFrom = { x: e.clientX, view: [...state.tlView] };
+    panMoved = false;
+    e.preventDefault();
+});
+
+window.addEventListener("mousemove", (e) => {
+    if (!panFrom) {
+        return;
+    }
+    const dx = e.clientX - panFrom.x;
+    if (Math.abs(dx) > 2) {
+        panMoved = true;
+    }
+    const [from, to] = panFrom.view;
+    const shift = -dx / (tl.clientWidth || 1) * (to - from);
+    setWindow(from + shift, to + shift);
+    renderTimeline();
+});
+
+window.addEventListener("mouseup", () => {
+    panFrom = null;
+});
+
+tl.addEventListener("dblclick", () => {
+    state.tlView = null;
+    renderTimeline();
+});
+
+stepFwd.addEventListener("click", () => stepBy(1));
+stepBack.addEventListener("click", () => stepBy(-1));
+
+window.addEventListener("keydown", (e) => {
+    if (e.target !== document.body || !state.active) {
+        return;
+    }
+    if (e.key === "ArrowRight") {
+        e.preventDefault();
+        stepBy(1);
+    } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        stepBy(-1);
+    }
+});
+
+window.addEventListener("resize", () => {
+    if (state.building) {
+        renderTimeline();
+    }
+});
+
+timeSlider.addEventListener("input", () => {
+    seek(Number(timeSlider.value));
+});
+
+speedSelect.addEventListener("change", () => {
+    state.speed = Number(speedSelect.value);
+});
+
+const TICK_MS = 50;
+let timer = null;
+
+function stopPlay() {
+    clearInterval(timer);
+    timer = null;
+    playBtn.textContent = "Play";
+}
+
+playBtn.addEventListener("click", () => {
+    if (timer) {
+        stopPlay();
+        return;
+    }
+    const times = state.active.times;
+    const end = times[times.length - 1];
+    if (state.time >= end) {
+        state.time = times[0];
+    }
+    playBtn.textContent = "Stop";
+    timer = setInterval(() => {
+        state.time = Math.min(end, state.time + state.speed * TICK_MS / 1000);
+        timeSlider.value = String(state.time);
+        if (state.moves) {
+            renderActors();
+        }
+        if (followCursor()) {
+            renderTimeline();
+        } else {
+            moveCursor();
+        }
+        renderFeed();
+        if (state.time >= end) {
+            stopPlay();
+        }
+    }, TICK_MS);
+});
+
+routeToggle.addEventListener("change", () => {
+    state.showRoutes = routeToggle.checked;
+    if (state.moves) {
+        renderActors();
+    }
+});
+
+visToggle.addEventListener("change", () => {
+    state.showVis = visToggle.checked;
+    render();
+});
+
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    drop.classList.add("over");
+});
+
+document.addEventListener("dragleave", () => {
+    drop.classList.remove("over");
+});
+
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
+    drop.classList.remove("over");
+    for (const file of e.dataTransfer.files) {
+        file.text().then(load);
+    }
+});
+
+routeToggle.disabled = true;
+fetch("building_paths.json").then((r) => (r.ok ? r.json() : null)).then((d) => {
+    if (isPathData(d)) {
+        loadPaths(d);
+    }
+}).catch(() => {});
+fetch("building.json").then((r) => r.text()).then(load).catch(() => {});
+</script>
+</body>
+</html>

@@ -34,7 +34,7 @@ float32 person_detection_range
 
 # General
 string dock_location
-string appointments_path
+string scenario_path
 bool cache_enabled
 
 # Simulation window

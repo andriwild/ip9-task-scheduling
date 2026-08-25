@@ -1,6 +1,6 @@
 {
-    "appointments_path": "scenarios/realistic.json",
     "cacheEnabled": true,
+    "scenario_path": "scenarios/realistic.json",
     "search_reward_strategy": "beta_smoothed",
     "sim_duration": 2592000,
     "use_distance_matrix": true

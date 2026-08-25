@@ -35,7 +35,7 @@ public:
             RCLCPP_WARN(this->get_logger(), "Failed to load sim_config.json, using defaults.");
             m_currentConfig = std::make_shared<SimConfig>();
             m_currentConfig->robotSpeed = 1.0;
-            m_currentConfig->appointmentsPath = "appointments.json";
+            m_currentConfig->scenarioPath = "appointments.json";
         }
         publishConfig();
     }
@@ -83,7 +83,7 @@ private:
             config.departureDistribution  = distributionTypeFromString(request->departure_distribution);
             config.dockLocation           = request->dock_location;
             config.cacheEnabled           = request->cache_enabled;
-            config.appointmentsPath       = request->appointments_path;
+            config.scenarioPath           = request->scenario_path;
             config.peopleSpawnLocation    = request->people_spawn_location;
             config.personIdentificationRange = request->person_detection_range;
             config.simStartTime           = request->sim_start_time;
@@ -127,7 +127,7 @@ private:
             msg.departure_distribution     = distributionTypeToString(m_currentConfig->departureDistribution);
             msg.dock_location              = m_currentConfig->dockLocation;
             msg.cache_enabled              = m_currentConfig->cacheEnabled;
-            msg.appointments_path          = m_currentConfig->appointmentsPath;
+            msg.scenario_path              = m_currentConfig->scenarioPath;
             msg.people_spawn_location      = m_currentConfig->peopleSpawnLocation;
             msg.person_detection_range     = m_currentConfig->personIdentificationRange;
             msg.sim_start_time             = m_currentConfig->simStartTime;
