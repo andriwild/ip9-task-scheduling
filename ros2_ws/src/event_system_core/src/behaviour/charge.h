@@ -144,9 +144,21 @@ public:
     static BT::PortsList providedPorts() { return { BT::InputPort<int>("ctx") }; }
 
     BT::NodeStatus tick() override {
-        const auto ctx       = config().blackboard.get()->get<ISimContext*>("ctx");
-        const bool forceFull = ctx->getConfig()->alwaysChargeAtDock && !ctx->hasBackgroundOrder();
-        ctx->getRobot()->setBatteryForceFull(forceFull);
+        const auto ctx          = config().blackboard.get()->get<ISimContext*>("ctx");
+        const auto cfg          = ctx->getConfig();
+        const auto robot        = ctx->getRobot();
+        const auto stats        = robot->batteryStats();
+        const double capacityWh = stats.capacity * robot->batteryVoltage();
+        const double reserveWh  = stats.lowThreshold / 100.0 * capacityWh;
+
+        double nextMissionWh = 0.0;
+        if (const auto next = ctx->peekNextScheduledOrder()) {
+            nextMissionWh = OrderRegistry::instance().get(next->type) .estimateMissionEnergy(*next, *ctx, cfg->dockLocation);
+        }
+        const bool cvTargetTooLow = nextMissionWh + reserveWh > cfg->cvThreshold * capacityWh;
+
+        const bool forceFull = cfg->alwaysChargeAtDock && (!ctx->hasBackgroundOrder() || cvTargetTooLow);
+        robot->setBatteryForceFull(forceFull);
         return BT::NodeStatus::SUCCESS;
     }
 };
