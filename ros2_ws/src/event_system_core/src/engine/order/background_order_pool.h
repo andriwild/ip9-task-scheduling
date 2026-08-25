@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <climits>
 #include <cstddef>
 #include <optional>
@@ -204,10 +203,6 @@ public:
             .cvEnergy        = cvEnergy,
         };
 
-        // TEMPORARY: runtime measurement of the tour computation
-        const std::size_t poolSize = m_missions.size();
-        const auto tBuildStart = std::chrono::steady_clock::now();
-
         // builds a problem instance containing parameters (constraints, budget) and a list of locations to visit 
         const auto problem = buildMissionInstance(EstimationView{ctx, ctx, *cfg}, ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
@@ -215,21 +210,10 @@ public:
             return;
         }
 
-        const auto tBuildEnd = std::chrono::steady_clock::now();
-
         // index based route (tour)
         const int graspSeed = static_cast<int>(ctx.activeSeed() + GRASP_SEED_OFFSET);
         const auto route = op_solver::grasp(problem->instance, cfg->graspIterations,
                                             static_cast<float>(cfg->graspAlpha), graspSeed);
-
-        const auto tGraspEnd = std::chrono::steady_clock::now();
-        const auto ms = [](const auto& from, const auto& to) {
-            return std::chrono::duration<double, std::milli>(to - from).count();
-        };
-        DES_LOG_ERROR("des.mission.background",
-                    "[TIMING] pool=%zu nodes=%zu iterations=%d build_ms=%.3f grasp_ms=%.3f total_ms=%.3f route=%zu",
-                    poolSize, problem->instance.nodeCount(), cfg->graspIterations,
-                    ms(tBuildStart, tBuildEnd), ms(tBuildEnd, tGraspEnd), ms(tBuildStart, tGraspEnd), route.size());
 
         DES_LOG_DEBUG("des.mission.background", "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
 

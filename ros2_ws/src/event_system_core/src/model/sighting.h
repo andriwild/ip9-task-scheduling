@@ -33,8 +33,13 @@ class SightingLog {
     std::string m_visitLocation;
     std::map<std::string, Sighting> m_visit;
     bool m_visitCovered = false;
+    bool m_keepEntries  = false;
 
 public:
+    void keepEntries(const bool keep) {
+        m_keepEntries = keep;
+    }
+
     void beginVisit(const std::string& location) {
         flushVisit();
         m_visitLocation = location;
@@ -76,7 +81,9 @@ public:
     }
 
     void add(const Sighting& sighting) {
-        m_entries.push_back(sighting);
+        if (m_keepEntries) {
+            m_entries.push_back(sighting);
+        }
         SightingCounts& c = m_counts[sighting.personName][sighting.location];
         if (sighting.kind == SightingKind::PRESENT) {
             c.hits++;

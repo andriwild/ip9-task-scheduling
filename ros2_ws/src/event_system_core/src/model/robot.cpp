@@ -13,6 +13,7 @@ Robot::Robot(const std::shared_ptr<SimConfig>& config, const int startTime)
     m_now = startTime;
     m_driveSpeed   = config->robotSpeed;
     m_dockLocation = config->dockLocation;
+    m_sightings.keepEntries(config->debugExport);
 
     m_bat = std::make_unique<Battery>(
         config->batteryCapacity,
