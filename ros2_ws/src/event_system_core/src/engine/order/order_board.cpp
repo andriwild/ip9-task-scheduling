@@ -157,17 +157,24 @@ bool OrderBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
 
     // Shifts the in-flight activity-end event by the interrupt's duration
     const bool wasDriving = robot->isDriving();
+    const bool continuesDuringInterrupt = !wasDriving
+        && robot->getLocation() == robot->getIdleLocation()
+        && robot->getState()->chargesAtDock();
 
     auto& plugin = OrderRegistry::instance().get(order->type);
     const int duration = static_cast<int>(plugin.estimateMissionDuration(*order, ctx, robot->getLocation()));
 
     if (auto e = robot->inFlight().lock()) {
-        const int oldTime = e->time;
-        const int newTime = oldTime + duration;
-        e->cancelled = true;
-        auto shifted = e->withTime(newTime);
-        ctx.startActivity(shifted);
-        DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, ctx.getTime(), e->getName().c_str(), oldTime, newTime);
+        if (continuesDuringInterrupt) {
+            DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — kept in-flight '%s' at %d, charging continues at the dock", order->id, order->type.c_str(), duration, ctx.getTime(), e->getName().c_str(), e->time);
+        } else {
+            const int oldTime = e->time;
+            const int newTime = oldTime + duration;
+            e->cancelled = true;
+            auto shifted = e->withTime(newTime);
+            ctx.startActivity(shifted);
+            DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — shifted in-flight '%s': %d → %d", order->id, order->type.c_str(), duration, ctx.getTime(), e->getName().c_str(), oldTime, newTime);
+        }
     } else {
         DES_LOG_DEBUG("des.context.interrupt", "Push %d (type=%s, dur=%ds) at t=%d — robot idle, no in-flight to shift", order->id, order->type.c_str(), duration, ctx.getTime());
     }
