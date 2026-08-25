@@ -30,7 +30,14 @@ public:
         return "ROS";
     }
 
+    void setPublishPersonEvents(const bool enabled) {
+        m_publishPersonEvents = enabled;
+    }
+
     void onEvent(const int time, EventType type, const std::string& message, const bool isDriving, const bool isCharging, const std::string& color = "", const int missionId = -1) override {
+        if (!m_publishPersonEvents && isPersonEvent(type)) {
+            return;
+        }
         auto msg = event_system_msgs::msg::TimelineEvent();
         msg.time = time;
         msg.type = static_cast<int>(type);
@@ -87,6 +94,14 @@ public:
     }
 
 private:
+    static bool isPersonEvent(const EventType type) {
+        return type == EventType::PERSON_TRANSITION
+            || type == EventType::PERSON_ARRIVED
+            || type == EventType::PERSON_DEPARTURE
+            || type == EventType::PERSON_ROOM_ARRIVED;
+    }
+
+    bool m_publishPersonEvents = true;
     rclcpp::Node::SharedPtr m_node;
     rclcpp::Publisher<event_system_msgs::msg::TimelineStateChange>::SharedPtr m_pubStateChange;
     rclcpp::Publisher<event_system_msgs::msg::TimelineReset>::SharedPtr m_pubReset;

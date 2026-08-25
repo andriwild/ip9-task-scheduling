@@ -37,6 +37,7 @@ struct SimConfig {
     double personRecognitionRange = 5.0;
     double personSpeedMale = 1.41;
     double personSpeedFemale = 1.27;
+    bool publishPersonEvents = true;
     int simStartTime = 25200;  // 07:00
     int simDuration  = 43200;
     bool useDistanceMatrix = false;
@@ -124,6 +125,7 @@ struct SimConfig {
         os << std::left << std::setw(W) << "personDirectionsWrongProbability" << ": " << config.personDirectionsWrongProbability << std::endl;
         os << std::left << std::setw(W) << "personSpeedMale" << ": " << config.personSpeedMale << std::endl;
         os << std::left << std::setw(W) << "personSpeedFemale" << ": " << config.personSpeedFemale << std::endl;
+        os << std::left << std::setw(W) << "publishPersonEvents" << ": " << config.publishPersonEvents << std::endl;
         os << std::left << std::setw(W) << "simStartTime" << ": " << config.simStartTime << std::endl;
         os << std::left << std::setw(W) << "simDuration" << ": " << config.simDuration << std::endl;
         os << std::left << std::setw(W) << "useDistanceMatrix" << ": " << config.useDistanceMatrix << std::endl;

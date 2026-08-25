@@ -274,6 +274,7 @@ public:
             config.debugExport = j.value("debug_export", j.value("move_trace_export", false));
             config.personSpeedMale   = j.value("person_speed_male", 1.41);
             config.personSpeedFemale = j.value("person_speed_female", 1.27);
+            config.publishPersonEvents = j.value("publish_person_events", true);
             config.simStartTime = j.value("sim_start_time", SIM_START_TIME);
             config.simDuration  = j.value("sim_duration",   SIM_DURATION);
             config.useDistanceMatrix = j.value("use_distance_matrix", false);
@@ -386,6 +387,7 @@ public:
         j["debug_export"]                   = config.debugExport;
         j["person_speed_male"]              = roundValue(config.personSpeedMale);
         j["person_speed_female"]            = roundValue(config.personSpeedFemale);
+        j["publish_person_events"]          = config.publishPersonEvents;
         j["sim_start_time"]                 = config.simStartTime;
         j["sim_duration"]                   = config.simDuration;
         j["use_distance_matrix"]            = config.useDistanceMatrix;

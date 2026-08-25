@@ -1,5 +1,6 @@
 #include "engine/person_registry.h"
 
+#include <stdexcept>
 #include <utility>
 
 #include "util/geometry.h"
@@ -42,7 +43,13 @@ bool PersonRegistry::hasEmployee(const std::string& name) const {
 }
 
 Person* PersonRegistry::getByName(const std::string& name) const {
-    return m_employees.at(name);
+    const auto it = m_employees.find(name);
+    if (it == m_employees.end()) {
+        throw std::out_of_range(
+            "Person '" + name + "' is referenced by the scenario but missing in the employee population ("
+            + std::to_string(m_employees.size()) + " loaded). Check employees_path in the sim config.");
+    }
+    return it->second;
 }
 
 std::string PersonRegistry::room(const std::string& person) const {

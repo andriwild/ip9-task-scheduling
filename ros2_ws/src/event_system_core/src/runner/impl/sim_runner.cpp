@@ -76,6 +76,7 @@ void SimRunner::setupApplication() {
 
     reloadSimulationData();
     m_rosObserver = std::make_shared<RosObserver>(m_systemConfigNode);
+    m_rosObserver->setPublishPersonEvents(m_config->publishPersonEvents);
     buildSimulation();
 
     DES_LOG_INFO("des.runner", "Setup Complete!");
@@ -84,6 +85,9 @@ void SimRunner::setupApplication() {
 void SimRunner::updateConfig(std::shared_ptr<SimConfig> config) {
     m_config = std::move(config);
     m_ctx->setConfig(m_config);
+    if (m_rosObserver) {
+        m_rosObserver->setPublishPersonEvents(m_config->publishPersonEvents);
+    }
     DES_LOG_DEBUG_STREAM("des.runner", *m_config.get());
 }
 
