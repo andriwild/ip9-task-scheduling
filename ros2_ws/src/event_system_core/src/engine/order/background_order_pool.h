@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <optional>
 #include <queue>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -142,6 +143,17 @@ public:
         m_pending = {};
         if (m_missions.empty()) { return; }
 
+        // remove duplicate missions from the pool
+        // this happens, if a background mission is dispatched before its successor is processed (mission jam)
+        std::set<std::pair<std::string, std::string>> seen;
+        std::erase_if(m_missions, [&](const OrderPtr& o) {
+            const auto target = OrderRegistry::instance().get(o->type).targetLocation(*o);
+            if (!target) {
+                return false;
+            }
+            return !seen.emplace(o->type, *target).second;
+        });
+
         const auto robot            = ctx.getRobot();
         const auto batStats         = robot->batteryStats();
         const double voltage        = robot->batteryVoltage();
@@ -185,7 +197,7 @@ public:
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
             .socThreshold    = static_cast<float>(socThreshold),
-            .maxEnergy       = static_cast<float>(cfg->fullBatteryThreshold / 100.0 * capacityWh),
+            .maxEnergy       = static_cast<float>((cfg->chargeToFull ? cfg->fullBatteryThreshold / 100.0 : cfg->cvThreshold) * capacityWh),
             .chargeTimePerWh = chargeTimePerWh,
             .chargeTimePerWhTapered = chargeTimePerWhTapered,
             .cvEnergy        = cvEnergy,
