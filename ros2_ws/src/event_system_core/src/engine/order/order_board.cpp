@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 
+#include "engine/contracts/estimation_view.h"
 #include "engine/contracts/i_sim_context.h"
 #include "model/robot.h"
 #include "model/robot_state.h"

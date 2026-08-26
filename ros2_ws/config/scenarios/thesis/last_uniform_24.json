@@ -1637,37 +1637,13 @@
     {
       "id": 115,
       "type": "clean",
-      "roomName": "5.2A_Elevator",
-      "description": "Reinigung 5.2A_Elevator",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 116,
-      "type": "clean",
-      "roomName": "5.2A_Open_Zone",
-      "description": "Reinigung 5.2A_Open_Zone",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 117,
-      "type": "clean",
-      "roomName": "5.2A_Stairwell",
-      "description": "Reinigung 5.2A_Stairwell",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 118,
-      "type": "clean",
       "roomName": "5.2A_Toilet_M",
       "description": "Reinigung 5.2A_Toilet_M",
       "every_n_days": 1,
       "cleaning_interval": 86400
     },
     {
-      "id": 119,
+      "id": 116,
       "type": "clean",
       "roomName": "5.2A_Toilet_W",
       "description": "Reinigung 5.2A_Toilet_W",
@@ -1675,7 +1651,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 120,
+      "id": 117,
       "type": "clean",
       "roomName": "5.2B01",
       "description": "Reinigung 5.2B01",
@@ -1683,7 +1659,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 121,
+      "id": 118,
       "type": "clean",
       "roomName": "5.2B03",
       "description": "Reinigung 5.2B03",
@@ -1691,7 +1667,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 122,
+      "id": 119,
       "type": "clean",
       "roomName": "5.2B04",
       "description": "Reinigung 5.2B04",
@@ -1699,7 +1675,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 123,
+      "id": 120,
       "type": "clean",
       "roomName": "5.2B05",
       "description": "Reinigung 5.2B05",
@@ -1707,7 +1683,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 124,
+      "id": 121,
       "type": "clean",
       "roomName": "5.2B06",
       "description": "Reinigung 5.2B06",
@@ -1715,7 +1691,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 125,
+      "id": 122,
       "type": "clean",
       "roomName": "5.2B10",
       "description": "Reinigung 5.2B10",
@@ -1723,7 +1699,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 126,
+      "id": 123,
       "type": "clean",
       "roomName": "5.2B13",
       "description": "Reinigung 5.2B13",
@@ -1731,7 +1707,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 127,
+      "id": 124,
       "type": "clean",
       "roomName": "5.2B15",
       "description": "Reinigung 5.2B15",
@@ -1739,7 +1715,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 128,
+      "id": 125,
       "type": "clean",
       "roomName": "5.2B17",
       "description": "Reinigung 5.2B17",
@@ -1747,7 +1723,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 129,
+      "id": 126,
       "type": "clean",
       "roomName": "5.2B18",
       "description": "Reinigung 5.2B18",
@@ -1755,7 +1731,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 130,
+      "id": 127,
       "type": "clean",
       "roomName": "5.2B31",
       "description": "Reinigung 5.2B31",
@@ -1763,7 +1739,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 131,
+      "id": 128,
       "type": "clean",
       "roomName": "5.2B33",
       "description": "Reinigung 5.2B33",
@@ -1771,7 +1747,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 132,
+      "id": 129,
       "type": "clean",
       "roomName": "5.2B34",
       "description": "Reinigung 5.2B34",
@@ -1779,7 +1755,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 133,
+      "id": 130,
       "type": "clean",
       "roomName": "5.2B51",
       "description": "Reinigung 5.2B51",
@@ -1787,7 +1763,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 134,
+      "id": 131,
       "type": "clean",
       "roomName": "5.2B53",
       "description": "Reinigung 5.2B53",
@@ -1795,23 +1771,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 135,
-      "type": "clean",
-      "roomName": "5.2B_Elevator",
-      "description": "Reinigung 5.2B_Elevator",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 136,
-      "type": "clean",
-      "roomName": "5.2B_Storage",
-      "description": "Reinigung 5.2B_Storage",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 137,
+      "id": 132,
       "type": "clean",
       "roomName": "5.2B_Toilet_M",
       "description": "Reinigung 5.2B_Toilet_M",
@@ -1819,7 +1779,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 138,
+      "id": 133,
       "type": "clean",
       "roomName": "5.2B_Toilet_W",
       "description": "Reinigung 5.2B_Toilet_W",
@@ -1827,7 +1787,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 139,
+      "id": 134,
       "type": "clean",
       "roomName": "5.2C01",
       "description": "Reinigung 5.2C01",
@@ -1835,7 +1795,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 140,
+      "id": 135,
       "type": "clean",
       "roomName": "5.2C03",
       "description": "Reinigung 5.2C03",
@@ -1843,7 +1803,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 141,
+      "id": 136,
       "type": "clean",
       "roomName": "5.2C05",
       "description": "Reinigung 5.2C05",
@@ -1851,7 +1811,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 142,
+      "id": 137,
       "type": "clean",
       "roomName": "5.2C07",
       "description": "Reinigung 5.2C07",
@@ -1859,7 +1819,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 143,
+      "id": 138,
       "type": "clean",
       "roomName": "5.2C08",
       "description": "Reinigung 5.2C08",
@@ -1867,7 +1827,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 144,
+      "id": 139,
       "type": "clean",
       "roomName": "5.2C19",
       "description": "Reinigung 5.2C19",
@@ -1875,7 +1835,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 145,
+      "id": 140,
       "type": "clean",
       "roomName": "5.2C30",
       "description": "Reinigung 5.2C30",
@@ -1883,7 +1843,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 146,
+      "id": 141,
       "type": "clean",
       "roomName": "5.2C52",
       "description": "Reinigung 5.2C52",
@@ -1891,7 +1851,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 147,
+      "id": 142,
       "type": "clean",
       "roomName": "5.2C54",
       "description": "Reinigung 5.2C54",
@@ -1899,7 +1859,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 148,
+      "id": 143,
       "type": "clean",
       "roomName": "5.2C56",
       "description": "Reinigung 5.2C56",
@@ -1907,7 +1867,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 149,
+      "id": 144,
       "type": "clean",
       "roomName": "5.2C59",
       "description": "Reinigung 5.2C59",
@@ -1915,7 +1875,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 150,
+      "id": 145,
       "type": "clean",
       "roomName": "5.2C91",
       "description": "Reinigung 5.2C91",
@@ -1923,39 +1883,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 151,
-      "type": "clean",
-      "roomName": "5.2C_Elevator",
-      "description": "Reinigung 5.2C_Elevator",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 152,
-      "type": "clean",
-      "roomName": "5.2C_Elevator_Goods",
-      "description": "Reinigung 5.2C_Elevator_Goods",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 153,
-      "type": "clean",
-      "roomName": "5.2C_Reserve_Mat",
-      "description": "Reinigung 5.2C_Reserve_Mat",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 154,
-      "type": "clean",
-      "roomName": "5.2C_Stairwell",
-      "description": "Reinigung 5.2C_Stairwell",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 155,
+      "id": 146,
       "type": "clean",
       "roomName": "5.2C_Toilet_Accessible",
       "description": "Reinigung 5.2C_Toilet_Accessible",
@@ -1963,23 +1891,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 156,
-      "type": "clean",
-      "roomName": "5.2C_Trash",
-      "description": "Reinigung 5.2C_Trash",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 157,
-      "type": "clean",
-      "roomName": "5.2C_Working_Space",
-      "description": "Reinigung 5.2C_Working_Space",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 158,
+      "id": 147,
       "type": "clean",
       "roomName": "5.2D02",
       "description": "Reinigung 5.2D02",
@@ -1987,7 +1899,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 159,
+      "id": 148,
       "type": "clean",
       "roomName": "5.2D11",
       "description": "Reinigung 5.2D11",
@@ -1995,31 +1907,7 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 160,
-      "type": "clean",
-      "roomName": "5.2D_Elevator",
-      "description": "Reinigung 5.2D_Elevator",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 161,
-      "type": "clean",
-      "roomName": "5.2D_Open_Zone",
-      "description": "Reinigung 5.2D_Open_Zone",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 162,
-      "type": "clean",
-      "roomName": "5.2D_Stairwell",
-      "description": "Reinigung 5.2D_Stairwell",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 163,
+      "id": 149,
       "type": "clean",
       "roomName": "5.2D_Toilet_M",
       "description": "Reinigung 5.2D_Toilet_M",
@@ -2027,58 +1915,10 @@
       "cleaning_interval": 86400
     },
     {
-      "id": 164,
+      "id": 150,
       "type": "clean",
       "roomName": "5.2D_Toilet_W",
       "description": "Reinigung 5.2D_Toilet_W",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 165,
-      "type": "clean",
-      "roomName": "5.2_Corridor_Geb6",
-      "description": "Reinigung 5.2_Corridor_Geb6",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 166,
-      "type": "clean",
-      "roomName": "5.2_Stair_Down",
-      "description": "Reinigung 5.2_Stair_Down",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 167,
-      "type": "clean",
-      "roomName": "5.2_Stair_Down_Geb6",
-      "description": "Reinigung 5.2_Stair_Down_Geb6",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 168,
-      "type": "clean",
-      "roomName": "5.2_Stair_Up",
-      "description": "Reinigung 5.2_Stair_Up",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 169,
-      "type": "clean",
-      "roomName": "IMVS_Kitchen",
-      "description": "Reinigung IMVS_Kitchen",
-      "every_n_days": 1,
-      "cleaning_interval": 86400
-    },
-    {
-      "id": 170,
-      "type": "clean",
-      "roomName": "IMVS_Printer",
-      "description": "Reinigung IMVS_Printer",
       "every_n_days": 1,
       "cleaning_interval": 86400
     },

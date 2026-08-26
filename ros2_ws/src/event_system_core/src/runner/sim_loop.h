@@ -51,7 +51,7 @@ inline bool executeNextEvent(IAppRunner& app) {
 
 inline int runSimulation(IAppRunner& app) {
     bool running = true;
-    bool batteryDepleted = false;
+    bool batteryHealthy= false;
 
     while (running && !stop::requested()) {
         app.updateConfig();
@@ -67,8 +67,8 @@ inline int runSimulation(IAppRunner& app) {
                 running = false;
                 break;
             case RunState::Run:
-                if (!executeNextEvent(app)) {
-                    batteryDepleted = true;
+                batteryHealthy = executeNextEvent(app);
+                if (!batteryHealthy) {
                     running = false;
                 }
                 break;
@@ -77,7 +77,7 @@ inline int runSimulation(IAppRunner& app) {
 
     DES_LOG_DEBUG("des.main", "Simulation complete");
     app.shutdown();
-    return batteryDepleted ? EXIT_FAILURE : EXIT_SUCCESS;
+    return batteryHealthy ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 }  // namespace des
