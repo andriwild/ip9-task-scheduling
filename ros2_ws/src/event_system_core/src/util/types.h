@@ -152,15 +152,6 @@ enum class ChargeTrigger {
     REACTIVE
 };
 
-inline std::string chargeTriggerToString(const ChargeTrigger trigger) {
-    switch (trigger) {
-        case ChargeTrigger::OPPORTUNISTIC:  return "Opportunistic";
-        case ChargeTrigger::PLANNED:        return "Planned";
-        case ChargeTrigger::REACTIVE:       return "Reactive";
-    }
-    assert(false);
-}
-
 struct ChargeSession {
     int time;
     ChargeTrigger trigger;

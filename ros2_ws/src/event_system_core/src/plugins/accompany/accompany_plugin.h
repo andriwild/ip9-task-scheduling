@@ -81,10 +81,4 @@ inline const AccompanyConfig& accompanyConfig() {
         OrderRegistry::instance().get(AccompanyOrderPlugin::kTypeName)).config();
 }
 
-inline double rndAccompanyConversationTime(std::mt19937& rng) {
-    const auto& cfg = accompanyConfig();
-    const double t = rnd::normal(rng, cfg.conversationDurationMean, cfg.conversationDurationStd);
-    return t < 1.0 ? 1.0 : t;
-}
-
 }  // namespace des

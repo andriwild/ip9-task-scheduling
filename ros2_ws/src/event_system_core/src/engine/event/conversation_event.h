@@ -46,7 +46,6 @@ public:
     }
 
     ConversationKind getKind() const { return m_spec.kind; }
-    bool wasSuccessful() const { return m_success; }
 
     std::string getName() const override {
         return m_success ? "Conversation Successful" : "Conversation Failed ";

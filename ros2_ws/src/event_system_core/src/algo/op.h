@@ -34,8 +34,6 @@ public:
     float distance(const int from, const int to) const { return m_mat[from][to]; }
     const std::vector<int>& docks() const { return m_docks; }
     const OpParams& params() const { return m_p; }
-    float timeBudget() const { return m_p.timeBudget; }
-    float energyBudget() const { return m_p.energyBudget; }
 
     bool isDock(const int idx) const {
         return std::ranges::find(m_docks, idx) != m_docks.end();

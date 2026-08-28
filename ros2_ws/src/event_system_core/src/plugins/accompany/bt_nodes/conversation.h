@@ -99,11 +99,6 @@ public:
             DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: '%s' is not a usable hint", room.c_str());
             return BT::NodeStatus::FAILURE;
         }
-        // const Person* informant = ctx->getPersonByName(order.pendingAsk.front());
-        // if (person->workplace != informant->workplace) {
-        //     DES_LOG_DEBUG("des.plugin.accompany.conversation", "ApplyDirections: %s shares no office with %s", informant->firstName.c_str(), order.personName.c_str());
-        //     return BT::NodeStatus::FAILURE;
-        // }
 
         std::string hint = room;
         bool wrong = false;

@@ -70,7 +70,6 @@ public:
     [[nodiscard]] BatteryProps getStats() const;
     [[nodiscard]] double getVoltage() const;
     [[nodiscard]] bool isBatteryLow() const;
-    [[nodiscard]] bool isBatteryFull() const;
     [[nodiscard]] bool isFullyCharged() const;
     [[nodiscard]] double timeToFull(double phaseOnePowerWatts) const;
     [[nodiscard]] double timeToPhaseTransition(double phaseOnePowerWatts) const;

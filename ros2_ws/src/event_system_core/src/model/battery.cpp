@@ -71,7 +71,6 @@ void Battery::updateBalance(const int time, const double energyConsumption) {
     const double capacityBefore = m_currentCapacity;
     m_currentCapacity -= capacityDiff;
 
-    //DES_LOG_DEBUG("des.battery", "updateBalance: timeDelta %ds, energyConsumption %.2fW, capacity updated by %.3fAh -> %.3fAh", timeDelta, energyConsumption, -capacityDiff, m_currentCapacity);
 
     if (m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity) {
         DES_LOG_DEBUG("des.battery", "Battery Low - SOC: %.1f", m_currentCapacity / m_designCapacity);
@@ -122,14 +121,7 @@ double Battery::getVoltage() const {
 
 bool Battery::isBatteryLow() const {
     const bool isLow = m_currentCapacity < m_lowBatteryThreshold / 100 * m_designCapacity;
-    //DES_LOG_DEBUG("des.battery", "isBatteryLow: %d", isLow);
     return isLow;
-}
-
-bool Battery::isBatteryFull() const {
-    const bool isFull = m_currentCapacity > m_fullBatteryThreshold / 100 * m_designCapacity;
-    DES_LOG_DEBUG("des.battery", "isBatteryFull: %d", isFull);
-    return isFull;
 }
 
 bool Battery::isFullyCharged() const {

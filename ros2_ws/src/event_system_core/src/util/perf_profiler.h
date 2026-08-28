@@ -67,10 +67,6 @@ public:
         m_path = std::move(path);
     }
 
-    [[nodiscard]] bool enabled() const {
-        return m_enabled;
-    }
-
     void onEvent(const int simTime, const bool executed, const std::size_t queueSize, const long long protocolSize) {
         if (!m_enabled) {
             return;

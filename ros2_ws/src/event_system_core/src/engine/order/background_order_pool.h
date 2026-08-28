@@ -25,8 +25,6 @@ namespace des {
 
 constexpr double kBackgroundEnergySafetyMarginWh = 5.0;
 constexpr double kReserveMarginPerMissionWh      = 1.5;
-constexpr int kGraspIterations = 200;
-constexpr float kGraspAlpha    = 0.3f;
 
 struct MissionReserve {
     double requiredWh = 0.0;
