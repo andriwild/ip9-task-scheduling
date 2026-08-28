@@ -39,6 +39,9 @@ void HeadlessRunner::setupApplication() {
         m_reporter.enableCsv(outputPath("metrics", ".csv"));
         m_reporter.enableDailyCsv(outputPath("metrics_daily", ".csv"));
     }
+    if (m_config->perfCsvExport) {
+        m_perf.enable(outputPath("perf_daily", ".csv"));
+    }
     if (m_config->debugExport) {
         m_reporter.enableDebugTrace(outputPath("debug", "/"));
     }

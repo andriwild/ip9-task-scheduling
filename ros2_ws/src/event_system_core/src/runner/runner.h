@@ -16,6 +16,7 @@
 #include "../sim/scheduler.h"
 #include "../plugins/order_registry.h"
 #include "util/constants.h"
+#include "util/perf_profiler.h"
 
 #include "metrics/metrics_reporter.h"
 #include "model/sim_config.h"
@@ -49,6 +50,8 @@ public:
     metrics::MetricsReporter& reporter() {
         return m_reporter;
     }
+
+    PerfProfiler m_perf;
 
     static EventList createMissionQueue(
         OrderList& orders,

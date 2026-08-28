@@ -25,7 +25,9 @@ inline bool executeNextEvent(IAppRunner& app) {
 
     const auto event = app.m_eventQueue.top();
     app.m_eventQueue.pop();
-    if (event->cancelled || event->isStale(*app.m_ctx)) {
+    const bool skipped = event->cancelled || event->isStale(*app.m_ctx);
+    app.m_perf.onEvent(event->time, !skipped, app.m_eventQueue.size(), static_cast<long long>(app.m_protocol.size()));
+    if (skipped) {
         return true;
     }
 
