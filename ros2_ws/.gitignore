@@ -2,13 +2,14 @@ log
 install
 build
 /log/
-./config/default/sim_config.json
 .vscode
 .idea
-./ros2_ws/.vscode
 bt_config.xml
 **/__pycache__
 bench
 vislib_test
-build-headless/
+build-*/
 cmake-build-*/
+perf.data*
+*.swp
+*~

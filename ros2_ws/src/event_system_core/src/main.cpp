@@ -26,8 +26,7 @@ int main(const int argc, char* argv[]) {
     if (!headless && des::ConfigLoader::s_baseConfigPath.empty()) {
         des::ConfigLoader::s_baseConfigPath = des::GUI_CONFIG_FILE;
     }
-    const auto app = headless ? des::HeadlessRunner::create(argc, argv)
-                              : des::SimRunner::create(argc, argv);
+    const auto app = headless ? des::HeadlessRunner::create(argc, argv) : des::SimRunner::create(argc, argv);
 
     DES_LOG_DEBUG("des.main", "Start Simulation Loop (Headless Mode: %d)", headless);
     return des::cli::setupAndRun(*app);
