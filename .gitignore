@@ -2,6 +2,7 @@
 /.fleet/
 .cache
 .claude
+cmake-build-*/
 build
 install
 log
