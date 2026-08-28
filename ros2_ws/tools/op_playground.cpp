@@ -155,7 +155,7 @@ int main() {
         }
     }
 
-    const std::vector<int> stations = { 2 };  // Dock
+    const std::vector<int> docks = { 2 };
 
     const double netChargeW = chargingRate - baseW;
     OpParams params;
@@ -183,7 +183,7 @@ int main() {
 
     for (const auto& v : VARIANTEN) {
         params.timeBudget = v.timeBudget;
-        const OpInstance op(nodes, distances, stations, params);
+        const OpInstance op(nodes, distances, docks, params);
         const std::vector<int> route = des::op_solver::grasp(op, 200, 0.3f, 42);
         const auto sim = op.simulateRoute(route, true);
 
@@ -203,7 +203,7 @@ int main() {
                   << ", verbraucht " << params.initialSoc - sim.socEnd << " Wh"
                   << ", machbar " << sim.feasible << "\n\n";
 
-        writeSvg(nodes, pos, route, params, stations, v.datei, SEITEN);
+        writeSvg(nodes, pos, route, params, docks, v.datei, SEITEN);
     }
     return 0;
 }

@@ -16,12 +16,11 @@
 
 namespace des::op_solver {
 
-// TODO: naming Station(s), dock?
 // Finds the nearest dock to charge the robot.
-inline int nearestStation(const OpInstance& op, const int from) {
-    const auto& stations = op.stations();
-    int best = stations.front();
-    for (const int s : stations) {
+inline int nearestDock(const OpInstance& op, const int from) {
+    const auto& docks = op.docks();
+    int best = docks.front();
+    for (const int s : docks) {
         if (op.distance(from, s) < op.distance(from, best)) {
             best = s;
         }
@@ -71,7 +70,7 @@ inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from,
 // TODO: rename ns
 namespace detail {
 
-struct Cand { float value; std::size_t idx; int station; };
+struct Cand { float value; std::size_t idx; int dock; };
 
 // Calculate the score of a candidate and check its feasibility with oder without additional charge stop.
 inline std::optional<Cand> scoreCandidate(
@@ -90,21 +89,21 @@ inline std::optional<Cand> scoreCandidate(
     }
 
     // add a charge stop, check again if the candidate is feasible
-    int bestStation = -1;
-    float bestCost  = std::numeric_limits<float>::max();
-    for (const int st : op.stations()) {
-        route.push_back(st);
+    int bestDock   = -1;
+    float bestCost = std::numeric_limits<float>::max();
+    for (const int dock : op.docks()) {
+        route.push_back(dock);
         route.push_back(candNode);
         const auto withCharge = op.simulateRoute(route);
         if (withCharge.feasible && withCharge.time < bestCost) {
-            bestCost    = withCharge.time;
-            bestStation = st;
+            bestCost = withCharge.time;
+            bestDock = dock;
         }
         route.pop_back();
         route.pop_back();
     }
-    if (bestStation >= 0) {
-        return Cand{ greedyValue(op, curId, candNode), candListIdx, bestStation };
+    if (bestDock >= 0) {
+        return Cand{ greedyValue(op, curId, candNode), candListIdx, bestDock };
     }
     return std::nullopt;
 }
@@ -127,14 +126,14 @@ inline std::vector<Cand> restrictedCandidateList(const std::vector<Cand>& scored
 // add nearest dock to the end of the route
 inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
     while (!op.simulateRoute(route, true).feasible) {
-        if (!op.stations().empty() && !route.empty() && !op.isStation(route.back())) {
-            route.push_back(nearestStation(op, route.back()));
+        if (!op.docks().empty() && !route.empty() && !op.isDock(route.back())) {
+            route.push_back(nearestDock(op, route.back()));
         } else {
             if (route.empty()) {
                 break;
             }
             route.pop_back();
-            if (!op.stations().empty() && !route.empty()) {
+            if (!op.docks().empty() && !route.empty()) {
                 route.pop_back();
             }
         }
@@ -168,8 +167,8 @@ inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const
         std::uniform_int_distribution<std::size_t> pick(0, rcl.size() - 1);
         const detail::Cand chosen = rcl[pick(gen)];
 
-        if (chosen.station >= 0) {
-            route.push_back(chosen.station);
+        if (chosen.dock >= 0) {
+            route.push_back(chosen.dock);
         }
         curId = candidates[chosen.idx];
         route.push_back(curId);
@@ -189,23 +188,23 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     std::vector<int> bestSolution;
     float bestReward = -1.0f;
     float bestDrive  = std::numeric_limits<float>::max();
-    int bestStations = std::numeric_limits<int>::max();
+    int bestDocks = std::numeric_limits<int>::max();
 
     for (int i = 0; i < maxIterations; ++i) {
         auto solution = greedyRandomizedConstruction(op, alpha, seed + i);
 
         const float reward = op.routeReward(solution);
         const float drive  = op.routeDriveDistance(solution);
-        const int stationVisits = static_cast<int>(std::ranges::count_if(solution, [&](int x) { return op.isStation(x); }));
+        const int dockVisits = static_cast<int>(std::ranges::count_if(solution, [&](int x) { return op.isDock(x); }));
 
         if (reward > bestReward
-            || (reward == bestReward && stationVisits < bestStations)
-            || (reward == bestReward && stationVisits == bestStations && drive < bestDrive)
+            || (reward == bestReward && dockVisits < bestDocks)
+            || (reward == bestReward && dockVisits == bestDocks && drive < bestDrive)
         ) {
             bestSolution = solution;
             bestReward   = reward;
             bestDrive    = drive;
-            bestStations = stationVisits;
+            bestDocks = dockVisits;
         }
     }
 
@@ -213,7 +212,7 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     if (useTwoOpt) {
         int legStart = 0;
         for (int i = 0; i < static_cast<int>(bestSolution.size()); ++i) {
-            if (op.isStation(bestSolution[i])) {
+            if (op.isDock(bestSolution[i])) {
                 twoOpt(op, bestSolution, legStart, i);
                 legStart = i + 1;
             }

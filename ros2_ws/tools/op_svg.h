@@ -33,7 +33,7 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
                      const std::vector<Point>& pos,
                      const std::vector<int>& route,
                      const des::OpParams& params,
-                     const std::vector<int>& stations,
+                     const std::vector<int>& docks,
                      const std::string& file,
                      const std::vector<char>& seiten = {}) {
     const SvgStyle st;
@@ -58,8 +58,8 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
     tour.insert(tour.end(), route.begin(), route.end());
     if (!params.openEnd) { tour.push_back(params.endNodeId); }
 
-    auto isStation = [&](int idx) {
-        return std::find(stations.begin(), stations.end(), idx) != stations.end();
+    auto isDock = [&](int idx) {
+        return std::find(docks.begin(), docks.end(), idx) != docks.end();
     };
     auto besucht = [&](int idx) {
         return std::find(tour.begin(), tour.end(), idx) != tour.end();
@@ -72,7 +72,7 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
     // Kreisflaeche proportional zum Nutzen, der groesste Kandidat gibt die Skala vor
     auto radius = [&](std::size_t i) {
         const int idx = static_cast<int>(i);
-        if (idx == params.startNodeId || idx == params.endNodeId || isStation(idx)) {
+        if (idx == params.startNodeId || idx == params.endNodeId || isDock(idx)) {
             return 11.0f;
         }
         return 10.0f + 26.0f * std::sqrt(nodes[i].reward / maxReward);
@@ -164,10 +164,10 @@ inline void writeSvg(const std::vector<des::OpNode>& nodes,
         std::string edge = drin ? st.roomEdge : st.skipEdge;
         if (idx == params.startNodeId)      { fill = st.start; edge = st.startEdge; }
         else if (idx == params.endNodeId)   { fill = st.goal;  edge = st.goalEdge; }
-        else if (isStation(idx))            { fill = st.dock;  edge = st.dockEdge; }
+        else if (isDock(idx))            { fill = st.dock;  edge = st.dockEdge; }
 
         const float r = radius(i);
-        if (isStation(idx)) {
+        if (isDock(idx)) {
             f << "<rect x='" << sx(pos[i].x) - r << "' y='" << sy(pos[i].y) - r << "' width='" << 2 * r
               << "' height='" << 2 * r << "' rx='4' fill='" << fill << "' stroke='" << edge
               << "' stroke-width='1.8'/>\n";

@@ -3,7 +3,7 @@
  * greedyValue() rates a next node by its reward divided by how much
  * of the time or energy limit the drive there uses up, whichever is tighter. 
  * taskCandidates() lists the nodes a solver may pick.
- * start, end and charging stations are left out.
+ * start, end and docks are left out.
  *
  */
 
@@ -33,7 +33,7 @@ inline std::vector<int> taskCandidates(const OpInstance& op) {
     candidates.reserve(op.nodeCount());
     for (std::size_t i = 0; i < op.nodeCount(); ++i) {
         const int idx = static_cast<int>(i);
-        if (idx != p.startNodeId && idx != p.endNodeId && !op.isStation(idx)) {
+        if (idx != p.startNodeId && idx != p.endNodeId && !op.isDock(idx)) {
             candidates.push_back(idx);
         }
     }

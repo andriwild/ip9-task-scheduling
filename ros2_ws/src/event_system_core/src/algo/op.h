@@ -3,7 +3,7 @@
  * The main job is simulateRoute(): it drives the route step by step
  * and reports how much time it takes and how full the battery is at the end.
  * A route is feasible if it stays inside the time limit and never falls below the battery limit.
- * Charging stations refill the battery in the middle of a route.
+ * Docks refill the battery in the middle of a route.
  *
  */
 
@@ -19,26 +19,26 @@ namespace des {
 class OpInstance {
     std::vector<OpNode> m_nodes;
     Mat m_mat;
-    std::vector<int> m_stations;
+    std::vector<int> m_docks;
     OpParams m_p;
 
 public:
-    OpInstance(std::vector<OpNode> nodes, Mat mat, std::vector<int> stations, const OpParams& params)
+    OpInstance(std::vector<OpNode> nodes, Mat mat, std::vector<int> docks, const OpParams& params)
         : m_nodes(std::move(nodes)),
           m_mat(std::move(mat)),
-          m_stations(std::move(stations)),
+          m_docks(std::move(docks)),
           m_p(params) {}
 
     const OpNode& node(const int idx) const { return m_nodes[idx]; }
     std::size_t nodeCount() const { return m_nodes.size(); }
     float distance(const int from, const int to) const { return m_mat[from][to]; }
-    const std::vector<int>& stations() const { return m_stations; }
+    const std::vector<int>& docks() const { return m_docks; }
     const OpParams& params() const { return m_p; }
     float timeBudget() const { return m_p.timeBudget; }
     float energyBudget() const { return m_p.energyBudget; }
 
-    bool isStation(const int idx) const {
-        return std::ranges::find(m_stations, idx) != m_stations.end();
+    bool isDock(const int idx) const {
+        return std::ranges::find(m_docks, idx) != m_docks.end();
     }
 
     float routeReward(const std::vector<int>& route) const {
@@ -96,7 +96,7 @@ public:
                 return { false, soc, time };
             }
 
-            if (isStation(idx)) {
+            if (isDock(idx)) {
                 time += chargeDuration(soc, m_p.maxEnergy);
                 soc   = m_p.maxEnergy;
             } else {

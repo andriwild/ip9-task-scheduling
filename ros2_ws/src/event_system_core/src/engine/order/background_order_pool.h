@@ -188,7 +188,7 @@ public:
 
         if (timeBudget <= 0) { return; }
 
-        // netChargeW <= 0: charging never pays off, price stations out of the tour
+        // netChargeW <= 0: charging never pays off, price docks out of the tour
         const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : kChargingPricedOut;
         const double taperedW = netChargeW * cfg->taperFraction;
         const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : kChargingPricedOut;
@@ -231,7 +231,7 @@ public:
                     m_missions.erase(it);
                 }
             } else {
-                // station node -> execute the planned charge as a background order
+                // dock node -> execute the planned charge as a background order
                 auto charge         = std::make_shared<ChargeOrder>();
                 charge->id          = -1 - m_chargeOrderSeq++;
                 charge->type        = kChargeOrderType;
