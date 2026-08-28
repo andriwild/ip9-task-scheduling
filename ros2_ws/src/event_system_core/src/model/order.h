@@ -1,3 +1,7 @@
+/*
+ * An order represents a mission with an execution type.
+ * Depending on its type, the order has a dispatch time.
+ */
 #pragma once
 
 #include <memory>

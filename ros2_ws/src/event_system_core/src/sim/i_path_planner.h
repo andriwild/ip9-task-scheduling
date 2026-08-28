@@ -1,3 +1,6 @@
+/*
+ * A planner calculates a distance between two waypoints.
+ */
 #pragma once
 
 #include <optional>
