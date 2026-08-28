@@ -43,9 +43,9 @@ constexpr int SIM_DURATION   = 43200;
 
 struct InterruptGeneratorConfig {
     std::string type;
-    ExecutionMode execution;   // always INTERRUPT
+    ExecutionMode execution;
     DistributionType distribution;
-    double ratePerSecond;     // rate_per_hour / 3600
+    double ratePerSecond;
     int from;
     int to;
     nlohmann::json params;

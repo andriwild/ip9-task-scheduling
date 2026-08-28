@@ -1,3 +1,7 @@
+/*
+ * State Pattern for the robot.
+ * Each state knows its own power usage, the plugins add further states.
+ */
 #pragma once
 
 #include <memory>
