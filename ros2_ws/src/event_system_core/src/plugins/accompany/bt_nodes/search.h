@@ -162,7 +162,6 @@ public:
 
     BT::NodeStatus tick() override {
         const auto ctx = config().blackboard.get()->get<ISimContext*>("ctx");
-        // TODO: fix static to dynamic cast
         auto& order = static_cast<AccompanyOrder&>(*ctx->getOrderPtr());
 
         const ScanStop stop = order.scanQueue.front();

@@ -24,7 +24,7 @@ public:
     }
 
     void execute(ISimContext& ctx) override {
-        ctx.notifyBatteryChanged();
+        ctx.notifyRobotStateChanged();
         ctx.notifyEvent(*this);
     }
 

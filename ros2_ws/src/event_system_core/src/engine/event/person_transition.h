@@ -69,8 +69,8 @@ public:
             return;
         }
 
+        // Arrival at the building, person is out of his transition matrix
         moveTo(ctx, nextRoom.value());
-        // TODO: magic number
         scheduleTransition(ctx, this->time + static_cast<int>(rnd::uni(p.rng, 10, 30)));
     }
 

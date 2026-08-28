@@ -10,7 +10,7 @@ class INotifier {
 public:
     virtual ~INotifier() = default;
     virtual void notifyEvent(const IEvent& event) const = 0;
-    virtual void notifyBatteryChanged() const = 0;
+    virtual void notifyRobotStateChanged() const = 0;
     virtual void notifyChargeStarted(ChargeTrigger trigger) const = 0;
     virtual void publishMission(const OrderPtr& order, int time) = 0;
 };

@@ -41,7 +41,7 @@ public:
         m_at = ctx.getRobot()->getPosition();
         ctx.getRobot()->setDriving(false);
         ctx.notifyEvent(*this);
-        ctx.notifyBatteryChanged();
+        ctx.notifyRobotStateChanged();
 
         if (m_onArrive) {
             ctx.startActivity(m_onArrive->withTime(this->time));

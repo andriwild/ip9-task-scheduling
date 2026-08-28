@@ -181,7 +181,6 @@ public:
             return BT::NodeStatus::SUCCESS;
         }
 
-        // TODO: check for refactoring
         ctx->getRobot()->m_opportunisticCharge = !ctx->getRobot()->isBatteryLow();
 
         const double netChargingPower = ctx->getConfig()->chargingRate - ctx->getConfig()->energyConsumptionBase;

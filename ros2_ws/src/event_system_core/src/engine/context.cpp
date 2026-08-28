@@ -357,15 +357,9 @@ void SimulationContext::removeObserver(const std::shared_ptr<IObserver>& observe
     m_eventBus.removeObserver(observer);
 }
 
-
 void SimulationContext::notifyRobotStateChanged() const {
     const auto* state = m_robot->getState();
     m_eventBus.notifyStateChanged(m_currentTime, state->getType(), state->getName(), m_robot->batteryStats());
-}
-
-// TODO: obsolet forwarding
-void SimulationContext::notifyBatteryChanged() const {
-    notifyRobotStateChanged();
 }
 
 void SimulationContext::notifyEvent(const IEvent& event) const {

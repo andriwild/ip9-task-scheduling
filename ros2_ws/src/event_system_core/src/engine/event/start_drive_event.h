@@ -40,7 +40,7 @@ public:
         ctx.startActivity(std::make_shared<StopDriveEvent>(this->time + duration, m_target, distance, m_onArrive));
 
         ctx.notifyEvent(*this);
-        ctx.notifyBatteryChanged();
+        ctx.notifyRobotStateChanged();
     }
 
     std::string getName() const override { return "Departing: " + m_target->label(); }

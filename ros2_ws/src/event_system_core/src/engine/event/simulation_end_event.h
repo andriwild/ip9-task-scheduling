@@ -23,7 +23,7 @@ public:
         ctx.getRobot()->flushRoomVisit();
         ctx.changeRobotState(std::make_unique<IdleState>());
         ctx.getRobot()->closeStateLog(time);
-        ctx.notifyBatteryChanged();
+        ctx.notifyRobotStateChanged();
         ctx.notifyEvent(*this);
         ctx.pushEvent(std::make_shared<StopDriveEvent>(time, std::make_shared<RoomTarget>(ctx.getRobot()->getLocation()), 0));
     }

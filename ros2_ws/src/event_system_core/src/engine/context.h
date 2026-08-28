@@ -144,8 +144,7 @@ public:
     void addObserver(const std::shared_ptr<IObserver>& observer);
     void removeObserver(const std::shared_ptr<IObserver>& observer);
 
-    void notifyRobotStateChanged() const;
-    void notifyBatteryChanged() const override;
+    void notifyRobotStateChanged() const override;
     void notifyEvent(const IEvent& event) const override;
     void notifyChargeStarted(ChargeTrigger trigger) const override;
     void robotMoved(const std::string& location, double distance = 0) const override;

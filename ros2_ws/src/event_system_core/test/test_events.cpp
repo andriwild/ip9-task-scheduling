@@ -119,7 +119,7 @@ public:
         const_cast<MockSimContext*>(this)->notifiedEvents.push_back(event.getName());
     }
 
-    void notifyBatteryChanged() const override {}
+    void notifyRobotStateChanged() const override {}
     void notifyChargeStarted(des::ChargeTrigger /*trigger*/) const override {}
 
     bool pushInterrupt(const des::OrderPtr& /*order*/) override { return true; }

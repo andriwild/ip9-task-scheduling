@@ -167,7 +167,6 @@ struct ChargeSession {
     double soc;
 };
 
-// TODO: remove optional and add assert
 inline std::optional<ConversationKind> conversationKindFromString(const std::string& value) {
     if (value == "found_person") {
         return ConversationKind::FOUND_PERSON;
