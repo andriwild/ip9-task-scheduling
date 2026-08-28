@@ -38,7 +38,6 @@ class Robot {
     double m_driveSpeed;
     double m_currentSpeed = 0;
 
-    // TODO: enum instead of single bools
     bool m_isDriving        = false;
     bool m_isCharging       = false;
     int m_chargeEpoch       = 0;

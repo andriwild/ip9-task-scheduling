@@ -22,7 +22,6 @@
 
 namespace des {
 
-// TODO: add to sim config file
 struct StayDurationConfig {
     double officeMin = 60 * 10;
     double officeMax = ONE_HOUR * 2;

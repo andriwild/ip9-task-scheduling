@@ -23,16 +23,7 @@
 #include "util/point.h"
 
 
-
-// TODO: better solution for config key's
-
 namespace des {
-
-// Baked in by CMake from the workspace layout, overridable at runtime via the
-// DES_CONFIG_DIR environment variable.
-#ifndef DES_CONFIG_DIR
-#define DES_CONFIG_DIR "config"
-#endif
 
 inline std::string configRoot() {
     const char* fromEnv = std::getenv("DES_CONFIG_DIR");
@@ -552,7 +543,6 @@ public:
         return merged;
     }
 
-    // TODO: refactor
     // Loads the building snapshot into a name -> Location map (coords + optional area)
     static std::optional<RoomMap> loadBuildingSnapshot(const std::string& filePath) {
         const auto json = getJson(filePath);
