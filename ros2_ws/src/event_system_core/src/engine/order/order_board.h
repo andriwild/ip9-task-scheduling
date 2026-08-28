@@ -33,13 +33,13 @@ public:
     void setCurrent(const OrderPtr& orderPtr);
     OrderPtr current() const;
     OrderPtr effective() const;
-    void updateState(const OrderState& newState);
+    void updateState(const OrderState& newState) const;
     void complete(ISimContext& ctx, const OrderPtr& order);
 
     void setDispatchPlan(const OrderList& orders);
     void addScheduled(const OrderPtr& orderPtr);
     bool hasScheduled() const;
-    OrderPtr nextScheduled();
+    OrderPtr nextScheduled() const;
     OrderPtr popScheduled();
     std::optional<int> nextScheduledDispatchTime() const;
     OrderPtr peekNextScheduledOrder() const;

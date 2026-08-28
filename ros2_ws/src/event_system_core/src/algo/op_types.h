@@ -13,7 +13,7 @@
 
 #include "util/types.h"
 
-namespace des {
+namespace des::op {
 
 
 struct OpNode {
@@ -41,4 +41,4 @@ struct OpParams {
     bool openEnd          = false;
 };
 
-}  // namespace des
+}  // namespace des::op

@@ -15,8 +15,7 @@ public:
     virtual OrderPtr nextScheduledOrder() = 0;
     virtual OrderPtr popScheduledOrder() = 0;
 
-    // Time of the next MissionDispatchEvent in the event queue, i.e. when the
-    // next scheduled mission will become pending. nullopt = nothing scheduled.
+    // Time of the next MissionDispatchEvent in the event queue, when the next scheduled mission will become pending. nullopt = nothing scheduled.
     virtual std::optional<int> getNextScheduledDispatchTime() const = 0;
 
     // OrderPtr of the next scheduled mission still queued, or nullptr.

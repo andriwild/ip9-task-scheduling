@@ -9,9 +9,9 @@
 #include "algo/background/op_solver.h"
 #include "op_svg.h"
 
-using des::OpNode;
-using des::OpParams;
-using des::OpInstance;
+using des::op::OpNode;
+using des::op::OpParams;
+using des::op::OpInstance;
 using json = nlohmann::json;
 
 namespace {
@@ -184,7 +184,7 @@ int main() {
     for (const auto& v : VARIANTEN) {
         params.timeBudget = v.timeBudget;
         const OpInstance op(nodes, distances, docks, params);
-        const std::vector<int> route = des::op_solver::grasp(op, 200, 0.3f, 42);
+        const std::vector<int> route = des::op::grasp(op, 200, 0.3f, 42);
         const auto sim = op.simulateRoute(route, true);
 
         int raeume = 0;

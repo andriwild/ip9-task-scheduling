@@ -1,3 +1,4 @@
+// Generated with Claude Code (Anthropic), then reviewed and adapted by the author. See the index of auxiliary tools.
 #include <gtest/gtest.h>
 
 #include "../src/algo/search/search_reward.h"
@@ -5,7 +6,7 @@
 
 namespace {
 
-const std::vector<des::SearchRoom> kRooms = {
+const std::vector<des::op::SearchRoom> kRooms = {
     { "office", des::RoomType::OFFICE },
     { "kitchen", des::RoomType::KITCHEN },
 };
@@ -21,7 +22,7 @@ des::SightingLog logWith(const int hits, const int misses, const std::string& ro
     return log;
 }
 
-float rewardOf(const std::vector<des::OpNode>& nodes, const std::string& room) {
+float rewardOf(const std::vector<des::op::OpNode>& nodes, const std::string& room) {
     for (const auto& node : nodes) {
         if (node.name == room) {
             return node.reward;
@@ -36,33 +37,33 @@ static constexpr double kPriorWeight = 4.0;
 static constexpr float kWorkplacePrior = 0.6f;
 
 TEST(RoomProbability, WithoutEvidenceItIsThePrior) {
-    EXPECT_NEAR(des::roomProbability(0, 0, 0.05f, kPriorWeight), 0.05f, 1e-6f);
-    EXPECT_NEAR(des::roomProbability(0, 0, 0.60f, kPriorWeight), 0.60f, 1e-6f);
+    EXPECT_NEAR(des::op::roomProbability(0, 0, 0.05f, kPriorWeight), 0.05f, 1e-6f);
+    EXPECT_NEAR(des::op::roomProbability(0, 0, 0.60f, kPriorWeight), 0.60f, 1e-6f);
 }
 
 TEST(RoomProbability, OneHitPullsItUp) {
-    EXPECT_NEAR(des::roomProbability(1, 0, 0.05f, kPriorWeight), 0.24f, 1e-6f);
+    EXPECT_NEAR(des::op::roomProbability(1, 0, 0.05f, kPriorWeight), 0.24f, 1e-6f);
 }
 
 TEST(RoomProbability, OneMissPullsItDown) {
-    EXPECT_NEAR(des::roomProbability(0, 1, 0.05f, kPriorWeight), 0.04f, 1e-6f);
+    EXPECT_NEAR(des::op::roomProbability(0, 1, 0.05f, kPriorWeight), 0.04f, 1e-6f);
 }
 
 TEST(RoomProbability, MoreHitsNeverLowerIt) {
-    EXPECT_LT(des::roomProbability(1, 0, 0.05f, kPriorWeight), des::roomProbability(2, 0, 0.05f, kPriorWeight));
-    EXPECT_LT(des::roomProbability(2, 0, 0.05f, kPriorWeight), des::roomProbability(10, 0, 0.05f, kPriorWeight));
+    EXPECT_LT(des::op::roomProbability(1, 0, 0.05f, kPriorWeight), des::op::roomProbability(2, 0, 0.05f, kPriorWeight));
+    EXPECT_LT(des::op::roomProbability(2, 0, 0.05f, kPriorWeight), des::op::roomProbability(10, 0, 0.05f, kPriorWeight));
 }
 
 TEST(OccupancyPrior, TheWorkplaceAlwaysWins) {
-    EXPECT_FLOAT_EQ(des::occupancyPrior(true, kWorkplacePrior), 0.6f);
+    EXPECT_FLOAT_EQ(des::op::occupancyPrior(true, kWorkplacePrior), 0.6f);
 }
 
 TEST(OccupancyPrior, EveryOtherRoomIsFlat) {
-    EXPECT_FLOAT_EQ(des::occupancyPrior(false, kWorkplacePrior), des::kOtherRoomPrior);
+    EXPECT_FLOAT_EQ(des::op::occupancyPrior(false, kWorkplacePrior), des::op::kOtherRoomPrior);
 }
 
 TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
-    const auto nodes = des::occupancyProbability(des::SightingLog{}, "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::op::occupancyProbability(des::SightingLog{}, "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
 
     ASSERT_EQ(nodes.size(), 2u);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
@@ -70,31 +71,31 @@ TEST(OccupancyProbability, UnseenRoomsKeepTheirPrior) {
 }
 
 TEST(OccupancyProbability, SightingsRaiseTheRoomAboveItsPrior) {
-    const auto nodes = des::occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::op::occupancyProbability(logWith(2, 0, "kitchen"), "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
 
     EXPECT_NEAR(rewardOf(nodes, "kitchen"), 2.2f / 6.0f, 1e-6f);
     EXPECT_NEAR(rewardOf(nodes, "office"), 0.60f, 1e-6f);
 }
 
 TEST(OccupancyProbability, MissesPushTheWorkplaceBelowItsPrior) {
-    const auto nodes = des::occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
+    const auto nodes = des::op::occupancyProbability(logWith(0, 3, "office"), "anna", "office", kRooms, kPriorWeight, kWorkplacePrior);
 
     EXPECT_LT(rewardOf(nodes, "office"), 0.60f);
 }
 
 TEST(FrequencyReward, HitsCountAndUnseenRoomsStayRankable) {
-    const auto nodes = des::frequencyReward(logWith(3, 0, "kitchen"), "anna", kRooms);
+    const auto nodes = des::op::frequencyReward(logWith(3, 0, "kitchen"), "anna", kRooms);
 
     ASSERT_EQ(nodes.size(), 2u);
     EXPECT_FLOAT_EQ(rewardOf(nodes, "kitchen"), 3.0f);
-    EXPECT_FLOAT_EQ(rewardOf(nodes, "office"), des::kUnseenRoomReward);
+    EXPECT_FLOAT_EQ(rewardOf(nodes, "office"), des::op::kUnseenRoomReward);
 }
 
 TEST(RandomReward, EveryRoomGetsAScoreAndTheDrawIsSeedDeterministic) {
     std::mt19937 a(7);
     std::mt19937 b(7);
-    const auto first  = des::randomReward(a, kRooms);
-    const auto second = des::randomReward(b, kRooms);
+    const auto first  = des::op::randomReward(a, kRooms);
+    const auto second = des::op::randomReward(b, kRooms);
 
     ASSERT_EQ(first.size(), 2u);
     EXPECT_FLOAT_EQ(first.front().reward, second.front().reward);
@@ -102,20 +103,20 @@ TEST(RandomReward, EveryRoomGetsAScoreAndTheDrawIsSeedDeterministic) {
 }
 
 TEST(SectorReward, TheWorkplaceSectorAlwaysOutranksTheRest) {
-    const std::vector<des::SearchRoom> rooms = {
+    const std::vector<des::op::SearchRoom> rooms = {
         { "5.2A01", des::RoomType::OFFICE },
         { "5.2B10", des::RoomType::OFFICE },
         { "5.2B22", des::RoomType::KITCHEN },
     };
     std::mt19937 rng(7);
-    const auto nodes = des::sectorReward(rng, rooms, "5.2B10");
+    const auto nodes = des::op::sectorReward(rng, rooms, "5.2B10");
 
     EXPECT_GT(rewardOf(nodes, "5.2B10"), rewardOf(nodes, "5.2A01"));
     EXPECT_GT(rewardOf(nodes, "5.2B22"), rewardOf(nodes, "5.2A01"));
 }
 
 TEST(FrequencyReward, AnUnseenRoomIsOrderedByCostNotDropped) {
-    const auto nodes = des::frequencyReward(des::SightingLog{}, "anna", kRooms);
+    const auto nodes = des::op::frequencyReward(des::SightingLog{}, "anna", kRooms);
 
     ASSERT_EQ(nodes.size(), 2u);
     EXPECT_GT(rewardOf(nodes, "office"), 0.0f);

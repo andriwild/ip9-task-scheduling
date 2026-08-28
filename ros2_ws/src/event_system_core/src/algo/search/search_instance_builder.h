@@ -24,7 +24,7 @@
 #include "model/room.h"
 
 
-namespace des {
+namespace des::op {
 
 inline std::optional<OpInstance> buildSearchInstance(
     const IWorldModel& world,
@@ -36,7 +36,7 @@ inline std::optional<OpInstance> buildSearchInstance(
     const OpBudgets& budgets
 ) {
     constexpr int startNodeId = 0;
-    std::vector planned = { op_build::anchorNode(startLoc) };
+    std::vector planned = { anchorNode(startLoc) };
 
     // With a drop-off at the find location the route has no fixed end.
     // The appointment room is then an ordinary candidate like every other room.
@@ -45,7 +45,7 @@ inline std::optional<OpInstance> buildSearchInstance(
     int endNodeId = startNodeId;
     if (!openEnd && endLoc != startLoc) {
         endNodeId = static_cast<int>(planned.size());
-        planned.push_back(op_build::anchorNode(endLoc));
+        planned.push_back(anchorNode(endLoc));
     }
     const std::size_t anchorCount = planned.size();
 
@@ -61,7 +61,7 @@ inline std::optional<OpInstance> buildSearchInstance(
         }
         const double scanTime    = tour.m_distance / cfg.robotSpeed;
         const double scanEnergy  = scanTime * cfg.energyConsumptionDrive / 3600.0;
-        planned.push_back(op_build::PlannedNode{
+        planned.push_back(PlannedNode{
             OpNode{ room.name, room.reward, static_cast<float>(scanTime), static_cast<float>(scanEnergy) },
             nullptr,
         });
@@ -72,7 +72,7 @@ inline std::optional<OpInstance> buildSearchInstance(
     }
 
     // create submatrix containing only the candidates
-    auto mat = op_build::distanceMatrix(paths, planned);
+    auto mat = distanceMatrix(paths, planned);
     if (!mat) {
         return std::nullopt;
     }
@@ -105,4 +105,4 @@ inline std::optional<OpInstance> buildSearchInstance(
     return OpInstance(std::move(nodes), std::move(*mat), {}, params);
 }
 
-}  // namespace des
+}  // namespace des::op

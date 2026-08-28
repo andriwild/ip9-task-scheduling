@@ -13,7 +13,7 @@
 #include "../op.h"
 #include "../op_solver_common.h"
 
-namespace des::op_solver {
+namespace des::op {
 
 inline std::vector<int> greedySearchOrder(const OpInstance& op) {
     std::vector<int> route;
@@ -47,4 +47,4 @@ inline std::vector<int> greedySearchOrder(const OpInstance& op) {
     return route;
 }
 
-}
+}  // namespace des::op

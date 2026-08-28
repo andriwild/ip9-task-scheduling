@@ -337,7 +337,7 @@ void SimulationContext::publishMission(const OrderPtr& order, const int time) {
     m_eventBus.notifyMissionPublished(order, time);
 }
 
-// Update time by executing an event.
+// Books the energy of the elapsed interval with the power of the current state, then update the clock.
 void SimulationContext::advanceTime(const int newTime) {
     assert(newTime >= m_currentTime);
     m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*m_robot, *m_simConfig));

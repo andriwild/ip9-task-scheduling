@@ -16,7 +16,7 @@
 #include "model/order.h"
 #include "../util/log.h"
 
-namespace des {
+namespace des::op {
 
 constexpr double kMinEnergyBudgetWh = 1e-3;
 constexpr float kChargingPricedOut = 1e9f;
@@ -33,7 +33,6 @@ struct OpBudgets {
     float cvEnergy;
 };
 
-namespace op_build {
 
 struct PlannedNode {
     OpNode op;
@@ -61,6 +60,5 @@ inline std::optional<Mat> distanceMatrix(const IPathPlanning& paths, const std::
     return mat;
 }
 
-}  // namespace op_build
 
-}  // namespace des
+}  // namespace des::op

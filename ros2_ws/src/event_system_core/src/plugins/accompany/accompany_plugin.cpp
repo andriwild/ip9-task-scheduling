@@ -85,31 +85,31 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const auto allNames = ctx.roomNames();
     auto searchable = allNames
         | std::views::filter([&](const std::string& name) { return !isSearchExcluded(ctx, name); })
-        | std::views::transform([&](const std::string& name) { return SearchRoom{ name, ctx.room(name).m_roomType }; })
+        | std::views::transform([&](const std::string& name) { return op::SearchRoom{ name, ctx.room(name).m_roomType }; })
         | std::views::common;
-    const std::vector<SearchRoom> searchableRooms(searchable.begin(), searchable.end());
+    const std::vector<op::SearchRoom> searchableRooms(searchable.begin(), searchable.end());
 
     const auto roomNodes = [&]() {
         switch (cfg->searchRewardStrategy) {
             case SearchRewardStrategy::RANDOM: {
-                return randomReward(ctx.robotRng(), searchableRooms);
+                return op::randomReward(ctx.robotRng(), searchableRooms);
             }
             case SearchRewardStrategy::RANDOM_SECTOR: {
-                return sectorReward(ctx.robotRng(), searchableRooms, person->workplace);
+                return op::sectorReward(ctx.robotRng(), searchableRooms, person->workplace);
             }
             case SearchRewardStrategy::UNIFORM: {
-                return uniformReward(searchableRooms);
+                return op::uniformReward(searchableRooms);
             }
             case SearchRewardStrategy::FREQUENCY: {
-                return frequencyReward(robot->getSightings(), a.personName, searchableRooms);
+                return op::frequencyReward(robot->getSightings(), a.personName, searchableRooms);
             }
             case SearchRewardStrategy::TRUE_DISTRIBUTION: {
-                return trueDistributionReward(person->workplace, person->roomLabels,
+                return op::trueDistributionReward(person->workplace, person->roomLabels,
                                               cfg->searchTrueWorkplaceShare, cfg->searchTrueDistribution,
                                               searchableRooms);
             }
             default: {
-                return occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
+                return op::occupancyProbability(robot->getSightings(), a.personName, person->workplace, searchableRooms, cfg->searchPriorWeight, static_cast<float>(cfg->searchWorkplacePrior));
             }
         }
     }();
@@ -123,23 +123,23 @@ std::optional<SearchPlan> planPersonSearch(const ISimContext& ctx, const Accompa
     const int now           = ctx.getTime();
     const int deadline      = a.deadline.value_or(now);
 
-    const OpBudgets budgets {
+    const op::OpBudgets budgets {
         .timeBudget      = static_cast<float>(std::min(std::max(0, deadline - now), static_cast<int>(cfg->timeBuffer))),
-        .energyBudget    = static_cast<float>(std::max(spendableWh, kMinEnergyBudgetWh)),
+        .energyBudget    = static_cast<float>(std::max(spendableWh, op::kMinEnergyBudgetWh)),
         .initialSoc      = static_cast<float>(currentWh),
         .endSocMin       = static_cast<float>(reserveWh),
         .socThreshold    = static_cast<float>(reserveWh),
         .maxEnergy       = static_cast<float>(capacityWh),
-        .chargeTimePerWh = kChargingPricedOut,
-        .chargeTimePerWhTapered = kChargingPricedOut,
+        .chargeTimePerWh = op::kChargingPricedOut,
+        .chargeTimePerWhTapered = op::kChargingPricedOut,
         .cvEnergy        = static_cast<float>(capacityWh),
     };
 
-    auto instance = buildSearchInstance(ctx, ctx, *cfg, roomNodes, startLoc, a.roomName, budgets);
+    auto instance = op::buildSearchInstance(ctx, ctx, *cfg, roomNodes, startLoc, a.roomName, budgets);
     if (!instance) {
         return std::nullopt;
     }
-    const auto route = op_solver::greedySearchOrder(*instance);
+    const auto route = op::greedySearchOrder(*instance);
     if (route.empty()) {
         return std::nullopt;
     }

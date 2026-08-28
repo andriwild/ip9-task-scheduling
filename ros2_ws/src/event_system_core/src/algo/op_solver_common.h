@@ -15,7 +15,7 @@
 #include "op.h"
 
 
-namespace des::op_solver {
+namespace des::op {
 
 inline float greedyValue(const OpInstance& op, const int curId, const int candIdx) {
     const auto& p    = op.params();
@@ -40,4 +40,4 @@ inline std::vector<int> taskCandidates(const OpInstance& op) {
     return candidates;
 }
 
-} // namespace des::op_solver
+} // namespace des::op

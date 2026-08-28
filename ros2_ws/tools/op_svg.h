@@ -29,10 +29,10 @@ struct SvgStyle {
     std::string muted     = "#9AA0A8";
 };
 
-inline void writeSvg(const std::vector<des::OpNode>& nodes,
+inline void writeSvg(const std::vector<des::op::OpNode>& nodes,
                      const std::vector<Point>& pos,
                      const std::vector<int>& route,
-                     const des::OpParams& params,
+                     const des::op::OpParams& params,
                      const std::vector<int>& docks,
                      const std::string& file,
                      const std::vector<char>& seiten = {}) {

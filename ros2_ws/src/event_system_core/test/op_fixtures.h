@@ -1,3 +1,4 @@
+// Generated with Claude Code (Anthropic), then reviewed and adapted by the author. See the index of auxiliary tools.
 #pragma once
 
 #include <cmath>
@@ -26,59 +27,59 @@ inline des::Mat lineMatrix(const std::vector<float>& position) {
     return mat;
 }
 
-inline des::OpInstance twoTasks(const float serviceTimeA, const float serviceTimeB) {
-    std::vector<des::OpNode> nodes = {
-        des::OpNode{"start", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"end", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"A", 1.0f, serviceTimeA, 0.0f},
-        des::OpNode{"B", 1.0f, serviceTimeB, 0.0f},
+inline des::op::OpInstance twoTasks(const float serviceTimeA, const float serviceTimeB) {
+    std::vector<des::op::OpNode> nodes = {
+        des::op::OpNode{"start", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"end", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"A", 1.0f, serviceTimeA, 0.0f},
+        des::op::OpNode{"B", 1.0f, serviceTimeB, 0.0f},
     };
     des::Mat mat = uniformMatrix(nodes.size(), 10.0f);
-    const des::OpParams params {
+    const des::op::OpParams params {
         .startNodeId  = 0,
         .endNodeId    = 1,
         .timeBudget   = 1000.0f,
         .energyBudget = 1000.0f,
         .initialSoc   = 1000.0f,
     };
-    return des::OpInstance(std::move(nodes), std::move(mat), {}, params);
+    return des::op::OpInstance(std::move(nodes), std::move(mat), {}, params);
 }
 
-inline des::OpInstance slowVersusHungry(const float timeBudget, const float energyBudget) {
-    std::vector<des::OpNode> nodes = {
-        des::OpNode{"start", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"end", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"slow", 1.0f, 100.0f, 1.0f},
-        des::OpNode{"hungry", 1.0f, 1.0f, 100.0f},
+inline des::op::OpInstance slowVersusHungry(const float timeBudget, const float energyBudget) {
+    std::vector<des::op::OpNode> nodes = {
+        des::op::OpNode{"start", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"end", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"slow", 1.0f, 100.0f, 1.0f},
+        des::op::OpNode{"hungry", 1.0f, 1.0f, 100.0f},
     };
     des::Mat mat = uniformMatrix(nodes.size(), 10.0f);
-    const des::OpParams params {
+    const des::op::OpParams params {
         .startNodeId  = 0,
         .endNodeId    = 1,
         .timeBudget   = timeBudget,
         .energyBudget = energyBudget,
         .initialSoc   = 100000.0f,
     };
-    return des::OpInstance(std::move(nodes), std::move(mat), {}, params);
+    return des::op::OpInstance(std::move(nodes), std::move(mat), {}, params);
 }
 
-inline des::OpInstance lineInstance(const float timeBudget) {
-    std::vector<des::OpNode> nodes = {
-        des::OpNode{"start", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"end", 0.0f, 0.0f, 0.0f},
-        des::OpNode{"A", 1.0f, 10.0f, 0.0f},
-        des::OpNode{"B", 4.0f, 10.0f, 0.0f},
-        des::OpNode{"C", 1.0f, 20.0f, 0.0f},
+inline des::op::OpInstance lineInstance(const float timeBudget) {
+    std::vector<des::op::OpNode> nodes = {
+        des::op::OpNode{"start", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"end", 0.0f, 0.0f, 0.0f},
+        des::op::OpNode{"A", 1.0f, 10.0f, 0.0f},
+        des::op::OpNode{"B", 4.0f, 10.0f, 0.0f},
+        des::op::OpNode{"C", 1.0f, 20.0f, 0.0f},
     };
     des::Mat mat = lineMatrix({ 0.0f, 40.0f, 10.0f, 20.0f, 30.0f });
-    const des::OpParams params {
+    const des::op::OpParams params {
         .startNodeId  = 0,
         .endNodeId    = 1,
         .timeBudget   = timeBudget,
         .energyBudget = 1000.0f,
         .initialSoc   = 1000.0f,
     };
-    return des::OpInstance(std::move(nodes), std::move(mat), {}, params);
+    return des::op::OpInstance(std::move(nodes), std::move(mat), {}, params);
 }
 
 }  // namespace op_fixtures

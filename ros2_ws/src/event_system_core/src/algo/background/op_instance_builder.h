@@ -14,7 +14,7 @@
 #include "../../util/log.h"
 #include "model/sim_config.h"
 
-namespace des {
+namespace des::op {
 
 struct OpProblem {
     OpInstance instance;
@@ -32,7 +32,6 @@ inline std::string formatRoute(const OpProblem& problem, const std::vector<int>&
     return s;
 }
 
-namespace op_build {
 
 inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const OrderPtr& order) {
     const auto& plugin = OrderRegistry::instance().get(order->type);
@@ -52,7 +51,6 @@ inline std::optional<PlannedNode> serviceNode(const EstimationView& view, const 
     };
 }
 
-}  // namespace op_build
 
 inline std::optional<OpProblem> buildMissionInstance(
     const EstimationView& view,
@@ -68,20 +66,20 @@ inline std::optional<OpProblem> buildMissionInstance(
     const int dockNodeId    = 1;
     int endNodeId           = dockNodeId;
 
-    std::vector<op_build::PlannedNode> planned = {
-        op_build::anchorNode(startLoc),
-        op_build::anchorNode(dock)
+    std::vector<PlannedNode> planned = {
+        anchorNode(startLoc),
+        anchorNode(dock)
     };
 
     if (endLoc != dock) {
-        planned.push_back(op_build::anchorNode(endLoc));
+        planned.push_back(anchorNode(endLoc));
         endNodeId = 2;
     }
 
     const size_t anchorCount = planned.size();
 
     for (const auto& order : missions) {
-        if (auto node = op_build::serviceNode(view, order)) {
+        if (auto node = serviceNode(view, order)) {
             planned.push_back(std::move(*node));
         }
     }
@@ -90,7 +88,7 @@ inline std::optional<OpProblem> buildMissionInstance(
         return std::nullopt;
     }
 
-    auto mat = op_build::distanceMatrix(paths, planned);
+    auto mat = distanceMatrix(paths, planned);
     if (!mat) {
         return std::nullopt;
     }
@@ -129,4 +127,4 @@ inline std::optional<OpProblem> buildMissionInstance(
     };
 }
 
-}  // namespace des
+}  // namespace des::op

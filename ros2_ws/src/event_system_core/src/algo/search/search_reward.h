@@ -19,7 +19,7 @@
 #include "model/room.h"
 #include "model/sighting.h"
 
-namespace des {
+namespace des::op {
 
 struct SearchRoom {
     std::string name;
@@ -143,4 +143,4 @@ inline std::vector<OpNode> frequencyReward(const SightingLog& sightings, const s
     return { scored.begin(), scored.end() };
 }
 
-}  // namespace des
+}  // namespace des::op

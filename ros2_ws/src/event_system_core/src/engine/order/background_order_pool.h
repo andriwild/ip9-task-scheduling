@@ -34,9 +34,10 @@ struct MissionReserve {
     std::size_t missionCount = 0;
 };
 
-// Computes the required reserve from a given time point in the future.
-// Accumulates the required energy of the schedules missions.
-// Takes into account that can be charged between mission.
+// Energy the robot has to keep back for the scheduled missions in the reserve horizon.
+// Calculates the missions backwards.
+// Each one needs its own energy plus what the later ones still need, minus what the robot can charge in the gaps between them.
+// Never less than the low battery threshold, never more than the full battery.
 inline MissionReserve computeMissionReserve(
     const ISimContext& ctx,
     const double socThreshold,
@@ -44,8 +45,10 @@ inline MissionReserve computeMissionReserve(
     const std::string& dockLoc
 ) {
     const auto cfg          = ctx.getConfig();
+    // the robot draws its base power while it charges, only the rest reaches the battery
     const double netChargeW = cfg->chargingRate - cfg->energyConsumptionBase;
 
+    // horizon: every mission of the next few hours. otherwise only the next one
     std::vector<OrderPtr> orders;
     if (cfg->energyReserveStrategy == EnergyReserveStrategy::HORIZON) {
         orders = ctx.peekScheduledOrdersUntil(ctx.getTime() + cfg->energyReserveHorizon);
@@ -53,6 +56,7 @@ inline MissionReserve computeMissionReserve(
         orders.push_back(next);
     }
 
+    // nothing planned, so the low battery threshold is all the robot keeps back
     if (orders.empty()) {
         return { socThreshold, dockLoc, 0 };
     }
@@ -62,6 +66,8 @@ inline MissionReserve computeMissionReserve(
     std::vector<bool> hasDuration(orders.size(), false);
     std::string endLoc = dockLoc;
 
+    // The background tour has to end where the first mission starts, so that one is estimated from there.
+    // For the later ones the robot is assumed to start at the dock.
     for (std::size_t i = 0; i < orders.size(); ++i) {
         const auto& plugin = OrderRegistry::instance().get(orders[i]->type);
         const std::string startLoc = i == 0
@@ -77,17 +83,21 @@ inline MissionReserve computeMissionReserve(
         endTime[i]     = orders[i]->dispatchTime + durationSec;
     }
 
+    // backwards, so every step already knows what the missions after it need
     double requiredWh = socThreshold;
     for (std::size_t k = orders.size(); k > 0; --k) {
         const std::size_t i = k - 1;
+        // energy the robot can put back in the idle time before the next mission
         double creditWh = 0.0;
         if (i + 1 < orders.size() && hasDuration[i] && netChargeW > 0.0) {
             const double gapSec = orders[i + 1]->dispatchTime - endTime[i];
             creditWh = std::max(0.0, gapSec) * netChargeW / 3600.0;
         }
+        // this mission on top of the threshold, or on top of what the rest still needs
         requiredWh = std::max(socThreshold + energyWh[i], requiredWh + energyWh[i] - creditWh);
     }
 
+    // keeping back more than the battery holds is pointless
     return { std::min(capacityWh, requiredWh), endLoc, orders.size() };
 }
 
@@ -120,7 +130,7 @@ public:
         return !m_pending.empty();
     }
 
-    // Next mission of the current plan; also removed from the pool.
+    // Next mission of the current plan, also removed from the pool.
     OrderPtr popPlanned() {
         if (m_pending.empty()) { return nullptr; }
         const auto order = m_pending.front();
@@ -189,14 +199,14 @@ public:
         if (timeBudget <= 0) { return; }
 
         // netChargeW <= 0: charging never pays off, price docks out of the tour
-        const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : kChargingPricedOut;
+        const float chargeTimePerWh = netChargeW > 0.0 ? static_cast<float>(3600.0 / netChargeW) : op::kChargingPricedOut;
         const double taperedW = netChargeW * cfg->taperFraction;
-        const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : kChargingPricedOut;
+        const float chargeTimePerWhTapered = taperedW > 0.0 ? static_cast<float>(3600.0 / taperedW) : op::kChargingPricedOut;
         const float cvEnergy = static_cast<float>(cfg->cvThreshold * capacityWh);
 
-        const OpBudgets budgets {
+        const op::OpBudgets budgets {
             .timeBudget      = static_cast<float>(timeBudget),
-            .energyBudget    = static_cast<float>(std::max(energyBudget, kMinEnergyBudgetWh)),
+            .energyBudget    = static_cast<float>(std::max(energyBudget, op::kMinEnergyBudgetWh)),
             .initialSoc      = static_cast<float>(currentWh),
             .endSocMin       = static_cast<float>(requiredWh),
             .socThreshold    = static_cast<float>(socThreshold),
@@ -207,7 +217,7 @@ public:
         };
 
         // builds a problem instance containing parameters (constraints, budget) and a list of locations to visit 
-        const auto problem = buildMissionInstance(EstimationView{ctx, ctx, *cfg}, ctx, m_missions, startLoc, endLoc, budgets);
+        const auto problem = op::buildMissionInstance(EstimationView{ctx, ctx, *cfg}, ctx, m_missions, startLoc, endLoc, budgets);
         if (!problem) {
             DES_LOG_DEBUG("des.mission.background", "No plannable background missions (pool=%zu)", m_missions.size());
             return;
@@ -215,10 +225,10 @@ public:
 
         // index based route (tour)
         const int graspSeed = static_cast<int>(ctx.activeSeed() + GRASP_SEED_OFFSET);
-        const auto route = op_solver::grasp(problem->instance, cfg->graspIterations,
+        const auto route = op::grasp(problem->instance, cfg->graspIterations,
                                             static_cast<float>(cfg->graspAlpha), graspSeed);
 
-        DES_LOG_DEBUG("des.mission.background", "Route: %s", formatRoute(*problem, route, startLoc, endLoc).c_str());
+        DES_LOG_DEBUG("des.mission.background", "Route: %s", op::formatRoute(*problem, route, startLoc, endLoc).c_str());
 
 
         // generate a tour of orderPtr, which the robot can process

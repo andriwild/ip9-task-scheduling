@@ -14,7 +14,7 @@
 
 #include "op_types.h"
 
-namespace des {
+namespace des::op {
 
 class OpInstance {
     std::vector<OpNode> m_nodes;
@@ -63,7 +63,8 @@ public:
         return d;
     }
 
-    // Calculate the time to charge the battery until to the cv threshold
+    // Time to charge the battery from one level to another.
+    // Above the cv threshold the charge rate drops.
     float chargeDuration(const float from, const float to) const {
         float t = 0.0f;
         const float phaseOneEnd = std::min(to, m_p.cvEnergy);
@@ -80,7 +81,8 @@ public:
     struct Sim { bool feasible; float socEnd; float time; };
 
     // Runs the current route and accumulates time and energy.
-    // Returns, if a route is feasibly within time and energy budget.
+    // Returns whether the route stays in the time budget and keeps enough energy.
+    // toEnd also drives back to the end node and uses the stricter energy limit.
     Sim simulateRoute(const std::vector<int>& route, const bool toEnd = false) const {
         float time = 0.0f;
         float soc  = m_p.initialSoc;
@@ -125,4 +127,4 @@ public:
     }
 };
 
-}  // namespace des
+}  // namespace des::op

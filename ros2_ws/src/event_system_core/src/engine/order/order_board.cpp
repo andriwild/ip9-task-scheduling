@@ -44,7 +44,7 @@ OrderPtr OrderBoard::effective() const {
     return m_current;
 }
 
-void OrderBoard::updateState(const OrderState& newState) {
+void OrderBoard::updateState(const OrderState& newState) const {
     assert(m_current != nullptr);
     DES_LOG_DEBUG("des.context.mission", "Mission %d (type=%s) state: %s -> %s", m_current->id, m_current->type.c_str(), orderStateStr(m_current->state).c_str(), orderStateStr(newState).c_str());
     m_current->state = newState;
@@ -93,7 +93,7 @@ bool OrderBoard::hasScheduled() const {
     return m_scheduled.has();
 }
 
-OrderPtr OrderBoard::nextScheduled() {
+OrderPtr OrderBoard::nextScheduled() const {
     return m_scheduled.peek();
 }
 
@@ -145,9 +145,9 @@ OrderPtr OrderBoard::acceptFeasibleBackground(ISimContext& ctx) {
     return accepted;
 }
 
-// A new Interrupt Mission arrived.
+// A new Interrupt Mission arrived. Rejected when the battery is low.
 // Only one Interrupt Mission at the same time can be active.
-// An ongoing activity has to be stopped and paused.
+// The running activity is shifted by the duration of the interrupt, unless the robot charges at the dock, then it keeps running.
 bool OrderBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
     assert(order->execution == ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
     const auto robot = ctx.getRobot();

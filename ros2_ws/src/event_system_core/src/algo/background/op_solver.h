@@ -14,7 +14,7 @@
 #include "../op_solver_common.h"
 
 
-namespace des::op_solver {
+namespace des::op {
 
 // Finds the nearest dock to charge the robot.
 inline int nearestDock(const OpInstance& op, const int from) {
@@ -28,10 +28,12 @@ inline int nearestDock(const OpInstance& op, const int from) {
     return best;
 }
 
-// Optimizes a tour by swapping to edges.
-// A swap is accepted, if the tour is shorter.
+// Optimizes a tour by swapping two edges.
+// A swap is accepted if the tour gets shorter.
+// Only the part between from and to is processed.
 inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from, const int to) {
     const auto& p   = op.params();
+    // the two nodes just outside the part, the route has to keep reaching them
     const int left  = from == 0 ? p.startNodeId : tour[from - 1];
     const int right = to == static_cast<int>(tour.size()) ? p.endNodeId : tour[to];
 
@@ -56,8 +58,10 @@ inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from,
                 const int c = idAt(j);
                 const int d = idAt(j + 1);
 
+                // cut the edges a-b and c-d and join a-c and b-d instead,
                 const float oldEdges = op.distance(a, b) + op.distance(c, d);
                 const float newEdges = op.distance(a, c) + op.distance(b, d);
+                // only a real gain, a swap that changes nothing would repeat forever
                 if (newEdges - oldEdges < -1e-6f) {
                     std::reverse(tour.begin() + i, tour.begin() + j);
                     improved = true;
@@ -67,12 +71,10 @@ inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from,
     }
 }
 
-// TODO: rename ns
-namespace detail {
 
 struct Cand { float value; std::size_t idx; int dock; };
 
-// Calculate the score of a candidate and check its feasibility with oder without additional charge stop.
+// Calculate the score of a candidate and check its feasibility with or without additional charge stop.
 inline std::optional<Cand> scoreCandidate(
     const OpInstance& op,
     std::vector<int>& route,
@@ -123,15 +125,20 @@ inline std::vector<Cand> restrictedCandidateList(const std::vector<Cand>& scored
     return rcl;
 }
 
-// add nearest dock to the end of the route
+// The route was built without checking the way back to the end node.
+// Adds charge stops or drops tasks until the robot gets there.
 inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
     while (!op.simulateRoute(route, true).feasible) {
         if (!op.docks().empty() && !route.empty() && !op.isDock(route.back())) {
+            // the battery does not last to the end node, so charge on the way
             route.push_back(nearestDock(op, route.back()));
         } else {
             if (route.empty()) {
+                // no task left to drop, the route stays infeasible
                 break;
             }
+            // charging did not help, so the last task has to go.
+            // the route ends with the dock added above, that one goes with it
             route.pop_back();
             if (!op.docks().empty() && !route.empty()) {
                 route.pop_back();
@@ -140,7 +147,6 @@ inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
     }
 }
 
-}  // namespace detail
 
 
 // Create a solution by adding a candidate from the rcl
@@ -153,9 +159,9 @@ inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const
     int curId = op.params().startNodeId;
 
     while (!candidates.empty()) {
-        std::vector<detail::Cand> scored;
+        std::vector<Cand> scored;
         for (std::size_t i = 0; i < candidates.size(); ++i) {
-            if (auto cand = detail::scoreCandidate(op, route, curId, i, candidates[i])) {
+            if (auto cand = scoreCandidate(op, route, curId, i, candidates[i])) {
                 scored.push_back(*cand);
             }
         }
@@ -163,9 +169,9 @@ inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const
             break;
         }
 
-        const std::vector<detail::Cand> rcl = detail::restrictedCandidateList(scored, alpha);
+        const std::vector<Cand> rcl = restrictedCandidateList(scored, alpha);
         std::uniform_int_distribution<std::size_t> pick(0, rcl.size() - 1);
-        const detail::Cand chosen = rcl[pick(gen)];
+        const Cand chosen = rcl[pick(gen)];
 
         if (chosen.dock >= 0) {
             route.push_back(chosen.dock);
@@ -177,7 +183,7 @@ inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const
         candidates.pop_back();
     }
 
-    detail::repairToEnd(op, route);
+    repairToEnd(op, route);
     return route;
 }
 
@@ -223,5 +229,5 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     return bestSolution;
 }
 
-}  // namespace des::op_solver
+}  // namespace des::op
 
