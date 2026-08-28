@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -15,14 +14,15 @@ namespace des {
 class ISimContext;
 
 class IEvent {
-    static inline std::atomic<uint64_t> s_seqCounter{0};
+    // Events are created on the simulation thread only
+    static inline uint64_t s_seqCounter{0};
 
 public:
     int time;
     uint64_t seq;
     bool cancelled = false;
-    explicit IEvent(const int time) : time(time), seq(s_seqCounter.fetch_add(1, std::memory_order_relaxed)) {}
-    IEvent(const IEvent& o) : time(o.time), seq(s_seqCounter.fetch_add(1, std::memory_order_relaxed)), cancelled(o.cancelled), m_missionId(o.m_missionId) {}
+    explicit IEvent(const int time) : time(time), seq(s_seqCounter++) {}
+    IEvent(const IEvent& o) : time(o.time), seq(s_seqCounter++), cancelled(o.cancelled), m_missionId(o.m_missionId) {}
     virtual ~IEvent() = default;
 
     virtual void execute(ISimContext& ctx) = 0;
