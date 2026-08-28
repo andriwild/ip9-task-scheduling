@@ -1,0 +1,15 @@
+{
+    "background_cost_aware": false,
+    "battery_capacity": 10000.0,
+    "charge_to_full": true,
+    "data_acquisition": {
+        "data_acquisition_duration": 10.0
+    },
+    "employees_path": "employees/employee_gebaeude84.json",
+    "initial_battery_capacity": 10000.0,
+    "scenario_path": "scenarios/thesis/nur_acquire.json",
+    "sim_duration": 600,
+    "sim_start_time": 18000,
+    "grasp_iterations": 200,
+    "grasp_alpha": 0.5
+}

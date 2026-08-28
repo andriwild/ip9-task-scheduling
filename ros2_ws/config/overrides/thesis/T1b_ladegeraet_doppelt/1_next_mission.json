@@ -1,0 +1,9 @@
+{
+    "charging_rate": 385.0,
+    "employees_path": "employees/employee_gebaeude84.json",
+    "energy_reserve_strategy": "next_mission",
+    "scenario_path": "scenarios/thesis_baseline.json",
+    "sim_duration": 2592000,
+    "sim_start_time": 18000,
+    "energy_reserve_horizon": 14400
+}

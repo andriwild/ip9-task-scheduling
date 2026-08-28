@@ -1,0 +1,7 @@
+{
+    "employees_path": "employees/employee_gebaeude84.json",
+    "low_battery_threshold": 50.0,
+    "scenario_path": "scenarios/thesis_baseline.json",
+    "sim_duration": 2592000,
+    "sim_start_time": 18000
+}

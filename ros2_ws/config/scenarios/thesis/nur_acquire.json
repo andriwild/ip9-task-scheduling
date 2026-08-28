@@ -1,0 +1,582 @@
+{
+  "orders": [],
+  "background": [
+    {
+      "id": 300,
+      "type": "data_acquisition",
+      "roomName": "5.2A01",
+      "description": "Datenakquise 5.2A01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 301,
+      "type": "data_acquisition",
+      "roomName": "5.2A02",
+      "description": "Datenakquise 5.2A02",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 302,
+      "type": "data_acquisition",
+      "roomName": "5.2A04",
+      "description": "Datenakquise 5.2A04",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 303,
+      "type": "data_acquisition",
+      "roomName": "5.2A05",
+      "description": "Datenakquise 5.2A05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 304,
+      "type": "data_acquisition",
+      "roomName": "5.2A07",
+      "description": "Datenakquise 5.2A07",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 305,
+      "type": "data_acquisition",
+      "roomName": "5.2A10",
+      "description": "Datenakquise 5.2A10",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 306,
+      "type": "data_acquisition",
+      "roomName": "5.2A12",
+      "description": "Datenakquise 5.2A12",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 307,
+      "type": "data_acquisition",
+      "roomName": "5.2A13",
+      "description": "Datenakquise 5.2A13",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 308,
+      "type": "data_acquisition",
+      "roomName": "5.2A14",
+      "description": "Datenakquise 5.2A14",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 309,
+      "type": "data_acquisition",
+      "roomName": "5.2A15",
+      "description": "Datenakquise 5.2A15",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 310,
+      "type": "data_acquisition",
+      "roomName": "5.2A17",
+      "description": "Datenakquise 5.2A17",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 311,
+      "type": "data_acquisition",
+      "roomName": "5.2A32",
+      "description": "Datenakquise 5.2A32",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 312,
+      "type": "data_acquisition",
+      "roomName": "5.2A34",
+      "description": "Datenakquise 5.2A34",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 313,
+      "type": "data_acquisition",
+      "roomName": "5.2A38",
+      "description": "Datenakquise 5.2A38",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 314,
+      "type": "data_acquisition",
+      "roomName": "5.2A71",
+      "description": "Datenakquise 5.2A71",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 315,
+      "type": "data_acquisition",
+      "roomName": "5.2A_Elevator",
+      "description": "Datenakquise 5.2A_Elevator",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 316,
+      "type": "data_acquisition",
+      "roomName": "5.2A_Open_Zone",
+      "description": "Datenakquise 5.2A_Open_Zone",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 317,
+      "type": "data_acquisition",
+      "roomName": "5.2A_Stairwell",
+      "description": "Datenakquise 5.2A_Stairwell",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 318,
+      "type": "data_acquisition",
+      "roomName": "5.2A_Toilet_M",
+      "description": "Datenakquise 5.2A_Toilet_M",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 319,
+      "type": "data_acquisition",
+      "roomName": "5.2A_Toilet_W",
+      "description": "Datenakquise 5.2A_Toilet_W",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 320,
+      "type": "data_acquisition",
+      "roomName": "5.2B01",
+      "description": "Datenakquise 5.2B01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 321,
+      "type": "data_acquisition",
+      "roomName": "5.2B03",
+      "description": "Datenakquise 5.2B03",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 322,
+      "type": "data_acquisition",
+      "roomName": "5.2B04",
+      "description": "Datenakquise 5.2B04",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 323,
+      "type": "data_acquisition",
+      "roomName": "5.2B05",
+      "description": "Datenakquise 5.2B05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 324,
+      "type": "data_acquisition",
+      "roomName": "5.2B06",
+      "description": "Datenakquise 5.2B06",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 325,
+      "type": "data_acquisition",
+      "roomName": "5.2B10",
+      "description": "Datenakquise 5.2B10",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 326,
+      "type": "data_acquisition",
+      "roomName": "5.2B13",
+      "description": "Datenakquise 5.2B13",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 327,
+      "type": "data_acquisition",
+      "roomName": "5.2B15",
+      "description": "Datenakquise 5.2B15",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 328,
+      "type": "data_acquisition",
+      "roomName": "5.2B17",
+      "description": "Datenakquise 5.2B17",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 329,
+      "type": "data_acquisition",
+      "roomName": "5.2B18",
+      "description": "Datenakquise 5.2B18",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 330,
+      "type": "data_acquisition",
+      "roomName": "5.2B31",
+      "description": "Datenakquise 5.2B31",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 331,
+      "type": "data_acquisition",
+      "roomName": "5.2B33",
+      "description": "Datenakquise 5.2B33",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 332,
+      "type": "data_acquisition",
+      "roomName": "5.2B34",
+      "description": "Datenakquise 5.2B34",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 333,
+      "type": "data_acquisition",
+      "roomName": "5.2B51",
+      "description": "Datenakquise 5.2B51",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 334,
+      "type": "data_acquisition",
+      "roomName": "5.2B53",
+      "description": "Datenakquise 5.2B53",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 335,
+      "type": "data_acquisition",
+      "roomName": "5.2B_Elevator",
+      "description": "Datenakquise 5.2B_Elevator",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 336,
+      "type": "data_acquisition",
+      "roomName": "5.2B_Storage",
+      "description": "Datenakquise 5.2B_Storage",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 337,
+      "type": "data_acquisition",
+      "roomName": "5.2B_Toilet_M",
+      "description": "Datenakquise 5.2B_Toilet_M",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 338,
+      "type": "data_acquisition",
+      "roomName": "5.2B_Toilet_W",
+      "description": "Datenakquise 5.2B_Toilet_W",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 339,
+      "type": "data_acquisition",
+      "roomName": "5.2C01",
+      "description": "Datenakquise 5.2C01",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 340,
+      "type": "data_acquisition",
+      "roomName": "5.2C03",
+      "description": "Datenakquise 5.2C03",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 341,
+      "type": "data_acquisition",
+      "roomName": "5.2C05",
+      "description": "Datenakquise 5.2C05",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 342,
+      "type": "data_acquisition",
+      "roomName": "5.2C07",
+      "description": "Datenakquise 5.2C07",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 343,
+      "type": "data_acquisition",
+      "roomName": "5.2C08",
+      "description": "Datenakquise 5.2C08",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 344,
+      "type": "data_acquisition",
+      "roomName": "5.2C19",
+      "description": "Datenakquise 5.2C19",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 345,
+      "type": "data_acquisition",
+      "roomName": "5.2C30",
+      "description": "Datenakquise 5.2C30",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 346,
+      "type": "data_acquisition",
+      "roomName": "5.2C52",
+      "description": "Datenakquise 5.2C52",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 347,
+      "type": "data_acquisition",
+      "roomName": "5.2C54",
+      "description": "Datenakquise 5.2C54",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 348,
+      "type": "data_acquisition",
+      "roomName": "5.2C56",
+      "description": "Datenakquise 5.2C56",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 349,
+      "type": "data_acquisition",
+      "roomName": "5.2C59",
+      "description": "Datenakquise 5.2C59",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 350,
+      "type": "data_acquisition",
+      "roomName": "5.2C91",
+      "description": "Datenakquise 5.2C91",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 351,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Elevator",
+      "description": "Datenakquise 5.2C_Elevator",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 352,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Elevator_Goods",
+      "description": "Datenakquise 5.2C_Elevator_Goods",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 353,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Reserve_Mat",
+      "description": "Datenakquise 5.2C_Reserve_Mat",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 354,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Stairwell",
+      "description": "Datenakquise 5.2C_Stairwell",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 355,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Toilet_Accessible",
+      "description": "Datenakquise 5.2C_Toilet_Accessible",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 356,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Trash",
+      "description": "Datenakquise 5.2C_Trash",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 357,
+      "type": "data_acquisition",
+      "roomName": "5.2C_Working_Space",
+      "description": "Datenakquise 5.2C_Working_Space",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 358,
+      "type": "data_acquisition",
+      "roomName": "5.2D02",
+      "description": "Datenakquise 5.2D02",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 359,
+      "type": "data_acquisition",
+      "roomName": "5.2D11",
+      "description": "Datenakquise 5.2D11",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 360,
+      "type": "data_acquisition",
+      "roomName": "5.2D_Elevator",
+      "description": "Datenakquise 5.2D_Elevator",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 361,
+      "type": "data_acquisition",
+      "roomName": "5.2D_Open_Zone",
+      "description": "Datenakquise 5.2D_Open_Zone",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 362,
+      "type": "data_acquisition",
+      "roomName": "5.2D_Stairwell",
+      "description": "Datenakquise 5.2D_Stairwell",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 363,
+      "type": "data_acquisition",
+      "roomName": "5.2D_Toilet_M",
+      "description": "Datenakquise 5.2D_Toilet_M",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 364,
+      "type": "data_acquisition",
+      "roomName": "5.2D_Toilet_W",
+      "description": "Datenakquise 5.2D_Toilet_W",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 365,
+      "type": "data_acquisition",
+      "roomName": "5.2_Corridor_Geb6",
+      "description": "Datenakquise 5.2_Corridor_Geb6",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 366,
+      "type": "data_acquisition",
+      "roomName": "5.2_Stair_Down",
+      "description": "Datenakquise 5.2_Stair_Down",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 367,
+      "type": "data_acquisition",
+      "roomName": "5.2_Stair_Down_Geb6",
+      "description": "Datenakquise 5.2_Stair_Down_Geb6",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 368,
+      "type": "data_acquisition",
+      "roomName": "5.2_Stair_Up",
+      "description": "Datenakquise 5.2_Stair_Up",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 369,
+      "type": "data_acquisition",
+      "roomName": "IMVS_Dock",
+      "description": "Datenakquise IMVS_Dock",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 370,
+      "type": "data_acquisition",
+      "roomName": "IMVS_Kitchen",
+      "description": "Datenakquise IMVS_Kitchen",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    },
+    {
+      "id": 371,
+      "type": "data_acquisition",
+      "roomName": "IMVS_Printer",
+      "description": "Datenakquise IMVS_Printer",
+      "every_n_days": 1,
+      "data_acquisition_interval": 86400
+    }
+  ],
+  "ad_hoc_generators": []
+}

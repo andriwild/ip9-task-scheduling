@@ -1,0 +1,9 @@
+{
+    "employees_path": "employees/employee_gebaeude84.json",
+    "grasp_iterations": 500,
+    "scenario_path": "scenarios/thesis_baseline.json",
+    "sim_duration": 2592000,
+    "sim_start_time": 18000,
+    "grasp_alpha": 0.5,
+    "background_cost_aware": true
+}
