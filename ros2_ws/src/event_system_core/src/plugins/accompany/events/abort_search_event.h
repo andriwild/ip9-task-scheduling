@@ -11,6 +11,11 @@
 
 namespace des {
 
+// Timeline colours of the three abort reasons.
+constexpr const char* kColorOutside     = "#9aa4b0";
+constexpr const char* kColorUnreachable = "#d0a020";
+constexpr const char* kColorFindable    = "#d62728";
+
 class AbortSearchEvent final : public IEvent {
     OrderPtr m_order;
 public:
@@ -58,13 +63,12 @@ public:
         return "Abort Search";
     }
 
-    //TODO: magic color strings
     std::string getColor() const override {
         if (auto* a = dynamic_cast<AccompanyOrder*>(m_order.get())) {
             switch (a->abortReason) {
-                case SearchAbortReason::OUTSIDE:                 return "#9aa4b0";
-                case SearchAbortReason::IN_BUILDING_UNREACHABLE: return "#d0a020";
-                case SearchAbortReason::IN_BUILDING_FINDABLE:    return "#d62728";
+                case SearchAbortReason::OUTSIDE:                 return kColorOutside;
+                case SearchAbortReason::IN_BUILDING_UNREACHABLE: return kColorUnreachable;
+                case SearchAbortReason::IN_BUILDING_FINDABLE:    return kColorFindable;
                 default: break;
             }
         }

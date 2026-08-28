@@ -174,7 +174,7 @@ protected:
         DES_LOG_INFO("des.runner", "Load ad-hoc generators: %s", path.c_str());
 
         auto adHocGenerators = ConfigLoader::loadInterruptGenerators(path.c_str());
-        int eventId = 100000; // TODO: magic number
+        int eventId = INTERRUPT_ID_BASE;
         const int simStart = m_config->simStartTime;
         const int simEnd   = m_config->simStartTime + m_config->simDuration;
 
@@ -203,7 +203,7 @@ protected:
 
     void addBackgroundReleaseEvents(const int simStartTime, const int simEndTime) {
         const int releaseOffset = simStartTime % SECONDS_PER_DAY;
-        int bgId = 300000;
+        int bgId = BACKGROUND_ID_BASE;
         for (int day = 0, base = 0; base < simEndTime; ++day, base += SECONDS_PER_DAY) {
             const int releaseTime = base + releaseOffset;
             if (releaseTime < simStartTime || releaseTime >= simEndTime) {

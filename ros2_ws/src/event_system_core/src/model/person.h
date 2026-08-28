@@ -64,8 +64,8 @@ public:
     bool lunchPending = false;
     std::vector<std::string> roomLabels;
     std::vector<std::vector<double>> transitionMatrix;
-    // TODO: static function instead of a member
-    StayDurationConfig stayDuration;
+    // The same for every person
+    static constexpr StayDurationConfig stayDuration{};
     std::mt19937 rng{};
 
     void reseed(const unsigned int seed) {

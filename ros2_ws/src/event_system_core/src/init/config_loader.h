@@ -102,7 +102,7 @@ public:
         }
 
         OrderList orders;
-        int instanceId = 200000; // TODO magic number
+        int instanceId = SCHEDULED_ID_BASE;
         for (const auto& j : json.value().at("orders")) {
             const std::string& type = j.at("type").get_ref<const std::string&>();
             auto& plugin = OrderRegistry::instance().get(type);
