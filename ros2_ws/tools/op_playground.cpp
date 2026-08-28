@@ -19,35 +19,33 @@ namespace {
 const std::string BUILDING = "../config/building.json";
 const std::string SIMCFG   = "../config/default/sim_config.json";
 
+// Die Kandidaten tragen in der Abbildung nur eine laufende Nummer. Die
+// Reihenfolge ist die Lage im Grundriss, von oben links nach unten rechts.
 const std::vector<std::string> KANDIDATEN = {
-    "5.2A01", "5.2A07", "5.2A12", "5.2A71", "5.2A15", "5.2A17",
-    "5.2D02", "5.2D11", "5.2C59", "5.2C08", "5.2C54", "5.2C91",
-    "5.2B53", "5.2B51", "IMVS_Kitchen", "5.2B31", "5.2B13", "5.2B17",
-};
-const std::vector<char> SEITEN = {
-    'l', 'l', 'r',                          // Start, Termin, Dock
-    'r', 'l', 'r', 'd', 'r', 'r',           // A01 A07 A12 A71 A15 A17
-    'd', 'r', 'd', 'r', 'r', 'r',           // D02 D11 C59 C08 C54 C91
-    'l', 'l', 'l', 'r', 'r', 'r',           // B53 B51 Küche B31 B13 B17
+    "5.2A07", "5.2A12", "5.2A71", "5.2A15", "5.2A17", "5.2A01",
+    "IMVS_Kitchen", "5.2B31", "5.2B51", "5.2D11", "5.2B13", "5.2B53",
+    "5.2C59", "5.2C54", "5.2D02", "5.2B17", "5.2C08", "5.2C91",
 };
 
+// Seite, auf der die Beschriftung steht. l links, r rechts, d darunter, o darueber.
+const std::vector<char> SEITEN = {
+    'l', 'd', 'd',                          // Start, Termin, Dock
+    'l', 'o', 'd', 'o', 'r', 'd',           //  1  2  3  4  5  6
+    'o', 'r', 'r', 'l', 'r', 'l',           //  7  8  9 10 11 12
+    'l', 'o', 'l', 'r', 'd', 'r',           // 13 14 15 16 17 18
+};
+
+// Stunden seit der letzten Reinigung. Der einzige freie Parameter des
+// Beispiels, er bestimmt ueber den Faelligkeitsfaktor den Nutzen eines Raums.
 const std::vector<double> STUNDEN_SEIT_REINIGUNG = {
-    20.0, 23.0,  4.0, 21.0, 14.0, 22.0,   // A01 A07 A12 A71 A15 A17
-    10.0, 18.0,  6.0, 16.0, 12.0, 19.0,   // D02 D11 C59 C08 C54 C91
-     8.0, 15.0, 17.0,  2.0, 13.0,  9.0,   // B53 B51 Kueche B31 B13 B17
+     3.0, 16.0, 22.0, 21.0, 20.0,  5.0,   //  1  2  3  4  5  6
+     6.0, 20.0, 23.0,  3.0, 16.0, 23.0,   //  7  8  9 10 11 12
+     4.0, 10.0,  3.0, 15.0, 14.0, 16.0,   // 13 14 15 16 17 18
 };
 
 const std::string START_RAUM = "5.2A05";        // Standort des Roboters
 const std::string DOCK_RAUM  = "IMVS_Dock";     // sim_config.dock_location
 const std::string END_RAUM   = "IMVS_Printer";  // Ort der Termine aus appointments.json
-
-std::string anzeige(const std::string& name) {
-    if (name == "IMVS_Kitchen") { return "Küche"; }
-    if (name == "IMVS_Dock")    { return "Dock"; }
-    if (name == "IMVS_Printer") { return "Termin"; }
-    if (name == START_RAUM)     { return "Start"; }
-    return name;
-}
 
 struct Variante {
     float timeBudget;
@@ -56,9 +54,9 @@ struct Variante {
 };
 
 const std::vector<Variante> VARIANTEN = {
-    { 1200.0f,  "op-route-kurz.svg", "knappes Zeitbudget"   },
-    { 3600.0f,  "op-route.svg",      "mittleres Zeitbudget" },
-    { 14400.0f, "op-route-lang.svg", "weites Zeitbudget"    },
+    { 1200.0f, "op-route-kurz.svg", "knappes Zeitbudget"   },
+    { 2400.0f, "op-route.svg",      "mittleres Zeitbudget" },
+    { 4800.0f, "op-route-lang.svg", "weites Zeitbudget"    },
 };
 
 json lies(const std::string& pfad) {
@@ -100,20 +98,19 @@ int main() {
     };
 
     // Werte aus der Konfiguration
-    const double rewardWeight   = cfg.at("clean").at("reward_weight").get<double>();
-    const double cleaningArea   = cfg.at("clean").at("cleaning_area").get<double>();
-    const double cleaningPower  = cfg.at("clean").at("cleaning_power").get<double>();
+    const double valuePerSqm      = cfg.at("clean").at("value_per_sqm").get<double>();
+    const double cleaningArea     = cfg.at("clean").at("cleaning_area").get<double>();
+    const double cleaningPower    = cfg.at("clean").at("cleaning_power").get<double>();
     const double cleaningInterval = cfg.at("clean").at("cleaning_interval").get<double>();
-    const double robotSpeed     = cfg.at("robot_speed").get<double>();
-    const double driveW         = cfg.at("energy_consumption_drive").get<double>();
-    const double baseW          = cfg.at("energy_consumption_base").get<double>();
-    const double chargingRate   = cfg.at("charging_rate").get<double>();
-    const double taperFraction  = cfg.at("taper_fraction").get<double>();
-    const double cvThreshold    = cfg.at("cv_threshold").get<double>();
-    const double lowThreshold   = cfg.at("low_battery_threshold").get<double>();
-    const double fullThreshold  = cfg.at("full_battery_threshold").get<double>();
-    const double capacityWh     = cfg.at("battery_capacity").get<double>()
-                                * cfg.at("battery_voltage").get<double>();
+    const double robotSpeed       = cfg.at("robot_speed").get<double>();
+    const double driveW           = cfg.at("energy_consumption_drive").get<double>();
+    const double baseW            = cfg.at("energy_consumption_base").get<double>();
+    const double chargingRate     = cfg.at("charging_rate").get<double>();
+    const double taperFraction    = cfg.at("taper_fraction").get<double>();
+    const double cvThreshold      = cfg.at("cv_threshold").get<double>();
+    const double lowThreshold     = cfg.at("low_battery_threshold").get<double>();
+    const double capacityWh       = cfg.at("battery_capacity").get<double>()
+                                  * cfg.at("battery_voltage").get<double>();
 
     std::vector<std::string> modellNamen = { START_RAUM, END_RAUM, DOCK_RAUM };
     modellNamen.insert(modellNamen.end(), KANDIDATEN.begin(), KANDIDATEN.end());
@@ -124,21 +121,24 @@ int main() {
         const auto& raum = gebaeude.at("rooms").at(indexVon(name));
         pos.push_back(schwerpunkt(raum));
 
-        const bool kandidat = std::find(KANDIDATEN.begin(), KANDIDATEN.end(), name)
-                              != KANDIDATEN.end();
-        if (!kandidat) {
-            nodes.push_back({ anzeige(name), 0.0f, 0.0f, 0.0f });
+        const auto it = std::find(KANDIDATEN.begin(), KANDIDATEN.end(), name);
+        if (it == KANDIDATEN.end()) {
+            const std::string beschriftung =
+                name == START_RAUM ? "Start" : (name == DOCK_RAUM ? "Dock" : "Termin");
+            nodes.push_back({ beschriftung, 0.0f, 0.0f, 0.0f });
             continue;
         }
-        const double flaeche = raum.value("area", 0.0);
-        const auto it = std::find(KANDIDATEN.begin(), KANDIDATEN.end(), name);
-        const double stunden = STUNDEN_SEIT_REINIGUNG.at(
-            static_cast<std::size_t>(std::distance(KANDIDATEN.begin(), it)));
-        const double reward  = rewardWeight
-                             * std::min(1.0, stunden * 3600.0 / cleaningInterval);
+        const std::size_t k   = static_cast<std::size_t>(std::distance(KANDIDATEN.begin(), it));
+        const double flaeche  = raum.value("area", 0.0);
+        const double stunden  = STUNDEN_SEIT_REINIGUNG.at(k);
+
+        // Nutzen wie in clean_plugin.cpp, estimateReward
+        const double faellig = stunden * 3600.0 / cleaningInterval;
+        const double reward  = valuePerSqm * flaeche * faellig;
+        // Dauer und Energie wie in clean_plugin.cpp, cleanDurationSeconds
         const double dauer   = (flaeche / cleaningArea + 1.0)
                              * (2.0 * std::sqrt(cleaningArea) / robotSpeed);
-        nodes.push_back({ anzeige(name),
+        nodes.push_back({ std::to_string(k + 1),
                           static_cast<float>(reward),
                           static_cast<float>(dauer),
                           static_cast<float>(dauer * cleaningPower / 3600.0) });
@@ -163,10 +163,10 @@ int main() {
     params.endNodeId    = 1;
     params.driveSpeed   = static_cast<float>(robotSpeed);
     params.driveEnergy  = static_cast<float>(driveW / (3600.0 * robotSpeed));
-    params.initialSoc   = static_cast<float>(0.45 * capacityWh);
+    params.initialSoc   = static_cast<float>(0.95 * capacityWh);
     params.endSocMin    = static_cast<float>(0.20 * capacityWh);
     params.energyBudget = params.initialSoc - params.endSocMin;
-    params.maxEnergy    = static_cast<float>(0.50 * capacityWh);
+    params.maxEnergy    = static_cast<float>(1.00 * capacityWh);
     params.socThreshold = static_cast<float>(lowThreshold / 100.0 * capacityWh);
     params.chargeTimePerWh        = static_cast<float>(3600.0 / netChargeW);
     params.chargeTimePerWhTapered = static_cast<float>(3600.0 / (netChargeW * taperFraction));
@@ -174,9 +174,12 @@ int main() {
     params.costAware              = true;
     params.openEnd                = false;
 
+    double gesamtNutzen = 0.0;
+    for (const auto& nd : nodes) { gesamtNutzen += nd.reward; }
+
     std::cout << "Batterie " << capacityWh << " Wh, Start bei " << params.initialSoc
               << " Wh, Reserve " << params.endSocMin << " Wh, Energiebudget "
-              << params.energyBudget << " Wh\n\n";
+              << params.energyBudget << " Wh, Nutzen aller Kandidaten " << gesamtNutzen << "\n\n";
 
     for (const auto& v : VARIANTEN) {
         params.timeBudget = v.timeBudget;
@@ -194,7 +197,7 @@ int main() {
         for (const int idx : route) { std::cout << " -> " << nodes[idx].name; }
         std::cout << " -> " << nodes[params.endNodeId].name << "\n";
         std::cout << "  Räume " << raeume << " von " << KANDIDATEN.size()
-                  << ", Nutzen " << op.routeReward(route)
+                  << ", Nutzen " << op.routeReward(route) << " von " << gesamtNutzen
                   << ", Zeit " << sim.time / 60.0f << " min"
                   << ", Ladung am Ende " << sim.socEnd << " Wh"
                   << ", verbraucht " << params.initialSoc - sim.socEnd << " Wh"

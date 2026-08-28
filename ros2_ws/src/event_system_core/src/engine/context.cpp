@@ -337,11 +337,12 @@ void SimulationContext::publishMission(const OrderPtr& order, const int time) {
     m_eventBus.notifyMissionPublished(order, time);
 }
 
-
+// Update time by executing an event.
 void SimulationContext::advanceTime(const int newTime) {
     assert(newTime >= m_currentTime);
     m_robot->updateBatteryBalance(newTime, m_robot->getState()->getEnergyConsumption(*m_robot, *m_simConfig));
     if (m_robot->isBatteryLow()) {
+        // TODO: this must be in the BT
         m_robot->setChargingRequired(true);
     }
     m_currentTime = newTime;

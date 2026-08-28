@@ -34,6 +34,9 @@ struct MissionReserve {
     std::size_t missionCount = 0;
 };
 
+// Computes the required reserve from a given time point in the future.
+// Accumulates the required energy of the schedules missions.
+// Takes into account that can be charged between mission.
 inline MissionReserve computeMissionReserve(
     const ISimContext& ctx,
     const double socThreshold,

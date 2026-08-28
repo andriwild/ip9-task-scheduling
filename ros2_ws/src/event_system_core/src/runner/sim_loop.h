@@ -31,6 +31,8 @@ inline bool executeNextEvent(IAppRunner& app) {
         return true;
     }
 
+    // Sequence matters here. Updating the battery relies on the current state.
+    // Time must be updated first, before executing the event
     app.m_ctx->advanceTime(event->time);
     app.m_ctx->executeEvent(event);
     app.m_protocol.push_back(event);
@@ -78,6 +80,7 @@ inline int runSimulation(IAppRunner& app) {
     }
 
     DES_LOG_DEBUG("des.main", "Simulation complete");
+    app.m_perf.finish(app.m_eventQueue.size(), static_cast<long long>(app.m_protocol.size()));
     app.shutdown();
     return batteryHealthy ? EXIT_SUCCESS : EXIT_FAILURE;
 }

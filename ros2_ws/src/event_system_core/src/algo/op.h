@@ -63,6 +63,7 @@ public:
         return d;
     }
 
+    // Calculate the time to charge the battery until to the cv threshold
     float chargeDuration(const float from, const float to) const {
         float t = 0.0f;
         const float phaseOneEnd = std::min(to, m_p.cvEnergy);
@@ -78,6 +79,8 @@ public:
 
     struct Sim { bool feasible; float socEnd; float time; };
 
+    // Runs the current route and accumulates time and energy.
+    // Returns, if a route is feasibly within time and energy budget.
     Sim simulateRoute(const std::vector<int>& route, const bool toEnd = false) const {
         float time = 0.0f;
         float soc  = m_p.initialSoc;

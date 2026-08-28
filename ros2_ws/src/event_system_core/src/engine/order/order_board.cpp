@@ -145,6 +145,9 @@ OrderPtr OrderBoard::acceptFeasibleBackground(ISimContext& ctx) {
     return accepted;
 }
 
+// A new Interrupt Mission arrived.
+// Only one Interrupt Mission at the same time can be active.
+// An ongoing activity has to be stopped and paused.
 bool OrderBoard::pushInterrupt(ISimContext& ctx, const OrderPtr& order) {
     assert(order->execution == ExecutionMode::INTERRUPT && "Interrupt pushed with wrong ExecutionMode");
     const auto robot = ctx.getRobot();

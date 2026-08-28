@@ -1,3 +1,7 @@
+/*
+ * Collection of Orienteering Problem helper functions.
+ *
+ */
 #pragma once
 
 #include <algorithm>
@@ -9,11 +13,11 @@
 #include "../op.h"
 #include "../op_solver_common.h"
 
-namespace des {
 
-namespace op_solver {
+namespace des::op_solver {
 
 // TODO: naming Station(s), dock?
+// Finds the nearest dock to charge the robot.
 inline int nearestStation(const OpInstance& op, const int from) {
     const auto& stations = op.stations();
     int best = stations.front();
@@ -25,10 +29,12 @@ inline int nearestStation(const OpInstance& op, const int from) {
     return best;
 }
 
+// Optimizes a tour by swapping to edges.
+// A swap is accepted, if the tour is shorter.
 inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from, const int to) {
     const auto& p   = op.params();
-    const int left  = (from == 0)                           ? p.startNodeId : tour[from - 1];
-    const int right = (to == static_cast<int>(tour.size())) ? p.endNodeId   : tour[to];
+    const int left  = from == 0 ? p.startNodeId : tour[from - 1];
+    const int right = to == static_cast<int>(tour.size()) ? p.endNodeId : tour[to];
 
     const int N = static_cast<int>(tour.size());
     if (N < 2) {
@@ -62,12 +68,19 @@ inline void twoOpt(const OpInstance& op, std::vector<int>& tour, const int from,
     }
 }
 
+// TODO: rename ns
 namespace detail {
 
 struct Cand { float value; std::size_t idx; int station; };
 
-inline std::optional<Cand> scoreCandidate(const OpInstance& op, std::vector<int>& route,
-                                          const int curId, const std::size_t candListIdx, const int candNode) {
+// Calculate the score of a candidate and check its feasibility with oder without additional charge stop.
+inline std::optional<Cand> scoreCandidate(
+    const OpInstance& op,
+    std::vector<int>& route,
+    const int curId,
+    const std::size_t candListIdx,
+    const int candNode
+    ) {
     route.push_back(candNode);
     const bool directlyReachable = op.simulateRoute(route).feasible;
     route.pop_back();
@@ -76,6 +89,7 @@ inline std::optional<Cand> scoreCandidate(const OpInstance& op, std::vector<int>
         return Cand{ greedyValue(op, curId, candNode), candListIdx, -1 };
     }
 
+    // add a charge stop, check again if the candidate is feasible
     int bestStation = -1;
     float bestCost  = std::numeric_limits<float>::max();
     for (const int st : op.stations()) {
@@ -110,6 +124,7 @@ inline std::vector<Cand> restrictedCandidateList(const std::vector<Cand>& scored
     return rcl;
 }
 
+// add nearest dock to the end of the route
 inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
     while (!op.simulateRoute(route, true).feasible) {
         if (!op.stations().empty() && !route.empty() && !op.isStation(route.back())) {
@@ -128,6 +143,10 @@ inline void repairToEnd(const OpInstance& op, std::vector<int>& route) {
 
 }  // namespace detail
 
+
+// Create a solution by adding a candidate from the rcl
+// with a given randomness of alpha to get out of local minima.
+// alpha = 0: pure greedy; alpha = 1: random
 inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const float alpha, const int seed) {
     std::mt19937 gen(seed);
     std::vector<int> route;
@@ -163,6 +182,9 @@ inline std::vector<int> greedyRandomizedConstruction(const OpInstance& op, const
     return route;
 }
 
+// Orienteering Problem heuristics
+// GRASP control loop
+// Repeatably create a solution using greedyRandomizedConstruction to find the route with the best reward.
 inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, const float alpha, const int seed, const bool useTwoOpt = true) {
     std::vector<int> bestSolution;
     float bestReward = -1.0f;
@@ -187,6 +209,7 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
         }
     }
 
+    // try to shorten the route by applying 2-opt between charge stops
     if (useTwoOpt) {
         int legStart = 0;
         for (int i = 0; i < static_cast<int>(bestSolution.size()); ++i) {
@@ -201,6 +224,5 @@ inline std::vector<int> grasp(const OpInstance& op, const int maxIterations, con
     return bestSolution;
 }
 
-}  // namespace op_solver
+}  // namespace des::op_solver
 
-}  // namespace des
