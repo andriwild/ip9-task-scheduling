@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include "../../model/robot_state.h"
@@ -20,7 +19,6 @@ public:
     void enter(Robot& robot) override;
     RobotStateType getType() const override { return RobotStateType::MISSION; }
     std::string getName() const override { return "acquire"; }
-    std::unique_ptr<RobotState> clone() const override { return std::make_unique<AcquireState>(*this); }
 };
 
 }  // namespace des

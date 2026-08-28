@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include "../../model/robot_state.h"
@@ -20,7 +19,6 @@ public:
     std::string getName() const override { return "information"; }
     double getEnergyConsumption(const Robot& robot, const SimConfig& cfg) const override;
     bool chargesAtDock() const override { return true; }
-    std::unique_ptr<RobotState> clone() const override { return std::make_unique<InformationState>(*this); }
 };
 
 }  // namespace des
